@@ -61,6 +61,15 @@
   --color-avatar-purple-bg:      #F5F3FF;
   --color-avatar-purple-border:  #DDD6FE;
   --color-avatar-purple-text:    #7C3AED;
+  --color-avatar-yellow-bg:      #FEFCE8;
+  --color-avatar-yellow-border:  #FEF08A;
+  --color-avatar-yellow-text:    #CA8A04;
+  --color-avatar-teal-bg:        #F0FDFA;
+  --color-avatar-teal-border:    #99F6E4;
+  --color-avatar-teal-text:      #0D9488;
+  --color-avatar-orange-bg:      #FFF7ED;
+  --color-avatar-orange-border:  #FED7AA;
+  --color-avatar-orange-text:    #EA580C;
 
   /* ── Portfolio Chart Palette ── */
   --color-chart-1: #0046FF;
