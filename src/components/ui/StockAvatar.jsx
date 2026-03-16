@@ -8,10 +8,10 @@
  */
 const COLOR_MAP = {
   primary: 'bg-primary-light border-primary-border text-primary',
-  warning: 'bg-[#FFF3E0] border-[#FED7AA] text-warning',
-  green:   'bg-[#ECFDF5] border-[#A7F3D0] text-[#059669]',
+  warning: 'bg-avatar-warning-bg border-avatar-warning-border text-warning',
+  green:   'bg-avatar-green-bg border-avatar-green-border text-avatar-green-text',
   red:     'bg-up-bg border-up-border text-up',
-  purple:  'bg-[#F5F3FF] border-[#DDD6FE] text-[#7C3AED]',
+  purple:  'bg-avatar-purple-bg border-avatar-purple-border text-avatar-purple-text',
 }
 
 const SIZE_MAP = {

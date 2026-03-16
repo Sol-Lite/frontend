@@ -52,6 +52,16 @@
   --color-stroke-subtle:#F3F4F6;  /* border-subtle → border-stroke-subtle */
   --color-stroke-input: #E5E7EB;  /* border-input  → border-stroke-input  */
 
+  /* ── Stock Avatar 테마 (종목 아이콘 배경/테두리) ── */
+  --color-avatar-warning-bg:     #FFF3E0;
+  --color-avatar-warning-border: #FED7AA;
+  --color-avatar-green-bg:       #ECFDF5;
+  --color-avatar-green-border:   #A7F3D0;
+  --color-avatar-green-text:     #059669;
+  --color-avatar-purple-bg:      #F5F3FF;
+  --color-avatar-purple-border:  #DDD6FE;
+  --color-avatar-purple-text:    #7C3AED;
+
   /* ── Portfolio Chart Palette ── */
   --color-chart-1: #0046FF;
   --color-chart-2: #00A878;

@@ -120,6 +120,9 @@ className="bg-primary"
 | 하락 | `text-down` / `bg-down-bg` / `border-down-border` |
 | 실시간 | `bg-live` / `text-live` |
 | 경고 | `text-warning` |
+| 종목 아바타 (warning) | `bg-avatar-warning-bg` / `border-avatar-warning-border` |
+| 종목 아바타 (green) | `bg-avatar-green-bg` / `border-avatar-green-border` / `text-avatar-green-text` |
+| 종목 아바타 (purple) | `bg-avatar-purple-bg` / `border-avatar-purple-border` / `text-avatar-purple-text` |
 
 **그림자 토큰**
 
