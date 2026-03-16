@@ -6,8 +6,7 @@ export default function LiveDot({ size = 'md', className = '' }) {
 
   return (
     <span
-      className={`inline-flex rounded-full bg-live flex-shrink-0 ${sizes[size]} ${className}`}
-      style={{ animation: 'pulse-dot 2s ease-in-out infinite' }}
+      className={`inline-flex rounded-full bg-live flex-shrink-0 animate-pulse-dot ${sizes[size]} ${className}`}
     />
   )
 }

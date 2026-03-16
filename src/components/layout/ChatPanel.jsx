@@ -18,8 +18,7 @@ function LoginPrompt() {
       </div>
       <button
         onClick={() => navigate('/login')}
-        className="w-full px-4 py-2 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms]"
-        style={{ boxShadow: 'var(--shadow-primary-btn)' }}
+        className="w-full px-4 py-2 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
       >
         로그인
       </button>
@@ -45,7 +44,7 @@ function ChatInput() {
         placeholder="AI에게 물어보세요..."
         className="flex-1 h-8 px-3 rounded-lg bg-background text-[12px] text-foreground placeholder:text-foreground-disabled border border-stroke focus:outline-none focus:border-primary transition-colors duration-[150ms]"
       />
-      <button className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors duration-[150ms]">
+      <button aria-label="메시지 전송" className="w-8 h-8 flex items-center justify-center rounded-lg bg-primary text-white hover:bg-primary-hover transition-colors duration-[150ms]">
         <Send className="w-3.5 h-3.5" />
       </button>
     </div>

@@ -7,8 +7,7 @@ function Logo() {
   return (
     <div className="flex items-center gap-2 mr-2 shrink-0">
       <div
-        className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center"
-        style={{ boxShadow: 'var(--shadow-brand-glow)' }}
+        className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow"
       >
         <Activity className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
       </div>
@@ -45,8 +44,7 @@ function UserArea() {
     <div className="flex items-center gap-2">
       <button
         onClick={() => navigate('/login')}
-        className="flex items-center px-4 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms]"
-        style={{ boxShadow: 'var(--shadow-primary-btn)' }}
+        className="flex items-center px-4 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
       >
         로그인
       </button>
