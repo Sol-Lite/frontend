@@ -214,13 +214,13 @@ CDN 로드:
 
 ### Border
 
-- **기본**: `border border-[#EAECF0]` (1px)
-- **입력**: `border-[1.5px] border-[#E5E7EB]`
-- **활성 칩/버튼**: `border-[1.5px] border-[#0046FF]`
-- **위젯 편집모드**: `border-[1.5px] border-dashed border-[#C8CBD2]`
-- **위젯 추가 슬롯**: `border-2 border-dashed border-[#C7D2FE]`
-- **구분선**: `border-b border-[#EAECF0]`
-- **테이블 행**: `border-b border-[#F3F4F6]`
+- **기본**: `border border-stroke` (1px)
+- **입력**: `border-[1.5px] border-stroke-input`
+- **활성 칩/버튼**: `border-[1.5px] border-primary`
+- **위젯 편집모드**: `border-[1.5px] border-dashed border-stroke-input`
+- **위젯 추가 슬롯**: `border-2 border-dashed border-primary-border`
+- **구분선**: `border-b border-stroke`
+- **테이블 행**: `border-b border-stroke-subtle`
 
 ### Shadow
 
@@ -337,7 +337,7 @@ html { min-width: 1280px; } /* 1280px 미만: 수평 스크롤, 레이아웃 고
 ```css
 ::-webkit-scrollbar { width: 3px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
+::-webkit-scrollbar-thumb { background: var(--color-stroke-subtle); border-radius: 4px; }
 ```
 
 Tailwind 커스텀 유틸리티로 등록 권장:
