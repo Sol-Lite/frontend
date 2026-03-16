@@ -1,14 +1,14 @@
 import { createBrowserRouter } from 'react-router-dom'
-import App from './App'
-import HomePage from './pages/HomePage'
-import MarketPage from './pages/MarketPage'
-import InvestPage from './pages/InvestPage'
-import AssetPage from './pages/AssetPage'
+import AppShell from '@/components/layout/AppShell'
+import HomePage from '@/pages/HomePage'
+import MarketPage from '@/pages/MarketPage'
+import InvestPage from '@/pages/InvestPage'
+import AssetPage from '@/pages/AssetPage'
 
 export const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />,
+    element: <AppShell />,
     children: [
       { index: true,        element: <HomePage /> },
       { path: 'market',     element: <MarketPage /> },

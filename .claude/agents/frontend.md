@@ -74,10 +74,74 @@ style(market): StockRow hover 스타일 수정
 - 이벤트 핸들러: `on` + 동사 (예: `onClick`, `onWidgetAdd`)
 - variant: string union (예: `variant="primary" | "secondary"`)
 
-### 스타일
-- 인라인 스타일(`style={{}}`) 사용 금지 → Tailwind 클래스로 대체
-- 하드코딩 색상값(`bg-[#0046FF]`) 사용 금지 → `src/index.css @theme` 토큰 클래스 사용
-  - 예: `bg-primary`, `text-foreground`, `border-stroke`
+### 스타일 — 안티패턴 (절대 금지)
+
+```jsx
+// ❌ 인라인 스타일
+style={{ boxShadow: 'var(--shadow-brand-glow)' }}
+style={{ animation: 'pulse-dot 2s ease-in-out infinite' }}
+
+// ❌ arbitrary value (토큰이 있을 경우)
+className="shadow-[var(--shadow-brand-glow)]"
+className="bg-[#0046FF]"
+
+// ✅ 올바른 사용
+className="shadow-brand-glow"
+className="animate-pulse-dot"
+className="bg-primary"
+```
+
+### Tailwind v4 토큰 → 클래스 변환 규칙
+
+`src/index.css @theme`에 등록된 CSS 변수는 Tailwind 유틸리티 클래스로 **자동 생성**된다.
+인라인 스타일이나 `var()` 참조 없이 클래스명으로 바로 사용한다.
+
+| `@theme` 변수 | 생성되는 클래스 |
+|---|---|
+| `--color-{name}` | `bg-{name}` / `text-{name}` / `border-{name}` |
+| `--shadow-{name}` | `shadow-{name}` |
+| `--animate-{name}` | `animate-{name}` |
+
+**색상 토큰 (주요)**
+
+| 용도 | 클래스 |
+|---|---|
+| 브랜드 | `bg-primary` / `text-primary` / `border-primary` |
+| 브랜드 hover | `bg-primary-hover` |
+| 브랜드 연한 배경 | `bg-primary-light` |
+| 본문 텍스트 | `text-foreground` |
+| 보조 텍스트 | `text-foreground-secondary` |
+| 비활성 텍스트 | `text-foreground-disabled` |
+| 앱 배경 | `bg-background` |
+| 카드/헤더 배경 | `bg-surface` |
+| 기본 테두리 | `border-stroke` |
+| 입력 테두리 | `border-stroke-input` |
+| 상승 | `text-up` / `bg-up-bg` / `border-up-border` |
+| 하락 | `text-down` / `bg-down-bg` / `border-down-border` |
+| 실시간 | `bg-live` / `text-live` |
+| 경고 | `text-warning` |
+
+**그림자 토큰**
+
+| 용도 | 클래스 |
+|---|---|
+| 로고/브랜드 glow | `shadow-brand-glow` |
+| primary 버튼 | `shadow-primary-btn` |
+| 위젯 hover | `shadow-widget-hover` |
+| 위젯 편집모드 | `shadow-widget-edit` |
+| 모달 | `shadow-modal` |
+| focus ring | `shadow-focus-ring` |
+
+**애니메이션 토큰**
+
+| 용도 | 클래스 |
+|---|---|
+| 실시간 점 pulse | `animate-pulse-dot` |
+| 말풍선 등장 | `animate-bubble-in` |
+| 위젯 wiggle | `animate-wiggle` |
+| 모달 등장 | `animate-modal-in` |
+
+### 스타일 — 기타 규칙
 - 아이콘은 `lucide-react` 사용, 커스텀 SVG는 `src/assets/icons/`에 분리
 - 아이콘 전용 버튼은 반드시 `aria-label` 포함
 

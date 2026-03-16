@@ -1,10 +1,5 @@
-import { Outlet } from 'react-router-dom'
-
-// TODO(layout): 4단계에서 AppShell(AppHeader + Sidebar + ChatPanel)로 교체
+// AppShell은 router.jsx에서 직접 마운트됩니다.
+// App.jsx는 향후 전역 Provider(QueryClient, Toast 등) 래퍼로 활용됩니다.
 export default function App() {
-  return (
-    <div className="flex flex-col h-screen bg-background text-foreground">
-      <Outlet />
-    </div>
-  )
+  return null
 }
