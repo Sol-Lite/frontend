@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOL Lite — 회원가입</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Pretendard', -apple-system, sans-serif; height: 100vh; overflow: hidden; color: #191F28; display: flex; }
+    input, button, select { font-family: inherit; }
+    .inp {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid #E5E7EB; border-radius: 10px;
+      font-size: 14px; color: #191F28; background: #fff;
+      outline: none; transition: border-color .2s, box-shadow .2s;
+    }
+    .inp:focus { border-color: #0046FF; box-shadow: 0 0 0 3px rgba(0,70,255,.08); }
+    .step-dot { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+  </style>
+</head>
+<body>
+
+  <!-- LEFT: 브랜드 패널 -->
+  <div style="width:44%;flex-shrink:0;background:linear-gradient(145deg,#0035CC 0%,#0046FF 50%,#2563EB 100%);display:flex;flex-direction:column;padding:48px 44px;position:relative;overflow:hidden">
+
+    <!-- 배경 장식 -->
+    <div style="position:absolute;top:-80px;right:-80px;width:320px;height:320px;border-radius:50%;background:rgba(255,255,255,.06)"></div>
+    <div style="position:absolute;bottom:-60px;left:-60px;width:240px;height:240px;border-radius:50%;background:rgba(255,255,255,.04)"></div>
+
+    <!-- 로고 -->
+    <a href="home-init.html" style="display:flex;align-items:center;gap:10px;text-decoration:none;position:relative;z-index:1">
+      <div style="width:36px;height:36px;border-radius:11px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center">
+        <svg style="width:18px;height:18px;color:#fff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <span style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-.3px">SOL <span style="opacity:.85">Lite</span></span>
+    </a>
+
+    <!-- 메인 카피 -->
+    <div style="margin-top:auto;margin-bottom:auto;position:relative;z-index:1">
+      <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,.6);letter-spacing:.08em;text-transform:uppercase;margin-bottom:14px">새로운 증권 경험</div>
+      <h1 style="font-size:30px;font-weight:900;color:#fff;line-height:1.3;letter-spacing:-.5px;margin-bottom:14px">채팅과 위젯으로<br>증권을 더<br>편리하게</h1>
+      <p style="font-size:13px;color:rgba(255,255,255,.7);line-height:1.8">AI 채팅 어시스턴트에게 물어보고,<br>내가 원하는 대로 대시보드를 구성하세요.</p>
+
+      <!-- 피처 리스트 -->
+      <div style="margin-top:28px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg style="width:13px;height:13px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          </div>
+          <span style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500">SOL AI 채팅 어시스턴트</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg style="width:13px;height:13px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/></svg>
+          </div>
+          <span style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500">자유롭게 구성하는 위젯 대시보드</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:28px;height:28px;border-radius:8px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg style="width:13px;height:13px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          </div>
+          <span style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500">국내·해외 실시간 시세 및 주문</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 하단 문구 -->
+    <div style="font-size:10px;color:rgba(255,255,255,.4);position:relative;z-index:1">SOL Lite는 실제 투자와 무관한 모의투자 서비스입니다</div>
+  </div>
+
+  <!-- RIGHT: 폼 패널 -->
+  <div style="flex:1;background:#fff;display:flex;flex-direction:column;overflow-y:auto">
+    <div style="max-width:420px;width:100%;margin:0 auto;padding:44px 32px">
+
+      <!-- 스텝 인디케이터 -->
+      <div style="display:flex;align-items:center;margin-bottom:32px">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0">
+          <div class="step-dot" style="background:#0046FF;color:#fff;box-shadow:0 0 12px rgba(0,70,255,.3)">1</div>
+          <span style="font-size:10px;font-weight:600;color:#0046FF">기본정보</span>
+        </div>
+        <div style="flex:1;height:2px;background:#E5E7EB;margin:0 10px;margin-bottom:14px"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0">
+          <div class="step-dot" style="background:#F3F4F6;color:#9CA3AF;border:1.5px solid #E5E7EB">2</div>
+          <span style="font-size:10px;color:#9CA3AF">약관동의</span>
+        </div>
+        <div style="flex:1;height:2px;background:#E5E7EB;margin:0 10px;margin-bottom:14px"></div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex-shrink:0">
+          <div class="step-dot" style="background:#F3F4F6;color:#9CA3AF;border:1.5px solid #E5E7EB">3</div>
+          <span style="font-size:10px;color:#9CA3AF">계좌개설</span>
+        </div>
+      </div>
+
+      <!-- 타이틀 -->
+      <h2 style="font-size:20px;font-weight:800;color:#191F28;margin-bottom:4px">기본 정보 입력</h2>
+      <p style="font-size:13px;color:#9CA3AF;margin-bottom:28px">가입에 필요한 정보를 입력해 주세요.</p>
+
+      <div style="display:flex;flex-direction:column;gap:18px">
+
+        <!-- 이메일 -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:6px">이메일 <span style="color:#E8393E">*</span></label>
+          <div style="display:flex;gap:8px">
+            <input class="inp" type="email" placeholder="example@domain.com" style="flex:1" />
+            <button style="padding:0 16px;background:#F3F4F6;border:1.5px solid #E5E7EB;border-radius:10px;font-size:12px;font-weight:600;color:#374151;cursor:pointer;white-space:nowrap">인증 발송</button>
+          </div>
+        </div>
+
+        <!-- 이름 -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:6px">이름 <span style="color:#E8393E">*</span></label>
+          <input class="inp" type="text" placeholder="이름을 입력하세요" />
+        </div>
+
+        <!-- 휴대폰 -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:6px">휴대폰 번호</label>
+          <input class="inp" type="tel" placeholder="010-0000-0000" />
+        </div>
+
+        <!-- 비밀번호 -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:6px">비밀번호 <span style="color:#E8393E">*</span></label>
+          <div style="position:relative">
+            <input class="inp" type="password" placeholder="비밀번호를 입력하세요" style="padding-right:42px" />
+            <button style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9CA3AF">
+              <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
+          <div style="margin-top:7px;background:#F8F9FB;border-radius:10px;padding:10px 12px;display:grid;grid-template-columns:1fr 1fr;gap:5px 12px">
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#9CA3AF">
+              <div style="width:4px;height:4px;border-radius:50%;background:#D1D5DB;flex-shrink:0"></div>최소 8자 이상
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#9CA3AF">
+              <div style="width:4px;height:4px;border-radius:50%;background:#D1D5DB;flex-shrink:0"></div>영문 포함
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#9CA3AF">
+              <div style="width:4px;height:4px;border-radius:50%;background:#D1D5DB;flex-shrink:0"></div>숫자 포함
+            </div>
+            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:#9CA3AF">
+              <div style="width:4px;height:4px;border-radius:50%;background:#D1D5DB;flex-shrink:0"></div>특수문자 포함
+            </div>
+          </div>
+        </div>
+
+        <!-- 비밀번호 확인 -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:6px">비밀번호 확인 <span style="color:#E8393E">*</span></label>
+          <input class="inp" type="password" placeholder="비밀번호를 다시 입력하세요" />
+        </div>
+
+        <!-- 다음 버튼 -->
+        <button style="width:100%;padding:13px;background:#0046FF;color:#fff;border:none;border-radius:12px;font-size:14px;font-weight:700;cursor:pointer;box-shadow:0 4px 14px rgba(0,70,255,.25);margin-top:4px">
+          다음 단계 →
+        </button>
+
+      </div>
+
+      <!-- 로그인 링크 -->
+      <p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:20px">
+        이미 계정이 있으신가요?
+        <a href="login.html" style="color:#0046FF;font-weight:600;margin-left:4px">로그인</a>
+      </p>
+
+    </div>
+  </div>
+
+</body>
+</html>

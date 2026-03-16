@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOL Lite — 로그인</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Pretendard', -apple-system, sans-serif; color: #191F28; overflow: hidden; }
+    input, button { font-family: inherit; }
+    .inp {
+      width: 100%; padding: 11px 14px;
+      border: 1.5px solid #D1D5DB; border-radius: 4px;
+      font-size: 14px; color: #191F28; background: #fff;
+      outline: none; transition: border-color .2s;
+    }
+    .inp:focus { border-color: #0046FF; }
+    @keyframes modalIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .modal { animation: modalIn .2s ease both; }
+  </style>
+</head>
+<body>
+
+  <!-- 뒷배경: 흐릿한 앱 화면 -->
+  <div style="position:fixed;inset:0;background:#F4F6FA;filter:blur(0px)">
+    <!-- 헤더 시뮬 -->
+    <div style="height:54px;background:#fff;border-bottom:1px solid #EAECF0;display:flex;align-items:center;padding:0 24px;gap:12px">
+      <div style="width:28px;height:28px;border-radius:9px;background:#0046FF;opacity:.4"></div>
+      <div style="width:80px;height:14px;background:#E5E7EB;border-radius:4px"></div>
+      <div style="display:flex;gap:4px;margin-left:8px">
+        <div style="width:44px;height:28px;background:#EEF2FF;border-radius:8px;opacity:.5"></div>
+        <div style="width:44px;height:28px;background:#F3F4F6;border-radius:8px;opacity:.5"></div>
+        <div style="width:44px;height:28px;background:#F3F4F6;border-radius:8px;opacity:.5"></div>
+        <div style="width:44px;height:28px;background:#F3F4F6;border-radius:8px;opacity:.5"></div>
+      </div>
+    </div>
+    <!-- 콘텐츠 시뮬 -->
+    <div style="padding:20px 24px;display:grid;grid-template-columns:repeat(4,1fr);gap:10px;opacity:.35">
+      <div style="height:160px;background:#fff;border-radius:16px"></div>
+      <div style="height:160px;background:#fff;border-radius:16px;grid-column:span 2"></div>
+      <div style="height:160px;background:#fff;border-radius:16px"></div>
+      <div style="height:160px;background:#fff;border-radius:16px"></div>
+      <div style="height:160px;background:#fff;border-radius:16px;grid-column:span 2"></div>
+      <div style="height:160px;background:#fff;border-radius:16px"></div>
+    </div>
+  </div>
+
+  <!-- 딤 오버레이 -->
+  <div style="position:fixed;inset:0;background:rgba(15,23,42,.5);backdrop-filter:blur(6px);z-index:10"></div>
+
+  <!-- 모달 -->
+  <div style="position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:20px">
+    <div class="modal" style="width:100%;max-width:400px;background:#fff;border-radius:6px;box-shadow:0 20px 50px rgba(0,0,0,.22);overflow:hidden">
+
+      <!-- 모달 헤더 -->
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:22px 24px 0">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:26px;height:26px;border-radius:5px;background:#0046FF;display:flex;align-items:center;justify-content:center">
+            <svg style="width:13px;height:13px;color:#fff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <span style="font-size:15px;font-weight:700;color:#374151;letter-spacing:-.2px">SOL Lite</span>
+        </div>
+        <button onclick="window.location.href='home-init.html'" style="background:none;border:none;cursor:pointer;color:#9CA3AF;font-size:22px;line-height:1;padding:4px">×</button>
+      </div>
+      <div style="padding:16px 24px 0">
+        <h2 style="font-size:20px;font-weight:800;color:#191F28;letter-spacing:-.3px">로그인</h2>
+      </div>
+
+      <!-- 폼 영역 -->
+      <div style="padding:18px 24px 26px;display:flex;flex-direction:column;gap:14px">
+
+        <!-- 이메일 -->
+        <div>
+          <label style="display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:6px">이메일</label>
+          <input class="inp" type="email" placeholder="example@domain.com" />
+        </div>
+
+        <!-- 비밀번호 -->
+        <div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+            <label style="font-size:11px;font-weight:600;color:#374151">비밀번호</label>
+            <a href="#" style="font-size:11px;color:#0046FF;font-weight:500">비밀번호 찾기</a>
+          </div>
+          <div style="position:relative">
+            <input class="inp" type="password" placeholder="비밀번호를 입력하세요" style="padding-right:42px" />
+            <button style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:#9CA3AF">
+              <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- 자동 로그인 -->
+        <label style="display:flex;align-items:center;gap:7px;cursor:pointer">
+          <div style="width:16px;height:16px;border-radius:2px;background:#0046FF;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg style="width:9px;height:9px;color:#fff" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5"><polyline points="20 6 9 17 4 12"/></svg>
+          </div>
+          <span style="font-size:12px;color:#374151">자동 로그인</span>
+        </label>
+
+        <!-- 로그인 버튼 -->
+        <button style="width:100%;padding:13px;background:#0046FF;color:#fff;border:none;border-radius:4px;font-size:14px;font-weight:700;cursor:pointer">
+          로그인
+        </button>
+
+        <!-- 회원가입 -->
+        <p style="text-align:center;font-size:12px;color:#9CA3AF;margin-top:2px">
+          계정이 없으신가요?
+          <a href="signup.html" style="color:#0046FF;font-weight:600;margin-left:4px">회원가입</a>
+        </p>
+
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

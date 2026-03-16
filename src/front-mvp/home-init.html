@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOL Lite — 홈</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
+    body { background: #F4F6FA; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; height: 100vh; overflow: hidden; color: #191F28; }
+    .app-header { height: 54px; }
+    .app-body   { height: calc(100vh - 54px); }
+    .sidebar { width: 56px; flex-shrink: 0; background: #fff; border-right: 1px solid #EAECF0; display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 4px; }
+    .nav-icon { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .15s, color .15s; color: #9CA3AF; }
+    .nav-icon.active { background: #EEF2FF; color: #0046FF; }
+    .nav-icon:hover:not(.active) { background: #F3F4F6; color: #374151; }
+    .widget-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px; height: 100%; }
+    .card { background: #fff; border: 1px solid #EAECF0; border-radius: 16px; padding: 14px 16px; cursor: pointer; overflow: hidden; display: flex; flex-direction: column; gap: 0; transition: box-shadow .2s, border-color .2s, transform .15s; }
+    .card:hover { border-color: #BFD0FF; box-shadow: 0 4px 16px rgba(0,70,255,.08); transform: translateY(-1px); }
+    .card-label { font-size: 10px; font-weight: 600; color: #9CA3AF; letter-spacing: .04em; text-transform: uppercase; }
+    .up   { color: #E8393E; }
+    .down { color: #0075E8; }
+    .up-bg   { background: #FFF0F1; color: #E8393E; border: 1px solid #FFBFC1; }
+    .down-bg { background: #EFF6FF; color: #0075E8; border: 1px solid #BFDBFE; }
+    .logo-circle { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; flex-shrink: 0; }
+    .spark { fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+    .live-dot { display: inline-flex; width: 6px; height: 6px; border-radius: 50%; background: #12B76A; animation: pulse-dot 2s infinite; flex-shrink: 0; }
+    .pie { border-radius: 50%; background: conic-gradient(#0046FF 0% 34%, #00A878 34% 54%, #FF9500 54% 69%, #EF4444 69% 81%, #8B5CF6 81% 100%); }
+    .tab-chip { padding: 3px 9px; font-size: 10px; font-weight: 600; border-radius: 6px; cursor: pointer; border: none; background: transparent; color: #9CA3AF; transition: background .15s, color .15s; }
+    .tab-chip.active { background: #EEF2FF; color: #0046FF; }
+    .chat-panel { width: 368px; flex-shrink: 0; background: #fff; border-left: 1px solid #EAECF0; display: flex; flex-direction: column; }
+    .locked-overlay { position: absolute; inset: 0; background: rgba(255,255,255,.85); backdrop-filter: blur(4px); border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+    .add-widget { border: 2px dashed #E5E7EB; border-radius: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: all .2s; }
+    .add-widget:hover { border-color: #0046FF; background: #F5F7FF; }
+  </style>
+</head>
+<body class="flex flex-col">
+
+  <!-- ══════════════ HEADER ══════════════ -->
+  <header class="app-header flex items-center px-4 gap-3 bg-white border-b border-[#EAECF0] shrink-0 z-50">
+    <!-- Logo -->
+    <div class="flex items-center gap-2 mr-2 shrink-0">
+      <div class="w-7 h-7 rounded-[9px] bg-[#0046FF] flex items-center justify-center shadow-[0_0_14px_rgba(0,70,255,.35)]">
+        <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <span class="text-[15px] font-bold tracking-tight">SOL <span class="text-[#0046FF]">Lite</span></span>
+    </div>
+    <!-- Nav -->
+    <nav class="flex items-center gap-0.5 bg-[#F4F6FA] rounded-xl p-1">
+      <button class="px-4 py-1.5 text-[12px] font-semibold rounded-lg bg-white text-[#191F28] shadow-sm">홈</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg hover:text-[#374151] transition-colors">시세</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg hover:text-[#374151] transition-colors">주문</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg hover:text-[#374151] transition-colors">잔고</button>
+    </nav>
+    <div class="flex-1"></div>
+    <!-- Right: Login button (no user) -->
+    <div class="flex items-center gap-2">
+      <a href="login.html" class="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-[#0046FF] text-white text-[12px] font-semibold hover:bg-[#0035CC] transition-colors shadow-[0_2px_10px_rgba(0,70,255,.25)]">
+        로그인
+      </a>
+      <a href="signup.html" class="flex items-center gap-1.5 px-4 py-1.5 rounded-xl border border-[#0046FF] text-[#0046FF] text-[12px] font-semibold hover:bg-[#F5F7FF] transition-colors">
+        회원가입
+      </a>
+    </div>
+  </header>
+
+  <!-- ══════════════ BODY ══════════════ -->
+  <div class="app-body flex min-h-0">
+
+    <!-- WIDGET AREA -->
+    <div class="flex-1 min-w-0 p-3 flex flex-col gap-2.5 overflow-hidden">
+      <div class="flex items-center justify-between shrink-0 px-1">
+        <div class="flex items-center gap-2">
+          <span class="text-[13px] font-bold text-[#191F28]">SOL Lite 대시보드</span>
+          <div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F4F6FA] border border-[#EAECF0]">
+            <span class="live-dot" style="width:5px;height:5px"></span>
+            <span class="text-[10px] text-[#9CA3AF]">실시간 반영</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-1">
+          <div class="w-4 h-1.5 rounded-full bg-[#0046FF]"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-[#E5E7EB]"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-[#E5E7EB]"></div>
+        </div>
+      </div>
+
+      <div class="widget-grid flex-1 min-h-0">
+
+        <!-- 계좌 잔고 [1col] — LOCKED (로그인 필요) -->
+        <div class="card relative" style="grid-column:span 1">
+          <!-- Blurred content behind -->
+          <div class="flex items-center justify-between mb-2 opacity-20">
+            <span class="card-label">계좌 잔고</span>
+          </div>
+          <div class="flex-1 opacity-20">
+            <div class="text-[18px] font-bold">**,***,***</div>
+            <div class="text-[11px]">▲ **% </div>
+          </div>
+          <!-- Lock overlay -->
+          <div class="locked-overlay">
+            <div class="w-9 h-9 rounded-xl bg-[#F3F4F6] flex items-center justify-center">
+              <svg style="width:18px;height:18px;color:#9CA3AF" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div class="text-center">
+              <div class="text-[12px] font-bold text-[#374151]">로그인 필요</div>
+              <div class="text-[10px] text-[#9CA3AF] mt-0.5">계좌 정보를 보려면</div>
+            </div>
+            <a href="login.html" class="px-4 py-1.5 bg-[#0046FF] text-white text-[11px] font-semibold rounded-lg hover:bg-[#0035CC] transition-colors">
+              로그인하기
+            </a>
+          </div>
+        </div>
+
+        <!-- 주요 지수 [2col] -->
+        <div class="card" style="grid-column:span 2">
+          <div class="flex items-center justify-between mb-2">
+            <span class="card-label">주요 지수</span>
+            <div class="flex gap-1">
+              <button class="tab-chip active">국내</button>
+              <button class="tab-chip">미국</button>
+              <button class="tab-chip">아시아</button>
+            </div>
+          </div>
+          <div class="flex-1 grid grid-cols-5 gap-1 items-center">
+            <div class="text-center py-2 rounded-xl bg-[#FFF8F8] border border-[#FFECEC]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">KOSPI</div>
+              <div class="text-[13px] font-bold text-[#191F28]">2,685</div>
+              <div class="text-[10px] up font-medium">▲0.46%</div>
+            </div>
+            <div class="text-center py-2 rounded-xl bg-[#F0F8FF] border border-[#DBEAFE]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">KOSDAQ</div>
+              <div class="text-[13px] font-bold text-[#191F28]">842</div>
+              <div class="text-[10px] down font-medium">▼0.63%</div>
+            </div>
+            <div class="text-center py-2 rounded-xl bg-[#F0F8FF] border border-[#DBEAFE]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">NASDAQ</div>
+              <div class="text-[13px] font-bold text-[#191F28]">16,274</div>
+              <div class="text-[10px] down font-medium">▼0.92%</div>
+            </div>
+            <div class="text-center py-2 rounded-xl bg-[#F0F8FF] border border-[#DBEAFE]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">S&P 500</div>
+              <div class="text-[13px] font-bold text-[#191F28]">5,234</div>
+              <div class="text-[10px] down font-medium">▼0.55%</div>
+            </div>
+            <div class="text-center py-2 rounded-xl bg-[#FFF8F8] border border-[#FFECEC]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">DOW</div>
+              <div class="text-[13px] font-bold text-[#191F28]">38,921</div>
+              <div class="text-[10px] up font-medium">▲0.11%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 포트폴리오 [1col] — LOCKED -->
+        <div class="card relative" style="grid-column:span 1">
+          <div class="flex items-center justify-between mb-1 opacity-20">
+            <span class="card-label">포트폴리오</span>
+          </div>
+          <div class="opacity-20 flex-1">
+            <div class="pie" style="width:50px;height:50px;margin:auto"></div>
+          </div>
+          <div class="locked-overlay">
+            <div class="w-9 h-9 rounded-xl bg-[#F3F4F6] flex items-center justify-center">
+              <svg style="width:18px;height:18px;color:#9CA3AF" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div class="text-center">
+              <div class="text-[12px] font-bold text-[#374151]">로그인 필요</div>
+              <div class="text-[10px] text-[#9CA3AF] mt-0.5">계좌 정보를 보려면</div>
+            </div>
+            <a href="login.html" class="px-4 py-1.5 bg-[#0046FF] text-white text-[11px] font-semibold rounded-lg hover:bg-[#0035CC] transition-colors">
+              로그인하기
+            </a>
+          </div>
+        </div>
+
+        <!-- ROW 2 -->
+
+        <!-- 삼성전자 주가 [1col] -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="logo-circle" style="background:#EEF2FF;color:#0046FF">삼성</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-[12px] font-bold leading-none">삼성전자</div>
+              <div class="text-[9px] text-[#9CA3AF] mt-0.5">005930 · KOSPI</div>
+            </div>
+            <span class="up-bg text-[9px] px-1.5 py-0.5 rounded-md font-semibold">+1.62%</span>
+          </div>
+          <div class="my-1">
+            <div class="text-[18px] font-bold leading-tight up">75,400</div>
+            <div class="text-[10px] up">▲ 1,200원 (+1.62%)</div>
+          </div>
+          <div class="flex justify-between text-[9px] py-1.5 border-t border-[#F3F4F6] mb-1">
+            <div class="text-center"><div class="text-[#9CA3AF]">시가</div><div class="font-medium text-[#374151]">74,200</div></div>
+            <div class="text-center"><div class="text-[#9CA3AF]">고가</div><div class="font-medium up">76,100</div></div>
+            <div class="text-center"><div class="text-[#9CA3AF]">저가</div><div class="font-medium down">73,900</div></div>
+          </div>
+          <svg class="w-full" height="22" viewBox="0 0 120 22" preserveAspectRatio="none">
+            <path class="spark" d="M0,18 L12,16 L24,14 L36,16 L48,10 L60,12 L72,7 L84,5 L96,3 L108,1.5 L120,1" stroke="#E8393E"/>
+          </svg>
+        </div>
+
+        <!-- 실시간 순위 [2col] -->
+        <div class="card" style="grid-column:span 2">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="card-label">실시간 순위</span>
+            <div class="flex gap-0.5">
+              <button class="tab-chip active">거래대금</button>
+              <button class="tab-chip">급상승</button>
+              <button class="tab-chip">거래량</button>
+              <button class="tab-chip">🇺🇸 미국</button>
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col justify-between gap-0.5">
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] cursor-pointer">
+              <span class="text-[11px] font-bold text-[#0046FF] w-4 text-center">1</span>
+              <div class="logo-circle" style="background:#EEF2FF;color:#0046FF;width:28px;height:28px;font-size:9px">삼성</div>
+              <div class="flex-1 min-w-0"><div class="text-[11px] font-semibold">삼성전자</div><div class="text-[9px] text-[#9CA3AF]">거래대금 5.2조</div></div>
+              <div class="text-right"><div class="text-[11px] font-bold text-[#191F28]">75,400</div><div class="text-[9px] up">▲1.62%</div></div>
+            </div>
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] cursor-pointer">
+              <span class="text-[11px] text-[#9CA3AF] w-4 text-center">2</span>
+              <div class="logo-circle" style="background:#FFF3E0;color:#FF9500;width:28px;height:28px;font-size:9px">SK</div>
+              <div class="flex-1 min-w-0"><div class="text-[11px] font-semibold">SK하이닉스</div><div class="text-[9px] text-[#9CA3AF]">거래대금 3.8조</div></div>
+              <div class="text-right"><div class="text-[11px] font-bold text-[#191F28]">195,500</div><div class="text-[9px] up">▲2.35%</div></div>
+            </div>
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] cursor-pointer">
+              <span class="text-[11px] text-[#9CA3AF] w-4 text-center">3</span>
+              <div class="logo-circle" style="background:#ECFDF5;color:#059669;width:28px;height:28px;font-size:10px;font-weight:900">N</div>
+              <div class="flex-1 min-w-0"><div class="text-[11px] font-semibold">NAVER</div><div class="text-[9px] text-[#9CA3AF]">거래대금 1.4조</div></div>
+              <div class="text-right"><div class="text-[11px] font-bold text-[#191F28]">210,000</div><div class="text-[9px] down">▼0.94%</div></div>
+            </div>
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] cursor-pointer">
+              <span class="text-[11px] text-[#9CA3AF] w-4 text-center">4</span>
+              <div class="logo-circle" style="background:#FEFCE8;color:#CA8A04;width:28px;height:28px;font-size:10px;font-weight:900">K</div>
+              <div class="flex-1 min-w-0"><div class="text-[11px] font-semibold">카카오</div><div class="text-[9px] text-[#9CA3AF]">거래대금 0.9조</div></div>
+              <div class="text-right"><div class="text-[11px] font-bold text-[#191F28]">44,150</div><div class="text-[9px] down">▼1.23%</div></div>
+            </div>
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] cursor-pointer">
+              <span class="text-[11px] text-[#9CA3AF] w-4 text-center">5</span>
+              <div class="logo-circle" style="background:#F0FDF4;color:#16A34A;width:28px;height:28px;font-size:9px">LG에</div>
+              <div class="flex-1 min-w-0"><div class="text-[11px] font-semibold">LG에너지솔루션</div><div class="text-[9px] text-[#9CA3AF]">거래대금 0.7조</div></div>
+              <div class="text-right"><div class="text-[11px] font-bold text-[#191F28]">382,000</div><div class="text-[9px] up">▲0.79%</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 관심종목 [1col] — LOCKED -->
+        <div class="card relative" style="grid-column:span 1">
+          <div class="flex items-center justify-between mb-2 opacity-20">
+            <span class="card-label">관심 종목</span>
+          </div>
+          <div class="opacity-20 flex-1 space-y-1">
+            <div class="h-6 bg-[#F3F4F6] rounded-lg"></div>
+            <div class="h-6 bg-[#F3F4F6] rounded-lg"></div>
+            <div class="h-6 bg-[#F3F4F6] rounded-lg"></div>
+          </div>
+          <div class="locked-overlay">
+            <div class="w-9 h-9 rounded-xl bg-[#F3F4F6] flex items-center justify-center">
+              <svg style="width:18px;height:18px;color:#9CA3AF" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+            </div>
+            <div class="text-center">
+              <div class="text-[11px] font-bold text-[#374151]">로그인 후 이용</div>
+            </div>
+            <a href="login.html" class="px-4 py-1.5 bg-[#0046FF] text-white text-[11px] font-semibold rounded-lg hover:bg-[#0035CC] transition-colors">
+              로그인
+            </a>
+          </div>
+        </div>
+
+        <!-- ROW 3 -->
+
+        <!-- 오늘의 시황 [1col] -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center justify-between mb-2">
+            <span class="card-label">오늘의 시황</span>
+            <span class="text-[9px] text-[#9CA3AF]">14:32</span>
+          </div>
+          <div class="flex-1 flex flex-col justify-between gap-1.5">
+            <div class="flex gap-2 p-2 rounded-xl bg-[#F5F7FF] border border-[#E0E7FF]">
+              <div class="w-1 rounded-full bg-[#0046FF] self-stretch shrink-0"></div>
+              <p class="text-[10px] text-[#374151] leading-relaxed">美 CPI 하회 … 나스닥 1% 상승, 반도체 강세</p>
+            </div>
+            <div class="flex gap-2 items-start px-1">
+              <div style="width:4px;height:4px;border-radius:50%;background:#D1D5DB;margin-top:4px;flex-shrink:0"></div>
+              <p class="text-[10px] text-[#9CA3AF] leading-relaxed">外人 순매수 4,200억 · 반도체↑</p>
+            </div>
+            <div class="flex gap-2 items-start px-1">
+              <div style="width:4px;height:4px;border-radius:50%;background:#D1D5DB;margin-top:4px;flex-shrink:0"></div>
+              <p class="text-[10px] text-[#9CA3AF] leading-relaxed">원달러 1,378원 소폭 하락 마감</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 환율 [1col] -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center justify-between mb-1">
+            <span class="card-label">환율</span>
+            <span class="live-dot"></span>
+          </div>
+          <div class="flex-1 flex flex-col justify-between">
+            <div class="flex items-center gap-2 py-1.5 px-2 rounded-xl bg-[#F8F9FB]">
+              <span style="font-size:16px">🇺🇸</span>
+              <div class="flex-1">
+                <div class="text-[9px] text-[#9CA3AF]">USD / KRW</div>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-[15px] font-bold text-[#191F28]">1,378.50</span>
+                  <span class="text-[9px] down">▼2.30</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 py-1.5 px-2 rounded-xl bg-[#F8F9FB]">
+              <span style="font-size:16px">🇯🇵</span>
+              <div class="flex-1">
+                <div class="text-[9px] text-[#9CA3AF]">JPY / KRW</div>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-[15px] font-bold text-[#191F28]">9.24</span>
+                  <span class="text-[9px] up">▲0.05</span>
+                </div>
+              </div>
+            </div>
+            <a href="login.html" class="w-full py-1.5 rounded-xl bg-[#EEF2FF] text-[#0046FF] text-[10px] font-bold hover:bg-[#E0E7FF] transition-colors text-center block">
+              환전하기 (로그인 필요)
+            </a>
+          </div>
+        </div>
+
+        <!-- SK하이닉스 [1col] -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="logo-circle" style="background:#FFF3E0;color:#FF9500">SK</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-[12px] font-bold leading-none">SK하이닉스</div>
+              <div class="text-[9px] text-[#9CA3AF] mt-0.5">000660 · KOSPI</div>
+            </div>
+            <span class="up-bg text-[9px] px-1.5 py-0.5 rounded-md font-semibold">+2.35%</span>
+          </div>
+          <div class="my-1">
+            <div class="text-[18px] font-bold leading-tight up">195,500</div>
+            <div class="text-[10px] up">▲ 4,500원 (+2.35%)</div>
+          </div>
+          <div class="flex justify-between text-[9px] py-1.5 border-t border-[#F3F4F6] mb-1">
+            <div class="text-center"><div class="text-[#9CA3AF]">시가</div><div class="font-medium">191,500</div></div>
+            <div class="text-center"><div class="text-[#9CA3AF]">고가</div><div class="font-medium up">197,000</div></div>
+            <div class="text-center"><div class="text-[#9CA3AF]">저가</div><div class="font-medium down">190,500</div></div>
+          </div>
+          <svg class="w-full" height="22" viewBox="0 0 120 22" preserveAspectRatio="none">
+            <path class="spark" d="M0,20 L12,18 L24,20 L36,14 L48,16 L60,10 L72,12 L84,7 L96,5 L108,3 L120,1" stroke="#E8393E"/>
+          </svg>
+        </div>
+
+        <!-- + 위젯 추가 -->
+        <div style="grid-column:span 1;border:2px dashed #E5E7EB;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:all .2s" class="hover:border-[#0046FF] hover:bg-[#F5F7FF]">
+          <div style="width:36px;height:36px;border-radius:50%;border:2px dashed #D1D5DB;display:flex;align-items:center;justify-content:center">
+            <svg style="width:16px;height:16px;color:#9CA3AF" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+          </div>
+          <span style="font-size:11px;color:#9CA3AF">위젯 추가</span>
+        </div>
+
+      </div>
+    </div>
+    <!-- /widget area -->
+
+    <!-- CHAT PANEL — Login prompt -->
+    <div class="chat-panel">
+      <!-- Chat header -->
+      <div class="shrink-0 px-4 py-3 border-b border-[#EAECF0]">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-[12px] bg-[#0046FF] flex items-center justify-center shadow-[0_0_14px_rgba(0,70,255,.3)]">
+            <svg class="w-[18px] h-[18px] text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="text-[13px] font-bold text-[#191F28] leading-none">SOL AI 어시스턴트</div>
+            <div class="flex items-center gap-1 mt-0.5">
+              <span class="live-dot" style="width:5px;height:5px;background:#12B76A"></span>
+              <span class="text-[10px] text-[#12B76A] font-medium">온라인 · 즉시 응답</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chat body — login prompt -->
+      <div class="flex-1 flex flex-col items-center justify-center p-6 gap-6" style="background:#F8F9FB">
+        <!-- AI icon -->
+        <div class="w-16 h-16 rounded-2xl bg-[#0046FF] flex items-center justify-center shadow-[0_0_24px_rgba(0,70,255,.3)]">
+          <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+        </div>
+        <!-- Text -->
+        <div class="text-center">
+          <div class="text-[16px] font-bold text-[#191F28] mb-2">SOL AI와 함께<br/>스마트하게 투자하세요</div>
+          <p class="text-[12px] text-[#9CA3AF] leading-relaxed">자연어로 주가 조회, 매수·매도,<br/>포트폴리오 분석까지 한번에</p>
+        </div>
+        <!-- Features -->
+        <div class="w-full space-y-2">
+          <div class="flex items-center gap-2.5 p-3 bg-white rounded-xl border border-[#EAECF0]">
+            <div class="w-7 h-7 rounded-lg bg-[#EEF2FF] flex items-center justify-center flex-shrink-0">
+              <svg style="width:14px;height:14px;color:#0046FF" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+            </div>
+            <span class="text-[11px] text-[#374151]">"삼성전자 주가 알려줘"</span>
+          </div>
+          <div class="flex items-center gap-2.5 p-3 bg-white rounded-xl border border-[#EAECF0]">
+            <div class="w-7 h-7 rounded-lg bg-[#FFF0F1] flex items-center justify-center flex-shrink-0">
+              <svg style="width:14px;height:14px;color:#E8393E" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+            </div>
+            <span class="text-[11px] text-[#374151]">"NAVER 100주 매수해줘"</span>
+          </div>
+          <div class="flex items-center gap-2.5 p-3 bg-white rounded-xl border border-[#EAECF0]">
+            <div class="w-7 h-7 rounded-lg bg-[#F0FDF4] flex items-center justify-center flex-shrink-0">
+              <svg style="width:14px;height:14px;color:#12B76A" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+            </div>
+            <span class="text-[11px] text-[#374151]">"내 포트폴리오 분석해줘"</span>
+          </div>
+        </div>
+        <!-- Login button -->
+        <a href="login.html" class="w-full py-3 bg-[#0046FF] text-white rounded-xl text-[13px] font-bold text-center hover:bg-[#0035CC] transition-colors shadow-[0_4px_14px_rgba(0,70,255,.25)]">
+          로그인하고 시작하기 →
+        </a>
+      </div>
+
+      <!-- Disabled input -->
+      <div class="shrink-0 p-3.5 border-t border-[#EAECF0] bg-white">
+        <div class="flex items-center gap-2 bg-[#F4F6FA] rounded-2xl border border-[#E5E7EB] px-3.5 py-2.5 opacity-60">
+          <span class="flex-1 text-[12px] text-[#9CA3AF]">로그인 후 이용하실 수 있습니다</span>
+          <div class="w-7 h-7 rounded-xl bg-[#E5E7EB] flex items-center justify-center">
+            <svg class="w-3.5 h-3.5 text-[#9CA3AF]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

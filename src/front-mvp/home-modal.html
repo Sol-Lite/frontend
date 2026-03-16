@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOL Lite — 종목 상세</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
+    body { background: #F4F6FA; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; height: 100vh; overflow: hidden; color: #191F28; }
+    .app-header { height: 54px; }
+    .app-body   { height: calc(100vh - 54px); }
+    .card { background: #fff; border: 1px solid #EAECF0; border-radius: 16px; padding: 14px 16px; overflow: hidden; display: flex; flex-direction: column; }
+    .card-label { font-size: 10px; font-weight: 600; color: #9CA3AF; letter-spacing: .04em; text-transform: uppercase; }
+    .widget-grid { display: grid; grid-template-columns: repeat(4, 1fr); grid-template-rows: repeat(3, 1fr); gap: 10px; height: 100%; }
+    .up   { color: #E8393E; }
+    .down { color: #0075E8; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+    .live-dot { display: inline-flex; width: 6px; height: 6px; border-radius: 50%; background: #12B76A; animation: pulse-dot 2s infinite; flex-shrink: 0; }
+    .chat-panel { width: 368px; flex-shrink: 0; background: #fff; border-left: 1px solid #EAECF0; display: flex; flex-direction: column; }
+    .ma-toggle { display:inline-flex; align-items:center; gap:3px; padding:2px 7px; border-radius:5px; font-size:9px; font-weight:600; cursor:pointer; border:1.5px solid #E5E7EB; background:#fff; color:#6B7280; font-family:inherit; }
+    .ma-toggle.active { border-color: var(--ma-color); background: var(--ma-bg); color: var(--ma-color); }
+    .info-tab { padding:7px 12px; font-size:11px; font-weight:600; color:#9CA3AF; border:none; background:none; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; }
+    .info-tab.active { color:#0046FF; border-bottom-color:#0046FF; font-weight:700; }
+    .order-type { flex:1; padding:4px; border-radius:7px; border:1.5px solid #E5E7EB; background:#fff; font-size:10px; color:#6B7280; cursor:pointer; font-family:inherit; }
+    .order-type.active { border-color:#0046FF; background:#EEF2FF; color:#0046FF; font-weight:700; }
+    .cond-btn { flex:1; padding:3px; border-radius:6px; border:1.5px solid #E5E7EB; background:#fff; font-size:9px; color:#6B7280; cursor:pointer; font-family:inherit; }
+    .cond-btn.active { border-color:#374151; background:#F3F4F6; color:#191F28; font-weight:700; }
+    .pct-btn { flex:1; padding:4px 0; border-radius:6px; border:1.5px solid #E5E7EB; background:#F8F9FB; font-size:9px; font-weight:600; color:#6B7280; cursor:pointer; font-family:inherit; }
+    .pct-btn.max { border-color:#E8393E; background:#FFF0F1; color:#E8393E; }
+  </style>
+</head>
+<body class="flex flex-col">
+
+  <!-- HEADER -->
+  <header class="app-header flex items-center px-4 gap-3 bg-white border-b border-[#EAECF0] shrink-0 z-50">
+    <div class="flex items-center gap-2 mr-2 shrink-0">
+      <div class="w-7 h-7 rounded-[9px] bg-[#0046FF] flex items-center justify-center shadow-[0_0_14px_rgba(0,70,255,.35)]">
+        <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <span class="text-[15px] font-bold tracking-tight">SOL <span class="text-[#0046FF]">Lite</span></span>
+    </div>
+    <nav class="flex items-center gap-0.5 bg-[#F4F6FA] rounded-xl p-1">
+      <button class="px-4 py-1.5 text-[12px] font-semibold rounded-lg bg-white text-[#191F28] shadow-sm">홈</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg">시세</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg">주문</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg">잔고</button>
+    </nav>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-2">
+      <button class="relative w-8 h-8 rounded-xl border border-[#EAECF0] flex items-center justify-center text-[#9CA3AF]">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        <span class="absolute -top-1 -right-1 w-[14px] h-[14px] rounded-full bg-[#E8393E] text-white text-[8px] font-bold flex items-center justify-center">3</span>
+      </button>
+      <div class="flex items-center gap-1.5 pl-2 border-l border-[#EAECF0] ml-1">
+        <div class="w-7 h-7 rounded-full bg-[#0046FF] flex items-center justify-center text-white text-[11px] font-bold">김</div>
+        <div>
+          <div class="text-[11px] font-semibold text-[#191F28] leading-none">김SOL</div>
+          <div class="text-[9px] text-[#9CA3AF] mt-0.5">주문가능 7,478만원</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <div class="app-body flex min-h-0">
+
+    <!-- WIDGET AREA -->
+    <div class="flex-1 min-w-0 relative overflow-hidden">
+
+      <!-- 배경 위젯 (흐리게) -->
+      <div class="p-3 h-full" style="opacity:.3;pointer-events:none">
+        <div class="widget-grid">
+          <div class="card" style="grid-column:span 1"><span class="card-label">계좌 잔고</span></div>
+          <div class="card" style="grid-column:span 2"><span class="card-label">주요 지수</span></div>
+          <div class="card" style="grid-column:span 1"><span class="card-label">포트폴리오</span></div>
+          <div class="card" style="grid-column:span 1"><span class="card-label">삼성전자</span></div>
+          <div class="card" style="grid-column:span 2"><span class="card-label">실시간 순위</span></div>
+          <div class="card" style="grid-column:span 1"><span class="card-label">관심 종목</span></div>
+          <div class="card" style="grid-column:span 1"><span class="card-label">오늘의 시황</span></div>
+          <div class="card" style="grid-column:span 1"><span class="card-label">환율</span></div>
+          <div class="card" style="grid-column:span 1"><span class="card-label">SK하이닉스</span></div>
+          <div style="grid-column:span 1;border:2px dashed #E5E7EB;border-radius:16px"></div>
+        </div>
+      </div>
+      <!-- 딤 오버레이 -->
+      <div style="position:absolute;inset:0;background:rgba(15,20,40,.32);backdrop-filter:blur(1px);z-index:9"></div>
+
+      <!-- ══ BOTTOM SHEET ══ -->
+      <div style="position:absolute;bottom:0;left:0;right:0;height:calc(100% - 20px);background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -12px 60px rgba(0,0,0,.18);display:flex;flex-direction:column;z-index:10">
+
+        <!-- 드래그 핸들 -->
+        <div style="flex-shrink:0;display:flex;justify-content:center;padding:10px 0 6px">
+          <div style="width:40px;height:4px;border-radius:2px;background:#E5E7EB"></div>
+        </div>
+
+        <!-- ── 시트 헤더: 종목명 + 가격 한 줄 ── -->
+        <div style="padding:0 20px 12px;border-bottom:1px solid #EAECF0;flex-shrink:0">
+          <div style="display:flex;align-items:center;gap:12px">
+            <!-- 로고 -->
+            <div style="width:42px;height:42px;border-radius:50%;background:#EEF2FF;border:2px solid #C7D2FE;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <span style="font-size:10px;font-weight:900;color:#0046FF">삼성</span>
+            </div>
+            <!-- 이름 + 코드 -->
+            <div style="flex:1;min-width:0">
+              <div style="display:flex;align-items:center;gap:6px;margin-bottom:1px">
+                <span style="font-size:17px;font-weight:800;color:#191F28">삼성전자</span>
+                <span style="font-size:9px;color:#9CA3AF;background:#F3F4F6;padding:1px 6px;border-radius:10px">005930</span>
+                <span style="font-size:9px;color:#9CA3AF;background:#F3F4F6;padding:1px 6px;border-radius:10px">KOSPI</span>
+                <span style="display:flex;align-items:center;gap:3px;margin-left:2px">
+                  <span class="live-dot" style="width:5px;height:5px"></span>
+                  <span style="font-size:9px;color:#12B76A">실시간</span>
+                </span>
+              </div>
+              <!-- 52주 인라인 바 -->
+              <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
+                <span style="font-size:9px;color:#0075E8;font-weight:600;white-space:nowrap">54,700</span>
+                <div style="flex:1;position:relative;height:4px;background:#E5E7EB;border-radius:2px;max-width:160px">
+                  <div style="position:absolute;left:0;top:0;height:100%;width:59%;background:linear-gradient(90deg,#93C5FD,#FCA5A5);border-radius:2px"></div>
+                  <div style="position:absolute;top:50%;left:59%;transform:translate(-50%,-50%);width:9px;height:9px;border-radius:50%;background:#E8393E;border:2px solid #fff;box-shadow:0 0 0 1px #E8393E"></div>
+                </div>
+                <span style="font-size:9px;color:#E8393E;font-weight:600;white-space:nowrap">89,800</span>
+                <span style="font-size:9px;color:#9CA3AF">52주범위</span>
+              </div>
+            </div>
+            <!-- 가격 -->
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:26px;font-weight:900;color:#E8393E;letter-spacing:-.5px;line-height:1">75,400</div>
+              <div style="display:flex;align-items:center;gap:5px;justify-content:flex-end;margin-top:3px">
+                <span style="font-size:12px;font-weight:700;color:#E8393E">▲ 1,200원</span>
+                <span style="font-size:10px;font-weight:700;color:#E8393E;background:#FFF0F1;padding:1px 6px;border-radius:10px;border:1px solid #FFBFC1">+1.62%</span>
+              </div>
+            </div>
+            <!-- 버튼들 -->
+            <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <button style="display:flex;align-items:center;gap:3px;padding:5px 10px;border-radius:9px;border:1.5px solid #EAECF0;background:#fff;cursor:pointer;font-size:10px;color:#6B7280;font-family:inherit">
+                <svg style="width:11px;height:11px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+                관심
+              </button>
+              <button style="width:28px;height:28px;border-radius:50%;background:#F3F4F6;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:16px;color:#6B7280;line-height:1">×</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 시트 바디 ── -->
+        <div style="display:flex;flex:1;overflow:hidden;min-height:0">
+
+          <!-- ◀ LEFT: 차트 + 정보 탭 -->
+          <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid #EAECF0">
+
+            <!-- 기간 + MA 토글 + 캔들/라인 -->
+            <div style="padding:8px 16px;border-bottom:1px solid #EAECF0;display:flex;align-items:center;gap:6px;flex-shrink:0">
+              <div style="display:flex;background:#F4F6FA;border-radius:9px;padding:2px">
+                <button style="padding:3px 10px;border-radius:7px;background:#fff;font-size:10px;font-weight:700;color:#191F28;border:none;cursor:pointer;font-family:inherit;box-shadow:0 1px 3px rgba(0,0,0,.08)">1일</button>
+                <button style="padding:3px 10px;font-size:10px;font-weight:600;color:#9CA3AF;border:none;cursor:pointer;background:transparent;font-family:inherit">1주</button>
+                <button style="padding:3px 10px;font-size:10px;font-weight:600;color:#9CA3AF;border:none;cursor:pointer;background:transparent;font-family:inherit">1개월</button>
+                <button style="padding:3px 10px;font-size:10px;font-weight:600;color:#9CA3AF;border:none;cursor:pointer;background:transparent;font-family:inherit">3개월</button>
+                <button style="padding:3px 10px;font-size:10px;font-weight:600;color:#9CA3AF;border:none;cursor:pointer;background:transparent;font-family:inherit">1년</button>
+              </div>
+              <div style="flex:1"></div>
+              <button class="ma-toggle active" style="--ma-color:#E8393E;--ma-bg:#FFF0F1;border-color:#E8393E;background:#FFF0F1;color:#E8393E"><span style="width:5px;height:5px;border-radius:50%;background:#E8393E;display:inline-block"></span>MA5</button>
+              <button class="ma-toggle active" style="--ma-color:#FF9500;--ma-bg:#FFF8EE;border-color:#FF9500;background:#FFF8EE;color:#FF9500"><span style="width:5px;height:5px;border-radius:50%;background:#FF9500;display:inline-block"></span>MA20</button>
+              <button class="ma-toggle active" style="--ma-color:#0075E8;--ma-bg:#EFF6FF;border-color:#0075E8;background:#EFF6FF;color:#0075E8"><span style="width:5px;height:5px;border-radius:50%;background:#0075E8;display:inline-block"></span>MA60</button>
+              <div style="display:flex;gap:3px;margin-left:4px">
+                <button style="padding:2px 8px;border-radius:6px;font-size:9px;color:#9CA3AF;border:1.5px solid #E5E7EB;background:#fff;cursor:pointer;font-family:inherit">캔들</button>
+                <button style="padding:2px 8px;border-radius:6px;font-size:9px;color:#0046FF;font-weight:700;border:1.5px solid #C7D2FE;background:#EEF2FF;cursor:pointer;font-family:inherit">라인</button>
+              </div>
+            </div>
+
+            <!-- 차트 SVG -->
+            <div style="flex:1;min-height:0;position:relative;padding:10px 16px 4px">
+              <!-- y축 레이블 -->
+              <div style="position:absolute;left:16px;top:10px;bottom:30px;display:flex;flex-direction:column;justify-content:space-between;pointer-events:none;z-index:2">
+                <span style="font-size:9px;color:#C9CDD4">77,000</span>
+                <span style="font-size:9px;color:#C9CDD4">76,000</span>
+                <span style="font-size:9px;color:#C9CDD4">75,000</span>
+                <span style="font-size:9px;color:#C9CDD4">74,000</span>
+                <span style="font-size:9px;color:#C9CDD4">73,000</span>
+              </div>
+              <div style="position:absolute;left:48px;right:16px;top:10px;bottom:30px">
+                <svg width="100%" height="100%" viewBox="0 0 500 180" preserveAspectRatio="none">
+                  <defs>
+                    <linearGradient id="cg2" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stop-color="#E8393E" stop-opacity=".16"/>
+                      <stop offset="100%" stop-color="#E8393E" stop-opacity="0"/>
+                    </linearGradient>
+                  </defs>
+                  <!-- 그리드 -->
+                  <line x1="0" y1="28" x2="500" y2="28" stroke="#F0F2F5" stroke-width="1"/>
+                  <line x1="0" y1="56" x2="500" y2="56" stroke="#F0F2F5" stroke-width="1"/>
+                  <line x1="0" y1="84" x2="500" y2="84" stroke="#F0F2F5" stroke-width="1"/>
+                  <line x1="0" y1="112" x2="500" y2="112" stroke="#F0F2F5" stroke-width="1"/>
+                  <!-- 그라데이션 채우기 -->
+                  <path d="M0,130 C40,120 70,108 110,96 S170,72 210,62 S270,48 310,36 S370,20 410,13 S460,6 500,3 L500,145 L0,145Z" fill="url(#cg2)"/>
+                  <!-- 가격선 -->
+                  <path d="M0,130 C40,120 70,108 110,96 S170,72 210,62 S270,48 310,36 S370,20 410,13 S460,6 500,3" stroke="#E8393E" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                  <!-- MA5 -->
+                  <path d="M0,128 C40,118 70,106 110,94 S170,70 210,60 S270,46 310,34 S370,18 410,11 S460,4 500,1" fill="none" stroke="#E8393E" stroke-width="1" stroke-dasharray="3,2" opacity=".6"/>
+                  <!-- MA20 -->
+                  <path d="M0,134 C40,126 70,118 110,108 S170,88 210,78 S270,64 310,52 S370,38 410,30 S460,22 500,18" fill="none" stroke="#FF9500" stroke-width="1.2" opacity=".85"/>
+                  <!-- MA60 -->
+                  <path d="M0,140 C40,136 70,130 110,122 S170,108 210,100 S270,88 310,76 S370,62 410,54 S460,44 500,40" fill="none" stroke="#0075E8" stroke-width="1" opacity=".75"/>
+                  <!-- 현재가 세로선 + 말풍선 -->
+                  <line x1="500" y1="0" x2="500" y2="145" stroke="#E8393E" stroke-width="1" stroke-dasharray="4,3" opacity=".4"/>
+                  <circle cx="500" cy="3" r="4" fill="#E8393E"/>
+                  <circle cx="500" cy="3" r="8" fill="#E8393E" opacity=".18"/>
+                  <!-- 볼륨 바 (하단 25%) -->
+                  <rect x="2"   y="158" width="14" height="14" rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="22"  y="153" width="14" height="19" rx="2" fill="#E8393E" opacity=".5"/>
+                  <rect x="42"  y="161" width="14" height="11" rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="62"  y="149" width="14" height="23" rx="2" fill="#E8393E" opacity=".5"/>
+                  <rect x="82"  y="164" width="14" height="8"  rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="102" y="157" width="14" height="15" rx="2" fill="#0075E8" opacity=".5"/>
+                  <rect x="122" y="155" width="14" height="17" rx="2" fill="#E8393E" opacity=".5"/>
+                  <rect x="142" y="166" width="14" height="6"  rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="162" y="151" width="14" height="21" rx="2" fill="#E8393E" opacity=".5"/>
+                  <rect x="182" y="159" width="14" height="13" rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="202" y="155" width="14" height="17" rx="2" fill="#0075E8" opacity=".5"/>
+                  <rect x="222" y="153" width="14" height="19" rx="2" fill="#E8393E" opacity=".5"/>
+                  <rect x="242" y="162" width="14" height="10" rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="262" y="157" width="14" height="15" rx="2" fill="#E8393E" opacity=".5"/>
+                  <rect x="282" y="155" width="14" height="17" rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="302" y="160" width="14" height="12" rx="2" fill="#0075E8" opacity=".5"/>
+                  <rect x="322" y="149" width="14" height="23" rx="2" fill="#E8393E" opacity=".55"/>
+                  <rect x="342" y="157" width="14" height="15" rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="362" y="153" width="14" height="19" rx="2" fill="#E8393E" opacity=".55"/>
+                  <rect x="382" y="162" width="14" height="10" rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="402" y="155" width="14" height="17" rx="2" fill="#E8393E" opacity=".55"/>
+                  <rect x="422" y="153" width="14" height="19" rx="2" fill="#D1D5DB" opacity=".85"/>
+                  <rect x="442" y="160" width="14" height="12" rx="2" fill="#0075E8" opacity=".55"/>
+                  <rect x="462" y="148" width="14" height="24" rx="2" fill="#E8393E" opacity=".6"/>
+                  <rect x="482" y="154" width="14" height="18" rx="2" fill="#E8393E" opacity=".65"/>
+                </svg>
+              </div>
+              <!-- x축 시간 레이블 -->
+              <div style="position:absolute;left:48px;right:16px;bottom:6px;display:flex;justify-content:space-between">
+                <span style="font-size:9px;color:#C9CDD4">09:00</span>
+                <span style="font-size:9px;color:#C9CDD4">10:30</span>
+                <span style="font-size:9px;color:#C9CDD4">12:00</span>
+                <span style="font-size:9px;color:#C9CDD4">13:30</span>
+                <span style="font-size:9px;color:#E8393E;font-weight:600">14:32</span>
+              </div>
+            </div>
+
+            <!-- 정보 탭 + 컨텐츠 -->
+            <div style="border-top:1px solid #EAECF0;flex-shrink:0">
+              <div style="display:flex;border-bottom:1px solid #EAECF0;padding:0 16px">
+                <button class="info-tab active">종목정보</button>
+                <button class="info-tab">뉴스</button>
+                <button class="info-tab">공시</button>
+                <button class="info-tab">AI 분석</button>
+              </div>
+              <!-- 종목정보: OHLCV 컴팩트 -->
+              <div style="padding:8px 16px 10px">
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">
+                  <div style="background:#F8F9FB;border-radius:8px;padding:6px 8px"><div style="font-size:8px;color:#9CA3AF;margin-bottom:1px">시가</div><div style="font-size:12px;font-weight:700;color:#191F28">74,200</div></div>
+                  <div style="background:#FFF5F5;border-radius:8px;padding:6px 8px"><div style="font-size:8px;color:#9CA3AF;margin-bottom:1px">고가</div><div style="font-size:12px;font-weight:700;color:#E8393E">76,100</div></div>
+                  <div style="background:#EFF6FF;border-radius:8px;padding:6px 8px"><div style="font-size:8px;color:#9CA3AF;margin-bottom:1px">저가</div><div style="font-size:12px;font-weight:700;color:#0075E8">73,900</div></div>
+                  <div style="background:#F8F9FB;border-radius:8px;padding:6px 8px"><div style="font-size:8px;color:#9CA3AF;margin-bottom:1px">거래량</div><div style="font-size:12px;font-weight:700;color:#191F28">18.2M</div></div>
+                  <div style="background:#F8F9FB;border-radius:8px;padding:6px 8px"><div style="font-size:8px;color:#9CA3AF;margin-bottom:1px">시가총액</div><div style="font-size:12px;font-weight:700;color:#191F28">450.2조</div></div>
+                  <div style="background:#F8F9FB;border-radius:8px;padding:6px 8px"><div style="font-size:8px;color:#9CA3AF;margin-bottom:1px">PER</div><div style="font-size:12px;font-weight:700;color:#191F28">13.2x</div></div>
+                  <div style="background:#F8F9FB;border-radius:8px;padding:6px 8px"><div style="font-size:8px;color:#9CA3AF;margin-bottom:1px">PBR</div><div style="font-size:12px;font-weight:700;color:#191F28">1.08x</div></div>
+                  <div style="background:#F8F9FB;border-radius:8px;padding:6px 8px"><div style="font-size:8px;color:#9CA3AF;margin-bottom:1px">거래대금</div><div style="font-size:12px;font-weight:700;color:#191F28">1.37조</div></div>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- /LEFT -->
+
+          <!-- ▶ RIGHT: 호가창 + 주문 -->
+          <div style="width:300px;flex-shrink:0;display:flex;flex-direction:column;overflow:hidden">
+
+            <!-- 매수/매도 전환 -->
+            <div style="padding:10px 14px;border-bottom:1px solid #EAECF0;flex-shrink:0">
+              <div style="display:flex;background:#F4F6FA;border-radius:10px;padding:3px;gap:2px">
+                <button id="btn-buy" onclick="setMode('buy')" style="flex:1;padding:7px;border-radius:8px;background:#E8393E;font-size:12px;font-weight:800;color:#fff;border:none;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(232,57,62,.3)">매수</button>
+                <button id="btn-sell" onclick="setMode('sell')" style="flex:1;padding:7px;border-radius:8px;background:transparent;font-size:12px;font-weight:600;color:#9CA3AF;border:none;cursor:pointer;font-family:inherit">매도</button>
+              </div>
+            </div>
+
+            <!-- 호가창 (스크롤) -->
+            <div style="flex:1;overflow-y:auto;display:flex;flex-direction:column;min-height:0">
+              <!-- 매도잔량 헤더 -->
+              <div style="padding:3px 12px;background:#EFF6FF;flex-shrink:0;display:flex;justify-content:space-between;border-bottom:1px solid #E5E7EB">
+                <span style="font-size:9px;font-weight:600;color:#0075E8">매도잔량</span>
+                <span style="font-size:10px;font-weight:700;color:#0075E8">14,118</span>
+              </div>
+              <!-- 매도 호가 10행 -->
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:8%;background:rgba(0,117,232,.07)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">76,500</span><span style="font-size:10px;color:#6B7280;position:relative">324</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:13%;background:rgba(0,117,232,.07)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">76,400</span><span style="font-size:10px;color:#6B7280;position:relative">512</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:22%;background:rgba(0,117,232,.09)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">76,300</span><span style="font-size:10px;color:#6B7280;position:relative">892</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:30%;background:rgba(0,117,232,.09)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">76,200</span><span style="font-size:10px;color:#6B7280;position:relative">1,204</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:84%;background:rgba(0,117,232,.1)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">76,100</span><span style="font-size:10px;color:#6B7280;position:relative">3,410</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:54%;background:rgba(0,117,232,.08)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">76,000</span><span style="font-size:10px;color:#6B7280;position:relative">2,187</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:38%;background:rgba(0,117,232,.07)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">75,900</span><span style="font-size:10px;color:#6B7280;position:relative">1,562</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:50%;background:rgba(0,117,232,.07)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">75,800</span><span style="font-size:10px;color:#6B7280;position:relative">2,048</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:22%;background:rgba(0,117,232,.07)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">75,700</span><span style="font-size:10px;color:#6B7280;position:relative">891</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;right:0;top:0;bottom:0;width:33%;background:rgba(0,117,232,.07)"></div><span style="font-size:12px;font-weight:700;color:#0075E8;position:relative">75,600</span><span style="font-size:10px;color:#6B7280;position:relative">1,340</span></div>
+              <!-- 현재가 -->
+              <div style="padding:5px 12px;background:#FFF0F1;border-top:2px solid #FFBFC1;border-bottom:2px solid #FFBFC1;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+                <span style="font-size:16px;font-weight:900;color:#E8393E">75,400</span>
+                <span style="font-size:9px;font-weight:700;color:#E8393E;background:#fff;padding:1px 6px;border-radius:4px;border:1px solid #FFBFC1">▲1.62%</span>
+              </div>
+              <!-- 매수 호가 10행 -->
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;left:0;top:0;bottom:0;width:70%;background:rgba(232,57,62,.06)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">75,300</span><span style="font-size:10px;color:#6B7280;position:relative">2,891</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;left:0;top:0;bottom:0;width:35%;background:rgba(232,57,62,.06)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">75,200</span><span style="font-size:10px;color:#6B7280;position:relative">1,456</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;left:0;top:0;bottom:0;width:24%;background:rgba(232,57,62,.06)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">75,100</span><span style="font-size:10px;color:#6B7280;position:relative">987</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;left:0;top:0;bottom:0;width:100%;background:rgba(232,57,62,.08)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">75,000</span><span style="font-size:10px;color:#6B7280;position:relative">4,230</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;left:0;top:0;bottom:0;width:42%;background:rgba(232,57,62,.06)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">74,900</span><span style="font-size:10px;color:#6B7280;position:relative">1,728</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;left:0;top:0;bottom:0;width:75%;background:rgba(232,57,62,.06)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">74,800</span><span style="font-size:10px;color:#6B7280;position:relative">3,104</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;left:0;top:0;bottom:0;width:22%;background:rgba(232,57,62,.06)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">74,700</span><span style="font-size:10px;color:#6B7280;position:relative">892</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;left:0;top:0;bottom:0;width:38%;background:rgba(232,57,62,.06)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">74,600</span><span style="font-size:10px;color:#6B7280;position:relative">1,560</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer;border-bottom:1px solid #F5F6F8"><div style="position:absolute;left:0;top:0;bottom:0;width:57%;background:rgba(232,57,62,.06)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">74,500</span><span style="font-size:10px;color:#6B7280;position:relative">2,340</span></div>
+              <div style="position:relative;display:flex;justify-content:space-between;align-items:center;padding:3px 12px;cursor:pointer"><div style="position:absolute;left:0;top:0;bottom:0;width:27%;background:rgba(232,57,62,.06)"></div><span style="font-size:12px;font-weight:700;color:#E8393E;position:relative">74,400</span><span style="font-size:10px;color:#6B7280;position:relative">1,089</span></div>
+              <!-- 매수잔량 -->
+              <div style="padding:3px 12px;background:#FFF5F5;flex-shrink:0;display:flex;justify-content:space-between;border-top:1px solid #FFBFC1">
+                <span style="font-size:9px;font-weight:600;color:#E8393E">매수잔량</span>
+                <span style="font-size:10px;font-weight:700;color:#E8393E">20,276</span>
+              </div>
+            </div>
+
+            <!-- 주문 폼 -->
+            <div id="order-form" style="padding:10px 14px 12px;border-top:2px solid #EAECF0;flex-shrink:0;background:#FAFAFA">
+              <!-- 주문 유형 -->
+              <div style="display:flex;gap:3px;margin-bottom:8px">
+                <button class="order-type active">시장가</button>
+                <button class="order-type">지정가</button>
+                <button class="order-type">현재가</button>
+              </div>
+              <!-- 체결 조건 -->
+              <div style="display:flex;gap:3px;margin-bottom:8px">
+                <button class="cond-btn active">일반</button>
+                <button class="cond-btn">IOC</button>
+                <button class="cond-btn">FOK</button>
+              </div>
+              <!-- 수량 -->
+              <div style="margin-bottom:8px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+                  <span style="font-size:9px;color:#9CA3AF;font-weight:600">주문 수량</span>
+                  <span style="font-size:9px;color:#9CA3AF">가능 <span style="color:#0046FF;font-weight:700">99,000,000원</span></span>
+                </div>
+                <div style="display:flex;align-items:center;gap:4px;margin-bottom:4px">
+                  <button style="width:28px;height:28px;border-radius:7px;border:1.5px solid #E5E7EB;background:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#374151;flex-shrink:0">−</button>
+                  <div style="flex:1;text-align:center;padding:4px;background:#fff;border:1.5px solid #E5E7EB;border-radius:8px">
+                    <span style="font-size:18px;font-weight:900;color:#191F28">100</span><span style="font-size:9px;color:#9CA3AF;margin-left:2px">주</span>
+                  </div>
+                  <button style="width:28px;height:28px;border-radius:7px;border:1.5px solid #E5E7EB;background:#fff;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#374151;flex-shrink:0">+</button>
+                </div>
+                <div style="display:flex;gap:3px">
+                  <button class="pct-btn">10%</button>
+                  <button class="pct-btn">25%</button>
+                  <button class="pct-btn">50%</button>
+                  <button class="pct-btn max">최대</button>
+                </div>
+              </div>
+              <!-- 예상금액 -->
+              <div id="order-summary" style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#FFF0F1;border-radius:8px;margin-bottom:8px;border:1px solid #FFBFC1">
+                <span style="font-size:10px;color:#E8393E;font-weight:600">예상 매수금액</span>
+                <span style="font-size:14px;font-weight:900;color:#E8393E">7,540,000원</span>
+              </div>
+              <!-- 주문 버튼 -->
+              <button id="order-btn" style="width:100%;padding:11px;border-radius:10px;background:linear-gradient(135deg,#E8393E,#C8282D);color:#fff;font-size:13px;font-weight:900;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(232,57,62,.35)">
+                매수 주문 →
+              </button>
+              <p style="font-size:9px;color:#C9CDD4;text-align:center;margin-top:5px">주문 전 비밀번호 확인이 필요합니다</p>
+            </div>
+
+          </div><!-- /RIGHT -->
+
+        </div><!-- /시트 바디 -->
+      </div><!-- /BOTTOM SHEET -->
+
+    </div><!-- /WIDGET AREA -->
+
+    <!-- CHAT PANEL -->
+    <div class="chat-panel">
+      <div style="flex-shrink:0;padding:12px 16px;border-bottom:1px solid #EAECF0;background:#fff">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="position:relative">
+              <div style="width:36px;height:36px;border-radius:12px;background:#0046FF;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(0,70,255,.3)">
+                <svg style="width:18px;height:18px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              </div>
+              <div style="position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:#12B76A;border:2px solid #fff"></div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28;line-height:1">SOL AI 어시스턴트</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:3px">
+                <span class="live-dot" style="width:5px;height:5px;background:#12B76A"></span>
+                <span style="font-size:10px;color:#12B76A;font-weight:500">온라인 · 즉시 응답</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;padding:14px;background:#F8F9FB;overflow-y:auto">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <div style="width:28px;height:28px;border-radius:8px;background:#0046FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
+            <svg style="width:14px;height:14px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          </div>
+          <div>
+            <div style="background:#fff;border:1px solid #EAECF0;border-radius:16px;border-top-left-radius:4px;padding:10px 14px;max-width:230px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+              <p style="font-size:12px;color:#374151;line-height:1.6">삼성전자 상세 정보를 불러왔어요! 📊<br>매수·매도 주문도 바로 도와드릴게요.</p>
+            </div>
+            <div style="font-size:10px;color:#D1D5DB;margin-top:4px;padding-left:4px">14:28</div>
+          </div>
+        </div>
+      </div>
+      <div style="flex-shrink:0;padding:12px 14px;border-top:1px solid #EAECF0;background:#fff">
+        <div style="display:flex;align-items:center;gap:8px;background:#F4F6FA;border:1.5px solid #E5E7EB;border-radius:20px;padding:9px 14px">
+          <input type="text" placeholder="종목명이나 원하는 기능을 입력하세요…" style="flex:1;background:transparent;font-size:12px;color:#374151;outline:none;border:none;font-family:inherit" />
+          <button style="width:28px;height:28px;border-radius:12px;background:#0046FF;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 10px rgba(0,70,255,.3)">
+            <svg style="width:14px;height:14px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </div>
+        <p style="font-size:9px;color:#D1D5DB;text-align:center;margin-top:6px">SOL AI는 투자 조언을 제공하지 않습니다</p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    function setMode(mode) {
+      const isBuy = mode === 'buy';
+      const btnBuy = document.getElementById('btn-buy');
+      const btnSell = document.getElementById('btn-sell');
+      const summary = document.getElementById('order-summary');
+      const orderBtn = document.getElementById('order-btn');
+
+      if (isBuy) {
+        btnBuy.style.cssText = 'flex:1;padding:7px;border-radius:8px;background:#E8393E;font-size:12px;font-weight:800;color:#fff;border:none;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(232,57,62,.3)';
+        btnSell.style.cssText = 'flex:1;padding:7px;border-radius:8px;background:transparent;font-size:12px;font-weight:600;color:#9CA3AF;border:none;cursor:pointer;font-family:inherit';
+        summary.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#FFF0F1;border-radius:8px;margin-bottom:8px;border:1px solid #FFBFC1';
+        summary.children[0].style.color = '#E8393E';
+        summary.children[0].textContent = '예상 매수금액';
+        summary.children[1].style.color = '#E8393E';
+        orderBtn.style.cssText = 'width:100%;padding:11px;border-radius:10px;background:linear-gradient(135deg,#E8393E,#C8282D);color:#fff;font-size:13px;font-weight:900;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(232,57,62,.35)';
+        orderBtn.textContent = '매수 주문 →';
+      } else {
+        btnSell.style.cssText = 'flex:1;padding:7px;border-radius:8px;background:#0075E8;font-size:12px;font-weight:800;color:#fff;border:none;cursor:pointer;font-family:inherit;box-shadow:0 2px 8px rgba(0,117,232,.3)';
+        btnBuy.style.cssText = 'flex:1;padding:7px;border-radius:8px;background:transparent;font-size:12px;font-weight:600;color:#9CA3AF;border:none;cursor:pointer;font-family:inherit';
+        summary.style.cssText = 'display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:#EFF6FF;border-radius:8px;margin-bottom:8px;border:1px solid #BFDBFE';
+        summary.children[0].style.color = '#0075E8';
+        summary.children[0].textContent = '예상 매도금액';
+        summary.children[1].style.color = '#0075E8';
+        orderBtn.style.cssText = 'width:100%;padding:11px;border-radius:10px;background:linear-gradient(135deg,#0075E8,#0050B3);color:#fff;font-size:13px;font-weight:900;border:none;cursor:pointer;font-family:inherit;box-shadow:0 4px 14px rgba(0,117,232,.35)';
+        orderBtn.textContent = '매도 주문 →';
+      }
+    }
+  </script>
+</body>
+</html>

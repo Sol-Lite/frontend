@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOL Lite — AI 투자 대시보드 v5</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
+
+    body {
+      background: #F4F6FA;
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+      height: 100vh;
+      overflow: hidden;
+      color: #191F28;
+    }
+
+    /* ── Layout ── */
+    .app-header { height: 54px; }
+    .app-body   { height: calc(100vh - 54px); }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      width: 56px;
+      flex-shrink: 0;
+      background: #fff;
+      border-right: 1px solid #EAECF0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 14px 0;
+      gap: 4px;
+    }
+    .nav-icon {
+      width: 40px; height: 40px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: background .15s, color .15s;
+      color: #9CA3AF;
+    }
+    .nav-icon.active { background: #EEF2FF; color: #0046FF; }
+    .nav-icon:hover:not(.active) { background: #F3F4F6; color: #374151; }
+
+    /* ── Widget grid: 4×3, no scroll ── */
+    .widget-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 10px;
+      height: 100%;
+    }
+
+    /* ── Card base ── */
+    .card {
+      background: #fff;
+      border: 1px solid #EAECF0;
+      border-radius: 16px;
+      padding: 14px 16px;
+      transition: box-shadow .2s, border-color .2s, transform .15s;
+      cursor: pointer;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+    .card:hover {
+      border-color: #BFD0FF;
+      box-shadow: 0 4px 16px rgba(0,70,255,.08);
+      transform: translateY(-1px);
+    }
+    .card-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: #9CA3AF;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+    }
+
+    /* ── Korean color convention: 상승=red, 하락=blue ── */
+    .up   { color: #E8393E; }
+    .down { color: #0075E8; }
+    .up-bg   { background: #FFF0F1; color: #E8393E; border: 1px solid #FFBFC1; }
+    .down-bg { background: #EFF6FF; color: #0075E8; border: 1px solid #BFDBFE; }
+
+    /* ── Company logo circles ── */
+    .logo-circle {
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 800;
+      flex-shrink: 0;
+    }
+
+    /* ── Sparkline ── */
+    .spark { fill:none; stroke-width:1.5; stroke-linecap:round; stroke-linejoin:round; }
+
+    /* ── Live dot ── */
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+    .live-dot {
+      display: inline-flex; width: 6px; height: 6px;
+      border-radius: 50%; background: #12B76A;
+      animation: pulse-dot 2s infinite;
+      flex-shrink: 0;
+    }
+
+    /* ── Pie chart ── */
+    .pie {
+      border-radius: 50%;
+      background: conic-gradient(
+        #0046FF 0% 34%, #00A878 34% 54%,
+        #FF9500 54% 69%, #EF4444 69% 81%, #8B5CF6 81% 100%
+      );
+    }
+
+    /* ── Tab chips ── */
+    .tab-chip {
+      padding: 3px 9px;
+      font-size: 10px; font-weight: 600;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none; background: transparent;
+      color: #9CA3AF;
+      transition: background .15s, color .15s;
+    }
+    .tab-chip.active { background: #EEF2FF; color: #0046FF; }
+    .tab-chip:hover:not(.active) { background: #F3F4F6; color: #374151; }
+
+    /* ── Chat panel ── */
+    .chat-panel {
+      width: 368px; flex-shrink: 0;
+      background: #fff;
+      border-left: 1px solid #EAECF0;
+      display: flex; flex-direction: column;
+    }
+    .chat-messages { overflow-y: auto; }
+    @keyframes bubbleIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    .bubble { animation: bubbleIn .22s ease both; }
+
+    /* ── Trade card ── */
+    .trade-card {
+      background: #fff;
+      border: 1px solid #EAECF0;
+      border-radius: 16px;
+      padding: 14px 15px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.06);
+      max-width: 258px;
+    }
+    .btn-sell {
+      flex:1; padding:10px 0; border-radius:10px;
+      background: #0046FF; color:#fff; font-size:13px; font-weight:700;
+      border:none; cursor:pointer; transition:background .15s;
+    }
+    .btn-sell:hover { background: #0035CC; }
+    .btn-buy {
+      flex:1; padding:10px 0; border-radius:10px;
+      background: #E8393E; color:#fff; font-size:13px; font-weight:700;
+      border:none; cursor:pointer; transition:background .15s;
+    }
+    .btn-buy:hover { background: #C8282D; }
+
+    /* ── Widget thumbnails (edit panel) ── */
+    .wt {
+      border: 1.5px solid #EAECF0;
+      border-radius: 10px;
+      background: #fff;
+      cursor: grab;
+      overflow: hidden;
+      transition: border-color .2s, box-shadow .2s;
+      flex-shrink: 0;
+    }
+    .wt:hover { border-color: #0046FF; box-shadow: 0 0 0 3px rgba(0,70,255,.07); }
+
+    /* ── Add widget placeholder ── */
+    .add-widget {
+      border: 2px dashed #E5E7EB;
+      border-radius: 16px;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px;
+      cursor: pointer; transition: all .2s;
+    }
+    .add-widget:hover { border-color: #0046FF; background: #F5F7FF; }
+    .add-widget:hover .add-icon { border-color: #0046FF; background: #EEF2FF; }
+    .add-widget:hover .add-icon svg { color: #0046FF; }
+    .add-widget:hover .add-label { color: #0046FF; }
+    .add-icon {
+      width: 36px; height: 36px; border-radius: 50%;
+      border: 2px dashed #D1D5DB;
+      display: flex; align-items: center; justify-content: center;
+      transition: all .2s;
+    }
+    .add-label { font-size: 11px; color: #9CA3AF; transition: color .2s; }
+  </style>
+</head>
+
+<body class="flex flex-col">
+
+  <!-- ══════════════ HEADER ══════════════ -->
+  <header class="app-header flex items-center px-4 gap-3 bg-white border-b border-[#EAECF0] shrink-0 z-50">
+
+    <!-- Logo -->
+    <div class="flex items-center gap-2 mr-2 shrink-0">
+      <div class="w-7 h-7 rounded-[9px] bg-[#0046FF] flex items-center justify-center shadow-[0_0_14px_rgba(0,70,255,.35)]">
+        <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+        </svg>
+      </div>
+      <span class="text-[15px] font-bold tracking-tight">SOL <span class="text-[#0046FF]">Lite</span></span>
+    </div>
+
+    <!-- Nav tabs -->
+    <nav class="flex items-center gap-0.5 bg-[#F4F6FA] rounded-xl p-1">
+      <button class="px-4 py-1.5 text-[12px] font-semibold rounded-lg bg-white text-[#191F28] shadow-sm">홈</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg hover:text-[#374151] transition-colors">시세</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg hover:text-[#374151] transition-colors">주문</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg hover:text-[#374151] transition-colors">잔고</button>
+    </nav>
+
+    <div class="flex-1"></div>
+
+    <!-- Right actions -->
+    <div class="flex items-center gap-2">
+      <button id="editBtn"
+        class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#EAECF0] text-[#9CA3AF] text-[11px] font-medium hover:border-[#0046FF] hover:text-[#0046FF] hover:bg-[#F5F7FF] transition-all">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6z
+               M14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6z
+               M4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2z
+               M14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+        </svg>
+        위젯 편집
+      </button>
+      <button class="relative w-8 h-8 rounded-xl border border-[#EAECF0] flex items-center justify-center text-[#9CA3AF] hover:border-[#0046FF] hover:text-[#0046FF] hover:bg-[#F5F7FF] transition-all">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+        </svg>
+        <span class="absolute -top-1 -right-1 w-[14px] h-[14px] rounded-full bg-[#E8393E] text-white text-[8px] font-bold flex items-center justify-center">3</span>
+      </button>
+      <div class="flex items-center gap-1.5 pl-2 border-l border-[#EAECF0] ml-1">
+        <div class="w-7 h-7 rounded-full bg-[#0046FF] flex items-center justify-center text-white text-[11px] font-bold cursor-pointer shadow-[0_0_8px_rgba(0,70,255,.3)]">김</div>
+        <div class="hidden sm:block">
+          <div class="text-[11px] font-semibold text-[#191F28] leading-none">김SOL</div>
+          <div class="text-[9px] text-[#9CA3AF] mt-0.5">위탁계좌</div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ══════════════ BODY ══════════════ -->
+  <div class="app-body flex min-h-0">
+
+    <!-- ───── LEFT · WIDGET AREA ───── -->
+    <div class="flex-1 min-w-0 p-3 flex flex-col gap-2.5 overflow-hidden">
+
+      <!-- Top sub-bar -->
+      <div class="flex items-center justify-between shrink-0 px-1">
+        <div class="flex items-center gap-2">
+          <span class="text-[13px] font-bold text-[#191F28]">나의 대시보드</span>
+          <div class="flex items-center gap-1 px-2 py-0.5 rounded-full bg-[#F4F6FA] border border-[#EAECF0]">
+            <span class="live-dot" style="width:5px;height:5px"></span>
+            <span class="text-[10px] text-[#9CA3AF]">실시간 반영</span>
+          </div>
+        </div>
+        <div class="flex items-center gap-1">
+          <div class="w-4 h-1.5 rounded-full bg-[#0046FF]"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-[#E5E7EB] cursor-pointer hover:bg-[#D1D5DB] transition-colors"></div>
+          <div class="w-1.5 h-1.5 rounded-full bg-[#E5E7EB] cursor-pointer hover:bg-[#D1D5DB] transition-colors"></div>
+        </div>
+      </div>
+
+      <div class="widget-grid flex-1 min-h-0">
+
+        <!-- ════ ROW 1 ════ -->
+
+        <!-- 계좌 잔고 [1col] — KRW/USD breakdown with flags -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center justify-between mb-2">
+            <span class="card-label">계좌 잔고</span>
+            <span class="live-dot"></span>
+          </div>
+          <div class="flex-1 flex flex-col justify-between">
+            <div>
+              <div class="text-[10px] text-[#9CA3AF] mb-0.5">총 평가자산</div>
+              <div class="text-[18px] font-bold leading-tight tracking-tight text-[#191F28]">84,320,000
+                <span class="text-[11px] font-medium text-[#6B7280]">원</span>
+              </div>
+              <div class="text-[11px] font-semibold up mt-0.5">▲ 2,140,000 (+2.61%)</div>
+            </div>
+            <div class="flex flex-col gap-1 pt-2 border-t border-[#F3F4F6] mt-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span style="font-size:13px">🇰🇷</span>
+                  <span class="text-[10px] text-[#6B7280]">KRW</span>
+                </div>
+                <span class="text-[10px] font-semibold text-[#374151]">72,100,000</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span style="font-size:13px">🇺🇸</span>
+                  <span class="text-[10px] text-[#6B7280]">USD</span>
+                </div>
+                <span class="text-[10px] font-semibold text-[#374151]">$8,924</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 주요 지수 [2col] -->
+        <div class="card" style="grid-column:span 2">
+          <div class="flex items-center justify-between mb-2">
+            <span class="card-label">주요 지수</span>
+            <div class="flex gap-1">
+              <button class="tab-chip active">국내</button>
+              <button class="tab-chip">미국</button>
+              <button class="tab-chip">아시아</button>
+            </div>
+          </div>
+          <div class="flex-1 grid grid-cols-5 gap-1 items-center">
+            <div class="text-center py-2 rounded-xl bg-[#FFF8F8] border border-[#FFECEC]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">KOSPI</div>
+              <div class="text-[13px] font-bold text-[#191F28]">2,685</div>
+              <div class="text-[10px] up font-medium">▲0.46%</div>
+            </div>
+            <div class="text-center py-2 rounded-xl bg-[#F0F8FF] border border-[#DBEAFE]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">KOSDAQ</div>
+              <div class="text-[13px] font-bold text-[#191F28]">842</div>
+              <div class="text-[10px] down font-medium">▼0.63%</div>
+            </div>
+            <div class="text-center py-2 rounded-xl bg-[#F0F8FF] border border-[#DBEAFE]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">NASDAQ</div>
+              <div class="text-[13px] font-bold text-[#191F28]">16,274</div>
+              <div class="text-[10px] down font-medium">▼0.92%</div>
+            </div>
+            <div class="text-center py-2 rounded-xl bg-[#F0F8FF] border border-[#DBEAFE]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">S&P 500</div>
+              <div class="text-[13px] font-bold text-[#191F28]">5,234</div>
+              <div class="text-[10px] down font-medium">▼0.55%</div>
+            </div>
+            <div class="text-center py-2 rounded-xl bg-[#FFF8F8] border border-[#FFECEC]">
+              <div class="text-[9px] text-[#9CA3AF] mb-0.5">DOW</div>
+              <div class="text-[13px] font-bold text-[#191F28]">38,921</div>
+              <div class="text-[10px] up font-medium">▲0.11%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 포트폴리오 [1col] -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center justify-between mb-1">
+            <span class="card-label">포트폴리오</span>
+            <span class="text-[10px] font-semibold text-[#0046FF]">5종목</span>
+          </div>
+          <div class="flex items-center gap-2.5 flex-1">
+            <div class="relative shrink-0">
+              <div class="pie" style="width:52px;height:52px"></div>
+              <div class="absolute inset-0 flex items-center justify-center">
+                <div class="rounded-full bg-white flex items-center justify-center shadow-inner" style="width:32px;height:32px">
+                  <span class="text-[9px] font-bold up">+5.2%</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex-1 space-y-[3px]">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1"><div style="width:6px;height:6px;border-radius:2px;background:#0046FF;flex-shrink:0"></div><span class="text-[10px] text-[#6B7280]">삼성전자</span></div>
+                <div class="flex items-center gap-1"><div style="width:28px;height:3px;border-radius:2px;background:#0046FF;opacity:.8"></div><span class="text-[9px] font-medium">34%</span></div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1"><div style="width:6px;height:6px;border-radius:2px;background:#00A878;flex-shrink:0"></div><span class="text-[10px] text-[#6B7280]">SK하이닉스</span></div>
+                <div class="flex items-center gap-1"><div style="width:16px;height:3px;border-radius:2px;background:#00A878;opacity:.8"></div><span class="text-[9px] font-medium">20%</span></div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1"><div style="width:6px;height:6px;border-radius:2px;background:#FF9500;flex-shrink:0"></div><span class="text-[10px] text-[#6B7280]">NAVER</span></div>
+                <div class="flex items-center gap-1"><div style="width:12px;height:3px;border-radius:2px;background:#FF9500;opacity:.8"></div><span class="text-[9px] font-medium">15%</span></div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1"><div style="width:6px;height:6px;border-radius:2px;background:#8B5CF6;flex-shrink:0"></div><span class="text-[10px] text-[#6B7280]">기타</span></div>
+                <div class="flex items-center gap-1"><div style="width:25px;height:3px;border-radius:2px;background:#8B5CF6;opacity:.8"></div><span class="text-[9px] font-medium">31%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ════ ROW 2 ════ -->
+
+        <!-- 삼성전자 주가 [1col] — improved with OHLC -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="logo-circle" style="background:#EEF2FF;color:#0046FF">삼성</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-[12px] font-bold leading-none truncate">삼성전자</div>
+              <div class="text-[9px] text-[#9CA3AF] mt-0.5">005930 · KOSPI</div>
+            </div>
+            <span class="up-bg text-[9px] px-1.5 py-0.5 rounded-md font-semibold flex-shrink-0">+1.62%</span>
+          </div>
+          <div class="my-1">
+            <div class="text-[18px] font-bold leading-tight tracking-tight up">75,400</div>
+            <div class="text-[10px] up">▲ 1,200원 (+1.62%)</div>
+          </div>
+          <div class="flex justify-between text-[9px] py-1.5 border-t border-[#F3F4F6] mb-1">
+            <div class="text-center"><div class="text-[#9CA3AF]">시가</div><div class="font-medium text-[#374151]">74,200</div></div>
+            <div class="text-center"><div class="text-[#9CA3AF]">고가</div><div class="font-medium up">76,100</div></div>
+            <div class="text-center"><div class="text-[#9CA3AF]">저가</div><div class="font-medium down">73,900</div></div>
+          </div>
+          <svg class="w-full" height="22" viewBox="0 0 120 22" preserveAspectRatio="none">
+            <defs><linearGradient id="sg1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#E8393E" stop-opacity=".15"/><stop offset="100%" stop-color="#E8393E" stop-opacity="0"/></linearGradient></defs>
+            <path class="spark" d="M0,18 L12,16 L24,14 L36,16 L48,10 L60,12 L72,7 L84,5 L96,3 L108,1.5 L120,1" stroke="#E8393E"/>
+            <path d="M0,18 L12,16 L24,14 L36,16 L48,10 L60,12 L72,7 L84,5 L96,3 L108,1.5 L120,1 L120,22 L0,22Z" fill="url(#sg1)"/>
+          </svg>
+        </div>
+
+        <!-- 실시간 순위 [2col] — logo circles like the app -->
+        <div class="card" style="grid-column:span 2">
+          <div class="flex items-center justify-between mb-1.5">
+            <span class="card-label">실시간 순위</span>
+            <div class="flex gap-0.5">
+              <button class="tab-chip active">거래대금</button>
+              <button class="tab-chip">급상승</button>
+              <button class="tab-chip">거래량</button>
+              <button class="tab-chip">🇺🇸 미국</button>
+            </div>
+          </div>
+          <div class="flex-1 flex flex-col justify-between gap-0.5">
+
+            <!-- Row 1 -->
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] transition-colors cursor-pointer">
+              <span class="text-[11px] font-bold text-[#0046FF] w-4 text-center shrink-0">1</span>
+              <div class="logo-circle shrink-0" style="background:#EEF2FF;color:#0046FF;width:28px;height:28px;font-size:9px">삼성</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[11px] font-semibold text-[#191F28] leading-none">삼성전자</div>
+                <div class="text-[9px] text-[#9CA3AF] mt-0.5">거래대금 5.2조</div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-[11px] font-bold text-[#0046FF]">75,400</div>
+                <div class="text-[9px] up">▲1.62%</div>
+              </div>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] transition-colors cursor-pointer">
+              <span class="text-[11px] text-[#9CA3AF] w-4 text-center shrink-0">2</span>
+              <div class="logo-circle shrink-0" style="background:#FFF3E0;color:#FF9500;width:28px;height:28px;font-size:9px">SK</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[11px] font-semibold text-[#191F28] leading-none">SK하이닉스</div>
+                <div class="text-[9px] text-[#9CA3AF] mt-0.5">거래대금 3.8조</div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-[11px] font-bold text-[#0046FF]">195,500</div>
+                <div class="text-[9px] up">▲2.35%</div>
+              </div>
+            </div>
+
+            <!-- Row 3 -->
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] transition-colors cursor-pointer">
+              <span class="text-[11px] text-[#9CA3AF] w-4 text-center shrink-0">3</span>
+              <div class="logo-circle shrink-0" style="background:#ECFDF5;color:#059669;width:28px;height:28px;font-size:10px;font-weight:900">N</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[11px] font-semibold text-[#191F28] leading-none">NAVER</div>
+                <div class="text-[9px] text-[#9CA3AF] mt-0.5">거래대금 1.4조</div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-[11px] font-bold text-[#374151]">210,000</div>
+                <div class="text-[9px] down">▼0.94%</div>
+              </div>
+            </div>
+
+            <!-- Row 4 -->
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] transition-colors cursor-pointer">
+              <span class="text-[11px] text-[#9CA3AF] w-4 text-center shrink-0">4</span>
+              <div class="logo-circle shrink-0" style="background:#FEFCE8;color:#CA8A04;width:28px;height:28px;font-size:10px;font-weight:900">K</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[11px] font-semibold text-[#191F28] leading-none">카카오</div>
+                <div class="text-[9px] text-[#9CA3AF] mt-0.5">거래대금 0.9조</div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-[11px] font-bold text-[#374151]">44,150</div>
+                <div class="text-[9px] down">▼1.23%</div>
+              </div>
+            </div>
+
+            <!-- Row 5 -->
+            <div class="flex items-center gap-2.5 px-1.5 py-1.5 rounded-xl hover:bg-[#F8F9FB] transition-colors cursor-pointer">
+              <span class="text-[11px] text-[#9CA3AF] w-4 text-center shrink-0">5</span>
+              <div class="logo-circle shrink-0" style="background:#F0FDF4;color:#16A34A;width:28px;height:28px;font-size:9px">LG에</div>
+              <div class="flex-1 min-w-0">
+                <div class="text-[11px] font-semibold text-[#191F28] leading-none">LG에너지솔루션</div>
+                <div class="text-[9px] text-[#9CA3AF] mt-0.5">거래대금 0.7조</div>
+              </div>
+              <div class="text-right shrink-0">
+                <div class="text-[11px] font-bold text-[#0046FF]">382,000</div>
+                <div class="text-[9px] up">▲0.79%</div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- 관심 종목 [1col] — with logo circles -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center justify-between mb-2">
+            <span class="card-label">관심 종목</span>
+            <button class="text-[10px] text-[#0046FF] font-semibold hover:underline">+ 추가</button>
+          </div>
+          <div class="flex-1 flex flex-col justify-between gap-0.5">
+            <div class="flex items-center gap-2 py-1 hover:bg-[#F8F9FB] rounded-xl px-1 transition-colors cursor-pointer">
+              <div class="logo-circle" style="background:#EFF6FF;color:#1D4ED8;width:26px;height:26px;font-size:9px">H</div>
+              <div class="flex-1 min-w-0"><div class="text-[11px] font-medium leading-none">현대차</div><div class="text-[9px] text-[#9CA3AF]">₩205,000</div></div>
+              <span class="text-[10px] font-semibold down">▼0.82%</span>
+            </div>
+            <div class="w-full h-px bg-[#F3F4F6] mx-1"></div>
+            <div class="flex items-center gap-2 py-1 hover:bg-[#F8F9FB] rounded-xl px-1 transition-colors cursor-pointer">
+              <div class="logo-circle" style="background:#F0FDF4;color:#16A34A;width:26px;height:26px;font-size:9px">LG</div>
+              <div class="flex-1 min-w-0"><div class="text-[11px] font-medium leading-none">LG에너지</div><div class="text-[9px] text-[#9CA3AF]">₩382,000</div></div>
+              <span class="text-[10px] font-semibold up">▲1.20%</span>
+            </div>
+            <div class="w-full h-px bg-[#F3F4F6] mx-1"></div>
+            <div class="flex items-center gap-2 py-1 hover:bg-[#F8F9FB] rounded-xl px-1 transition-colors cursor-pointer">
+              <div class="logo-circle" style="background:#F0FDFA;color:#0D9488;width:26px;height:26px;font-size:9px">셀트</div>
+              <div class="flex-1 min-w-0"><div class="text-[11px] font-medium leading-none">셀트리온</div><div class="text-[9px] text-[#9CA3AF]">₩172,300</div></div>
+              <span class="text-[10px] font-semibold up">▲0.34%</span>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- ════ ROW 3 ════ -->
+
+        <!-- 오늘의 시황 [1col] -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center justify-between mb-2">
+            <span class="card-label">오늘의 시황</span>
+            <span class="text-[9px] text-[#9CA3AF]">14:32</span>
+          </div>
+          <div class="flex-1 flex flex-col justify-between gap-1.5">
+            <div class="flex gap-2 p-2 rounded-xl bg-[#F5F7FF] border border-[#E0E7FF]">
+              <div class="w-1 rounded-full bg-[#0046FF] self-stretch shrink-0"></div>
+              <p class="text-[10px] text-[#374151] leading-relaxed">美 CPI 하회 … 나스닥 1% 상승, 반도체 강세</p>
+            </div>
+            <div class="flex gap-2 items-start px-1">
+              <div style="width:4px;height:4px;border-radius:50%;background:#D1D5DB;margin-top:4px;flex-shrink:0"></div>
+              <p class="text-[10px] text-[#9CA3AF] leading-relaxed">外人 순매수 4,200억 · 반도체↑</p>
+            </div>
+            <div class="flex gap-2 items-start px-1">
+              <div style="width:4px;height:4px;border-radius:50%;background:#D1D5DB;margin-top:4px;flex-shrink:0"></div>
+              <p class="text-[10px] text-[#9CA3AF] leading-relaxed">원달러 1,378원 소폭 하락 마감</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- 환율 [1col] — with flag icons -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center justify-between mb-1">
+            <span class="card-label">환율</span>
+            <span class="live-dot"></span>
+          </div>
+          <div class="flex-1 flex flex-col justify-between">
+            <div class="flex items-center gap-2 py-1.5 px-2 rounded-xl bg-[#F8F9FB]">
+              <span style="font-size:16px">🇺🇸</span>
+              <div class="flex-1">
+                <div class="text-[9px] text-[#9CA3AF]">USD / KRW</div>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-[15px] font-bold text-[#191F28]">1,378.50</span>
+                  <span class="text-[9px] down">▼2.30</span>
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-2 py-1.5 px-2 rounded-xl bg-[#F8F9FB]">
+              <span style="font-size:16px">🇯🇵</span>
+              <div class="flex-1">
+                <div class="text-[9px] text-[#9CA3AF]">JPY / KRW</div>
+                <div class="flex items-baseline gap-1">
+                  <span class="text-[15px] font-bold text-[#191F28]">9.24</span>
+                  <span class="text-[9px] up">▲0.05</span>
+                </div>
+              </div>
+            </div>
+            <button class="w-full py-1.5 rounded-xl bg-[#EEF2FF] text-[#0046FF] text-[10px] font-bold hover:bg-[#E0E7FF] transition-colors">환전하기 →</button>
+          </div>
+        </div>
+
+        <!-- SK하이닉스 [1col] -->
+        <div class="card" style="grid-column:span 1">
+          <div class="flex items-center gap-2 mb-1">
+            <div class="logo-circle" style="background:#FFF3E0;color:#FF9500">SK</div>
+            <div class="flex-1 min-w-0">
+              <div class="text-[12px] font-bold leading-none">SK하이닉스</div>
+              <div class="text-[9px] text-[#9CA3AF] mt-0.5">000660 · KOSPI</div>
+            </div>
+            <span class="up-bg text-[9px] px-1.5 py-0.5 rounded-md font-semibold flex-shrink-0">+2.35%</span>
+          </div>
+          <div class="my-1">
+            <div class="text-[18px] font-bold leading-tight tracking-tight up">195,500</div>
+            <div class="text-[10px] up">▲ 4,500원 (+2.35%)</div>
+          </div>
+          <div class="flex justify-between text-[9px] py-1.5 border-t border-[#F3F4F6] mb-1">
+            <div class="text-center"><div class="text-[#9CA3AF]">시가</div><div class="font-medium text-[#374151]">191,500</div></div>
+            <div class="text-center"><div class="text-[#9CA3AF]">고가</div><div class="font-medium up">197,000</div></div>
+            <div class="text-center"><div class="text-[#9CA3AF]">저가</div><div class="font-medium down">190,500</div></div>
+          </div>
+          <svg class="w-full" height="22" viewBox="0 0 120 22" preserveAspectRatio="none">
+            <defs><linearGradient id="sg2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0046FF" stop-opacity=".12"/><stop offset="100%" stop-color="#0046FF" stop-opacity="0"/></linearGradient></defs>
+            <path class="spark" d="M0,20 L12,18 L24,20 L36,14 L48,16 L60,10 L72,12 L84,7 L96,5 L108,3 L120,1" stroke="#0046FF"/>
+            <path d="M0,20 L12,18 L24,20 L36,14 L48,16 L60,10 L72,12 L84,7 L96,5 L108,3 L120,1 L120,22 L0,22Z" fill="url(#sg2)"/>
+          </svg>
+        </div>
+
+        <!-- + 위젯 추가 [1col] -->
+        <div class="add-widget" style="grid-column:span 1">
+          <div class="add-icon">
+            <svg style="width:16px;height:16px;color:#9CA3AF" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+            </svg>
+          </div>
+          <span class="add-label">위젯 추가</span>
+        </div>
+
+      </div>
+    </div>
+    <!-- /left -->
+
+
+    <!-- ───── RIGHT · CHAT PANEL ───── -->
+    <div class="chat-panel">
+
+      <!-- Chat header -->
+      <div class="shrink-0 px-4 py-3 border-b border-[#EAECF0] bg-white">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="relative">
+              <div class="w-9 h-9 rounded-[12px] bg-[#0046FF] flex items-center justify-center shadow-[0_0_14px_rgba(0,70,255,.3)]">
+                <svg class="w-[18px] h-[18px] text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+              </div>
+              <div class="absolute -bottom-0.5 -right-0.5 w-[10px] h-[10px] rounded-full bg-[#12B76A] border-2 border-white"></div>
+            </div>
+            <div>
+              <div class="text-[13px] font-bold text-[#191F28] leading-none">SOL AI 어시스턴트</div>
+              <div class="flex items-center gap-1 mt-0.5">
+                <span class="live-dot" style="width:5px;height:5px;background:#12B76A"></span>
+                <span class="text-[10px] text-[#12B76A] font-medium">온라인 · 즉시 응답</span>
+              </div>
+            </div>
+          </div>
+          <div class="flex items-center gap-1">
+            <button class="w-7 h-7 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] flex items-center justify-center transition-all" title="대화 초기화">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+            <button class="w-7 h-7 rounded-lg text-[#9CA3AF] hover:text-[#374151] hover:bg-[#F3F4F6] flex items-center justify-center transition-all">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div class="flex-1 chat-messages p-4 space-y-4" style="background:#F8F9FB">
+
+        <!-- AI greeting -->
+        <div class="bubble flex gap-2">
+          <div class="w-7 h-7 rounded-[8px] bg-[#0046FF] flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <div>
+            <div class="bg-white border border-[#EAECF0] rounded-2xl rounded-tl-sm px-3.5 py-2.5 max-w-[230px] shadow-sm">
+              <p class="text-[12px] text-[#374151] leading-relaxed">안녕하세요, 김SOL님! 👋<br/>자연어로 편하게 말씀해 주세요.<br/>주가 조회, 매수·매도, 포트폴리오 분석까지 바로 도와드릴게요.</p>
+            </div>
+            <div class="text-[10px] text-[#D1D5DB] mt-1 pl-1">14:28</div>
+          </div>
+        </div>
+
+        <!-- User -->
+        <div class="bubble flex justify-end">
+          <div>
+            <div class="bg-[#0046FF] rounded-2xl rounded-tr-sm px-3.5 py-2.5 max-w-[200px]">
+              <p class="text-[12px] text-white leading-relaxed">삼성전자 매수하고 싶어</p>
+            </div>
+            <div class="text-[10px] text-[#D1D5DB] mt-1 text-right pr-1">14:29</div>
+          </div>
+        </div>
+
+        <!-- AI: trade card -->
+        <div class="bubble flex gap-2">
+          <div class="w-7 h-7 rounded-[8px] bg-[#0046FF] flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <div class="space-y-2">
+            <div class="bg-white border border-[#EAECF0] rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm max-w-[230px]">
+              <p class="text-[12px] text-[#374151]">삼성전자 현재 시세입니다. 수량을 선택해 주세요.</p>
+            </div>
+
+            <!-- Trade card -->
+            <div class="trade-card">
+              <div class="flex items-center gap-3 mb-3">
+                <div style="width:44px;height:44px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid #C7D2FE">
+                  <span style="font-size:12px;font-weight:800;color:#0046FF">삼성</span>
+                </div>
+                <div class="flex-1">
+                  <div style="font-size:14px;font-weight:700;color:#191F28;line-height:1.2">삼성전자</div>
+                  <div style="font-size:18px;font-weight:800;color:#0046FF;line-height:1.2;margin-top:1px">75,400원</div>
+                  <div style="font-size:10px;color:#E8393E;margin-top:1px">▲ 1,200원 (+1.62%)</div>
+                </div>
+                <button style="width:22px;height:22px;border-radius:50%;background:#F3F4F6;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#9CA3AF;font-size:13px;flex-shrink:0">×</button>
+              </div>
+              <!-- Mini OHLC -->
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:8px;background:#F8F9FB;border-radius:10px;margin-bottom:12px;font-size:9px;text-align:center">
+                <div><div style="color:#9CA3AF">시가</div><div style="font-weight:600;color:#374151">74,200</div></div>
+                <div><div style="color:#9CA3AF">고가</div><div style="font-weight:600;color:#E8393E">76,100</div></div>
+                <div><div style="color:#9CA3AF">저가</div><div style="font-weight:600;color:#0075E8">73,900</div></div>
+              </div>
+              <div style="display:flex;gap:8px">
+                <button class="btn-sell">팔게요</button>
+                <button class="btn-buy">살게요</button>
+              </div>
+            </div>
+
+            <div class="text-[10px] text-[#D1D5DB] pl-1">14:29</div>
+          </div>
+        </div>
+
+        <!-- User -->
+        <div class="bubble flex justify-end">
+          <div>
+            <div class="bg-[#0046FF] rounded-2xl rounded-tr-sm px-3.5 py-2.5 max-w-[200px]">
+              <p class="text-[12px] text-white">살게요 — 100주</p>
+            </div>
+            <div class="text-[10px] text-[#D1D5DB] mt-1 text-right pr-1">14:31</div>
+          </div>
+        </div>
+
+        <!-- AI: order confirmation -->
+        <div class="bubble flex gap-2">
+          <div class="w-7 h-7 rounded-[8px] bg-[#0046FF] flex items-center justify-center shrink-0 mt-0.5">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+            </svg>
+          </div>
+          <div class="space-y-2">
+            <div class="bg-white border border-[#EAECF0] rounded-2xl rounded-tl-sm px-3.5 py-2.5 shadow-sm max-w-[230px]">
+              <p class="text-[12px] text-[#374151]">주문 내용을 확인해 주세요. 비밀번호 입력 후 즉시 실행됩니다.</p>
+            </div>
+
+            <!-- Order confirmation card -->
+            <div class="trade-card">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+                <span style="font-size:10px;font-weight:700;color:#0046FF;text-transform:uppercase;letter-spacing:.06em">매수 주문 확인</span>
+                <span style="font-size:9px;background:#FFF0F1;color:#E8393E;border:1px solid #FFBFC1;padding:2px 8px;border-radius:20px;font-weight:600">시장가</span>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:12px;padding:10px;background:#F8F9FB;border-radius:10px">
+                <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:#9CA3AF">종목</span><span style="font-size:10px;font-weight:600;color:#191F28">삼성전자 (005930)</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:#9CA3AF">수량</span><span style="font-size:10px;color:#191F28">100주</span></div>
+                <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:#9CA3AF">단가 (현재)</span><span style="font-size:10px;color:#191F28">₩75,400</span></div>
+                <div style="height:1px;background:#EAECF0"></div>
+                <div style="display:flex;justify-content:space-between"><span style="font-size:10px;color:#9CA3AF">예상 금액</span><span style="font-size:14px;font-weight:800;color:#191F28">₩7,540,000</span></div>
+              </div>
+              <!-- Password input -->
+              <div style="background:#F8F9FB;border:1px solid #EAECF0;border-radius:10px;padding:10px;margin-bottom:10px;text-align:center">
+                <div style="font-size:9px;color:#9CA3AF;margin-bottom:8px">계좌 비밀번호 4자리</div>
+                <div style="display:flex;gap:8px;justify-content:center">
+                  <div style="width:32px;height:32px;border-radius:8px;background:#EEF2FF;border:1.5px solid #C7D2FE;display:flex;align-items:center;justify-content:center;font-size:18px;color:#0046FF">●</div>
+                  <div style="width:32px;height:32px;border-radius:8px;background:#EEF2FF;border:1.5px solid #C7D2FE;display:flex;align-items:center;justify-content:center;font-size:18px;color:#0046FF">●</div>
+                  <div style="width:32px;height:32px;border-radius:8px;background:#F3F4F6;border:1.5px solid #E5E7EB;display:flex;align-items:center;justify-content:center;font-size:18px;color:#D1D5DB">○</div>
+                  <div style="width:32px;height:32px;border-radius:8px;background:#F3F4F6;border:1.5px solid #E5E7EB;display:flex;align-items:center;justify-content:center;font-size:18px;color:#D1D5DB">○</div>
+                </div>
+              </div>
+              <button class="btn-buy" style="width:100%;border-radius:12px;font-size:13px">매수 실행 →</button>
+            </div>
+
+            <div class="text-[10px] text-[#D1D5DB] pl-1">14:31</div>
+          </div>
+        </div>
+
+      </div>
+      <!-- /messages -->
+
+      <!-- Input -->
+      <div class="shrink-0 p-3.5 border-t border-[#EAECF0] bg-white">
+        <div class="flex items-center gap-2 bg-[#F4F6FA] rounded-2xl border border-[#E5E7EB] px-3.5 py-2.5 focus-within:border-[#0046FF] focus-within:bg-white focus-within:shadow-[0_0_0_3px_rgba(0,70,255,.08)] transition-all">
+          <input type="text" placeholder="종목명이나 원하는 기능을 입력하세요…"
+            class="flex-1 bg-transparent text-[12px] text-[#374151] placeholder-[#9CA3AF] outline-none"/>
+          <button class="w-7 h-7 rounded-xl bg-[#0046FF] flex items-center justify-center hover:bg-[#0035CC] transition-colors shrink-0 shadow-[0_0_10px_rgba(0,70,255,.35)]">
+            <svg class="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+            </svg>
+          </button>
+        </div>
+        <p class="text-[9px] text-[#D1D5DB] text-center mt-2">SOL AI는 투자 조언을 제공하지 않습니다</p>
+      </div>
+
+    </div>
+    <!-- /chat panel -->
+  </div>
+
+
+  <!-- ══════════════ EDIT OVERLAY ══════════════ -->
+  <div id="editOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.4);backdrop-filter:blur(4px);z-index:40;align-items:stretch">
+    <!-- dim left area -->
+    <div style="flex:1;display:flex;align-items:flex-start;padding:18px 20px">
+      <div style="background:rgba(255,255,255,.9);border-radius:12px;padding:8px 16px;font-size:12px;color:#6B7280;backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.6);box-shadow:0 2px 12px rgba(0,0,0,.08)">
+        ✦ 편집 모드 · 우측에서 위젯을 선택해 대시보드에 추가하세요
+      </div>
+    </div>
+
+    <!-- Right picker panel -->
+    <div style="width:380px;background:#fff;border-left:1px solid #EAECF0;display:flex;flex-direction:column;height:100%;overflow:hidden;box-shadow:-4px 0 24px rgba(0,0,0,.06)">
+
+      <!-- Panel header -->
+      <div style="padding:16px;border-bottom:1px solid #EAECF0;flex-shrink:0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <span style="font-size:14px;font-weight:700;color:#191F28">위젯 추가</span>
+          <button id="closeEdit" style="font-size:11px;color:#0046FF;font-weight:600;padding:6px 16px;border-radius:10px;background:#EEF2FF;border:1px solid #C7D2FE;cursor:pointer">완료</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;background:#F4F6FA;border:1px solid #EAECF0;border-radius:12px;padding:8px 12px">
+          <svg style="width:14px;height:14px;color:#9CA3AF;flex-shrink:0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" placeholder="위젯 검색…" style="flex:1;background:transparent;border:none;font-size:12px;color:#374151;outline:none"/>
+        </div>
+      </div>
+
+      <!-- Widget list -->
+      <div style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:20px">
+
+        <!-- ① 계좌 잔고 -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">계좌 잔고</div>
+          <div style="display:flex;gap:8px;align-items:flex-start">
+            <div class="wt" style="width:155px;height:80px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="소형 (1×1)">
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">계좌잔고</span>
+                <div style="width:5px;height:5px;border-radius:50%;background:#12B76A"></div>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#191F28">84,320,000</div>
+                <div style="font-size:9px;color:#E8393E">▲ +2.61%</div>
+              </div>
+            </div>
+            <div class="wt" style="width:155px;height:110px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="중형 (1×2)">
+              <span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">계좌잔고</span>
+              <div>
+                <div style="font-size:9px;color:#9CA3AF;margin-bottom:1px">총 평가자산</div>
+                <div style="font-size:13px;font-weight:700;color:#191F28">84,320,000원</div>
+                <div style="font-size:9px;color:#E8393E">▲ 2,140,000 (+2.61%)</div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:3px;padding-top:6px;border-top:1px solid #F3F4F6">
+                <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:4px"><span style="font-size:12px">🇰🇷</span><span style="font-size:9px;color:#9CA3AF">KRW</span></div><span style="font-size:9px;font-weight:600;color:#374151">72,100,000</span></div>
+                <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:4px"><span style="font-size:12px">🇺🇸</span><span style="font-size:9px;color:#9CA3AF">USD</span></div><span style="font-size:9px;font-weight:600;color:#374151">$8,924</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ② 포트폴리오 -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">포트폴리오</div>
+          <div style="display:flex;gap:8px">
+            <div class="wt" style="width:155px;height:80px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="소형">
+              <span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">포트폴리오</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="width:36px;height:36px;border-radius:50%;background:conic-gradient(#0046FF 0% 34%,#00A878 34% 54%,#FF9500 54% 69%,#EF4444 69% 100%);flex-shrink:0"></div>
+                <div style="font-size:9px;color:#6B7280;line-height:1.5">삼성 34%<br/>SK 20%<br/>기타 46%</div>
+              </div>
+            </div>
+            <div class="wt" style="width:155px;height:110px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="중형">
+              <div style="display:flex;justify-content:space-between"><span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">포트폴리오</span><span style="font-size:9px;color:#0046FF">5종목</span></div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <div style="position:relative;flex-shrink:0">
+                  <div style="width:40px;height:40px;border-radius:50%;background:conic-gradient(#0046FF 0% 34%,#00A878 34% 54%,#FF9500 54% 69%,#EF4444 69% 81%,#8B5CF6 81% 100%)"></div>
+                  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#E8393E">+5.2</div></div>
+                </div>
+                <div style="font-size:9px;color:#6B7280;line-height:1.7">
+                  <div style="display:flex;align-items:center;gap:3px"><div style="width:5px;height:5px;border-radius:1px;background:#0046FF"></div>삼성 34%</div>
+                  <div style="display:flex;align-items:center;gap:3px"><div style="width:5px;height:5px;border-radius:1px;background:#00A878"></div>SK 20%</div>
+                  <div style="display:flex;align-items:center;gap:3px"><div style="width:5px;height:5px;border-radius:1px;background:#8B5CF6"></div>기타 46%</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ③ 주가/차트 -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">주가 / 차트</div>
+          <div style="display:flex;gap:8px">
+            <div class="wt" style="width:155px;height:80px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="소형">
+              <div style="display:flex;align-items:center;gap:6px">
+                <div style="width:20px;height:20px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#0046FF;flex-shrink:0">삼</div>
+                <div><div style="font-size:11px;font-weight:700;color:#191F28">삼성전자</div></div>
+                <span style="font-size:8px;background:#FFF0F1;color:#E8393E;border:1px solid #FFBFC1;border-radius:4px;padding:1px 4px;margin-left:auto;flex-shrink:0">+1.62%</span>
+              </div>
+              <div><div style="font-size:13px;font-weight:700;color:#0046FF">75,400</div>
+                <svg style="width:100%;margin-top:2px" height="12" viewBox="0 0 100 12" preserveAspectRatio="none">
+                  <path d="M0,10 L20,8 L40,5 L60,6 L80,3 L100,1" fill="none" stroke="#E8393E" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="wt" style="width:155px;height:110px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="중형">
+              <div style="display:flex;align-items:center;gap:6px;justify-content:space-between">
+                <div style="display:flex;align-items:center;gap:5px">
+                  <div style="width:22px;height:22px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:800;color:#0046FF;flex-shrink:0">삼</div>
+                  <div><div style="font-size:11px;font-weight:700;color:#191F28">삼성전자</div><div style="font-size:8px;color:#9CA3AF">005930</div></div>
+                </div>
+                <span style="font-size:8px;background:#FFF0F1;color:#E8393E;border:1px solid #FFBFC1;border-radius:4px;padding:1px 4px">+1.62%</span>
+              </div>
+              <div>
+                <div style="font-size:15px;font-weight:700;color:#0046FF">75,400</div>
+                <div style="font-size:9px;color:#E8393E">▲ 1,200원</div>
+              </div>
+              <svg style="width:100%" height="18" viewBox="0 0 120 18" preserveAspectRatio="none">
+                <path d="M0,14 L24,12 L48,9 L72,6 L96,3 L120,1" fill="none" stroke="#E8393E" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- ④ 실시간 순위 -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">실시간 순위</div>
+          <div style="display:flex;gap:8px">
+            <div class="wt" style="width:155px;height:110px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="중형">
+              <div style="display:flex;justify-content:space-between"><span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">순위</span><span style="font-size:9px;color:#0046FF">거래대금</span></div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#0046FF;font-weight:700;width:10px">1</span><div style="width:16px;height:16px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:800;color:#0046FF;flex-shrink:0">삼</div><span style="font-size:10px;flex:1">삼성전자</span><span style="font-size:9px;color:#E8393E">▲1.62%</span></div>
+                <div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#9CA3AF;width:10px">2</span><div style="width:16px;height:16px;border-radius:50%;background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:800;color:#FF9500;flex-shrink:0">SK</div><span style="font-size:10px;flex:1">SK하이닉스</span><span style="font-size:9px;color:#E8393E">▲2.35%</span></div>
+                <div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#9CA3AF;width:10px">3</span><div style="width:16px;height:16px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;color:#059669;flex-shrink:0">N</div><span style="font-size:10px;flex:1">NAVER</span><span style="font-size:9px;color:#0075E8">▼0.94%</span></div>
+              </div>
+            </div>
+            <div class="wt" style="width:155px;height:150px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="대형">
+              <div style="display:flex;justify-content:space-between"><span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">순위</span><span style="font-size:9px;color:#0046FF">거래대금</span></div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#0046FF;font-weight:700;width:10px">1</span><div style="width:16px;height:16px;border-radius:50%;background:#EEF2FF;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:800;color:#0046FF;flex-shrink:0">삼</div><span style="font-size:10px;flex:1">삼성전자</span><span style="font-size:9px;color:#E8393E">▲1.62%</span></div>
+                <div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#9CA3AF;width:10px">2</span><div style="width:16px;height:16px;border-radius:50%;background:#FFF3E0;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:800;color:#FF9500;flex-shrink:0">SK</div><span style="font-size:10px;flex:1">SK하이닉스</span><span style="font-size:9px;color:#E8393E">▲2.35%</span></div>
+                <div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#9CA3AF;width:10px">3</span><div style="width:16px;height:16px;border-radius:50%;background:#ECFDF5;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;color:#059669;flex-shrink:0">N</div><span style="font-size:10px;flex:1">NAVER</span><span style="font-size:9px;color:#0075E8">▼0.94%</span></div>
+                <div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#9CA3AF;width:10px">4</span><div style="width:16px;height:16px;border-radius:50%;background:#FEFCE8;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:900;color:#CA8A04;flex-shrink:0">K</div><span style="font-size:10px;flex:1">카카오</span><span style="font-size:9px;color:#0075E8">▼1.23%</span></div>
+                <div style="display:flex;align-items:center;gap:4px"><span style="font-size:10px;color:#9CA3AF;width:10px">5</span><div style="width:16px;height:16px;border-radius:50%;background:#F0FDF4;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;color:#16A34A;flex-shrink:0">LG</div><span style="font-size:10px;flex:1">LG에너지</span><span style="font-size:9px;color:#E8393E">▲0.79%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ⑤ 주요 지수 -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">주요 지수</div>
+          <div style="display:flex;gap:8px">
+            <div class="wt" style="width:155px;height:80px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="소형">
+              <span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">지수</span>
+              <div style="display:flex;justify-content:space-between">
+                <div style="text-align:center;padding:4px;background:#FFF8F8;border-radius:6px;flex:1;margin-right:3px"><div style="font-size:8px;color:#9CA3AF">KOSPI</div><div style="font-size:11px;font-weight:700">2,685</div><div style="font-size:8px;color:#E8393E">▲0.46%</div></div>
+                <div style="text-align:center;padding:4px;background:#F0F8FF;border-radius:6px;flex:1;margin-left:3px"><div style="font-size:8px;color:#9CA3AF">NASDAQ</div><div style="font-size:11px;font-weight:700">16,274</div><div style="font-size:8px;color:#0075E8">▼0.92%</div></div>
+              </div>
+            </div>
+            <div class="wt" style="width:155px;height:80px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="광폭">
+              <span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">지수 전체</span>
+              <div style="display:flex;justify-content:space-between;gap:2px">
+                <div style="text-align:center"><div style="font-size:8px;color:#9CA3AF">KOSPI</div><div style="font-size:10px;font-weight:700">2,685</div><div style="font-size:8px;color:#E8393E">▲</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:#9CA3AF">KOSDAQ</div><div style="font-size:10px;font-weight:700">842</div><div style="font-size:8px;color:#0075E8">▼</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:#9CA3AF">NASDAQ</div><div style="font-size:10px;font-weight:700">16,274</div><div style="font-size:8px;color:#0075E8">▼</div></div>
+                <div style="text-align:center"><div style="font-size:8px;color:#9CA3AF">S&P</div><div style="font-size:10px;font-weight:700">5,234</div><div style="font-size:8px;color:#0075E8">▼</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ⑥ 환율 -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">환율</div>
+          <div style="display:flex;gap:8px">
+            <div class="wt" style="width:155px;height:110px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="중형">
+              <span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">환율</span>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="display:flex;align-items:center;gap:6px;padding:5px 6px;background:#F8F9FB;border-radius:8px">
+                  <span style="font-size:13px">🇺🇸</span>
+                  <div><div style="font-size:8px;color:#9CA3AF">USD/KRW</div><div style="font-size:12px;font-weight:700">1,378.50</div></div>
+                  <span style="font-size:8px;color:#0075E8;margin-left:auto">▼2.30</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;padding:5px 6px;background:#F8F9FB;border-radius:8px">
+                  <span style="font-size:13px">🇯🇵</span>
+                  <div><div style="font-size:8px;color:#9CA3AF">JPY/KRW</div><div style="font-size:12px;font-weight:700">9.24</div></div>
+                  <span style="font-size:8px;color:#E8393E;margin-left:auto">▲0.05</span>
+                </div>
+              </div>
+              <div style="background:#EEF2FF;border-radius:8px;padding:4px;text-align:center;font-size:9px;color:#0046FF;font-weight:700">환전하기</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ⑦ 관심 종목 -->
+        <div>
+          <div style="font-size:10px;font-weight:700;color:#9CA3AF;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px">관심 종목</div>
+          <div style="display:flex;gap:8px">
+            <div class="wt" style="width:155px;height:120px;padding:10px 12px;display:flex;flex-direction:column;justify-content:space-between" title="중형">
+              <div style="display:flex;justify-content:space-between"><span style="font-size:9px;font-weight:600;color:#9CA3AF;text-transform:uppercase">관심종목</span><span style="font-size:9px;color:#0046FF">3개</span></div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                <div style="display:flex;align-items:center;gap:4px"><div style="width:16px;height:16px;border-radius:50%;background:#EFF6FF;display:flex;align-items:center;justify-content:center;font-size:7px;font-weight:700;color:#1D4ED8;flex-shrink:0">H</div><span style="font-size:10px;flex:1">현대차</span><span style="font-size:9px;color:#0075E8">▼0.82%</span></div>
+                <div style="height:1px;background:#F3F4F6"></div>
+                <div style="display:flex;align-items:center;gap:4px"><div style="width:16px;height:16px;border-radius:50%;background:#F0FDF4;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;color:#16A34A;flex-shrink:0">LG</div><span style="font-size:10px;flex:1">LG에너지</span><span style="font-size:9px;color:#E8393E">▲1.20%</span></div>
+                <div style="height:1px;background:#F3F4F6"></div>
+                <div style="display:flex;align-items:center;gap:4px"><div style="width:16px;height:16px;border-radius:50%;background:#F0FDFA;display:flex;align-items:center;justify-content:center;font-size:6px;font-weight:700;color:#0D9488;flex-shrink:0">셀</div><span style="font-size:10px;flex:1">셀트리온</span><span style="font-size:9px;color:#E8393E">▲0.34%</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- /widget list -->
+    </div>
+    <!-- /picker panel -->
+  </div>
+  <!-- /edit overlay -->
+
+
+  <script>
+    const editBtn     = document.getElementById('editBtn');
+    const closeEdit   = document.getElementById('closeEdit');
+    const editOverlay = document.getElementById('editOverlay');
+
+    editBtn.addEventListener('click', () => {
+      editOverlay.style.display = 'flex';
+    });
+    closeEdit.addEventListener('click', () => {
+      editOverlay.style.display = 'none';
+    });
+    editOverlay.addEventListener('click', (e) => {
+      if (e.target === editOverlay) editOverlay.style.display = 'none';
+    });
+
+    // Tab switching
+    document.querySelectorAll('.tab-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        const group = chip.closest('.card, .wt') || chip.parentElement;
+        group.querySelectorAll('.tab-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+      });
+    });
+  </script>
+
+</body>
+</html>

@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SOL Lite — 시세</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #D1D5DB; border-radius: 4px; }
+    body { background: #F4F6FA; font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif; height: 100vh; overflow: hidden; color: #191F28; }
+    .app-header { height: 54px; }
+    .app-body   { height: calc(100vh - 54px); }
+    .up   { color: #E8393E; }
+    .down { color: #0075E8; }
+    .up-bg   { background: #FFF0F1; color: #E8393E; border: 1px solid #FFBFC1; }
+    .down-bg { background: #EFF6FF; color: #0075E8; border: 1px solid #BFDBFE; }
+    @keyframes pulse-dot { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+    .live-dot { display:inline-flex;width:6px;height:6px;border-radius:50%;background:#12B76A;animation:pulse-dot 2s infinite;flex-shrink:0; }
+    .chat-panel { width:368px;flex-shrink:0;background:#fff;border-left:1px solid #EAECF0;display:flex;flex-direction:column; }
+    @keyframes bubbleIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+    .bubble { animation: bubbleIn .22s ease both; }
+
+    /* 메인탭 */
+    .main-tab { padding:8px 0; font-size:13px; font-weight:600; color:#9CA3AF; border:none; background:none; cursor:pointer; font-family:inherit; border-bottom:2px solid transparent; transition:all .15s; }
+    .main-tab.active { color:#191F28; border-bottom-color:#191F28; font-weight:700; }
+
+    /* 서브 필터 칩 */
+    .filter-chip { padding:4px 12px; border-radius:20px; font-size:11px; font-weight:600; cursor:pointer; border:none; font-family:inherit; transition:all .12s; white-space:nowrap; }
+    .filter-chip.active { background:#0046FF; color:#fff; }
+    .filter-chip:not(.active) { background:#F3F4F6; color:#6B7280; }
+    .filter-chip:not(.active):hover { background:#E5E7EB; }
+
+    /* 기간 칩 */
+    .period-chip { padding:3px 9px; border-radius:6px; font-size:10px; font-weight:600; cursor:pointer; border:none; font-family:inherit; transition:all .12s; }
+    .period-chip.active { background:#191F28; color:#fff; }
+    .period-chip:not(.active) { background:transparent; color:#9CA3AF; }
+
+    /* 종목 행 */
+    .stock-row { display:grid; grid-template-columns:32px 36px 1fr 100px 80px 90px 120px; align-items:center; padding:10px 16px; cursor:pointer; transition:background .1s; border-bottom:1px solid #F3F4F6; }
+    .stock-row:hover { background:#F8F9FB; }
+    .stock-row:last-child { border-bottom:none; }
+
+    /* 하트 버튼 */
+    .heart-btn { width:24px; height:24px; border-radius:6px; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; color:#D1D5DB; font-size:14px; transition:all .12s; }
+    .heart-btn:hover { color:#E8393E; }
+    .heart-btn.active { color:#E8393E; }
+
+    /* 매수/매도 비율 바 */
+    .ratio-bar { display:flex; height:4px; border-radius:2px; overflow:hidden; margin-bottom:3px; }
+    .ratio-buy { background:#E8393E; }
+    .ratio-sell { background:#0075E8; }
+  </style>
+</head>
+<body class="flex flex-col">
+
+  <!-- HEADER -->
+  <header class="app-header flex items-center px-4 gap-3 bg-white border-b border-[#EAECF0] shrink-0 z-50">
+    <div class="flex items-center gap-2 mr-2 shrink-0">
+      <div class="w-7 h-7 rounded-[9px] bg-[#0046FF] flex items-center justify-center shadow-[0_0_14px_rgba(0,70,255,.35)]">
+        <svg class="w-3.5 h-3.5 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <span class="text-[15px] font-bold tracking-tight">SOL <span class="text-[#0046FF]">Lite</span></span>
+    </div>
+    <nav class="flex items-center gap-0.5 bg-[#F4F6FA] rounded-xl p-1">
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg">홈</button>
+      <button class="px-4 py-1.5 text-[12px] font-semibold rounded-lg bg-white text-[#191F28] shadow-sm">시세</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg">주문</button>
+      <button class="px-4 py-1.5 text-[12px] text-[#9CA3AF] rounded-lg">잔고</button>
+    </nav>
+    <div class="flex-1"></div>
+    <div class="flex items-center gap-1.5 pl-2 border-l border-[#EAECF0] ml-1">
+      <div class="w-7 h-7 rounded-full bg-[#0046FF] flex items-center justify-center text-white text-[11px] font-bold">김</div>
+      <div><div class="text-[11px] font-semibold leading-none">김SOL</div><div class="text-[9px] text-[#9CA3AF] mt-0.5">주문가능 7,478만원</div></div>
+    </div>
+  </header>
+
+  <!-- BODY -->
+  <div class="app-body flex min-h-0">
+
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 min-w-0 flex flex-col overflow-hidden bg-white">
+
+      <!-- ① 글로벌 지표 바 -->
+      <div style="display:flex;align-items:center;gap:0;padding:0 20px;border-bottom:1px solid #EAECF0;flex-shrink:0;overflow-x:auto;background:#fff">
+        <!-- KOSPI -->
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 16px 10px 0;border-right:1px solid #F3F4F6;flex-shrink:0">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#9CA3AF;margin-bottom:1px">KOSPI</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-size:16px;font-weight:800;color:#191F28">2,685.40</span>
+              <span style="font-size:11px;font-weight:700;color:#E8393E">▲0.46%</span>
+            </div>
+          </div>
+          <svg width="56" height="28" viewBox="0 0 56 28" fill="none"><path d="M0,22 L9,20 L18,18 L27,14 L36,10 L45,6 L56,3" stroke="#E8393E" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+        </div>
+        <!-- KOSDAQ -->
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-right:1px solid #F3F4F6;flex-shrink:0">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#9CA3AF;margin-bottom:1px">KOSDAQ</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-size:16px;font-weight:800;color:#191F28">842.15</span>
+              <span style="font-size:11px;font-weight:700;color:#0075E8">▼0.63%</span>
+            </div>
+          </div>
+          <svg width="56" height="28" viewBox="0 0 56 28" fill="none"><path d="M0,6 L9,7 L18,8 L27,11 L36,14 L45,18 L56,22" stroke="#0075E8" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+        </div>
+        <!-- 달러/원 -->
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-right:1px solid #F3F4F6;flex-shrink:0">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#9CA3AF;margin-bottom:1px">달러/원</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-size:16px;font-weight:800;color:#191F28">1,342.50</span>
+              <span style="font-size:11px;font-weight:700;color:#E8393E">▲1.2%</span>
+            </div>
+          </div>
+          <svg width="56" height="28" viewBox="0 0 56 28" fill="none"><path d="M0,20 L9,18 L18,22 L27,16 L36,12 L45,8 L56,5" stroke="#E8393E" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+        </div>
+        <!-- 나스닥 -->
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-right:1px solid #F3F4F6;flex-shrink:0">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#9CA3AF;margin-bottom:1px">나스닥</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-size:16px;font-weight:800;color:#191F28">17,754.8</span>
+              <span style="font-size:11px;font-weight:700;color:#0075E8">▼0.92%</span>
+            </div>
+          </div>
+          <svg width="56" height="28" viewBox="0 0 56 28" fill="none"><path d="M0,8 L9,6 L18,10 L27,12 L36,16 L45,20 L56,22" stroke="#0075E8" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+        </div>
+        <!-- S&P500 -->
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;flex-shrink:0">
+          <div>
+            <div style="font-size:10px;font-weight:600;color:#9CA3AF;margin-bottom:1px">S&P 500</div>
+            <div style="display:flex;align-items:baseline;gap:6px">
+              <span style="font-size:16px;font-weight:800;color:#191F28">5,614.3</span>
+              <span style="font-size:11px;font-weight:700;color:#0075E8">▼0.45%</span>
+            </div>
+          </div>
+          <svg width="56" height="28" viewBox="0 0 56 28" fill="none"><path d="M0,10 L9,8 L18,9 L27,13 L36,15 L45,18 L56,20" stroke="#0075E8" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+        </div>
+      </div>
+
+      <!-- ② 서브 필터 바 -->
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 20px;border-bottom:1px solid #EAECF0;flex-shrink:0;background:#fff;overflow-x:auto">
+        <!-- 시장 필터 -->
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="filter-chip active">전체</button>
+          <button class="filter-chip">🇰🇷 국내</button>
+          <button class="filter-chip">🇺🇸 미국</button>
+        </div>
+        <div style="width:1px;height:16px;background:#E5E7EB;flex-shrink:0"></div>
+        <!-- 정렬 필터 -->
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="filter-chip active">거래대금</button>
+          <button class="filter-chip">거래량</button>
+          <button class="filter-chip">급상승</button>
+          <button class="filter-chip">급하락</button>
+          <button class="filter-chip">시가총액</button>
+        </div>
+        <!-- 검색 (오른쪽) -->
+        <div style="margin-left:auto;display:flex;align-items:center;gap:2px;background:#F4F6FA;border:1px solid #E5E7EB;border-radius:10px;padding:6px 12px;flex-shrink:0">
+          <svg style="width:12px;height:12px;color:#9CA3AF" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" placeholder="종목 검색" style="background:transparent;font-size:11px;color:#374151;outline:none;border:none;font-family:inherit;width:90px" />
+        </div>
+      </div>
+
+      <!-- ④ 종목 리스트 -->
+      <div style="flex:1;overflow-y:auto">
+        <!-- 테이블 헤더 -->
+        <div class="stock-row" style="background:#FAFAFA;border-bottom:2px solid #EAECF0;cursor:default;padding:7px 16px">
+          <div></div>
+          <div style="font-size:10px;font-weight:600;color:#9CA3AF">순위</div>
+          <div style="font-size:10px;font-weight:600;color:#9CA3AF">종목명</div>
+          <div style="font-size:10px;font-weight:600;color:#9CA3AF;text-align:right">현재가</div>
+          <div style="font-size:10px;font-weight:600;color:#9CA3AF;text-align:right">등락률</div>
+          <div style="font-size:10px;font-weight:600;color:#9CA3AF;text-align:right">거래대금</div>
+          <div style="font-size:10px;font-weight:600;color:#9CA3AF;text-align:right">매수 비율</div>
+        </div>
+
+        <!-- 1. 삼성전자 -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:700;color:#0046FF">1</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#EEF2FF;border:1px solid #C7D2FE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#0046FF;flex-shrink:0">삼성</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">삼성전자</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">75,400</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#E8393E">+1.62%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">1.37조</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:68%"></div><div class="ratio-sell" style="width:32%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">68</span><span style="color:#0075E8;font-weight:600">32</span></div>
+          </div>
+        </div>
+
+        <!-- 2. SK하이닉스 -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:600;color:#9CA3AF">2</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#FFF3E0;border:1px solid #FED7AA;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#FF9500;flex-shrink:0">SK</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">SK하이닉스</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">195,500</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#E8393E">+2.35%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">9,834억</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:83%"></div><div class="ratio-sell" style="width:17%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">83</span><span style="color:#0075E8;font-weight:600">17</span></div>
+          </div>
+        </div>
+
+        <!-- 3. NAVER -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:600;color:#9CA3AF">3</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#ECFDF5;border:1px solid #A7F3D0;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#059669;flex-shrink:0">N</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">NAVER</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">210,000</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#0075E8">-0.94%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">7,124억</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:41%"></div><div class="ratio-sell" style="width:59%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">41</span><span style="color:#0075E8;font-weight:600">59</span></div>
+          </div>
+        </div>
+
+        <!-- 4. 카카오 -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:600;color:#9CA3AF">4</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#FEFCE8;border:1px solid #FEF08A;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#CA8A04;flex-shrink:0">K</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">카카오</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">44,150</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#0075E8">-1.23%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">5,612억</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:29%"></div><div class="ratio-sell" style="width:71%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">29</span><span style="color:#0075E8;font-weight:600">71</span></div>
+          </div>
+        </div>
+
+        <!-- 5. LG에너지솔루션 -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:600;color:#9CA3AF">5</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#F0FDF4;border:1px solid #BBF7D0;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#16A34A;flex-shrink:0">LG에</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">LG에너지솔루션</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">382,000</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#E8393E">+0.79%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">4,892억</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:55%"></div><div class="ratio-sell" style="width:45%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">55</span><span style="color:#0075E8;font-weight:600">45</span></div>
+          </div>
+        </div>
+
+        <!-- 6. 현대차 -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:600;color:#9CA3AF">6</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#EEF2FF;border:1px solid #C7D2FE;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#3B82F6;flex-shrink:0">현대</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">현대차</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">205,000</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#0075E8">-0.82%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">3,781억</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:7%"></div><div class="ratio-sell" style="width:93%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">7</span><span style="color:#0075E8;font-weight:600">93</span></div>
+          </div>
+        </div>
+
+        <!-- 7. 셀트리온 -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:600;color:#9CA3AF">7</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#F0FDFA;border:1px solid #99F6E4;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#0D9488;flex-shrink:0">셀트</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">셀트리온</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">172,300</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#E8393E">+0.35%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">2,943억</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:63%"></div><div class="ratio-sell" style="width:37%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">63</span><span style="color:#0075E8;font-weight:600">37</span></div>
+          </div>
+        </div>
+
+        <!-- 8. POSCO홀딩스 -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:600;color:#9CA3AF">8</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#FFF1F2;border:1px solid #FECDD3;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:#E11D48;flex-shrink:0">포스코</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">POSCO홀딩스</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">396,000</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#E8393E">+2.19%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">2,104억</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:79%"></div><div class="ratio-sell" style="width:21%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">79</span><span style="color:#0075E8;font-weight:600">21</span></div>
+          </div>
+        </div>
+
+        <!-- 9. KB금융 -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:600;color:#9CA3AF">9</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#F3F0FF;border:1px solid #DDD6FE;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#7C3AED;flex-shrink:0">KB</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">KB금융</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">76,200</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#0075E8">-0.52%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">1,837억</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:44%"></div><div class="ratio-sell" style="width:56%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">44</span><span style="color:#0075E8;font-weight:600">56</span></div>
+          </div>
+        </div>
+
+        <!-- 10. 신한지주 -->
+        <div class="stock-row">
+          <button class="heart-btn">♡</button>
+          <div style="font-size:13px;font-weight:600;color:#9CA3AF">10</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="width:36px;height:36px;border-radius:50%;background:#FFF7ED;border:1px solid #FED7AA;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:#EA580C;flex-shrink:0">신한</div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28">신한지주</div>
+            </div>
+          </div>
+          <div style="text-align:right;font-size:14px;font-weight:700;color:#191F28">44,850</div>
+          <div style="text-align:right;font-size:12px;font-weight:700;color:#E8393E">+0.79%</div>
+          <div style="text-align:right;font-size:12px;font-weight:600;color:#374151">1,523억</div>
+          <div>
+            <div class="ratio-bar"><div class="ratio-buy" style="width:58%"></div><div class="ratio-sell" style="width:42%"></div></div>
+            <div style="display:flex;justify-content:space-between;font-size:9px"><span style="color:#E8393E;font-weight:600">58</span><span style="color:#0075E8;font-weight:600">42</span></div>
+          </div>
+        </div>
+
+      </div><!-- /종목 리스트 -->
+    </div><!-- /MAIN -->
+
+    <!-- CHAT PANEL -->
+    <div class="chat-panel">
+      <div style="flex-shrink:0;padding:12px 16px;border-bottom:1px solid #EAECF0;background:#fff">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="position:relative">
+              <div style="width:36px;height:36px;border-radius:12px;background:#0046FF;display:flex;align-items:center;justify-content:center;box-shadow:0 0 14px rgba(0,70,255,.3)">
+                <svg style="width:18px;height:18px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+              </div>
+              <div style="position:absolute;bottom:-2px;right:-2px;width:10px;height:10px;border-radius:50%;background:#12B76A;border:2px solid #fff"></div>
+            </div>
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#191F28;line-height:1">SOL AI 어시스턴트</div>
+              <div style="display:flex;align-items:center;gap:4px;margin-top:3px">
+                <span class="live-dot" style="width:5px;height:5px;background:#12B76A"></span>
+                <span style="font-size:10px;color:#12B76A;font-weight:500">온라인 · 즉시 응답</span>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:4px">
+            <button style="width:28px;height:28px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#9CA3AF">
+              <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            </button>
+            <button style="width:28px;height:28px;border-radius:8px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#9CA3AF">
+              <svg style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+      <div style="flex:1;padding:14px;background:#F8F9FB;overflow-y:auto;display:flex;flex-direction:column;gap:14px">
+        <div class="bubble" style="display:flex;gap:8px">
+          <div style="width:28px;height:28px;border-radius:8px;background:#0046FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
+            <svg style="width:14px;height:14px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          </div>
+          <div>
+            <div style="background:#fff;border:1px solid #EAECF0;border-radius:16px;border-top-left-radius:4px;padding:10px 14px;max-width:230px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+              <p style="font-size:12px;color:#374151;line-height:1.6">안녕하세요, 김SOL님! 👋<br/>시세 페이지에서 도움드릴게요. 관심 종목이나 시황 분석을 요청해 보세요.</p>
+            </div>
+            <div style="font-size:10px;color:#D1D5DB;margin-top:4px;padding-left:4px">14:28</div>
+          </div>
+        </div>
+        <div class="bubble" style="display:flex;justify-content:flex-end">
+          <div>
+            <div style="background:#0046FF;border-radius:16px;border-top-right-radius:4px;padding:10px 14px;max-width:200px">
+              <p style="font-size:12px;color:#fff;line-height:1.6">삼성전자 지금 사도 돼?</p>
+            </div>
+            <div style="font-size:10px;color:#D1D5DB;margin-top:4px;text-align:right;padding-right:4px">14:30</div>
+          </div>
+        </div>
+        <div class="bubble" style="display:flex;gap:8px">
+          <div style="width:28px;height:28px;border-radius:8px;background:#0046FF;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px">
+            <svg style="width:14px;height:14px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          </div>
+          <div>
+            <div style="background:#fff;border:1px solid #EAECF0;border-radius:16px;border-top-left-radius:4px;padding:10px 14px;max-width:230px;box-shadow:0 1px 4px rgba(0,0,0,.04)">
+              <p style="font-size:12px;color:#374151;line-height:1.6">삼성전자는 현재 <strong style="color:#E8393E">75,400원</strong>으로 +1.62% 상승 중입니다. MA20(74,100) 위에서 거래 중으로 단기 추세는 양호합니다. 주문 페이지로 이동할까요?</p>
+            </div>
+            <div style="font-size:10px;color:#D1D5DB;margin-top:4px;padding-left:4px">14:30</div>
+          </div>
+        </div>
+      </div>
+      <div style="flex-shrink:0;padding:14px;border-top:1px solid #EAECF0;background:#fff">
+        <div style="display:flex;align-items:center;gap:8px;background:#F4F6FA;border:1.5px solid #E5E7EB;border-radius:20px;padding:10px 14px">
+          <input type="text" placeholder="종목명이나 원하는 기능을 입력하세요…" style="flex:1;background:transparent;font-size:12px;color:#374151;outline:none;border:none;font-family:inherit" />
+          <button style="width:28px;height:28px;border-radius:12px;background:#0046FF;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 0 10px rgba(0,70,255,.3)">
+            <svg style="width:14px;height:14px;color:#fff" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </div>
+        <p style="font-size:9px;color:#D1D5DB;text-align:center;margin-top:6px">SOL AI는 투자 조언을 제공하지 않습니다</p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
