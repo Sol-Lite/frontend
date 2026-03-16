@@ -1,111 +1,148 @@
-:root {
-  --text: #6b6375;
-  --text-h: #08060d;
-  --bg: #fff;
-  --border: #e5e4e7;
-  --code-bg: #f4f3ec;
-  --accent: #aa3bff;
-  --accent-bg: rgba(170, 59, 255, 0.1);
-  --accent-border: rgba(170, 59, 255, 0.5);
-  --social-bg: rgba(244, 243, 236, 0.5);
-  --shadow:
-    rgba(0, 0, 0, 0.1) 0 10px 15px -3px, rgba(0, 0, 0, 0.05) 0 4px 6px -2px;
+@import "tailwindcss";
 
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
-  --mono: ui-monospace, Consolas, monospace;
+/* ─────────────────────────────────────────────
+   Pretendard 폰트 로드
+───────────────────────────────────────────── */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
 
-  font: 18px/145% var(--sans);
-  letter-spacing: 0.18px;
-  color-scheme: light dark;
-  color: var(--text);
-  background: var(--bg);
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ─────────────────────────────────────────────
+   Tailwind v4 Design Tokens
+   DESIGN.md Token Mapping 기준
+   CSS variable stem → Tailwind utility prefix
+   --color-{name} → text-{name} / bg-{name} / border-{name}
+───────────────────────────────────────────── */
+@theme {
+  /* ── Font ── */
+  --font-sans: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
 
-  @media (max-width: 1024px) {
-    font-size: 16px;
-  }
+  /* ── Brand (DESIGN.md: primary) ── */
+  --color-primary:        #0046FF;
+  --color-primary-hover:  #0035CC;
+  --color-primary-light:  #EEF2FF;
+  --color-primary-border: #C7D2FE;
+  --color-primary-dim:    #E0E7FF;
+
+  /* ── Price Direction (DESIGN.md: up / down) ── */
+  --color-up:           #E8393E;
+  --color-up-bg:        #FFF0F1;
+  --color-up-border:    #FFBFC1;
+  --color-down:         #0075E8;
+  --color-down-bg:      #EFF6FF;
+  --color-down-border:  #BFDBFE;
+
+  /* ── Semantic (DESIGN.md: live / danger / warning) ── */
+  --color-live:    #12B76A;
+  --color-danger:  #FF3B30;
+  --color-warning: #FF9500;
+
+  /* ── Foreground / Text (DESIGN.md: text-primary ~ text-disabled) ── */
+  --color-foreground:          #191F28;  /* text-primary   → text-foreground          */
+  --color-foreground-secondary:#374151;  /* text-secondary → text-foreground-secondary */
+  --color-foreground-tertiary: #6B7280;  /* text-tertiary  → text-foreground-tertiary  */
+  --color-foreground-disabled: #9CA3AF;  /* text-disabled  → text-foreground-disabled  */
+
+  /* ── Background (DESIGN.md: bg-app / bg-surface / bg-subtle / bg-muted) ── */
+  --color-background:       #F4F6FA;  /* bg-app     → bg-background       */
+  --color-surface:          #FFFFFF;  /* bg-surface → bg-surface           */
+  --color-surface-subtle:   #F8F9FB;  /* bg-subtle  → bg-surface-subtle    */
+  --color-surface-muted:    #F3F4F6;  /* bg-muted   → bg-surface-muted     */
+
+  /* ── Border (DESIGN.md: border / border-subtle / border-input) ── */
+  --color-stroke:       #EAECF0;  /* border       → border-stroke       */
+  --color-stroke-subtle:#F3F4F6;  /* border-subtle → border-stroke-subtle */
+  --color-stroke-input: #E5E7EB;  /* border-input  → border-stroke-input  */
+
+  /* ── Portfolio Chart Palette ── */
+  --color-chart-1: #0046FF;
+  --color-chart-2: #00A878;
+  --color-chart-3: #FF9500;
+  --color-chart-4: #EF4444;
+  --color-chart-5: #8B5CF6;
+
+  /* ── Box Shadow ── */
+  --shadow-brand-glow:    0 0 14px rgba(0,70,255,.35);
+  --shadow-brand-glow-sm: 0 0 14px rgba(0,70,255,.30);
+  --shadow-primary-btn:   0 4px 14px rgba(0,70,255,.25);
+  --shadow-widget-hover:  0 4px 16px rgba(0,70,255,.08);
+  --shadow-widget-edit:   0 4px 14px rgba(0,0,0,.07);
+  --shadow-modal:         0 20px 50px rgba(0,0,0,.22);
+  --shadow-focus-ring:    0 0 0 3px rgba(0,70,255,.08);
+  --shadow-delete-btn:    0 2px 6px rgba(0,0,0,.22);
+
+  /* ── Animation ── */
+  --animate-pulse-dot:  pulse-dot 2000ms ease-in-out infinite;
+  --animate-bubble-in:  bubble-in 220ms ease both;
+  --animate-wiggle:     wiggle 550ms ease-in-out infinite;
+  --animate-modal-in:   modal-in 200ms ease both;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --text: #9ca3af;
-    --text-h: #f3f4f6;
-    --bg: #16171d;
-    --border: #2e303a;
-    --code-bg: #1f2028;
-    --accent: #c084fc;
-    --accent-bg: rgba(192, 132, 252, 0.15);
-    --accent-border: rgba(192, 132, 252, 0.5);
-    --social-bg: rgba(47, 48, 58, 0.5);
-    --shadow:
-      rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
-  }
+/* ─────────────────────────────────────────────
+   Keyframes
+───────────────────────────────────────────── */
+@keyframes pulse-dot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: .5; transform: scale(.8); }
+}
 
-  #social .button-icon {
-    filter: invert(1) brightness(2);
-  }
+@keyframes bubble-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  20%       { transform: rotate(-1.2deg) translateY(-1px); }
+  60%       { transform: rotate(1.2deg) translateY(-1px); }
+}
+
+@keyframes modal-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ─────────────────────────────────────────────
+   Base Reset
+───────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  min-width: 1280px; /* desktop-only: 최소 창 너비, 미만 시 수평 스크롤 */
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
-  margin: 0;
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+  height: 100vh;
+  overflow: hidden; /* fixed-layout hybrid */
 }
 
 #root {
-  width: 1126px;
-  max-width: 100%;
-  margin: 0 auto;
-  text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  box-sizing: border-box;
 }
 
-h1,
-h2 {
-  font-family: var(--heading);
-  font-weight: 500;
-  color: var(--text-h);
+/* ─────────────────────────────────────────────
+   Scrollbar (전역)
+───────────────────────────────────────────── */
+::-webkit-scrollbar       { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-stroke-subtle); border-radius: 4px; }
+
+/* ─────────────────────────────────────────────
+   Input / Button 공통
+───────────────────────────────────────────── */
+input, button, select, textarea {
+  font-family: inherit;
 }
 
-h1 {
-  font-size: 56px;
-  letter-spacing: -1.68px;
-  margin: 32px 0;
-  @media (max-width: 1024px) {
-    font-size: 36px;
-    margin: 20px 0;
-  }
-}
-h2 {
-  font-size: 24px;
-  line-height: 118%;
-  letter-spacing: -0.24px;
-  margin: 0 0 8px;
-  @media (max-width: 1024px) {
-    font-size: 20px;
-  }
-}
-p {
-  margin: 0;
-}
-
-code,
-.counter {
-  font-family: var(--mono);
-  display: inline-flex;
-  border-radius: 4px;
-  color: var(--text-h);
-}
-
-code {
-  font-size: 15px;
-  line-height: 135%;
-  padding: 4px 8px;
-  background: var(--code-bg);
+button {
+  cursor: pointer;
 }
