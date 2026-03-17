@@ -1,7 +1,8 @@
-import { Activity } from 'lucide-react'
+import { Activity, LayoutGrid } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import NavTabs from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
+import useEditModeStore from '@/store/useEditModeStore'
 
 function Logo() {
   return (
@@ -58,12 +59,52 @@ function UserArea() {
   )
 }
 
+function EditModeActions() {
+  const { exitEditMode, saveLayout } = useEditModeStore()
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-light border border-primary-border">
+        <LayoutGrid className="w-3.5 h-3.5 text-primary" strokeWidth={2} />
+        <span className="text-[12px] font-semibold text-primary">위젯 편집</span>
+      </div>
+      <button
+        onClick={exitEditMode}
+        className="px-3 py-1.5 rounded-xl border border-stroke-input text-[12px] text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms]"
+      >
+        취소
+      </button>
+      <button
+        onClick={saveLayout}
+        className="px-3 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
+      >
+        완료 · 저장
+      </button>
+    </div>
+  )
+}
+
+function WidgetEditButton() {
+  const { enterEditMode } = useEditModeStore()
+  return (
+    <button
+      onClick={enterEditMode}
+      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stroke text-foreground-secondary text-[12px] font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-[150ms]"
+    >
+      <LayoutGrid className="w-3.5 h-3.5" strokeWidth={2} />
+      위젯 편집
+    </button>
+  )
+}
+
 export default function AppHeader() {
+  const { isEditMode } = useEditModeStore()
+
   return (
     <header className="h-header flex items-center px-4 gap-3 bg-surface border-b border-stroke shrink-0 z-50">
       <Logo />
       <NavTabs />
       <div className="flex-1" />
+      {isEditMode ? <EditModeActions /> : <WidgetEditButton />}
       <UserArea />
     </header>
   )
