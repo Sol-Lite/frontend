@@ -60,7 +60,7 @@ function UserArea() {
 
 export default function AppHeader() {
   return (
-    <header className="h-[54px] flex items-center px-4 gap-3 bg-surface border-b border-stroke shrink-0 z-50">
+    <header className="h-header flex items-center px-4 gap-3 bg-surface border-b border-stroke shrink-0 z-50">
       <Logo />
       <NavTabs />
       <div className="flex-1" />

@@ -28,7 +28,7 @@ function LoginPrompt() {
 
 function ChatHeader() {
   return (
-    <div className="h-[46px] flex items-center gap-2 px-4 border-b border-stroke shrink-0">
+    <div className="h-chat-header flex items-center gap-2 px-4 border-b border-stroke shrink-0">
       <MessageSquare className="w-3.5 h-3.5 text-primary" />
       <span className="text-[13px] font-semibold text-foreground">SOL AI</span>
       <LiveDot size="sm" className="ml-0.5" />
@@ -38,7 +38,7 @@ function ChatHeader() {
 
 function ChatInput() {
   return (
-    <div className="h-[52px] flex items-center gap-2 px-3 border-t border-stroke shrink-0">
+    <div className="h-chat-input flex items-center gap-2 px-3 border-t border-stroke shrink-0">
       <input
         type="text"
         placeholder="AI에게 물어보세요..."
@@ -73,7 +73,7 @@ export default function ChatPanel() {
   const { isAuthenticated } = useAuthStore()
 
   return (
-    <aside className="w-[368px] flex flex-col bg-surface border-l border-stroke shrink-0">
+    <aside className="w-chat-panel flex flex-col bg-surface border-l border-stroke shrink-0">
       {isAuthenticated ? (
         <>
           <ChatHeader />

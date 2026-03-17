@@ -16,7 +16,7 @@ export default function Sidebar() {
     path === '/' ? pathname === '/' : pathname.startsWith(path)
 
   return (
-    <aside className="w-14 flex flex-col items-center py-3 gap-1 bg-surface border-r border-stroke shrink-0">
+    <aside className="w-sidebar flex flex-col items-center py-3 gap-1 bg-surface border-r border-stroke shrink-0">
       {ITEMS.map(({ icon: Icon, path, label }) => (
         <button
           key={path}
