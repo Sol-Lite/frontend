@@ -52,7 +52,10 @@ export default function HomePage() {
       </div>
 
       {/* 위젯 그리드: 4열 × 3행 */}
-      <div className="grid grid-cols-4 grid-rows-3 gap-[10px] flex-1 min-h-0">
+      <div className={[
+        'grid grid-cols-4 grid-rows-3 gap-[10px] flex-1 min-h-0',
+        isEditMode ? 'overflow-visible' : 'overflow-hidden',
+      ].join(' ')}>
         {/* Row 1 */}
         <BalanceWidget />
         <IndexWidget />
@@ -67,7 +70,7 @@ export default function HomePage() {
         <MarketOverviewWidget />
         <ExchangeWidget />
         <StockChartWidget stock={HOME_STOCKS[1]} />
-        <AddWidgetSlot />
+        {!isEditMode && <AddWidgetSlot />}
       </div>
     </div>
   )
