@@ -61,6 +61,22 @@
   --color-avatar-purple-bg:      #F5F3FF;
   --color-avatar-purple-border:  #DDD6FE;
   --color-avatar-purple-text:    #7C3AED;
+  --color-avatar-yellow-bg:      #FEFCE8;
+  --color-avatar-yellow-border:  #FEF08A;
+  --color-avatar-yellow-text:    #CA8A04;
+  --color-avatar-teal-bg:        #F0FDFA;
+  --color-avatar-teal-border:    #99F6E4;
+  --color-avatar-teal-text:      #0D9488;
+  --color-avatar-orange-bg:      #FFF7ED;
+  --color-avatar-orange-border:  #FED7AA;
+  --color-avatar-orange-text:    #EA580C;
+
+  /* ── Layout Structure (여러 컴포넌트가 참조하는 구조값) ── */
+  --spacing-header:       54px;   /* AppHeader 높이 */
+  --spacing-chat-panel:   368px;  /* ChatPanel 너비 */
+  --spacing-chat-header:  46px;   /* ChatPanel 헤더 높이 */
+  --spacing-chat-input:   52px;   /* ChatPanel 입력 영역 높이 */
+  --spacing-sidebar:      56px;   /* Sidebar 너비 */
 
   /* ── Portfolio Chart Palette ── */
   --color-chart-1: #0046FF;

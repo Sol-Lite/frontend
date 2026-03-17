@@ -12,6 +12,9 @@ const COLOR_MAP = {
   green:   'bg-avatar-green-bg border-avatar-green-border text-avatar-green-text',
   red:     'bg-up-bg border-up-border text-up',
   purple:  'bg-avatar-purple-bg border-avatar-purple-border text-avatar-purple-text',
+  yellow:  'bg-avatar-yellow-bg border-avatar-yellow-border text-avatar-yellow-text',
+  teal:    'bg-avatar-teal-bg border-avatar-teal-border text-avatar-teal-text',
+  orange:  'bg-avatar-orange-bg border-avatar-orange-border text-avatar-orange-text',
 }
 
 const SIZE_MAP = {

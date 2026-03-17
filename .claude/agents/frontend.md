@@ -77,18 +77,55 @@ style(market): StockRow hover 스타일 수정
 ### 스타일 — 안티패턴 (절대 금지)
 
 ```jsx
-// ❌ 인라인 스타일
+// ❌ 인라인 스타일 — 항상 금지
 style={{ boxShadow: 'var(--shadow-brand-glow)' }}
 style={{ animation: 'pulse-dot 2s ease-in-out infinite' }}
+style={{ gridTemplateColumns: '32px 1fr 100px' }}
+style={{ width: '368px' }}
 
-// ❌ arbitrary value (토큰이 있을 경우)
-className="shadow-[var(--shadow-brand-glow)]"
+// ❌ 색상 arbitrary value — 항상 금지
 className="bg-[#0046FF]"
+className="text-[#191F28]"
+className="shadow-[var(--shadow-brand-glow)]"
 
 // ✅ 올바른 사용
-className="shadow-brand-glow"
-className="animate-pulse-dot"
-className="bg-primary"
+className="shadow-brand-glow"       // @theme 토큰
+className="animate-pulse-dot"       // @theme 토큰
+className="bg-primary"              // @theme 토큰
+className="w-chat-panel"            // @theme 구조 토큰
+className="grid-cols-[32px_1fr]"    // 레이아웃 arbitrary value (컴포넌트 고유값)
+```
+
+### arbitrary value 허용 기준
+
+| 종류 | 규칙 |
+|---|---|
+| 색상 (`bg-[#...]`, `text-[#...]`) | **항상 금지** → `@theme` 토큰 클래스 사용 |
+| 여러 컴포넌트가 공유하는 크기 | **토큰으로 등록** (`--spacing-{name}` → `w-{name}`, `h-{name}`) |
+| 컴포넌트 고유 레이아웃 값 | **arbitrary value 허용** (`grid-cols-[...]`, `w-[...]`) |
+
+**등록된 구조 토큰** (`src/index.css @theme --spacing-*`)
+
+| 토큰 | 클래스 | 값 |
+|---|---|---|
+| `--spacing-header` | `h-header` | AppHeader 높이 (54px) |
+| `--spacing-sidebar` | `w-sidebar` | Sidebar 너비 (56px) |
+| `--spacing-chat-panel` | `w-chat-panel` | ChatPanel 너비 (368px) |
+| `--spacing-chat-header` | `h-chat-header` | ChatPanel 헤더 높이 (46px) |
+| `--spacing-chat-input` | `h-chat-input` | ChatPanel 입력 영역 높이 (52px) |
+
+### SVG 색상 속성
+
+SVG `stroke` / `fill` 속성은 Tailwind 클래스를 받을 수 없다.
+이 경우에만 `var(--color-{name})` 참조를 허용한다. 하드코딩 hex는 금지.
+
+```jsx
+// ❌ 하드코딩 hex
+<path stroke="#E8393E" />
+<path stroke={isUp ? '#E8393E' : '#0075E8'} />
+
+// ✅ CSS 변수 참조 (SVG 속성 한정 허용)
+<path stroke={isUp ? 'var(--color-up)' : 'var(--color-down)'} />
 ```
 
 ### Tailwind v4 토큰 → 클래스 변환 규칙
