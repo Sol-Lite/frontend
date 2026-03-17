@@ -31,3 +31,4 @@ dist-ssr
 # .
 .github/
 CLAUDE.md
+.claude/agents.local/
