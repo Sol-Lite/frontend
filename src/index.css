@@ -48,9 +48,10 @@
   --color-surface-muted:    #F3F4F6;  /* bg-muted   → bg-surface-muted     */
 
   /* ── Border (DESIGN.md: border / border-subtle / border-input) ── */
-  --color-stroke:       #EAECF0;  /* border       → border-stroke       */
-  --color-stroke-subtle:#F3F4F6;  /* border-subtle → border-stroke-subtle */
-  --color-stroke-input: #E5E7EB;  /* border-input  → border-stroke-input  */
+  --color-stroke:              #EAECF0;  /* border       → border-stroke       */
+  --color-stroke-subtle:       #F3F4F6;  /* border-subtle → border-stroke-subtle */
+  --color-stroke-input:        #E5E7EB;  /* border-input  → border-stroke-input  */
+  --color-widget-border-hover: #BFD0FF;  /* 위젯 카드 hover 테두리 */
 
   /* ── Stock Avatar 테마 (종목 아이콘 배경/테두리) ── */
   --color-avatar-warning-bg:     #FFF3E0;
