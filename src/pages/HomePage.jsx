@@ -18,7 +18,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
       {/* 서브바 */}
-      <div className="flex items-center justify-between shrink-0 px-1">
+      <div className="flex items-center justify-between shrink-0 px-1 h-7">
         <div className="flex items-center gap-2">
           <span className="text-[13px] font-bold text-foreground">나의 대시보드</span>
           {isEditMode ? (
