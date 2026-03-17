@@ -17,10 +17,10 @@ export const HOME_INDICES = [
 export const PORTFOLIO = {
   returnRate: '+5.2%',
   items: [
-    { name: '삼성전자', ratio: 34, color: 'var(--color-chart-1)', barWidth: 28 },
-    { name: 'SK하이닉스', ratio: 20, color: 'var(--color-chart-2)', barWidth: 16 },
-    { name: 'NAVER',    ratio: 15, color: 'var(--color-chart-3)', barWidth: 12 },
-    { name: '기타',     ratio: 31, color: 'var(--color-chart-5)', barWidth: 25 },
+    { name: '삼성전자', ratio: 34, color: 'var(--color-chart-1)', barWidth: '28px' },
+    { name: 'SK하이닉스', ratio: 20, color: 'var(--color-chart-2)', barWidth: '16px' },
+    { name: 'NAVER',    ratio: 15, color: 'var(--color-chart-3)', barWidth: '12px' },
+    { name: '기타',     ratio: 31, color: 'var(--color-chart-5)', barWidth: '25px' },
   ],
 }
 
