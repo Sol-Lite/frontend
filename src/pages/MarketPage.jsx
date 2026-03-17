@@ -53,6 +53,7 @@ function FilterBar({ marketFilter, setMarketFilter, sortFilter, setSortFilter, s
       <div className="ml-auto flex items-center gap-1.5 bg-background border border-stroke-input rounded-[10px] px-3 py-1.5 shrink-0">
         <Search className="w-3 h-3 text-foreground-disabled" />
         <input
+          aria-label="종목 검색"
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -91,9 +92,10 @@ export default function MarketPage() {
       return next
     })
 
-  const filtered = STOCKS.filter((s) =>
-    s.name.includes(search) || s.label.includes(search)
-  )
+  const filtered = STOCKS
+    .filter((s) => marketFilter === 'all' || s.market === marketFilter)
+    .filter((s) => s.name.includes(search) || s.label.includes(search))
+  // TODO: sortFilter 기반 정렬은 API 연동 시 구현
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-surface">

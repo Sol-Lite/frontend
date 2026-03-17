@@ -20,15 +20,16 @@ export const SORT_FILTERS = [
   { key: 'market_cap',   label: '시가총액' },
 ]
 
+// market: 'kr' | 'us'
 export const STOCKS = [
-  { id: 1, rank: 1,  name: '삼성전자',        label: '삼성', color: 'primary', price: '75,400',   change: 1.62,  volume: '1.37조', buyRatio: 68, sellRatio: 32 },
-  { id: 2, rank: 2,  name: 'SK하이닉스',       label: 'SK',   color: 'warning', price: '195,500',  change: 2.35,  volume: '9,834억', buyRatio: 83, sellRatio: 17 },
-  { id: 3, rank: 3,  name: 'NAVER',            label: 'N',    color: 'green',   price: '210,000',  change: -0.94, volume: '7,124억', buyRatio: 41, sellRatio: 59 },
-  { id: 4, rank: 4,  name: '카카오',           label: 'K',    color: 'yellow',  price: '44,150',   change: -1.23, volume: '5,612억', buyRatio: 29, sellRatio: 71 },
-  { id: 5, rank: 5,  name: 'LG에너지솔루션',   label: 'LG에', color: 'green',   price: '382,000',  change: 0.79,  volume: '4,892억', buyRatio: 55, sellRatio: 45 },
-  { id: 6, rank: 6,  name: '현대차',           label: '현대', color: 'primary', price: '205,000',  change: -0.82, volume: '3,781억', buyRatio: 7,  sellRatio: 93 },
-  { id: 7, rank: 7,  name: '셀트리온',         label: '셀트', color: 'teal',    price: '172,300',  change: 0.35,  volume: '2,943억', buyRatio: 63, sellRatio: 37 },
-  { id: 8, rank: 8,  name: 'POSCO홀딩스',      label: '포스코',color: 'red',    price: '396,000',  change: 2.19,  volume: '2,104억', buyRatio: 79, sellRatio: 21 },
-  { id: 9, rank: 9,  name: 'KB금융',           label: 'KB',   color: 'purple',  price: '76,200',   change: -0.52, volume: '1,837억', buyRatio: 44, sellRatio: 56 },
-  { id: 10, rank: 10, name: '신한지주',        label: '신한', color: 'orange',  price: '44,850',   change: 0.79,  volume: '1,523억', buyRatio: 58, sellRatio: 42 },
+  { id: 1, rank: 1,  market: 'kr', name: '삼성전자',       label: '삼성',  color: 'primary', price: '75,400',   change: 1.62,  volume: '1.37조',  buyRatio: 68, sellRatio: 32 },
+  { id: 2, rank: 2,  market: 'kr', name: 'SK하이닉스',      label: 'SK',    color: 'warning', price: '195,500',  change: 2.35,  volume: '9,834억', buyRatio: 83, sellRatio: 17 },
+  { id: 3, rank: 3,  market: 'kr', name: 'NAVER',           label: 'N',     color: 'green',   price: '210,000',  change: -0.94, volume: '7,124억', buyRatio: 41, sellRatio: 59 },
+  { id: 4, rank: 4,  market: 'kr', name: '카카오',          label: 'K',     color: 'yellow',  price: '44,150',   change: -1.23, volume: '5,612억', buyRatio: 29, sellRatio: 71 },
+  { id: 5, rank: 5,  market: 'kr', name: 'LG에너지솔루션',  label: 'LG에',  color: 'green',   price: '382,000',  change: 0.79,  volume: '4,892억', buyRatio: 55, sellRatio: 45 },
+  { id: 6, rank: 6,  market: 'kr', name: '현대차',          label: '현대',  color: 'primary', price: '205,000',  change: -0.82, volume: '3,781억', buyRatio: 7,  sellRatio: 93 },
+  { id: 7, rank: 7,  market: 'kr', name: '셀트리온',        label: '셀트',  color: 'teal',    price: '172,300',  change: 0.35,  volume: '2,943억', buyRatio: 63, sellRatio: 37 },
+  { id: 8, rank: 8,  market: 'kr', name: 'POSCO홀딩스',     label: '포스코',color: 'red',     price: '396,000',  change: 2.19,  volume: '2,104억', buyRatio: 79, sellRatio: 21 },
+  { id: 9, rank: 9,  market: 'us', name: 'KB금융',          label: 'KB',    color: 'purple',  price: '76,200',   change: -0.52, volume: '1,837억', buyRatio: 44, sellRatio: 56 },
+  { id: 10, rank: 10, market: 'us', name: '신한지주',       label: '신한',  color: 'orange',  price: '44,850',   change: 0.79,  volume: '1,523억', buyRatio: 58, sellRatio: 42 },
 ]
