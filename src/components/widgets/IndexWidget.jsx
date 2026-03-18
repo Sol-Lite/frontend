@@ -3,6 +3,7 @@ import PriceChange from '@/components/ui/PriceChange'
 import TabChip from '@/components/ui/TabChip'
 import WidgetCard from './WidgetCard'
 import { HOME_INDICES } from '@/mocks/home'
+import { cn } from '@/lib/cn'
 
 const TABS = ['국내', '미국', '아시아']
 
@@ -29,10 +30,10 @@ export default function IndexWidget() {
         {HOME_INDICES.map((idx) => (
           <div
             key={idx.key}
-            className={[
+            className={cn(
               'text-center py-2 rounded-xl border',
               idx.change > 0 ? 'bg-up-bg border-up-border' : 'bg-down-bg border-down-border',
-            ].join(' ')}
+            )}
           >
             <div className="text-[9px] text-foreground-disabled mb-0.5">{idx.label}</div>
             <div className="text-[13px] font-bold text-foreground">{idx.value}</div>

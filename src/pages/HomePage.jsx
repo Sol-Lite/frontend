@@ -1,6 +1,7 @@
 import { Pencil } from 'lucide-react'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
+import { cn } from '@/lib/cn'
 import BalanceWidget from '@/components/widgets/BalanceWidget'
 import IndexWidget from '@/components/widgets/IndexWidget'
 import PortfolioWidget from '@/components/widgets/PortfolioWidget'
@@ -52,10 +53,10 @@ export default function HomePage() {
       </div>
 
       {/* 위젯 그리드: 4열 × 3행 */}
-      <div className={[
+      <div className={cn(
         'grid grid-cols-4 grid-rows-3 gap-[10px] flex-1 min-h-0',
         isEditMode ? 'overflow-visible' : 'overflow-hidden',
-      ].join(' ')}>
+      )}>
         {/* Row 1 */}
         <BalanceWidget />
         <IndexWidget />
