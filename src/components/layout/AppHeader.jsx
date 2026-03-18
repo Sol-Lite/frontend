@@ -1,7 +1,8 @@
-import { Activity } from 'lucide-react'
+import { Activity, LogOut } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import NavTabs from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
+import { authApi } from '@/api/auth'
 
 function Logo() {
   return (
@@ -20,22 +21,41 @@ function Logo() {
 
 function UserArea() {
   const navigate = useNavigate()
-  const { isAuthenticated, user } = useAuthStore()
+  const { isAuthenticated, user, logout } = useAuthStore()
+
+  async function handleLogout() {
+    try {
+      await authApi.logout()
+    } finally {
+      logout()
+      navigate('/login')
+    }
+  }
 
   if (isAuthenticated && user) {
     return (
-      <div className="flex items-center gap-1.5 pl-2 border-l border-stroke">
-        <div className="w-7 h-7 rounded-full bg-primary text-white text-[11px] font-bold flex items-center justify-center">
-          {user.name?.[0] ?? '김'}
-        </div>
-        <div className="hidden sm:block">
-          <div className="text-[11px] font-semibold leading-none text-foreground">
-            {user.name ?? '김SOL'}
+      <div className="flex items-center gap-2 pl-2 border-l border-stroke">
+        <div className="flex items-center gap-1.5">
+          <div className="w-7 h-7 rounded-full bg-primary text-white text-[11px] font-bold flex items-center justify-center">
+            {user.name?.[0] ?? '김'}
           </div>
-          <div className="text-[9px] text-foreground-disabled mt-0.5">
-            주문가능 {user.availableAmount ?? '7,478만원'}
+          <div className="hidden sm:block">
+            <div className="text-[11px] font-semibold leading-none text-foreground">
+              {user.name ?? '김SOL'}
+            </div>
+            <div className="text-[9px] text-foreground-disabled mt-0.5">
+              주문가능 {user.availableAmount ?? '7,478만원'}
+            </div>
           </div>
         </div>
+        <button
+          onClick={handleLogout}
+          aria-label="로그아웃"
+          className="p-2 text-foreground-tertiary hover:text-foreground hover:bg-surface-muted rounded-lg transition-colors"
+          title="로그아웃"
+        >
+          <LogOut className="w-5 h-5" strokeWidth={2} />
+        </button>
       </div>
     )
   }
