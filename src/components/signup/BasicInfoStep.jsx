@@ -103,6 +103,16 @@ export default function BasicInfoStep({
               <span className="text-[11px] font-semibold text-live">이메일 인증이 완료되었습니다.</span>
             </div>
           )}
+
+          {fieldErrors.email?.includes('이미 등록된') && (
+            <div className="mt-2 flex flex-col gap-2 rounded-[10px] px-3 py-2.5 border border-up/30 bg-up/5">
+              <p className="text-[11px] font-semibold text-up">{fieldErrors.email}</p>
+              <p className="text-[11px] text-foreground-secondary">
+                이미 가입된 계정이 있으신가요?{' '}
+                <a href="/login" className="text-primary font-semibold hover:underline">로그인</a>
+              </p>
+            </div>
+          )}
         </div>
 
         <Controller
