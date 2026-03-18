@@ -1,6 +1,8 @@
+import { useEffect, useRef } from 'react'
 import { Pencil } from 'lucide-react'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
+import useGridStore from '@/store/useGridStore'
 import { cn } from '@/lib/cn'
 import BalanceWidget from '@/components/widgets/BalanceWidget'
 import IndexWidget from '@/components/widgets/IndexWidget'
@@ -12,9 +14,27 @@ import MarketOverviewWidget from '@/components/widgets/MarketOverviewWidget'
 import ExchangeWidget from '@/components/widgets/ExchangeWidget'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import { HOME_STOCKS } from '@/mocks/home'
+import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT } from '@/lib/gridConstants'
 
 export default function HomePage() {
   const { isEditMode } = useEditModeStore()
+  const { setCellSize } = useGridStore()
+  const gridRef = useRef(null)
+
+  useEffect(() => {
+    const el = gridRef.current
+    if (!el) return
+
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      const cellWidth = (width - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
+      const cellHeight = (height - GRID_GAP * (GRID_ROWS - 1)) / GRID_ROWS
+      setCellSize(cellWidth, cellHeight)
+    })
+
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [setCellSize])
 
   return (
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
@@ -52,26 +72,36 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* 위젯 그리드: 4열 × 3행 */}
+      {/* 스크롤 래퍼: 최솟값 이하로 줄어들면 스크롤 */}
       <div className={cn(
-        'grid grid-cols-4 grid-rows-3 gap-[10px] flex-1 min-h-0',
-        isEditMode ? 'overflow-visible' : 'overflow-hidden',
+        'flex-1 min-h-0',
+        isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
-        {/* Row 1 */}
-        <BalanceWidget />
-        <IndexWidget />
-        <PortfolioWidget />
+        {/* 위젯 그리드: 4열 × 3행, 뷰포트 채움 / 최솟값 이하면 고정 */}
+        <div
+          ref={gridRef}
+          className="grid grid-cols-4 grid-rows-3 gap-[10px] w-full h-full"
+          style={{
+            minWidth: `${MIN_GRID_WIDTH}px`,
+            minHeight: `${MIN_GRID_HEIGHT}px`,
+          }}
+        >
+          {/* Row 1 */}
+          <BalanceWidget />
+          <IndexWidget />
+          <PortfolioWidget />
 
-        {/* Row 2 */}
-        <StockChartWidget stock={HOME_STOCKS[0]} />
-        <RankingWidget />
-        <WatchlistWidget />
+          {/* Row 2 */}
+          <StockChartWidget stock={HOME_STOCKS[0]} />
+          <RankingWidget />
+          <WatchlistWidget />
 
-        {/* Row 3 */}
-        <MarketOverviewWidget />
-        <ExchangeWidget />
-        <StockChartWidget stock={HOME_STOCKS[1]} />
-        {!isEditMode && <AddWidgetSlot />}
+          {/* Row 3 */}
+          <MarketOverviewWidget />
+          <ExchangeWidget />
+          <StockChartWidget stock={HOME_STOCKS[1]} />
+          {!isEditMode && <AddWidgetSlot />}
+        </div>
       </div>
     </div>
   )
