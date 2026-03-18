@@ -4,6 +4,10 @@ import HomePage from '@/pages/HomePage'
 import MarketPage from '@/pages/MarketPage'
 import InvestPage from '@/pages/InvestPage'
 import AssetPage from '@/pages/AssetPage'
+import LoginPage from '@/pages/auth/LoginPage'
+import SignupPage from '@/pages/auth/SignupPage'
+import EmailVerifyPage from '@/pages/auth/EmailVerifyPage'
+import PasswordResetPage from '@/pages/auth/PasswordResetPage'
 
 export const router = createBrowserRouter([
   {
@@ -16,4 +20,8 @@ export const router = createBrowserRouter([
       { path: 'asset',      element: <AssetPage /> },
     ],
   },
+  { path: '/login',          element: <LoginPage /> },
+  { path: '/signup',         element: <SignupPage /> },
+  { path: '/email/verify',   element: <EmailVerifyPage /> },
+  { path: '/password/reset', element: <PasswordResetPage /> },
 ])
