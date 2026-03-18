@@ -52,14 +52,14 @@ function DetailModal({ title, onClose, children }) {
   return (
     <div className="fixed inset-0 z-40 bg-black/40 flex items-center justify-center px-6 py-8">
       <div
-        className="w-full max-w-[860px] max-h-[82vh] bg-surface rounded-2xl shadow-modal overflow-hidden"
-        style={{ animation: 'modal-in .2s ease both' }}
+        className="w-full max-w-[860px] max-h-[82vh] bg-surface rounded-2xl shadow-modal overflow-hidden animate-modal-in"
       >
         <div className="flex items-center justify-between px-6 py-5 border-b border-stroke">
           <h3 className="text-[18px] font-extrabold tracking-tight text-foreground">{title}</h3>
           <button
             type="button"
             onClick={onClose}
+            aria-label="닫기"
             className="w-9 h-9 rounded-full bg-surface-subtle border border-stroke flex items-center justify-center text-foreground-secondary hover:bg-surface-muted transition-colors"
           >
             <X className="w-4 h-4" />

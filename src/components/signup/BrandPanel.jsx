@@ -9,8 +9,7 @@ const FEATURES = [
 export default function BrandPanel() {
   return (
     <div
-      className="w-[44%] shrink-0 flex flex-col py-12 px-11 relative overflow-hidden"
-      style={{ background: 'linear-gradient(145deg, #0035CC 0%, #0046FF 50%, #2563EB 100%)' }}
+      className="w-[44%] shrink-0 flex flex-col py-12 px-11 relative overflow-hidden bg-gradient-to-br from-[#0035CC] via-primary to-[#2563EB]"
     >
       <div className="absolute -top-20 -right-20 w-80 h-80 rounded-full bg-white/[.06]" />
       <div className="absolute -bottom-[60px] -left-[60px] w-60 h-60 rounded-full bg-white/[.04]" />

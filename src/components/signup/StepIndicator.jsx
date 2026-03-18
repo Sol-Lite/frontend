@@ -13,7 +13,7 @@ export default function StepIndicator({ current, steps }) {
               <div
                 className={[
                   'w-[26px] h-[26px] rounded-full flex items-center justify-center text-[11px] font-bold',
-                  active ? 'bg-primary text-white shadow-[0_0_12px_rgba(0,70,255,.3)]'
+                  active ? 'bg-primary text-white shadow-brand-glow'
                     : done ? 'bg-primary text-white'
                       : 'bg-surface-muted text-foreground-disabled border-[1.5px] border-stroke-input',
                 ].join(' ')}

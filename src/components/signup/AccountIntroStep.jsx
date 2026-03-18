@@ -4,10 +4,8 @@ export default function AccountIntroStep({ onNext }) {
   return (
     <div className="w-full min-h-screen relative overflow-hidden px-8 py-11 flex flex-col justify-center">
       {/* 배경 장식 요소들 */}
-      <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl pointer-events-none"
-           style={{background: 'rgba(0, 70, 255, 0.15)'}} />
-      <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full blur-3xl pointer-events-none"
-           style={{background: 'rgba(0, 70, 255, 0.1)'}} />
+      <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full blur-3xl pointer-events-none bg-primary/15" />
+      <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full blur-3xl pointer-events-none bg-primary/10" />
 
       {/* 메인 콘텐츠 */}
       <div className="relative z-10">
