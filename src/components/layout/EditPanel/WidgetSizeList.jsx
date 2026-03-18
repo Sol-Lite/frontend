@@ -242,7 +242,7 @@ function PreviewContent({ type }) {
             <span className="text-[9px] text-foreground-disabled">종목별 비중</span>
             <span className="text-[10px] font-bold text-up">+5.2%</span>
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex flex-col gap-0.9">
             {[
               { name: '삼성전자',       pct: 34, color: 'bg-chart-1' },
               { name: 'SK하이닉스',     pct: 20, color: 'bg-chart-2' },
@@ -413,9 +413,9 @@ function PreviewContent({ type }) {
             {weekCells.map(({ d, trades }, i) => (
               <div
                 key={i}
-                className={cn('flex flex-col items-start justify-start rounded p-1', trades ? 'bg-primary/10' : 'bg-background/50')}
+                className="flex flex-col items-start justify-start rounded p-1 bg-background/50"
               >
-                <span className={cn('text-[8px] leading-none mb-1', trades ? 'text-primary font-bold' : 'text-foreground')}>{d}</span>
+                <span className="text-[8px] leading-none mb-1 text-foreground">{d}</span>
                 {trades && trades.map((tr, j) => (
                   <div key={j} className="flex items-center gap-0.5 w-full mb-0.5">
                     <div className={cn('w-0.5 rounded-full shrink-0 self-stretch', tr.buy ? 'bg-up' : 'bg-down')} />
