@@ -14,14 +14,14 @@ function widthClass(colSpan) {
 /* ── 실제 대시보드 셀 크기 기반 aspect-ratio 계산 ─────────────
    cellWidth/cellHeight: ResizeObserver로 측정한 실제 셀 크기
    0이면 아직 측정 전 → MIN_CELL 기준 폴백
+   gap은 변하지 않는 상수(GRID_GAP)를 직접 사용
    반환값: 숫자 (w/h 비율)
 ─────────────────────────────────────────────────────────── */
-function calcAspectRatio(colSpan, rowSpan, cellWidth, cellHeight, gap) {
+function calcAspectRatio(colSpan, rowSpan, cellWidth, cellHeight) {
   const cw = cellWidth || MIN_CELL_WIDTH
   const ch = cellHeight || MIN_CELL_HEIGHT
-  const g = gap ?? GRID_GAP
-  const w = colSpan * cw + (colSpan - 1) * g
-  const h = rowSpan * ch + (rowSpan - 1) * g
+  const w = colSpan * cw + (colSpan - 1) * GRID_GAP
+  const h = rowSpan * ch + (rowSpan - 1) * GRID_GAP
   return w / h
 }
 
@@ -790,14 +790,15 @@ function PreviewContent({ type }) {
 /* ── VariantPreview ─────────────────────────────────────── */
 function VariantPreview({ variant }) {
   const { colSpan, rowSpan } = variant
-  const { cellWidth, cellHeight, gap } = useGridStore()
+  const { cellWidth, cellHeight } = useGridStore()
 
-  // 실제 대시보드 비율 (숫자)
-  const ratio = calcAspectRatio(colSpan, rowSpan, cellWidth, cellHeight, gap)
+  // 실제 대시보드 비율 (숫자) — ResizeObserver 측정값 기반
+  const ratio = calcAspectRatio(colSpan, rowSpan, cellWidth, cellHeight)
 
-  // 최솟값 기준 minHeight — 대시보드가 최소 크기일 때 preview content가 잘리지 않는 하한
+  // 최솟값 기준 minHeight — 대시보드가 MIN 크기일 때 preview content가 잘리지 않는 하한
+  // previewWidth: colSpan=1 → 패널 절반(168px), colSpan=2 → 패널 전체(336px)
   const previewWidth = colSpan === 2 ? PANEL_USABLE_WIDTH : PANEL_USABLE_WIDTH / 2
-  const minRatio = calcAspectRatio(colSpan, rowSpan, MIN_CELL_WIDTH, MIN_CELL_HEIGHT, GRID_GAP)
+  const minRatio = calcAspectRatio(colSpan, rowSpan, MIN_CELL_WIDTH, MIN_CELL_HEIGHT)
   const minHeight = previewWidth / minRatio
 
   return (

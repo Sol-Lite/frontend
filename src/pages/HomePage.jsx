@@ -14,7 +14,7 @@ import MarketOverviewWidget from '@/components/widgets/MarketOverviewWidget'
 import ExchangeWidget from '@/components/widgets/ExchangeWidget'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import { HOME_STOCKS } from '@/mocks/home'
-import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT } from '@/lib/gridConstants'
+import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
 
 export default function HomePage() {
   const { isEditMode } = useEditModeStore()
@@ -24,6 +24,9 @@ export default function HomePage() {
   useEffect(() => {
     const el = gridRef.current
     if (!el) return
+
+    // ResizeObserver 콜백은 비동기 → 초기값을 MIN으로 설정해 측정 전 공백 방지
+    setCellSize(MIN_CELL_WIDTH, MIN_CELL_HEIGHT)
 
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect
