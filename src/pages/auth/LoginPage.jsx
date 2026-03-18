@@ -101,7 +101,13 @@ export default function LoginPage() {
           <div>
             <div className="flex justify-between items-center mb-1.5">
               <label className="text-[11px] font-semibold text-foreground-secondary">비밀번호</label>
-              <a href="#" className="text-[11px] text-primary font-medium">비밀번호 찾기</a>
+              <button
+                type="button"
+                onClick={() => navigate('/forgot-password')}
+                className="text-[11px] text-primary font-medium hover:text-primary-hover transition-colors"
+              >
+                비밀번호 찾기
+              </button>
             </div>
             <PasswordInput
               placeholder="비밀번호를 입력하세요"

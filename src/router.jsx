@@ -7,6 +7,7 @@ import AssetPage from '@/pages/AssetPage'
 import LoginPage from '@/pages/auth/LoginPage'
 import SignupPage from '@/pages/auth/SignupPage'
 import EmailVerifyPage from '@/pages/auth/EmailVerifyPage'
+import ForgotPasswordPage from '@/pages/auth/ForgotPasswordPage'
 import PasswordResetPage from '@/pages/auth/PasswordResetPage'
 
 export const router = createBrowserRouter([
@@ -20,8 +21,9 @@ export const router = createBrowserRouter([
       { path: 'asset',      element: <AssetPage /> },
     ],
   },
-  { path: '/login',          element: <LoginPage /> },
-  { path: '/signup',         element: <SignupPage /> },
-  { path: '/email/verify',   element: <EmailVerifyPage /> },
-  { path: '/password/reset', element: <PasswordResetPage /> },
+  { path: '/login',             element: <LoginPage /> },
+  { path: '/signup',            element: <SignupPage /> },
+  { path: '/email/verify',      element: <EmailVerifyPage /> },
+  { path: '/forgot-password',   element: <ForgotPasswordPage /> },
+  { path: '/password/reset',    element: <PasswordResetPage /> },
 ])
