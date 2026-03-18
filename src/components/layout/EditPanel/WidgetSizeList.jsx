@@ -1,25 +1,32 @@
 import { ChevronLeft, Plus } from 'lucide-react'
 import { cn } from '@/lib/cn'
+import useGridStore from '@/store/useGridStore'
+import { MIN_CELL_WIDTH, MIN_CELL_HEIGHT, GRID_GAP } from '@/lib/gridConstants'
 
-/* ── 비율 계산 ──────────────────────────────────────────────
-   패널 폭 = 2열 기준.
-   너비: colSpan=1 → w-1/2,  colSpan=2 → w-full
-   비율: 실제 대시보드 셀 비율 그대로
-     1×1 → aspect-square
-     2×1 → aspect-[2/1]
-     1×2 → aspect-[1/2] (현재 실제 사용하지는 x)
-     2×2 → aspect-square
+/* ── 너비 클래스 ─────────────────────────────────────────────
+   패널 usable width = 2열 기준 (336px).
+   colSpan=1 → w-1/2,  colSpan=2 → w-full
 ─────────────────────────────────────────────────────────── */
 function widthClass(colSpan) {
   return colSpan === 2 ? 'w-full' : 'w-1/2'
 }
 
-function aspectClass(colSpan, rowSpan) {
-  if (colSpan === 1 && rowSpan === 2) return 'aspect-[1/2]'
-  if (colSpan === 2 && rowSpan === 1) return 'aspect-[2/1]'
-  if (colSpan === 2 && rowSpan === 2) return 'aspect-square'
-  return 'aspect-square' // 1×1
+/* ── 실제 대시보드 셀 크기 기반 aspect-ratio 계산 ─────────────
+   cellWidth/cellHeight: ResizeObserver로 측정한 실제 셀 크기
+   0이면 아직 측정 전 → MIN_CELL 기준 폴백
+   gap은 변하지 않는 상수(GRID_GAP)를 직접 사용
+   반환값: 숫자 (w/h 비율)
+─────────────────────────────────────────────────────────── */
+function calcAspectRatio(colSpan, rowSpan, cellWidth, cellHeight) {
+  const cw = cellWidth || MIN_CELL_WIDTH
+  const ch = cellHeight || MIN_CELL_HEIGHT
+  const w = colSpan * cw + (colSpan - 1) * GRID_GAP
+  const h = rowSpan * ch + (rowSpan - 1) * GRID_GAP
+  return w / h
 }
+
+// EditPanel 패널 usable width (w-chat-panel 368px - px-4*2 32px)
+const PANEL_USABLE_WIDTH = 336
 
 function SizeBadge({ colSpan, rowSpan }) {
   return (
@@ -783,12 +790,21 @@ function PreviewContent({ type }) {
 /* ── VariantPreview ─────────────────────────────────────── */
 function VariantPreview({ variant }) {
   const { colSpan, rowSpan } = variant
+  const { cellWidth, cellHeight } = useGridStore()
+
+  // 실제 대시보드 비율 (숫자) — ResizeObserver 측정값 기반
+  const ratio = calcAspectRatio(colSpan, rowSpan, cellWidth, cellHeight)
+
+  // 최솟값 기준 minHeight — 대시보드가 MIN 크기일 때 preview content가 잘리지 않는 하한
+  // previewWidth: colSpan=1 → 패널 절반(168px), colSpan=2 → 패널 전체(336px)
+  const previewWidth = colSpan === 2 ? PANEL_USABLE_WIDTH : PANEL_USABLE_WIDTH / 2
+  const minRatio = calcAspectRatio(colSpan, rowSpan, MIN_CELL_WIDTH, MIN_CELL_HEIGHT)
+  const minHeight = previewWidth / minRatio
+
   return (
     <div
-      className={cn(
-        'w-full border border-stroke rounded-xl p-3 bg-surface flex flex-col overflow-hidden',
-        aspectClass(colSpan, rowSpan),
-      )}
+      className="w-full border border-stroke rounded-xl p-3 bg-surface flex flex-col overflow-hidden"
+      style={{ aspectRatio: ratio, minHeight: `${minHeight}px` }}
     >
       {/* 라벨 + 크기 배지 */}
       <div className="flex items-center justify-between mb-2 shrink-0">
