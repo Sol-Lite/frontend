@@ -28,7 +28,7 @@ function UserArea() {
       await authApi.logout()
     } finally {
       logout()
-      navigate('/login')
+      navigate('/')
     }
   }
 

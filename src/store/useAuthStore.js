@@ -4,6 +4,7 @@ const useAuthStore = create((set, get) => ({
   isAuthenticated: false,
   user: null,           // { userId, email, name }
   accessToken: null,
+  showLoginModal: false,
 
   // 로그인 성공 시 호출
   setAuth: ({ accessToken, user, autoLogin }) => {
@@ -25,6 +26,14 @@ const useAuthStore = create((set, get) => ({
     localStorage.removeItem('accessToken')
     sessionStorage.removeItem('accessToken')
     set({ isAuthenticated: false, user: null, accessToken: null })
+  },
+
+  openLoginModal: () => {
+    set({ showLoginModal: true })
+  },
+
+  closeLoginModal: () => {
+    set({ showLoginModal: false })
   },
 }))
 
