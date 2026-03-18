@@ -295,8 +295,8 @@ function GroupRow({ group, agreements, onAgreementsChange, expandedItems, onExpa
 
 function DocumentSection({ doc, agreements, onAgreementsChange, expandedItems, onExpandItems }) {
   return (
-    <div>
-      <p className="text-[13px] font-bold text-foreground-secondary mb-1">{doc.title}</p>
+    <div className="pt-6 border-t border-stroke-subtle">
+      <p className="text-[13px] font-bold text-foreground mb-3">{doc.title}</p>
       {doc.intro && (
         <p className="text-[11px] text-foreground-disabled leading-[1.75] mb-2">{doc.intro}</p>
       )}

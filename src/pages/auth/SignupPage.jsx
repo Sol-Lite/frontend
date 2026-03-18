@@ -140,14 +140,13 @@ export default function SignupPage() {
       <BrandPanel />
 
       <div className="flex-1 bg-surface flex flex-col overflow-y-auto">
-        <div className="max-w-[560px] w-full mx-auto px-8 py-11">
-          <StepIndicator current={STEP_TO_INDICATOR[step]} steps={INDICATOR_STEPS} />
+        {step === 0 ? (
+          <AccountIntroStep onNext={() => setStep(1)} />
+        ) : (
+          <div className="max-w-[560px] w-full mx-auto px-8 py-11">
+            <StepIndicator current={STEP_TO_INDICATOR[step]} steps={INDICATOR_STEPS} />
 
-          {step === 0 && (
-            <AccountIntroStep onNext={() => setStep(1)} />
-          )}
-
-          {step === 1 && (
+            {step === 1 && (
             <BasicInfoStep
               password={password}
               control={control}
@@ -202,6 +201,7 @@ export default function SignupPage() {
             </p>
           )}
         </div>
+        )}
       </div>
     </div>
   )
