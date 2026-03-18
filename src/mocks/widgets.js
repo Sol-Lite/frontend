@@ -116,4 +116,4 @@ export const WIDGET_TYPES = [
   },
 ]
 
-export const WIDGET_CATEGORIES = ['전체', '계좌', '시세', '포트폴리오', '기타']
+export const WIDGET_CATEGORIES = ['전체', ...new Set(WIDGET_TYPES.map((w) => w.category))]

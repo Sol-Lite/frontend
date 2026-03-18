@@ -242,7 +242,7 @@ function PreviewContent({ type }) {
             <span className="text-[9px] text-foreground-disabled">종목별 비중</span>
             <span className="text-[10px] font-bold text-up">+5.2%</span>
           </div>
-          <div className="flex flex-col gap-0.9">
+          <div className="flex flex-col gap-1">
             {[
               { name: '삼성전자',       pct: 34, color: 'bg-chart-1' },
               { name: 'SK하이닉스',     pct: 20, color: 'bg-chart-2' },
