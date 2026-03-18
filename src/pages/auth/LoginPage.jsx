@@ -22,9 +22,8 @@ export default function LoginPage() {
     try {
       const res = await authApi.login({ email, password, autoLogin })
       setAuth({
-        accessToken:  res.accessToken,
-        refreshToken: res.refreshToken,
-        user:         res.user,
+        accessToken: res.accessToken,
+        user:        res.user,
         autoLogin,
       })
       navigate('/')
