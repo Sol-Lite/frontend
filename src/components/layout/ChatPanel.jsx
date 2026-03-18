@@ -2,6 +2,8 @@ import { MessageSquare, Send, Lock } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import LiveDot from '@/components/ui/LiveDot'
 import useAuthStore from '@/store/useAuthStore'
+import useEditModeStore from '@/store/useEditModeStore'
+import EditPanel from './EditPanel'
 
 function LoginPrompt() {
   const navigate = useNavigate()
@@ -71,6 +73,9 @@ function ChatMessages() {
 
 export default function ChatPanel() {
   const { isAuthenticated } = useAuthStore()
+  const { isEditMode } = useEditModeStore()
+
+  if (isEditMode) return <EditPanel />
 
   return (
     <aside className="w-chat-panel flex flex-col bg-surface border-l border-stroke shrink-0">

@@ -1,5 +1,6 @@
 import { LayoutGrid, TrendingUp, ArrowLeftRight, Wallet } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
+import { cn } from '@/lib/cn'
 
 const ITEMS = [
   { icon: LayoutGrid,     path: '/',       label: '홈' },
@@ -22,12 +23,12 @@ export default function Sidebar() {
           key={path}
           onClick={() => navigate(path)}
           title={label}
-          className={[
+          className={cn(
             'w-9 h-9 flex items-center justify-center rounded-xl transition-colors duration-[150ms]',
             isActive(path)
               ? 'bg-primary-light text-primary'
               : 'text-foreground-disabled hover:text-foreground-secondary hover:bg-background',
-          ].join(' ')}
+          )}
         >
           <Icon className="w-[18px] h-[18px]" strokeWidth={isActive(path) ? 2.5 : 2} />
         </button>
