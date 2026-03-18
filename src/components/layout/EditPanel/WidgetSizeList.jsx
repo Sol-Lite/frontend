@@ -242,12 +242,11 @@ function PreviewContent({ type }) {
             <span className="text-[9px] text-foreground-disabled">종목별 비중</span>
             <span className="text-[10px] font-bold text-up">+5.2%</span>
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             {[
-              { name: '삼성전자',       pct: 34, color: 'bg-chart-1' },
-              { name: 'SK하이닉스',     pct: 20, color: 'bg-chart-2' },
-              { name: 'LG에너지솔루션', pct: 18, color: 'bg-chart-3' },
-              { name: '기타',           pct: 28, color: 'bg-chart-4' },
+              { name: '삼성전자',   pct: 34, color: 'bg-chart-1' },
+              { name: 'SK하이닉스', pct: 20, color: 'bg-chart-2' },
+              { name: '기타',       pct: 46, color: 'bg-chart-4' },
             ].map(({ name, pct, color }) => (
               <div key={name}>
                 <div className="flex justify-between mb-0.5">
