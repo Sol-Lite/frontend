@@ -1,7 +1,7 @@
 /**
  * 위젯 편집 피커용 위젯 타입 & 사이즈 정의
- * colSpan: 1 | 2  (그리드 열 수)
- * rowSpan: 1 | 2  (그리드 행 수)
+ * colSpan: 1 | 2 | 3  (그리드 열 수)
+ * rowSpan: 1 | 2      (그리드 행 수)
  * preview: 프리뷰 렌더러 키 (WidgetSizeList의 PreviewContent에서 switch)
  */
 export const WIDGET_TYPES = [
@@ -13,7 +13,7 @@ export const WIDGET_TYPES = [
     variants: [
       { id: 'balance-sm',  label: '소형',  colSpan: 1, rowSpan: 1, preview: 'balance-sm' },
       { id: 'balance-lg',  label: '와이드', colSpan: 2, rowSpan: 1, preview: 'balance-lg' },
-      { id: 'balance-2x2', label: '대형',  colSpan: 2, rowSpan: 2, preview: 'balance-2x2' },
+      { id: 'balance-3x1', label: '확장형', colSpan: 3, rowSpan: 1, preview: 'balance-3x1' },
     ],
   },
   {
@@ -23,8 +23,9 @@ export const WIDGET_TYPES = [
     description: '종목 현재가 · 미니 차트',
     variants: [
       { id: 'stock-sm',   label: '카드형',    colSpan: 1, rowSpan: 1, preview: 'stock-sm' },
-      { id: 'stock-tall', label: '차트형',    colSpan: 1, rowSpan: 1, preview: 'stock-tall' },
+      { id: 'stock-wide', label: '와이드',    colSpan: 2, rowSpan: 1, preview: 'stock-wide' },
       { id: 'stock-2x2',  label: '대형 차트', colSpan: 2, rowSpan: 2, preview: 'stock-2x2' },
+      { id: 'stock-3x2',  label: '풀 차트',   colSpan: 3, rowSpan: 2, preview: 'stock-3x2' },
     ],
   },
   {
@@ -43,9 +44,9 @@ export const WIDGET_TYPES = [
     category: '시세',
     description: 'KOSPI · KOSDAQ · NASDAQ',
     variants: [
-      { id: 'index-sm',   label: '단일', colSpan: 1, rowSpan: 1, preview: 'index-sm' },
-      { id: 'index-wide', label: '복합', colSpan: 2, rowSpan: 1, preview: 'index-wide' },
-      { id: 'index-2x2',  label: '대형', colSpan: 2, rowSpan: 2, preview: 'index-2x2' },
+      { id: 'index-sm',   label: '단일',  colSpan: 1, rowSpan: 1, preview: 'index-sm' },
+      { id: 'index-wide', label: '복합',  colSpan: 2, rowSpan: 1, preview: 'index-wide' },
+      { id: 'index-3x1',  label: '3지수', colSpan: 3, rowSpan: 1, preview: 'index-3x1' },
     ],
   },
   {
@@ -63,11 +64,11 @@ export const WIDGET_TYPES = [
     id: 'exchange',
     name: '환율',
     category: '기타',
-    description: 'USD · JPY 실시간 환율',
+    description: 'USD · JPY · EUR 실시간 환율',
     variants: [
-      { id: 'exchange-sm',   label: '단일', colSpan: 1, rowSpan: 1, preview: 'exchange-sm' },
-      { id: 'exchange-wide', label: '복합', colSpan: 2, rowSpan: 1, preview: 'exchange-wide' },
-      { id: 'exchange-2x2',  label: '대형', colSpan: 2, rowSpan: 2, preview: 'exchange-2x2' },
+      { id: 'exchange-sm',   label: '단일',  colSpan: 1, rowSpan: 1, preview: 'exchange-sm' },
+      { id: 'exchange-wide', label: '복합',  colSpan: 2, rowSpan: 1, preview: 'exchange-wide' },
+      { id: 'exchange-3x1',  label: '3통화', colSpan: 3, rowSpan: 1, preview: 'exchange-3x1' },
     ],
   },
   {
@@ -82,6 +83,17 @@ export const WIDGET_TYPES = [
     ],
   },
   {
+    id: 'stock-news',
+    name: '종목별 뉴스',
+    category: '기타',
+    description: '선택 종목 관련 뉴스 헤드라인',
+    variants: [
+      { id: 'stock-news-sm',   label: '헤드라인', colSpan: 1, rowSpan: 1, preview: 'stock-news-sm' },
+      { id: 'stock-news-wide', label: '상세',     colSpan: 2, rowSpan: 1, preview: 'stock-news-wide' },
+      { id: 'stock-news-2x2',  label: '대형',     colSpan: 2, rowSpan: 2, preview: 'stock-news-2x2' },
+    ],
+  },
+  {
     id: 'watchlist',
     name: '관심종목',
     category: '기타',
@@ -89,7 +101,6 @@ export const WIDGET_TYPES = [
     variants: [
       { id: 'watchlist-sm',   label: '컴팩트', colSpan: 1, rowSpan: 1, preview: 'watchlist-sm' },
       { id: 'watchlist-wide', label: '목록형', colSpan: 2, rowSpan: 1, preview: 'watchlist-wide' },
-      { id: 'watchlist-2x2',  label: '대형',   colSpan: 2, rowSpan: 2, preview: 'watchlist-2x2' },
     ],
   },
   {
@@ -101,17 +112,6 @@ export const WIDGET_TYPES = [
       { id: 'trade-list', label: '목록형', colSpan: 1, rowSpan: 1, preview: 'trade-list' },
       { id: 'trade-wide', label: '주간',   colSpan: 2, rowSpan: 1, preview: 'trade-wide' },
       { id: 'trade-cal',  label: '캘린더', colSpan: 2, rowSpan: 2, preview: 'trade-cal' },
-    ],
-  },
-  {
-    id: 'report',
-    name: '증권사 리포트',
-    category: '기타',
-    description: '최신 증권사 리포트 목록',
-    variants: [
-      { id: 'report-sm',   label: '단일',   colSpan: 1, rowSpan: 1, preview: 'report-sm' },
-      { id: 'report-wide', label: '목록형', colSpan: 2, rowSpan: 1, preview: 'report-wide' },
-      { id: 'report-2x2',  label: '대형',   colSpan: 2, rowSpan: 2, preview: 'report-2x2' },
     ],
   },
 ]
