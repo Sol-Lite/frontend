@@ -1,4 +1,5 @@
 import { useNavigate, useLocation } from 'react-router-dom'
+import { cn } from '@/lib/cn'
 
 const TABS = [
   { label: '홈',  path: '/' },
@@ -10,6 +11,7 @@ const TABS = [
 export default function NavTabs() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  
 
   const isActive = (path) =>
     path === '/' ? pathname === '/' : pathname.startsWith(path)
@@ -20,12 +22,12 @@ export default function NavTabs() {
         <button
           key={path}
           onClick={() => navigate(path)}
-          className={[
+          className={cn(
             'px-4 py-1.5 text-[12px] rounded-lg transition-colors duration-[150ms]',
             isActive(path)
               ? 'bg-surface text-foreground font-semibold shadow-sm'
               : 'text-foreground-disabled hover:text-foreground-secondary',
-          ].join(' ')}
+          )}
         >
           {label}
         </button>

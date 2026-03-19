@@ -54,6 +54,30 @@ chore(config): tailwind 디자인 토큰 등록
 style(market): StockRow hover 스타일 수정
 ```
 
+## GitHub 이슈 컨벤션
+
+### 제목 형식
+```
+[Type] 한글 설명
+```
+
+### Type
+- `[Feat]` : 새로운 기능
+- `[Fix]` : 버그 수정
+- `[Refactor]` : 리팩토링
+- `[Style]` : UI/스타일 수정
+- `[Chore]` : 빌드, 설정, 패키지 등 유지보수
+- `[Docs]` : 문서
+
+### 예시
+```
+[Feat] EditPanel 위젯 사이즈 선택 UI 구현
+[Fix] 관심종목 위젯 overflow 수정
+[Refactor] className 조합 방식 cn() 유틸로 통일
+```
+
+---
+
 ## 커밋 단위
 - 하나의 컴포넌트 또는 하나의 기능 단위로 커밋
 - 공통 UI 원자 컴포넌트는 여러 개를 묶어서 커밋 가능

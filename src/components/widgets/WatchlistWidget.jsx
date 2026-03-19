@@ -3,10 +3,18 @@ import StockAvatar from '@/components/ui/StockAvatar'
 import WidgetCard from './WidgetCard'
 import { WATCHLIST } from '@/mocks/home'
 
-export default function WatchlistWidget() {
+const WATCHLIST_EXTENDED = [
+  ...WATCHLIST,
+  { name: 'POSCO홀딩스', label: 'P',  color: 'warning', price: '₩378,500', change:  0.53 },
+  { name: 'SK하이닉스',  label: 'SK', color: 'yellow',  price: '₩195,500', change:  2.35 },
+]
+
+export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1, rowSpan = 1, onDelete }) {
+  const items = variant === 'watchlist-sm' ? WATCHLIST : WATCHLIST_EXTENDED
+
   return (
-    <WidgetCard>
-      <div className="flex items-center justify-between mb-2">
+    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <div className="flex items-center justify-between mb-2 shrink-0">
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
         <button
           onClick={(e) => e.stopPropagation()}
@@ -15,8 +23,8 @@ export default function WatchlistWidget() {
           + 추가
         </button>
       </div>
-      <div className="flex-1 flex flex-col justify-between gap-0.5">
-        {WATCHLIST.map((stock, i) => (
+      <div className={`flex-1 flex flex-col gap-0.5 ${variant === 'watchlist-sm' ? 'justify-between' : 'min-h-0 overflow-y-auto'}`}>
+        {items.map((stock, i) => (
           <div key={stock.name}>
             <div className="flex items-center gap-2 py-1 hover:bg-surface-subtle rounded-xl px-1 transition-colors cursor-pointer">
               <StockAvatar name={stock.label} color={stock.color} size="sm" />
@@ -26,7 +34,7 @@ export default function WatchlistWidget() {
               </div>
               <PriceChange value={stock.change} className="text-[10px]" />
             </div>
-            {i < WATCHLIST.length - 1 && <div className="h-px bg-stroke-subtle mx-1" />}
+            {i < items.length - 1 && <div className="h-px bg-stroke-subtle mx-1" />}
           </div>
         ))}
       </div>

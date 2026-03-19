@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>SOL Lite — 그리드 B안 (6×4)</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background:#F4F6FA; font-family:'Pretendard',-apple-system,sans-serif; height:100vh; overflow:hidden; color:#191F28; padding-top:28px; }
+    .up { color:#E8393E; } .down { color:#0075E8; }
+    .up-bg { background:#FFF0F1; color:#E8393E; }
+    .down-bg { background:#EFF6FF; color:#0075E8; }
+
+    .app-header { height:54px; background:#fff; border-bottom:1px solid #EAECF0; display:flex; align-items:center; padding:0 16px; gap:12px; flex-shrink:0; }
+    .app-body   { height:calc(100vh - 54px - 28px); display:flex; overflow:hidden; }
+    .sidebar    { width:56px; flex-shrink:0; background:#fff; border-right:1px solid #EAECF0; display:flex; flex-direction:column; align-items:center; padding:14px 0; gap:4px; }
+    .nav-icon   { width:40px; height:40px; border-radius:12px; display:flex; align-items:center; justify-content:center; color:#9CA3AF; cursor:pointer; }
+    .nav-icon.active { background:#EEF2FF; color:#0046FF; }
+
+    .card { background:#fff; border:1px solid #EAECF0; border-radius:14px; padding:11px 13px; overflow:hidden; display:flex; flex-direction:column; position:relative; cursor:pointer; transition:box-shadow .15s,border-color .15s; }
+    .card:hover { border-color:#BFD0FF; box-shadow:0 4px 16px rgba(0,70,255,.08); }
+    .lbl { font-size:9px; font-weight:600; color:#9CA3AF; letter-spacing:.05em; text-transform:uppercase; margin-bottom:5px; }
+
+    /* B안: 6열 × 4행 */
+    .grid { display:grid; grid-template-columns:repeat(6,1fr); grid-template-rows:repeat(4,1fr); gap:8px; width:100%; height:100%; }
+    .c2 { grid-column:span 2; }
+    .c3 { grid-column:span 3; }
+    .r2 { grid-row:span 2; }
+
+    .bar { border-radius:2px; align-self:flex-end; }
+    .pie { border-radius:50%; background:conic-gradient(#0046FF 0% 34%,#00A878 34% 54%,#FF9500 54% 69%,#EF4444 69% 81%,#8B5CF6 81% 100%); flex-shrink:0; }
+    .tag { font-size:8px; font-weight:600; padding:1px 5px; border-radius:3px; }
+
+    /* 사이즈 배지 — 각 카드 우하단 */
+    .size-badge {
+      position:absolute; bottom:8px; right:8px;
+      font-size:9px; font-weight:700; padding:2px 7px; border-radius:4px;
+      display:flex; align-items:center; gap:3px;
+      pointer-events:none;
+    }
+    .size-badge .dot { width:5px; height:5px; border-radius:50%; }
+
+    /* 채팅 패널 */
+    .cp { width:368px; flex-shrink:0; background:#FAFBFC; border-left:1px solid #EAECF0; display:flex; flex-direction:column; }
+    .cp-head { height:48px; display:flex; align-items:center; gap:8px; padding:0 16px; border-bottom:1px solid #EAECF0; flex-shrink:0; }
+    .cp-msgs { flex:1; overflow-y:auto; padding:12px 16px; display:flex; flex-direction:column; gap:10px; }
+    .cp-foot { height:56px; display:flex; align-items:center; gap:8px; padding:0 12px; border-top:1px solid #EAECF0; flex-shrink:0; }
+    .ai-bbl { background:#fff; border:1px solid #EAECF0; border-radius:12px 12px 12px 3px; padding:9px 12px; max-width:280px; font-size:11px; color:#374151; line-height:1.6; }
+    .me-bbl { background:#0046FF; border-radius:12px 12px 3px 12px; padding:9px 12px; max-width:220px; margin-left:auto; font-size:11px; color:#fff; line-height:1.6; }
+    .av { width:24px; height:24px; border-radius:50%; background:#0046FF; display:flex; align-items:center; justify-content:center; flex-shrink:0; margin-top:2px; }
+
+    .compare-banner { position:fixed; top:0; left:0; right:0; z-index:100; background:#7C3AED; color:#fff; font-size:11px; font-weight:700; text-align:center; padding:5px; }
+  </style>
+</head>
+<body>
+
+<div class="compare-banner">B안 — 6열 × 4행 (24셀) · 모든 사이즈 타입 표시 · 채팅 패널 상시 오픈</div>
+
+<!-- Header -->
+<header class="app-header">
+  <div style="display:flex;align-items:center;gap:8px;margin-right:6px;">
+    <div style="width:28px;height:28px;border-radius:9px;background:#0046FF;display:flex;align-items:center;justify-content:center;">
+      <svg style="width:14px;height:14px;" fill="none" stroke="white" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+    </div>
+    <span style="font-size:15px;font-weight:700;color:#111827;">SOL <span style="color:#0046FF;">Lite</span></span>
+  </div>
+  <nav style="display:flex;gap:3px;">
+    <button style="padding:5px 11px;border-radius:8px;background:#EEF2FF;color:#0046FF;font-size:12px;font-weight:600;">홈</button>
+    <button style="padding:5px 11px;border-radius:8px;color:#9CA3AF;font-size:12px;">시세</button>
+    <button style="padding:5px 11px;border-radius:8px;color:#9CA3AF;font-size:12px;">투자</button>
+    <button style="padding:5px 11px;border-radius:8px;color:#9CA3AF;font-size:12px;">자산</button>
+  </nav>
+  <div style="flex:1;"></div>
+  <button style="display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:10px;border:1px solid #E5E7EB;color:#6B7280;font-size:12px;">
+    <svg style="width:13px;height:13px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+    위젯 편집
+  </button>
+  <div style="display:flex;align-items:center;gap:6px;padding-left:8px;border-left:1px solid #F3F4F6;margin-left:4px;">
+    <div style="width:28px;height:28px;border-radius:50%;background:#0046FF;color:#fff;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;">김</div>
+    <div><div style="font-size:11px;font-weight:600;color:#111827;">김SOL</div><div style="font-size:9px;color:#9CA3AF;">주문가능 7,478만원</div></div>
+  </div>
+</header>
+
+<div class="app-body">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="nav-icon active"><svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></div>
+    <div class="nav-icon"><svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
+    <div class="nav-icon"><svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zM3 12a9 9 0 1118 0A9 9 0 013 12z"/></svg></div>
+    <div class="nav-icon"><svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>
+  </div>
+
+  <!-- Main -->
+  <main style="flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden;padding:12px;gap:8px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;height:24px;padding:0 2px;">
+      <span style="font-size:13px;font-weight:700;">나의 대시보드</span>
+      <div style="display:flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;background:#fff;border:1px solid #EAECF0;">
+        <span style="width:5px;height:5px;border-radius:50%;background:#34D399;display:inline-block;"></span>
+        <span style="font-size:10px;color:#9CA3AF;">실시간 반영</span>
+      </div>
+    </div>
+
+    <div style="flex:1;min-height:0;">
+      <div class="grid" style="min-width:700px;min-height:560px;">
+
+        <!-- ══════════════════════════════════════
+             Row 1: 3×1 | 1×1 | 1×1 | 1×1
+             6 = 3 + 1 + 1 + 1
+        ══════════════════════════════════════ -->
+
+        <!-- 주요 지수 ── 3×1 (화면 절반 너비) -->
+        <div class="card c3" style="border-color:#7C3AED;">
+          <div class="lbl">주요 지수</div>
+          <div style="flex:1;display:flex;">
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:0 8px;border-right:1px solid #F3F4F6;">
+              <div style="text-align:center;"><div style="font-size:9px;color:#9CA3AF;">KOSPI</div><div style="font-size:15px;font-weight:800;line-height:1.1;">2,685.42</div><div style="font-size:9px;" class="up">▲ +0.46%</div></div>
+              <div style="display:flex;align-items:flex-end;gap:2px;height:22px;width:100%;"><div class="bar" style="flex:1;background:#FECACA;height:45%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:58%;"></div><div class="bar" style="flex:1;background:#F87171;height:70%;"></div><div class="bar" style="flex:1;background:#EF4444;height:80%;"></div><div class="bar" style="flex:1;background:#DC2626;height:90%;"></div></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:0 8px;border-right:1px solid #F3F4F6;">
+              <div style="text-align:center;"><div style="font-size:9px;color:#9CA3AF;">KOSDAQ</div><div style="font-size:15px;font-weight:800;line-height:1.1;">868.15</div><div style="font-size:9px;" class="down">▼ −0.21%</div></div>
+              <div style="display:flex;align-items:flex-end;gap:2px;height:22px;width:100%;"><div class="bar" style="flex:1;background:#BFDBFE;height:60%;"></div><div class="bar" style="flex:1;background:#93C5FD;height:50%;"></div><div class="bar" style="flex:1;background:#60A5FA;height:42%;"></div><div class="bar" style="flex:1;background:#3B82F6;height:36%;"></div><div class="bar" style="flex:1;background:#2563EB;height:32%;"></div></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:0 8px;">
+              <div style="text-align:center;"><div style="font-size:9px;color:#9CA3AF;">NASDAQ</div><div style="font-size:15px;font-weight:800;line-height:1.1;">16,274</div><div style="font-size:9px;" class="up">▲ +0.83%</div></div>
+              <div style="display:flex;align-items:flex-end;gap:2px;height:22px;width:100%;"><div class="bar" style="flex:1;background:#FECACA;height:42%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:55%;"></div><div class="bar" style="flex:1;background:#F87171;height:68%;"></div><div class="bar" style="flex:1;background:#EF4444;height:78%;"></div><div class="bar" style="flex:1;background:#DC2626;height:88%;"></div></div>
+            </div>
+          </div>
+          <div class="size-badge" style="background:#F3EEFF;color:#7C3AED;"><div class="dot" style="background:#7C3AED;"></div>3×1 · 하프 와이드</div>
+        </div>
+
+        <!-- 계좌 잔고 ── 1×1 -->
+        <div class="card">
+          <div class="lbl">계좌 잔고</div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+            <span style="font-size:9px;color:#9CA3AF;">총 평가자산</span>
+            <div>
+              <div style="font-size:15px;font-weight:800;line-height:1.1;">84,320,000</div>
+              <div style="font-size:9px;font-weight:600;margin-top:2px;" class="up">▲ +2.61%</div>
+            </div>
+          </div>
+          <div class="size-badge" style="background:#EEF2FF;color:#0046FF;"><div class="dot" style="background:#0046FF;"></div>1×1 · 소형</div>
+        </div>
+
+        <!-- 포트폴리오 ── 1×1 -->
+        <div class="card">
+          <div class="lbl">포트폴리오</div>
+          <div style="flex:1;display:flex;align-items:center;gap:6px;">
+            <div class="pie" style="width:34px;height:34px;"></div>
+            <div style="display:flex;flex-direction:column;gap:2px;">
+              <div style="display:flex;align-items:center;gap:2px;"><div style="width:5px;height:5px;border-radius:50%;background:#0046FF;"></div><span style="font-size:8px;color:#6B7280;">삼성 34%</span></div>
+              <div style="display:flex;align-items:center;gap:2px;"><div style="width:5px;height:5px;border-radius:50%;background:#00A878;"></div><span style="font-size:8px;color:#6B7280;">SK하이 20%</span></div>
+              <div style="display:flex;align-items:center;gap:2px;"><div style="width:5px;height:5px;border-radius:50%;background:#FF9500;"></div><span style="font-size:8px;color:#6B7280;">기타 46%</span></div>
+            </div>
+          </div>
+          <div class="size-badge" style="background:#EEF2FF;color:#0046FF;"><div class="dot" style="background:#0046FF;"></div>1×1 · 소형</div>
+        </div>
+
+        <!-- 환율 ── 1×1 -->
+        <div class="card">
+          <div class="lbl">환율</div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <div style="font-size:8px;color:#9CA3AF;">USD / KRW</div>
+              <div style="font-size:14px;font-weight:800;line-height:1.1;">1,378.50</div>
+              <div style="font-size:8px;margin-top:1px;" class="down">▼ −0.17%</div>
+            </div>
+            <div style="font-size:8px;display:flex;flex-direction:column;gap:2px;">
+              <div style="display:flex;justify-content:space-between;"><span style="color:#9CA3AF;">JPY</span><span class="up">9.18 ▲</span></div>
+              <div style="display:flex;justify-content:space-between;"><span style="color:#9CA3AF;">EUR</span><span class="down">1,502 ▼</span></div>
+            </div>
+          </div>
+          <div class="size-badge" style="background:#EEF2FF;color:#0046FF;"><div class="dot" style="background:#0046FF;"></div>1×1 · 소형</div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             Row 2–3: 3×2 | 2×2 | 1×2
+             6 = 3 + 2 + 1  (×2행)
+        ══════════════════════════════════════ -->
+
+        <!-- 주가/차트 ── 3×2 (화면 절반 너비 × 2행) -->
+        <div class="card c3 r2" style="border-color:#7C3AED;background:linear-gradient(135deg,#faf8ff,#fff);">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-shrink:0;margin-bottom:4px;">
+            <div><div style="font-size:12px;font-weight:700;">SK하이닉스</div><div style="font-size:8px;color:#9CA3AF;">000660 · KOSPI</div></div>
+            <div style="text-align:right;"><div style="font-size:18px;font-weight:800;line-height:1.1;">182,000</div><div style="font-size:9px;" class="up">▲ +3,500 (+1.96%)</div></div>
+          </div>
+          <div style="background:#F9FAFB;border-radius:10px;flex:1;display:flex;align-items:flex-end;padding:10px;gap:2px;min-height:0;margin:4px 0;">
+            <div class="bar" style="flex:1;background:#FECACA;height:30%;"></div><div class="bar" style="flex:1;background:#FECACA;height:38%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:35%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:47%;"></div><div class="bar" style="flex:1;background:#F87171;height:52%;"></div><div class="bar" style="flex:1;background:#F87171;height:58%;"></div><div class="bar" style="flex:1;background:#EF4444;height:63%;"></div><div class="bar" style="flex:1;background:#EF4444;height:70%;"></div><div class="bar" style="flex:1;background:#DC2626;height:74%;"></div><div class="bar" style="flex:1;background:#DC2626;height:79%;"></div><div class="bar" style="flex:1;background:#B91C1C;height:84%;"></div><div class="bar" style="flex:1;background:#B91C1C;height:90%;"></div><div class="bar" style="flex:1;background:#991B1B;height:93%;"></div><div class="bar" style="flex:1;background:#991B1B;height:96%;"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;flex-shrink:0;">
+            <div style="text-align:center;"><div style="font-size:8px;color:#9CA3AF;">시가</div><div style="font-size:10px;font-weight:600;">178,500</div></div>
+            <div style="text-align:center;"><div style="font-size:8px;color:#9CA3AF;">고가</div><div style="font-size:10px;font-weight:600;" class="up">183,000</div></div>
+            <div style="text-align:center;"><div style="font-size:8px;color:#9CA3AF;">저가</div><div style="font-size:10px;font-weight:600;" class="down">177,200</div></div>
+            <div style="text-align:center;"><div style="font-size:8px;color:#9CA3AF;">거래량</div><div style="font-size:10px;font-weight:600;">8.2M</div></div>
+          </div>
+          <div class="size-badge" style="background:#F3EEFF;color:#7C3AED;"><div class="dot" style="background:#7C3AED;"></div>3×2 · 하프 대형</div>
+        </div>
+
+        <!-- 실시간 순위 ── 2×2 -->
+        <div class="card c2 r2" style="border-color:#0046FF;">
+          <div class="lbl">실시간 순위</div>
+          <div style="display:flex;gap:3px;margin-bottom:6px;">
+            <span class="tag" style="background:#EEF2FF;color:#0046FF;">거래대금</span>
+            <span class="tag" style="color:#9CA3AF;">상승률</span>
+            <span class="tag" style="color:#9CA3AF;">거래량</span>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">1</span><span style="font-size:11px;font-weight:500;">삼성전자</span></div><span style="font-size:10px;font-weight:600;" class="up">+1.62%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">2</span><span style="font-size:11px;font-weight:500;">SK하이닉스</span></div><span style="font-size:10px;font-weight:600;" class="up">+2.35%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">3</span><span style="font-size:11px;font-weight:500;">LG에너지솔루션</span></div><span style="font-size:10px;font-weight:600;" class="down">−0.87%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">4</span><span style="font-size:11px;font-weight:500;">POSCO홀딩스</span></div><span style="font-size:10px;font-weight:600;" class="up">+0.54%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">5</span><span style="font-size:11px;font-weight:500;">현대차</span></div><span style="font-size:10px;font-weight:600;" class="down">−1.20%</span></div>
+            <div style="height:1px;background:#F3F4F6;"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">6</span><span style="font-size:11px;font-weight:500;">카카오뱅크</span></div><span style="font-size:10px;font-weight:600;" class="up">+0.91%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">7</span><span style="font-size:11px;font-weight:500;">셀트리온</span></div><span style="font-size:10px;font-weight:600;" class="down">−0.33%</span></div>
+          </div>
+          <div class="size-badge" style="background:#EEF2FF;color:#0046FF;"><div class="dot" style="background:#0046FF;"></div>2×2 · 대형</div>
+        </div>
+
+        <!-- 관심종목 ── 1×2 (세로형) -->
+        <div class="card r2" style="border-color:#00A878;">
+          <div class="lbl">관심종목</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:500;">삼성전자</span><span style="font-size:9px;font-weight:600;" class="up">+1.62%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:500;">SK하이닉스</span><span style="font-size:9px;font-weight:600;" class="up">+2.35%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:500;">LG에너지</span><span style="font-size:9px;font-weight:600;" class="up">+0.91%</span></div>
+            <div style="height:1px;background:#F3F4F6;"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:500;">현대차</span><span style="font-size:9px;font-weight:600;" class="down">−0.43%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:500;">POSCO홀딩스</span><span style="font-size:9px;font-weight:600;" class="up">+0.54%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:500;">카카오</span><span style="font-size:9px;font-weight:600;" class="down">−1.12%</span></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:500;">셀트리온</span><span style="font-size:9px;font-weight:600;" class="down">−0.33%</span></div>
+          </div>
+          <div class="size-badge" style="background:#ECFDF5;color:#00A878;"><div class="dot" style="background:#00A878;"></div>1×2 · 세로형</div>
+        </div>
+
+        <!-- ══════════════════════════════════════
+             Row 4: 2×1 | 2×1 | 2×1
+             6 = 2 + 2 + 2
+        ══════════════════════════════════════ -->
+
+        <!-- 거래내역 ── 2×1 -->
+        <div class="card c2" style="border-color:#F59E0B;">
+          <div class="lbl">거래내역</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;overflow:hidden;">
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span class="tag up-bg">매수</span><span style="font-size:10px;font-weight:500;">삼성전자</span></div><div style="text-align:right;"><span style="font-size:10px;">75,400원</span><span style="font-size:9px;color:#9CA3AF;margin-left:4px;">10주</span></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span class="tag down-bg">매도</span><span style="font-size:10px;font-weight:500;">SK하이닉스</span></div><div style="text-align:right;"><span style="font-size:10px;">182,000원</span><span style="font-size:9px;color:#9CA3AF;margin-left:4px;">5주</span></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span class="tag up-bg">매수</span><span style="font-size:10px;font-weight:500;">LG에너지솔루션</span></div><div style="text-align:right;"><span style="font-size:10px;">398,000원</span><span style="font-size:9px;color:#9CA3AF;margin-left:4px;">3주</span></div></div>
+          </div>
+          <div class="size-badge" style="background:#FFFBEB;color:#F59E0B;"><div class="dot" style="background:#F59E0B;"></div>2×1 · 와이드</div>
+        </div>
+
+        <!-- 오늘의 시황 ── 2×1 -->
+        <div class="card c2" style="border-color:#F59E0B;">
+          <div class="lbl">오늘의 시황</div>
+          <div style="flex:1;display:flex;flex-direction:column;gap:5px;overflow:hidden;">
+            <p style="font-size:10px;color:#374151;line-height:1.5;font-weight:500;">美 CPI 예상치 하회, 나스닥 1% 상승</p>
+            <p style="font-size:10px;color:#374151;line-height:1.5;">SK하이닉스 목표가 상향 조정 — 키움증권</p>
+            <p style="font-size:10px;color:#374151;line-height:1.5;">원/달러 환율 1,378원 하락 마감</p>
+          </div>
+          <div class="size-badge" style="background:#FFFBEB;color:#F59E0B;"><div class="dot" style="background:#F59E0B;"></div>2×1 · 와이드</div>
+        </div>
+
+        <!-- 증권사 리포트 ── 2×1 -->
+        <div class="card c2" style="border-color:#F59E0B;">
+          <div class="lbl">증권사 리포트</div>
+          <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;">
+            <div>
+              <p style="font-size:11px;font-weight:700;line-height:1.4;">삼성전자 목표가 9만원으로 상향</p>
+              <p style="font-size:9px;color:#9CA3AF;margin-top:3px;">반도체 업황 회복 기대감, HBM 수주 확대 전망</p>
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span style="font-size:9px;color:#0046FF;font-weight:600;">키움증권</span>
+              <span style="font-size:8px;color:#9CA3AF;">· 2026.03.18</span>
+            </div>
+          </div>
+          <div class="size-badge" style="background:#FFFBEB;color:#F59E0B;"><div class="dot" style="background:#F59E0B;"></div>2×1 · 와이드</div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+
+  <!-- 채팅 패널 (368px) -->
+  <div class="cp">
+    <div class="cp-head">
+      <svg style="width:14px;height:14px;" fill="none" stroke="#0046FF" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+      <span style="font-size:13px;font-weight:600;">SOL AI</span>
+      <span style="width:6px;height:6px;border-radius:50%;background:#34D399;display:inline-block;margin-left:2px;"></span>
+    </div>
+    <div class="cp-msgs">
+      <div style="display:flex;gap:8px;"><div class="av"><svg style="width:11px;height:11px;" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></div><div class="ai-bbl">안녕하세요! 오늘의 시장 동향이나 종목 분석을 도와드릴게요.</div></div>
+      <div style="display:flex;justify-content:flex-end;"><div class="me-bbl">SK하이닉스 지금 사도 돼?</div></div>
+      <div style="display:flex;gap:8px;"><div class="av"><svg style="width:11px;height:11px;" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg></div><div class="ai-bbl">현재 <strong style="color:#E8393E;">+1.96%</strong> 상승 중이에요. HBM 수요 증가로 목표주가 상향 리포트가 나왔습니다. 단기 모멘텀은 긍정적이나 분할 매수를 권장해요.</div></div>
+    </div>
+    <div class="cp-foot">
+      <input type="text" placeholder="AI에게 물어보세요..." style="flex:1;height:32px;padding:0 12px;border-radius:8px;background:#F4F6FA;font-size:12px;border:1px solid #E5E7EB;outline:none;"/>
+      <button style="width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:8px;background:#0046FF;border:none;cursor:pointer;"><svg style="width:13px;height:13px;" fill="none" stroke="white" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
+    </div>
+  </div>
+</div>
+
+<!-- 범례 -->
+<div style="position:fixed;bottom:12px;left:72px;display:flex;gap:6px;z-index:50;flex-wrap:wrap;">
+  <div style="background:#EEF2FF;color:#0046FF;font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid #C7D7FF;">● 1×1 소형</div>
+  <div style="background:#FFFBEB;color:#F59E0B;font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid #FDE68A;">● 2×1 와이드</div>
+  <div style="background:#F3EEFF;color:#7C3AED;font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid #DDD6FE;">● 3×1 하프 와이드 (신규)</div>
+  <div style="background:#ECFDF5;color:#00A878;font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid #A7F3D0;">● 1×2 세로형 (신규)</div>
+  <div style="background:#EEF2FF;color:#0046FF;font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid #C7D7FF;">● 2×2 대형</div>
+  <div style="background:#F3EEFF;color:#7C3AED;font-size:9px;font-weight:700;padding:3px 8px;border-radius:6px;border:1px solid #DDD6FE;">● 3×2 하프 대형 (신규)</div>
+</div>
+
+</body>
+</html>
