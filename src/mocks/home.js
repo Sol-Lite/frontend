@@ -4,6 +4,8 @@ export const BALANCE = {
   profitRate: '+2.61%',
   krw: '72,100,000',
   usd: '$8,924',
+  invested: '82,168,000',
+  available: '74,780,000',
 }
 
 export const HOME_INDICES = [

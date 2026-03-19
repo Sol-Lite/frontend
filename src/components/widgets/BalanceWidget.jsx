@@ -40,6 +40,37 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
             </div>
           </div>
         </div>
+      ) : variant === 'balance-3x1' ? (
+        <div className="flex flex-1 gap-4 min-h-0">
+          <div className="flex flex-col justify-between flex-1 min-w-0">
+            <div>
+              <div className="text-[10px] text-foreground-disabled">총 평가자산</div>
+              <div className="text-[20px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
+                {BALANCE.total}<span className="text-[11px] font-medium text-foreground-tertiary ml-0.5">원</span>
+              </div>
+              <div className="text-[11px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+            </div>
+            <div className="flex gap-6">
+              <div>
+                <div className="text-[9px] text-foreground-disabled">투자원금</div>
+                <div className="text-[12px] font-semibold text-foreground">{BALANCE.invested}</div>
+              </div>
+              <div>
+                <div className="text-[9px] text-foreground-disabled">주문가능</div>
+                <div className="text-[12px] font-semibold text-foreground">{BALANCE.available}</div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-col flex-1 min-w-0 pl-4 border-l border-stroke">
+            <div className="text-[9px] text-foreground-disabled shrink-0">수익 추이 (30일)</div>
+            <div className="flex-1 min-h-0 flex items-end gap-px my-2">
+              {[30,38,35,50,55,65,70,80,85,92].map((h, i) => (
+                <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
+              ))}
+            </div>
+            <div className="text-[9px] text-foreground-disabled text-right shrink-0">최고 +5.2%</div>
+          </div>
+        </div>
       ) : variant === 'balance-2x2' ? (
         <div className="flex flex-col flex-1 gap-2.5">
           <div>
