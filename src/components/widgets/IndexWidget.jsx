@@ -30,6 +30,43 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
     )
   }
 
+  if (variant === 'index-3x1') {
+    const indices = HOME_INDICES.slice(0, 3)
+    const PATHS = [
+      { area: 'M0,27 L25,21 L50,14 L75,8 L100,3 L100,30 L0,30 Z',   line: '0,27 25,21 50,14 75,8 100,3'   },
+      { area: 'M0,3 L33,12 L66,20 L100,27 L100,30 L0,30 Z',          line: '0,3 33,12 66,20 100,27'         },
+      { area: 'M0,3 L25,10 L50,17 L75,22 L100,27 L100,30 L0,30 Z',   line: '0,3 25,10 50,17 75,22 100,27'  },
+    ]
+    return (
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
+        <div className="flex flex-1 min-h-0 divide-x divide-stroke mt-1">
+          {indices.map((idx, i) => {
+            const isUp = idx.change > 0
+            const { area, line } = PATHS[i]
+            const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
+            const fill  = isUp ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
+            return (
+              <div key={idx.key} className="flex-1 flex flex-col items-center px-2">
+                <div className="flex-1 flex flex-col justify-center items-center text-center">
+                  <div className="text-[9px] text-foreground-disabled">{idx.label}</div>
+                  <div className="text-[15px] font-bold text-foreground leading-tight">{idx.value}</div>
+                  <PriceChange value={idx.change} className="text-[10px]" />
+                </div>
+                <div className="h-[22px] w-full shrink-0">
+                  <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+                    <path d={area} fill={fill} />
+                    <polyline points={line} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                  </svg>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </WidgetCard>
+    )
+  }
+
   if (variant === 'index-2x2') {
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
