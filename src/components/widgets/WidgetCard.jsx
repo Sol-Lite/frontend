@@ -2,7 +2,7 @@ import useEditModeStore from '@/store/useEditModeStore'
 import EditHandle from './EditHandle'
 import { cn } from '@/lib/cn'
 
-export default function WidgetCard({ children, colSpan = 1, className = '', onDelete }) {
+export default function WidgetCard({ children, colSpan = 1, rowSpan = 1, className = '', onDelete }) {
   const { isEditMode } = useEditModeStore()
 
   return (
@@ -13,6 +13,7 @@ export default function WidgetCard({ children, colSpan = 1, className = '', onDe
           ? 'animate-wiggle cursor-grab'
           : 'cursor-pointer transition-[transform] duration-[200ms] hover:-translate-y-px',
         colSpan === 2 ? 'col-span-2' : 'col-span-1',
+        rowSpan === 2 && 'row-span-2',
         className,
       )}
     >

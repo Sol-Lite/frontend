@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import NavTabs from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
 import useEditModeStore from '@/store/useEditModeStore'
+import useWidgetStore from '@/store/useWidgetStore'
 
 function Logo() {
   return (
@@ -61,6 +62,7 @@ function UserArea() {
 
 function EditModeActions() {
   const { exitEditMode, saveLayout } = useEditModeStore()
+  const { restoreSnapshot, clearSnapshot } = useWidgetStore()
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-light border border-primary-border">
@@ -68,13 +70,13 @@ function EditModeActions() {
         <span className="text-[12px] font-semibold text-primary">위젯 편집</span>
       </div>
       <button
-        onClick={exitEditMode}
+        onClick={() => { restoreSnapshot(); exitEditMode() }}
         className="px-3 py-1.5 rounded-xl border border-stroke-input text-[12px] text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms]"
       >
         취소
       </button>
       <button
-        onClick={saveLayout}
+        onClick={() => { clearSnapshot(); saveLayout() }}
         className="px-3 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
       >
         완료 · 저장
@@ -85,9 +87,10 @@ function EditModeActions() {
 
 function WidgetEditButton() {
   const { enterEditMode } = useEditModeStore()
+  const { snapshotWidgets } = useWidgetStore()
   return (
     <button
-      onClick={enterEditMode}
+      onClick={() => { snapshotWidgets(); enterEditMode() }}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stroke text-foreground-secondary text-[12px] font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-[150ms]"
     >
       <LayoutGrid className="w-3.5 h-3.5" strokeWidth={2} />

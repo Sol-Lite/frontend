@@ -1,9 +1,39 @@
 import WidgetCard from './WidgetCard'
 import { MARKET_OVERVIEW } from '@/mocks/home'
 
-export default function MarketOverviewWidget() {
+const NEWS_LIST = [
+  '美 CPI 예상치 하회… 나스닥 1% 상승',
+  'SK하이닉스 목표가 상향 조정',
+  '원/달러 환율 1,378원 하락 마감',
+  '코스피 외국인 순매수 이틀 연속',
+  '반도체 업황 긍정적… HBM 수요 증가',
+]
+
+export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 1, rowSpan = 1, onDelete }) {
+  const news = variant === 'market-2x2' ? NEWS_LIST : NEWS_LIST.slice(0, 4)
+
+  if (variant === 'market-wide' || variant === 'market-2x2') {
+    return (
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+        <div className="flex items-center justify-between mb-2 shrink-0">
+          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
+          <span className="text-[9px] text-foreground-disabled">{MARKET_OVERVIEW.time}</span>
+        </div>
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
+          {news.map((item, i) => (
+            <div key={i} className="flex items-start gap-2 px-1">
+              <span className="text-[10px] font-semibold text-primary shrink-0 mt-px">{i + 1}</span>
+              <p className="text-[10px] text-foreground-secondary leading-relaxed">{item}</p>
+            </div>
+          ))}
+        </div>
+      </WidgetCard>
+    )
+  }
+
+  /* market-sm (default) */
   return (
-    <WidgetCard>
+    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
       <div className="flex items-center justify-between mb-2">
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
         <span className="text-[9px] text-foreground-disabled">{MARKET_OVERVIEW.time}</span>
