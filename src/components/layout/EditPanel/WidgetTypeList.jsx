@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Search, ChevronRight } from 'lucide-react'
 import { WIDGET_TYPES, WIDGET_CATEGORIES } from '@/mocks/widgets'
+import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 
 export default function WidgetTypeList({ onSelectType }) {
+  const { widgets } = useWidgetStore()
   const [query, setQuery] = useState('')
   const [activeCategory, setActiveCategory] = useState('전체')
 
@@ -29,7 +31,7 @@ export default function WidgetTypeList({ onSelectType }) {
         <div className="flex items-center justify-between mb-3">
           <span className="text-[14px] font-bold text-foreground">위젯 추가</span>
           <span className="text-[10px] text-foreground-disabled bg-surface-muted px-2 py-0.5 rounded-full">
-            9개 배치 중
+            {widgets.length}개 배치 중
           </span>
         </div>
         {/* 검색 */}

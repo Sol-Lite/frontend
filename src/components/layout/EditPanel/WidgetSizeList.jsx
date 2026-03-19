@@ -1,39 +1,24 @@
 import { ChevronLeft, Plus } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import useGridStore from '@/store/useGridStore'
-import { MIN_CELL_WIDTH, MIN_CELL_HEIGHT, GRID_GAP } from '@/lib/gridConstants'
+import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
+import { GRID_GAP, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
 
 /* ── 너비 클래스 ─────────────────────────────────────────────
-   패널 usable width = 2열 기준 (336px).
    colSpan=1 → w-1/2,  colSpan=2 → w-full
 ─────────────────────────────────────────────────────────── */
 function widthClass(colSpan) {
   return colSpan === 2 ? 'w-full' : 'w-1/2'
 }
 
-/* ── 실제 대시보드 셀 크기 기반 aspect-ratio 계산 ─────────────
-   cellWidth/cellHeight: ResizeObserver로 측정한 실제 셀 크기
-   0이면 아직 측정 전 → MIN_CELL 기준 폴백
-   gap은 변하지 않는 상수(GRID_GAP)를 직접 사용
-   반환값: 숫자 (w/h 비율)
+/* ── aspect-ratio 계산 ──────────────────────────────────────
+   previewCellWidth/Height: EditPanel 미열림(full-grid) 상태의
+   실제 셀 크기. 0이면 아직 측정 전 → MIN_CELL 기준 폴백.
 ─────────────────────────────────────────────────────────── */
-function calcAspectRatio(colSpan, rowSpan, cellWidth, cellHeight) {
-  const cw = cellWidth || MIN_CELL_WIDTH
-  const ch = cellHeight || MIN_CELL_HEIGHT
+function calcAspectRatio(colSpan, rowSpan, cw, ch) {
   const w = colSpan * cw + (colSpan - 1) * GRID_GAP
   const h = rowSpan * ch + (rowSpan - 1) * GRID_GAP
   return w / h
-}
-
-// EditPanel 패널 usable width (w-chat-panel 368px - px-4*2 32px)
-const PANEL_USABLE_WIDTH = 336
-
-function SizeBadge({ colSpan, rowSpan }) {
-  return (
-    <span className="text-[8px] font-semibold text-foreground-disabled bg-surface-muted px-1.5 py-0.5 rounded shrink-0">
-      {colSpan}×{rowSpan}
-    </span>
-  )
 }
 
 /* ── 위젯별 미리보기 콘텐츠 ─────────────────────────────── */
@@ -55,11 +40,13 @@ function PreviewContent({ type }) {
     /* 계좌 잔고 — 와이드 2×1 */
     case 'balance-lg':
       return (
-        <div className="flex items-center justify-between h-full gap-3">
-          <div className="flex flex-col justify-center gap-1">
+        <div className="flex items-start justify-between h-full gap-3">
+          <div className="flex flex-col justify-between h-full">
             <span className="text-[9px] text-foreground-disabled">총 평가자산</span>
-            <div className="text-[15px] font-extrabold text-foreground leading-none">84,320,000원</div>
-            <div className="text-[10px] text-up font-semibold">▲ +2,152,000원 (+2.61%)</div>
+            <div>
+              <div className="text-[15px] font-extrabold text-foreground leading-none">84,320,000원</div>
+              <div className="text-[10px] text-up font-semibold">▲ +2,152,000원 (+2.61%)</div>
+            </div>
           </div>
           <div className="flex flex-col gap-2 shrink-0">
             <div className="text-right">
@@ -192,25 +179,28 @@ function PreviewContent({ type }) {
     /* 주요 지수 — 복합 2×1 */
     case 'index-wide':
       return (
-        <div className="flex h-full divide-x divide-stroke">
-          {[
-            { name: 'KOSPI',  val: '2,685.42', chg: '+0.46%', up: true,  bars: [50,55,48,60,52,58,54,62] },
-            { name: 'KOSDAQ', val: '868.15',   chg: '-0.21%', up: false, bars: [60,55,58,52,56,50,54,48] },
-            { name: 'NASDAQ', val: '16,274',   chg: '+0.83%', up: true,  bars: [45,52,48,58,54,62,58,68] },
-          ].map(({ name, val, chg, up, bars }) => (
-            <div key={name} className="flex-1 flex flex-col justify-between items-center px-1 py-1">
-              <div className="text-center">
-                <span className="text-[9px] font-semibold text-foreground-disabled">{name}</span>
-                <div className="text-[11px] font-extrabold text-foreground leading-none">{val}</div>
-                <span className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
+        <div className="flex flex-col h-full gap-1">
+          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+          <div className="flex flex-1 min-h-0 divide-x divide-stroke">
+            {[
+              { name: 'KOSPI',  val: '2,685.42', chg: '+0.46%', up: true,  bars: [50,55,48,60,52,58,54,62] },
+              { name: 'KOSDAQ', val: '868.15',   chg: '-0.21%', up: false, bars: [60,55,58,52,56,50,54,48] },
+              { name: 'NASDAQ', val: '16,274',   chg: '+0.83%', up: true,  bars: [45,52,48,58,54,62,58,68] },
+            ].map(({ name, val, chg, up, bars }) => (
+              <div key={name} className="flex-1 flex flex-col justify-between items-center px-1 py-1">
+                <div className="text-center">
+                  <span className="text-[9px] font-semibold text-foreground-disabled">{name}</span>
+                  <div className="text-[11px] font-extrabold text-foreground leading-none">{val}</div>
+                  <span className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
+                </div>
+                <div className="flex items-end gap-px h-6 w-full">
+                  {bars.map((h, i) => (
+                    <div key={i} className={`flex-1 rounded-sm ${up ? 'bg-up/50' : 'bg-down/50'}`} style={{ height: `${h}%` }} />
+                  ))}
+                </div>
               </div>
-              <div className="flex items-end gap-px h-6 w-full">
-                {bars.map((h, i) => (
-                  <div key={i} className={`flex-1 rounded-sm ${up ? 'bg-up/50' : 'bg-down/50'}`} style={{ height: `${h}%` }} />
-                ))}
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )
 
@@ -289,8 +279,11 @@ function PreviewContent({ type }) {
     case 'exchange-wide':
       return (
         <div className="flex flex-col h-full gap-0.5">
-          <span className="text-[7px] text-foreground-disabled text-right shrink-0">09:30 기준</span>
-          <div className="flex flex-1 divide-x divide-stroke">
+          <div className="flex items-center justify-between shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled">환율</span>
+            <span className="text-[7px] text-foreground-disabled">09:30 기준</span>
+          </div>
+          <div className="flex flex-1 min-h-0 divide-x divide-stroke">
             {[
               { pair: 'USD/KRW', rate: '1,378.50', chg: '-0.17%', up: false, bars: [60,58,62,55,58,52,56,50] },
               { pair: 'JPY/KRW', rate: '9.18',     chg: '+0.11%', up: true,  bars: [45,48,50,52,49,54,52,56] },
@@ -317,7 +310,7 @@ function PreviewContent({ type }) {
     case 'market-sm':
       return (
         <div className="flex flex-col h-full gap-2">
-          <span className="text-[9px] font-semibold text-foreground-disabled">시황</span>
+          <span className="text-[9px] font-semibold text-foreground-disabled">오늘의 시황</span>
           <p className="text-[10px] text-foreground-secondary leading-snug">
             美 CPI 예상치 하회…<br />나스닥 1% 이상 상승.<br />반도체 섹터 강세.
           </p>
@@ -511,7 +504,7 @@ function PreviewContent({ type }) {
     case 'report-sm':
       return (
         <div className="flex flex-col justify-between h-full">
-          <span className="text-[8px] font-semibold text-foreground-disabled">리포트</span>
+          <span className="text-[8px] font-semibold text-foreground-disabled">증권사 리포트</span>
           <div>
             <div className="text-[9px] font-bold text-foreground leading-snug">삼성전자<br />목표가 상향</div>
             <div className="text-[8px] text-foreground-disabled mt-1">키움증권 · 3.18</div>
@@ -638,7 +631,9 @@ function PreviewContent({ type }) {
       
       return (
         <div className="flex flex-col h-full gap-2">
+          <span className="text-[9px] text-foreground-disabled shrink-0">섹터별 비중</span>
           <div className="flex items-center gap-3 shrink-0">
+            
             <div
               className="w-16 h-16 rounded-full shrink-0"
               style={{ background: 'conic-gradient(var(--color-chart-1) 0% 54%, var(--color-chart-2) 54% 72%, var(--color-chart-3) 72% 87%, var(--color-chart-4) 87% 100%)' }}
@@ -649,7 +644,7 @@ function PreviewContent({ type }) {
               <div className="text-[9px] text-foreground-disabled mt-0.5">+4,280,000원</div>
             </div>
           </div>
-          <span className="text-[9px] text-foreground-disabled shrink-0">섹터별 비중</span>
+          
           <div className="flex flex-col gap-2">
             {[
               { name: 'IT·반도체', pct: 54, color: 'bg-chart-1' },
@@ -790,31 +785,18 @@ function PreviewContent({ type }) {
 /* ── VariantPreview ─────────────────────────────────────── */
 function VariantPreview({ variant }) {
   const { colSpan, rowSpan } = variant
-  const { cellWidth, cellHeight } = useGridStore()
-
-  // 실제 대시보드 비율 (숫자) — ResizeObserver 측정값 기반
-  const ratio = calcAspectRatio(colSpan, rowSpan, cellWidth, cellHeight)
-
-  // 최솟값 기준 minHeight — 대시보드가 MIN 크기일 때 preview content가 잘리지 않는 하한
-  // previewWidth: colSpan=1 → 패널 절반(168px), colSpan=2 → 패널 전체(336px)
-  const previewWidth = colSpan === 2 ? PANEL_USABLE_WIDTH : PANEL_USABLE_WIDTH / 2
-  const minRatio = calcAspectRatio(colSpan, rowSpan, MIN_CELL_WIDTH, MIN_CELL_HEIGHT)
-  const minHeight = previewWidth / minRatio
+  const { previewCellWidth, previewCellHeight } = useGridStore()
+  const cw = previewCellWidth || MIN_CELL_WIDTH
+  const ch = previewCellHeight || MIN_CELL_HEIGHT
+  const ratio = calcAspectRatio(colSpan, rowSpan, cw, ch)
 
   return (
     <div
-      className="w-full border border-stroke rounded-xl p-3 bg-surface flex flex-col overflow-hidden"
-      style={{ aspectRatio: ratio, minHeight: `${minHeight}px` }}
+      className="w-full border border-stroke rounded-xl p-3 bg-surface overflow-hidden relative"
+      style={{ aspectRatio: ratio }}
     >
-      {/* 라벨 + 크기 배지 */}
-      <div className="flex items-center justify-between mb-2 shrink-0">
-        <span className="text-[8px] font-semibold text-foreground-disabled uppercase tracking-[.06em]">
-          {variant.label}
-        </span>
-        <SizeBadge colSpan={colSpan} rowSpan={rowSpan} />
-      </div>
-      {/* 미리보기 */}
-      <div className="flex-1 min-h-0 overflow-hidden">
+      {/* absolute inset-0으로 PreviewContent에 명확한 높이 전달 */}
+      <div className="absolute inset-0 p-3 overflow-hidden">
         <PreviewContent type={variant.preview} />
       </div>
     </div>
@@ -823,6 +805,8 @@ function VariantPreview({ variant }) {
 
 /* ── WidgetSizeList ─────────────────────────────────────── */
 export default function WidgetSizeList({ widgetType, onBack }) {
+  const { widgets, addWidget } = useWidgetStore()
+
   return (
     <>
       {/* 헤더 */}
@@ -844,23 +828,34 @@ export default function WidgetSizeList({ widgetType, onBack }) {
           크기 선택
         </div>
         <div className="flex flex-col gap-3">
-          {widgetType.variants.map((variant) => (
-            <div
-              key={variant.id}
-              className={cn('relative group', widthClass(variant.colSpan))}
-            >
-              <VariantPreview variant={variant} />
-              {/* hover 추가 오버레이 */}
-              <button
-                aria-label={`${variant.label} 추가`}
-                className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-primary/10 border border-primary flex items-center justify-center transition-opacity duration-[150ms]"
+          {widgetType.variants.map((variant) => {
+            const canAdd = canFitInGrid(widgets, variant.colSpan, variant.rowSpan)
+            return (
+              <div
+                key={variant.id}
+                className={cn('relative group', widthClass(variant.colSpan))}
               >
-                <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-primary-btn">
-                  <Plus className="w-3.5 h-3.5 text-white" />
-                </div>
-              </button>
-            </div>
-          ))}
+                <VariantPreview variant={variant} />
+                {canAdd ? (
+                  /* hover 추가 오버레이 */
+                  <button
+                    aria-label={`${variant.label} 추가`}
+                    onClick={() => { addWidget(widgetType.id, variant); onBack() }}
+                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-primary/10 border border-primary flex items-center justify-center transition-opacity duration-[150ms]"
+                  >
+                    <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-primary-btn">
+                      <Plus className="w-3.5 h-3.5 text-white" />
+                    </div>
+                  </button>
+                ) : (
+                  /* 공간 부족 오버레이 — 항상 표시 */
+                  <div className="absolute inset-0 rounded-xl bg-background/60 border border-stroke flex items-center justify-center">
+                    <span className="text-[10px] text-foreground-disabled font-medium">공간 부족</span>
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
         <p className="text-[10px] text-foreground-disabled mt-4 text-center">
           클릭하여 대시보드에 추가
