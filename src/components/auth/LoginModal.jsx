@@ -1,19 +1,18 @@
 import { useState } from 'react'
 import { Activity, X, Check } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { authApi } from '@/api/auth'
+import { router } from '@/router'
 import useAuthStore from '@/store/useAuthStore'
 
-export default function LoginPage() {
-  const navigate  = useNavigate()
-  const setAuth   = useAuthStore((s) => s.setAuth)
+export default function LoginModal({ onClose }) {
+  const setAuth = useAuthStore((s) => s.setAuth)
 
-  const [email, setEmail]       = useState('')
+  const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [autoLogin, setAutoLogin] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
-  const [error, setError]         = useState('')
+  const [error, setError] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -26,7 +25,7 @@ export default function LoginPage() {
         user:        res.user,
         autoLogin,
       })
-      navigate('/')
+      onClose()
     } catch (err) {
       setError(err?.message ?? '이메일 또는 비밀번호를 확인해 주세요.')
     } finally {
@@ -35,35 +34,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="fixed inset-0 z-10 flex items-center justify-center p-5">
-      {/* 뒷배경 */}
-      <div className="fixed inset-0 bg-background">
-        <div className="h-header bg-surface border-b border-stroke flex items-center px-6 gap-3 opacity-40">
-          <div className="w-7 h-7 rounded-[9px] bg-primary" />
-          <div className="w-20 h-3.5 bg-stroke-input rounded" />
-          <div className="flex gap-1 ml-2">
-            {[true, false, false, false].map((active, i) => (
-              <div key={i} className={['w-11 h-7 rounded-lg', active ? 'bg-primary-light' : 'bg-surface-muted'].join(' ')} />
-            ))}
-          </div>
-        </div>
-        <div className="p-5 grid grid-cols-4 gap-[10px] opacity-35">
-          <div className="h-40 bg-surface rounded-2xl" />
-          <div className="h-40 bg-surface rounded-2xl col-span-2" />
-          <div className="h-40 bg-surface rounded-2xl" />
-          <div className="h-40 bg-surface rounded-2xl" />
-          <div className="h-40 bg-surface rounded-2xl col-span-2" />
-          <div className="h-40 bg-surface rounded-2xl" />
-        </div>
-      </div>
-
-      {/* 딤 오버레이 */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-[6px] z-10" />
-
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-5 pointer-events-none">
       {/* 모달 */}
       <div
-        className="relative z-20 w-full max-w-[400px] bg-surface rounded-[6px] shadow-modal overflow-hidden"
-        style={{ animation: 'modal-in .2s ease both' }}
+        className="relative w-full max-w-[400px] bg-surface rounded-[6px] shadow-modal overflow-hidden pointer-events-auto animate-modal-in"
       >
         {/* 모달 헤더 */}
         <div className="flex items-center justify-between px-6 pt-[22px]">
@@ -74,7 +48,7 @@ export default function LoginPage() {
             <span className="text-[15px] font-bold tracking-tight text-foreground-secondary">SOL Lite</span>
           </div>
           <button
-            onClick={() => navigate('/')}
+            onClick={onClose}
             aria-label="닫기"
             className="text-foreground-disabled hover:text-foreground-tertiary p-1 transition-colors"
           >
@@ -102,7 +76,10 @@ export default function LoginPage() {
               <label className="text-[11px] font-semibold text-foreground-secondary">비밀번호</label>
               <button
                 type="button"
-                onClick={() => navigate('/forgot-password')}
+                onClick={() => {
+                  onClose()
+                  router.navigate('/forgot-password')
+                }}
                 className="text-[11px] text-primary font-medium hover:text-primary-hover transition-colors"
               >
                 비밀번호 찾기
@@ -144,8 +121,14 @@ export default function LoginPage() {
           {/* 회원가입 링크 */}
           <p className="text-center text-xs text-foreground-disabled mt-0.5">
             계정이 없으신가요?
-            <button type="button" onClick={() => navigate('/signup')}
-              className="text-primary font-semibold ml-1">
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                router.navigate('/signup')
+              }}
+              className="text-primary font-semibold ml-1"
+            >
               회원가입
             </button>
           </p>
