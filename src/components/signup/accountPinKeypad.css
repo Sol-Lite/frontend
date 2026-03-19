@@ -1,0 +1,178 @@
+.sol-pin-keyboard {
+  width: 100%;
+  background: transparent !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  font-family: inherit !important;
+  overflow: visible !important;
+  padding: 0 !important;
+}
+
+.sol-pin-keyboard .hg-rows {
+  display: grid;
+  gap: 10px;
+}
+
+.sol-pin-keyboard .hg-row {
+  display: flex;
+  gap: 10px;
+}
+
+.sol-pin-keyboard .hg-row:not(:last-child) {
+  margin-bottom: 0 !important;
+}
+
+.sol-pin-keyboard .hg-row .hg-button:not(:last-child),
+.sol-pin-keyboard .hg-row .hg-button-container {
+  margin-right: 0 !important;
+}
+
+.sol-pin-keyboard .hg-button {
+  align-items: center;
+  background: #ffffff !important;
+  border: 1.5px solid #e5e7eb !important;
+  border-bottom: 1.5px solid #e5e7eb !important;
+  border-radius: 10px !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  box-sizing: border-box;
+  color: #0046ff !important;
+  cursor: pointer;
+  display: flex;
+  flex: 1 1 0;
+  font-size: 27px;
+  font-weight: 800;
+  height: 54px;
+  justify-content: center;
+  margin: 0 !important;
+  max-width: none !important;
+  padding: 0 !important;
+  transition: border-color .2s, box-shadow .2s, background-color .15s, transform .15s;
+  width: auto !important;
+}
+
+.sol-pin-keyboard .hg-button.hg-standardBtn {
+  width: auto !important;
+}
+
+.sol-pin-keyboard .hg-button:hover,
+.sol-pin-keyboard .hg-button.hg-activeButton {
+  background: #ffffff !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  transform: none !important;
+}
+
+.sol-pin-keyboard .hg-button > span {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+  text-align: center;
+  width: 100%;
+}
+
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__action {
+  background: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+  color: #374151 !important;
+  font-size: 14px;
+  font-weight: 700;
+  height: 46px;
+}
+
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__action--primary {
+  background: #0046ff !important;
+  border-color: #0046ff !important;
+  box-shadow: 0 4px 14px rgba(0, 70, 255, 0.25) !important;
+  color: #ffffff !important;
+}
+
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__action:hover,
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__action.hg-activeButton {
+  background: #f3f4f6 !important;
+  border-color: #e5e7eb !important;
+  box-shadow: none !important;
+}
+
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__action--primary:hover,
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__action--primary.hg-activeButton {
+  background: #0046ff !important;
+  border-color: #0046ff !important;
+  box-shadow: 0 4px 14px rgba(0, 70, 255, 0.25) !important;
+}
+
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__dummy {
+  background: #f8f9fb !important;
+  border-color: #e5e7eb !important;
+  color: #7ea8ff !important;
+}
+
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__dummy:hover,
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__dummy.hg-activeButton {
+  background: #f8f9fb !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+.sol-pin-keyboard .sol-pin-keyboard__lock {
+  align-items: center;
+  border-radius: 999px;
+  display: inline-flex;
+  height: 30px;
+  justify-content: center;
+  width: 30px;
+}
+
+.sol-pin-keyboard .sol-pin-keyboard__lock-icon {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__flash,
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__flash:hover,
+.sol-pin-keyboard .hg-button.sol-pin-keyboard__flash.hg-activeButton {
+  background: #eef2ff !important;
+  border-color: #c7d2fe !important;
+  box-shadow: 0 0 0 2px rgba(0, 70, 255, 0.12) !important;
+  color: #0046ff !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sol-pin-keypad-shell--desktop,
+  .sol-pin-keypad-shell--desktop * {
+    cursor: none !important;
+  }
+}
+
+.sol-pin-keypad-shell--mobile .sol-pin-keyboard .hg-button {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  height: 56px;
+}
+
+.sol-pin-keypad-shell--mobile .sol-pin-keyboard .hg-button.sol-pin-keyboard__action {
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.sol-pin-keypad-shell--mobile .sol-pin-keyboard .hg-button.sol-pin-keyboard__action--primary {
+  background: #0046ff !important;
+  border-color: #0046ff !important;
+}
+
+.sol-pin-keypad-shell--mobile .sol-pin-keyboard .hg-button.sol-pin-keyboard__dummy {
+  background: rgba(255, 255, 255, 0.12) !important;
+  border-color: rgba(255, 255, 255, 0.1) !important;
+  color: #ffffff !important;
+}
+
+.sol-pin-keypad-shell--mobile .sol-pin-keyboard .hg-button.sol-pin-keyboard__flash,
+.sol-pin-keypad-shell--mobile .sol-pin-keyboard .hg-button.sol-pin-keyboard__flash:hover,
+.sol-pin-keypad-shell--mobile .sol-pin-keyboard .hg-button.sol-pin-keyboard__flash.hg-activeButton {
+  background: rgba(255, 255, 255, 0.24) !important;
+  border-color: rgba(255, 255, 255, 0.22) !important;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12) !important;
+}
