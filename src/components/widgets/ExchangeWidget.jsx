@@ -6,7 +6,18 @@ import { EXCHANGE } from '@/mocks/home'
 
 const EXCHANGE_EXTENDED = [
   ...EXCHANGE,
-  { flag: '🇪🇺', pair: 'EUR / KRW', rate: '1,502.30', change: -0.05 },
+  { flag: '🇪🇺', pair: 'EUR / KRW', rate: '1,502.30', change: -3.20, pct: '-0.21%' },
+]
+
+const WIDE_CHART_DATA = [
+  { area: 'M0,3 L25,10 L50,17 L75,22 L100,27 L100,30 L0,30 Z',  line: '0,3 25,10 50,17 75,22 100,27'  },
+  { area: 'M0,27 L33,20 L66,12 L100,3 L100,30 L0,30 Z',          line: '0,27 33,20 66,12 100,3'         },
+]
+
+const WIDE_3X1_CHART_DATA = [
+  { area: 'M0,3 L25,10 L50,17 L75,22 L100,27 L100,30 L0,30 Z',  line: '0,3 25,10 50,17 75,22 100,27'  },
+  { area: 'M0,27 L33,20 L66,12 L100,3 L100,30 L0,30 Z',          line: '0,27 33,20 66,12 100,3'         },
+  { area: 'M0,3 L33,12 L66,20 L100,27 L100,30 L0,30 Z',          line: '0,3 33,12 66,20 100,27'         },
 ]
 
 function ExchangeRow({ flag, pair, rate, change }) {
@@ -32,10 +43,10 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
   const usd = EXCHANGE[0]
 
   if (variant === 'exchange-3x1') {
-    const CHART_DATA = [
-      { area: 'M0,3 L25,10 L50,17 L75,22 L100,27 L100,30 L0,30 Z',  line: '0,3 25,10 50,17 75,22 100,27'  },
-      { area: 'M0,27 L33,20 L66,12 L100,3 L100,30 L0,30 Z',          line: '0,27 33,20 66,12 100,3'         },
-      { area: 'M0,3 L33,12 L66,20 L100,27 L100,30 L0,30 Z',          line: '0,3 33,12 66,20 100,27'         },
+    const cols3x1 = [
+      { ...EXCHANGE_EXTENDED[0], rateSize: 'text-[20px]', flex: '1.2', pr: 'pr-3', pl: '' },
+      { ...EXCHANGE_EXTENDED[1], rateSize: 'text-[16px]', flex: '1',   pr: 'pr-2.5', pl: 'pl-2.5' },
+      { ...EXCHANGE_EXTENDED[2], rateSize: 'text-[16px]', flex: '1',   pr: '',    pl: 'pl-2.5' },
     ]
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
@@ -44,16 +55,16 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
           <LiveDot />
         </div>
         <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-          {EXCHANGE_EXTENDED.map(({ pair, rate, change }, i) => {
+          {cols3x1.map(({ pair, rate, change, rateSize, flex, pr, pl }, i) => {
             const isUp = change > 0
             const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
             const fill  = isUp ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
-            const { area, line } = CHART_DATA[i]
+            const { area, line } = WIDE_3X1_CHART_DATA[i]
             return (
-              <div key={pair} className="flex-1 flex flex-col justify-between px-3">
+              <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>
                 <div>
                   <div className="text-[9px] text-foreground-disabled">{pair}</div>
-                  <div className="text-[16px] font-bold text-foreground leading-tight">{rate}</div>
+                  <div className={`${rateSize} font-bold text-foreground leading-tight`}>{rate}</div>
                   <div className={`text-[9px] ${isUp ? 'text-up' : 'text-down'}`}>
                     {isUp ? '▲' : '▼'} {Math.abs(change)}
                   </div>
@@ -74,24 +85,36 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
   }
 
   if (variant === 'exchange-wide') {
+    const cols2x1 = [
+      { ...EXCHANGE[0], rateSize: 'text-[20px]', flex: '1.2', pr: 'pr-3', pl: '' },
+      { ...EXCHANGE[1], rateSize: 'text-[16px]', flex: '1',   pr: '',    pl: 'pl-3' },
+    ]
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between mb-1 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
           <LiveDot />
         </div>
-        <div className="flex-1 flex divide-x divide-stroke">
-          {EXCHANGE_EXTENDED.map(({ flag, pair, rate, change }) => {
+        <div className="flex flex-1 min-h-0 divide-x divide-stroke">
+          {cols2x1.map(({ pair, rate, change, rateSize, flex, pr, pl }, i) => {
             const isUp = change > 0
+            const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
+            const fill  = isUp ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
+            const { area, line } = WIDE_CHART_DATA[i]
             return (
-              <div key={pair} className="flex-1 flex flex-col items-center justify-center px-2 gap-1">
-                <span className="text-[16px]">{flag}</span>
-                <div className="text-center">
-                  <div className="text-[9px] text-foreground-disabled">{pair.split(' / ')[0]} / KRW</div>
-                  <div className="text-[13px] font-bold text-foreground">{rate}</div>
+              <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>
+                <div>
+                  <div className="text-[9px] text-foreground-disabled">{pair}</div>
+                  <div className={`${rateSize} font-bold text-foreground leading-tight`}>{rate}</div>
                   <div className={`text-[9px] ${isUp ? 'text-up' : 'text-down'}`}>
                     {isUp ? '▲' : '▼'} {Math.abs(change)}
                   </div>
+                </div>
+                <div className="h-[18px] w-full shrink-0">
+                  <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+                    <path d={area} fill={fill} />
+                    <polyline points={line} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                  </svg>
                 </div>
               </div>
             )
@@ -154,18 +177,13 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
   /* exchange-sm (default) */
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-      <div className="flex items-center justify-between mb-1">
-        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
-        <LiveDot />
-      </div>
-      <div className="flex-1 flex flex-col justify-between">
-        {EXCHANGE.map((item) => <ExchangeRow key={item.pair} {...item} />)}
-        <button
-          onClick={(e) => e.stopPropagation()}
-          className="w-full py-1.5 rounded-xl bg-primary-light text-primary text-[10px] font-bold hover:bg-primary-dim transition-colors duration-[150ms]"
-        >
-          환전하기 →
-        </button>
+      <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">환율</span>
+      <div className="flex-1 flex flex-col justify-center min-h-0">
+        <div className="text-[9px] text-foreground-disabled">{usd.pair}</div>
+        <div className="text-[18px] font-bold text-foreground leading-tight">{usd.rate}</div>
+        <div className={`text-[9px] font-semibold mt-0.5 ${usd.change > 0 ? 'text-up' : 'text-down'}`}>
+          {usd.change > 0 ? '▲' : '▼'} {Math.abs(usd.change)} ({usd.pct})
+        </div>
       </div>
       {!isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
     </WidgetCard>

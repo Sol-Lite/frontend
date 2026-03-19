@@ -15,49 +15,46 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
       </div>
 
       {variant === 'balance-lg' ? (
-        <div className="flex items-center justify-between flex-1 gap-4">
-          <div className="flex flex-col gap-1.5">
-            <div className="text-[10px] text-foreground-disabled">총 평가자산</div>
-            <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground">
-              {BALANCE.total}<span className="text-[11px] font-medium text-foreground-tertiary ml-0.5">원</span>
+        <div className="flex flex-col flex-1 gap-1.5 min-h-0">
+          <div className="shrink-0">
+            <div className="text-[8px] text-foreground-disabled">총 평가자산</div>
+            <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
+              {BALANCE.total}
             </div>
-            <div className="text-[11px] font-semibold text-up">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+            <div className="text-[9px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
           </div>
-          <div className="flex flex-col gap-2 shrink-0">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-subtle">
-              <span className="text-[13px]">🇰🇷</span>
-              <div>
-                <div className="text-[9px] text-foreground-disabled">KRW</div>
-                <div className="text-[12px] font-semibold text-foreground">{BALANCE.krw}</div>
+          <div className="h-px bg-stroke-subtle shrink-0" />
+          <div className="flex gap-2 flex-1 items-start">
+            {[
+              { label: '투자원금', val: BALANCE.invested, color: 'text-foreground' },
+              { label: '평가손익', val: BALANCE.profit,   color: 'text-up' },
+              { label: '주문가능', val: BALANCE.available, color: 'text-foreground' },
+            ].map(({ label, val, color }) => (
+              <div key={label} className="flex-1 min-w-0">
+                <div className="text-[10px] text-foreground-disabled">{label}</div>
+                <div className={`text-[13px] font-semibold truncate ${color}`}>{val}</div>
               </div>
-            </div>
-            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-subtle">
-              <span className="text-[13px]">🇺🇸</span>
-              <div>
-                <div className="text-[9px] text-foreground-disabled">USD</div>
-                <div className="text-[12px] font-semibold text-foreground">{BALANCE.usd}</div>
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       ) : variant === 'balance-3x1' ? (
         <div className="flex flex-1 gap-4 min-h-0">
-          <div className="flex flex-col justify-between flex-1 min-w-0">
-            <div>
-              <div className="text-[10px] text-foreground-disabled">총 평가자산</div>
-              <div className="text-[20px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
-                {BALANCE.total}<span className="text-[11px] font-medium text-foreground-tertiary ml-0.5">원</span>
+          <div className="flex flex-col flex-1 min-w-0">
+            <div className="flex-1 flex flex-col justify-center">
+              <div className="text-[9px] text-foreground-disabled">총 평가자산</div>
+              <div className="text-[22px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
+                {BALANCE.total}
               </div>
-              <div className="text-[11px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+              <div className="text-[10px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
             </div>
-            <div className="flex gap-6">
+            <div className="flex gap-6 shrink-0">
               <div>
                 <div className="text-[9px] text-foreground-disabled">투자원금</div>
-                <div className="text-[12px] font-semibold text-foreground">{BALANCE.invested}</div>
+                <div className="text-[11px] font-semibold text-foreground">{BALANCE.invested}</div>
               </div>
               <div>
                 <div className="text-[9px] text-foreground-disabled">주문가능</div>
-                <div className="text-[12px] font-semibold text-foreground">{BALANCE.available}</div>
+                <div className="text-[11px] font-semibold text-foreground">{BALANCE.available}</div>
               </div>
             </div>
           </div>
@@ -82,9 +79,9 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
           </div>
           <div className="grid grid-cols-2 gap-2 shrink-0">
             {[
-              { label: '투자원금', val: '82,180,000', color: 'text-foreground' },
-              { label: '평가손익', val: BALANCE.profit, color: 'text-up' },
-              { label: '당일손익', val: '+342,000',    color: 'text-up' },
+              { label: '투자원금', val: BALANCE.invested, color: 'text-foreground' },
+              { label: '평가손익', val: BALANCE.profit,    color: 'text-up' },
+              { label: '당일손익', val: '+342,000',        color: 'text-up' },
               { label: '수익률',   val: BALANCE.profitRate, color: 'text-up' },
             ].map(({ label, val, color }) => (
               <div key={label} className="bg-background rounded-xl px-3 py-2">

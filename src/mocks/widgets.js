@@ -109,9 +109,10 @@ export const WIDGET_TYPES = [
     category: '기타',
     description: '달력 · 리스트 뷰',
     variants: [
-      { id: 'trade-list', label: '목록형', colSpan: 1, rowSpan: 1, preview: 'trade-list' },
-      { id: 'trade-wide', label: '주간',   colSpan: 2, rowSpan: 1, preview: 'trade-wide' },
-      { id: 'trade-cal',  label: '캘린더', colSpan: 2, rowSpan: 2, preview: 'trade-cal' },
+      { id: 'trade-list', label: '목록형',       colSpan: 1, rowSpan: 1, preview: 'trade-list' },
+      { id: 'trade-wide', label: '주간',         colSpan: 2, rowSpan: 1, preview: 'trade-wide' },
+      { id: 'trade-cal',  label: '캘린더',       colSpan: 2, rowSpan: 2, preview: 'trade-cal'  },
+      { id: 'trade-3x2',  label: '캘린더+목록', colSpan: 3, rowSpan: 2, preview: 'trade-3x2'  },
     ],
   },
 ]
