@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useController } from 'react-hook-form'
 import AccountPinKeypad from '@/components/signup/AccountPinKeypad'
 import { INVESTMENT_TYPE_OPTIONS } from '@/components/signup/signupSchema'
@@ -225,20 +225,13 @@ export default function AccountSetupStep({
     control,
   })
 
-  const pinAreaRef = useRef(null)
   const [activePinField, setActivePinField] = useState('accountPin')
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
 
   const accountPin = accountPinField.value ?? ''
   const accountPinConfirm = accountPinConfirmField.value ?? ''
-  const accountPinConfirmError =
-    (() => {
-      const baseError = fieldErrors.accountPinConfirm
-      if (!baseError) return undefined
-      if (accountPinConfirm.length > 0 && accountPinConfirm.length < 4) return undefined
-
-      return baseError
-    })()
+  const isTypingConfirm = accountPinConfirm.length > 0 && accountPinConfirm.length < 4
+  const accountPinConfirmError = isTypingConfirm ? undefined : fieldErrors.accountPinConfirm
 
   useEffect(() => {
     if (!isKeyboardOpen) return undefined
@@ -285,7 +278,7 @@ export default function AccountSetupStep({
       </div>
 
       <div className="rounded-2xl border border-stroke bg-surface px-5 py-5">
-        <div ref={pinAreaRef} className="space-y-4">
+        <div className="space-y-4">
           <div className="space-y-4 md:space-y-5">
             <div>
               <PinField

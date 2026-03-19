@@ -65,7 +65,10 @@ export const signupAccountSetupSchema = z.object({
   accountPin: z
     .string()
     .regex(/^\d{4}$/, '계좌 비밀번호는 숫자 4자리입니다'),
-  accountPinConfirm: z.string().min(1, '계좌 비밀번호 확인을 입력해 주세요.'),
+  accountPinConfirm: z
+    .string()
+    .min(1, '계좌 비밀번호 확인을 입력해 주세요.')
+    .regex(/^\d{4}$/, '계좌 비밀번호는 숫자 4자리입니다'),
 }).refine((data) => data.accountPin === data.accountPinConfirm, {
   path: ['accountPinConfirm'],
   message: '계좌 비밀번호가 일치하지 않습니다.',

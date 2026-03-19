@@ -34,26 +34,23 @@ const BUTTON_THEME = [
   },
 ]
 
-function shuffleDigits() {
-  const digits = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
+function shuffle(items) {
+  const result = [...items]
 
-  for (let index = digits.length - 1; index > 0; index -= 1) {
+  for (let index = result.length - 1; index > 0; index -= 1) {
     const randomIndex = Math.floor(Math.random() * (index + 1))
-    ;[digits[index], digits[randomIndex]] = [digits[randomIndex], digits[index]]
+    ;[result[index], result[randomIndex]] = [result[randomIndex], result[index]]
   }
 
-  return digits
+  return result
+}
+
+function shuffleDigits() {
+  return shuffle(['1', '2', '3', '4', '5', '6', '7', '8', '9', '0'])
 }
 
 function shuffleInteractiveKeys() {
-  const keys = [...shuffleDigits(), ...DUMMY_KEYS]
-
-  for (let index = keys.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(Math.random() * (index + 1))
-    ;[keys[index], keys[randomIndex]] = [keys[randomIndex], keys[index]]
-  }
-
-  return keys
+  return shuffle([...shuffleDigits(), ...DUMMY_KEYS])
 }
 
 function buildLayout(keys) {
@@ -67,14 +64,7 @@ function buildLayout(keys) {
 }
 
 function pickRandomFlashButtons(keys, count) {
-  const pool = [...keys]
-
-  for (let index = pool.length - 1; index > 0; index -= 1) {
-    const randomIndex = Math.floor(Math.random() * (index + 1))
-    ;[pool[index], pool[randomIndex]] = [pool[randomIndex], pool[index]]
-  }
-
-  return pool.slice(0, Math.min(count, pool.length))
+  return shuffle(keys).slice(0, Math.min(count, keys.length))
 }
 
 export default function AccountPinKeypad({
