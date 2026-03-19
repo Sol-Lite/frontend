@@ -502,39 +502,6 @@ function PreviewContent({ type }) {
       )
     }
 
-    /* 증권사 리포트 — 단일 1×1 */
-    case 'report-sm':
-      return (
-        <div className="flex flex-col justify-between h-full">
-          <span className="text-[8px] font-semibold text-foreground-disabled">증권사 리포트</span>
-          <div>
-            <div className="text-[9px] font-bold text-foreground leading-snug">삼성전자<br />목표가 상향</div>
-            <div className="text-[8px] text-foreground-disabled mt-1">키움증권 · 3.18</div>
-          </div>
-        </div>
-      )
-
-    /* 증권사 리포트 — 목록형 2×1 */
-    case 'report-wide':
-      return (
-        <div className="flex flex-col h-full gap-1">
-          <span className="text-[8px] font-semibold text-foreground-disabled shrink-0">증권사 리포트</span>
-          <div className="flex flex-col gap-2">
-            {[
-              { title: '삼성전자 목표가 상향',      firm: '키움증권',   date: '3.18' },
-              { title: 'SK하이닉스 HBM 수요 긍정적', firm: '삼성증권',   date: '3.17' },
-              { title: 'LG에너지 실적 전망 하향',   firm: 'NH투자증권', date: '3.16' },
-              { title: '현대차 글로벌 판매 호조',   firm: '한투증권',   date: '3.15' },
-            ].map(({ title, firm, date }, i) => (
-              <div key={i}>
-                <p className="text-[9px] text-foreground leading-snug">{title}</p>
-                <span className="text-[7px] text-foreground-disabled">{firm} · {date}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-
     /* 계좌 잔고 — 확장형 3×1 */
     case 'balance-3x1':
       return (
