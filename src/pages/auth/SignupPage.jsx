@@ -20,8 +20,8 @@ import {
 import { authApi } from '@/api/auth'
 import useEmailVerification from '@/hooks/useEmailVerification'
 
-const INDICATOR_STEPS = ['계좌개설', '기본정보', '사전확인', '동의서', '계좌설정']
-const STEP_TO_INDICATOR = [0, 1, 2, 3, 4, 4]
+const INDICATOR_STEPS = ['계좌개설', '기본정보', '계좌설정']
+const STEP_TO_INDICATOR = [0, 1, 1, 1, 2, 2]
 
 export default function SignupPage() {
   const navigate = useNavigate()
