@@ -3,23 +3,22 @@ import { Pencil } from 'lucide-react'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
+import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
-import BalanceWidget from '@/components/widgets/BalanceWidget'
-import IndexWidget from '@/components/widgets/IndexWidget'
-import PortfolioWidget from '@/components/widgets/PortfolioWidget'
-import StockChartWidget from '@/components/widgets/StockChartWidget'
-import RankingWidget from '@/components/widgets/RankingWidget'
-import WatchlistWidget from '@/components/widgets/WatchlistWidget'
-import MarketOverviewWidget from '@/components/widgets/MarketOverviewWidget'
-import ExchangeWidget from '@/components/widgets/ExchangeWidget'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
-import { HOME_STOCKS } from '@/mocks/home'
+import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
 
 export default function HomePage() {
   const { isEditMode } = useEditModeStore()
-  const { setCellSize } = useGridStore()
+  const { setCellSize, setPreviewCellSize } = useGridStore()
+  const { widgets, removeWidget } = useWidgetStore()
   const gridRef = useRef(null)
+  const isEditModeRef = useRef(isEditMode)
+
+  useEffect(() => {
+    isEditModeRef.current = isEditMode
+  }, [isEditMode])
 
   useEffect(() => {
     const el = gridRef.current
@@ -33,11 +32,15 @@ export default function HomePage() {
       const cellWidth = (width - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
       const cellHeight = (height - GRID_GAP * (GRID_ROWS - 1)) / GRID_ROWS
       setCellSize(cellWidth, cellHeight)
+      // EditPanel 미열림 상태(full grid)의 셀 크기만 preview 기준으로 저장
+      if (!isEditModeRef.current) {
+        setPreviewCellSize(cellWidth, cellHeight)
+      }
     })
 
     observer.observe(el)
     return () => observer.disconnect()
-  }, [setCellSize])
+  }, [setCellSize, setPreviewCellSize])
 
   return (
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
@@ -89,20 +92,20 @@ export default function HomePage() {
             minHeight: `${MIN_GRID_HEIGHT}px`,
           }}
         >
-          {/* Row 1 */}
-          <BalanceWidget />
-          <IndexWidget />
-          <PortfolioWidget />
-
-          {/* Row 2 */}
-          <StockChartWidget stock={HOME_STOCKS[0]} />
-          <RankingWidget />
-          <WatchlistWidget />
-
-          {/* Row 3 */}
-          <MarketOverviewWidget />
-          <ExchangeWidget />
-          <StockChartWidget stock={HOME_STOCKS[1]} />
+          {widgets.map((w) => {
+            const Component = WIDGET_REGISTRY[w.widgetTypeId]
+            if (!Component) return null
+            return (
+              <Component
+                key={w.instanceId}
+                variant={w.variantId}
+                colSpan={w.colSpan}
+                rowSpan={w.rowSpan}
+                config={w.config}
+                onDelete={() => removeWidget(w.instanceId)}
+              />
+            )
+          })}
           {!isEditMode && <AddWidgetSlot />}
         </div>
       </div>
