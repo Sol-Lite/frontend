@@ -5,10 +5,10 @@ import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { GRID_GAP, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
 
 /* ── 너비 클래스 ─────────────────────────────────────────────
-   colSpan=1 → w-1/2,  colSpan=2 → w-full
+   colSpan=1 → w-1/2,  colSpan=2|3 → w-full
 ─────────────────────────────────────────────────────────── */
 function widthClass(colSpan) {
-  return colSpan === 2 ? 'w-full' : 'w-1/2'
+  return colSpan >= 2 ? 'w-full' : 'w-1/2'
 }
 
 /* ── aspect-ratio 계산 ──────────────────────────────────────
@@ -76,22 +76,24 @@ function PreviewContent({ type }) {
         </div>
       )
 
-    /* 주가/차트 — 차트형 1×1 */
-    case 'stock-tall':
+    /* 주가/차트 — 와이드 2×1 */
+    case 'stock-wide':
       return (
-        <div className="flex flex-col h-full gap-1.5">
-          <div className="flex items-center justify-between shrink-0">
-            <span className="text-[10px] font-bold text-foreground">삼성전자</span>
-            <span className="text-[8px] text-foreground-disabled">1D</span>
+        <div className="flex h-full gap-2.5">
+          <div className="flex flex-col justify-between shrink-0">
+            <div>
+              <div className="text-[10px] font-bold text-foreground">삼성전자</div>
+              <div className="text-[8px] text-foreground-disabled">005930 · KOSPI</div>
+            </div>
+            <div>
+              <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
+              <div className="text-[10px] text-up mt-0.5">▲ +1,200 (+1.62%)</div>
+            </div>
           </div>
-          <div className="flex-1 min-h-0 bg-background rounded-lg flex items-end px-1.5 pb-1.5 pt-2 gap-px">
-            {[42, 58, 50, 72, 60, 68, 55, 80, 70, 85, 75, 90].map((h, i) => (
+          <div className="flex-1 min-h-0 flex items-end gap-px pb-1 pt-2">
+            {[35,48,42,55,48,62,55,70,60,78,68,88].map((h, i) => (
               <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
             ))}
-          </div>
-          <div className="shrink-0">
-            <div className="text-[13px] font-extrabold text-foreground leading-none">75,400</div>
-            <div className="text-[10px] text-up mt-0.5">▲ +1.62%</div>
           </div>
         </div>
       )
@@ -533,7 +535,38 @@ function PreviewContent({ type }) {
         </div>
       )
 
-    /* 계좌 잔고 — 대형 2×2 */
+    /* 계좌 잔고 — 확장형 3×1 */
+    case 'balance-3x1':
+      return (
+        <div className="flex h-full gap-3">
+          <div className="flex flex-col justify-between flex-1 min-w-0">
+            <span className="text-[9px] text-foreground-disabled">총 평가자산</span>
+            <div>
+              <div className="text-[15px] font-extrabold text-foreground leading-none">84,320,000원</div>
+              <div className="text-[10px] text-up font-semibold mt-0.5">▲ +2,152,000원 (+2.61%)</div>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1.5 shrink-0 justify-center">
+            {[
+              { label: '투자원금', val: '82,168,000', color: 'text-foreground' },
+              { label: '평가손익', val: '+2,152,000', color: 'text-up' },
+              { label: '당일손익', val: '+342,000',   color: 'text-up' },
+            ].map(({ label, val, color }) => (
+              <div key={label} className="text-right">
+                <div className="text-[8px] text-foreground-disabled">{label}</div>
+                <div className={`text-[10px] font-semibold ${color}`}>{val}</div>
+              </div>
+            ))}
+          </div>
+          <div className="w-16 shrink-0 flex items-end gap-px pb-1">
+            {[30,45,38,60,52,65,55,70,62,78,68,85].map((h, i) => (
+              <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+        </div>
+      )
+
+    /* 계좌 잔고 — 대형 (구 2×2, 미사용) */
     case 'balance-2x2':
       return (
         <div className="flex flex-col h-full gap-2">
@@ -598,7 +631,35 @@ function PreviewContent({ type }) {
         </div>
       )
 
-    /* 주요 지수 — 대형 2×2 */
+    /* 주요 지수 — 3지수 3×1 */
+    case 'index-3x1':
+      return (
+        <div className="flex flex-col h-full gap-1">
+          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+          <div className="flex flex-1 min-h-0 divide-x divide-stroke">
+            {[
+              { name: 'KOSPI',  val: '2,685.42', chg: '+0.46%', up: true,  bars: [50,55,48,60,52,58,54,62] },
+              { name: 'KOSDAQ', val: '868.15',   chg: '-0.21%', up: false, bars: [60,55,58,52,56,50,54,48] },
+              { name: 'NASDAQ', val: '16,274',   chg: '+0.83%', up: true,  bars: [45,52,48,58,54,62,58,68] },
+            ].map(({ name, val, chg, up, bars }) => (
+              <div key={name} className="flex-1 flex flex-col justify-between px-2">
+                <span className="text-[9px] font-semibold text-foreground-disabled">{name}</span>
+                <div className="flex items-end gap-px h-6 w-full my-1">
+                  {bars.map((h, i) => (
+                    <div key={i} className={`flex-1 rounded-sm ${up ? 'bg-up/50' : 'bg-down/50'}`} style={{ height: `${h}%` }} />
+                  ))}
+                </div>
+                <div>
+                  <div className="text-[11px] font-extrabold text-foreground leading-none">{val}</div>
+                  <span className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+
+    /* 주요 지수 — 대형 (구 2×2, 미사용) */
     case 'index-2x2':
       return (
         <div className="flex flex-col h-full gap-2">
@@ -666,7 +727,76 @@ function PreviewContent({ type }) {
         </div>
       )
 
-    /* 환율 — 대형 2×2 */
+    /* 주가/차트 — 풀 차트 3×2 */
+    case 'stock-3x2':
+      return (
+        <div className="flex flex-col h-full gap-1.5">
+          <div className="flex items-start justify-between shrink-0">
+            <div>
+              <div className="text-[11px] font-bold text-foreground">삼성전자</div>
+              <div className="text-[8px] text-foreground-disabled">005930 · KOSPI · 반도체</div>
+            </div>
+            <div className="text-right">
+              <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
+              <div className="text-[9px] text-up">▲ +1,200 (+1.62%)</div>
+            </div>
+          </div>
+          <div className="flex gap-1.5 shrink-0">
+            {['1일', '1주', '1달', '3달'].map((t, i) => (
+              <span key={t} className={`text-[8px] px-1.5 py-0.5 rounded ${i === 0 ? 'bg-primary-light text-primary font-semibold' : 'text-foreground-disabled'}`}>{t}</span>
+            ))}
+          </div>
+          <div className="flex-1 min-h-0 bg-background rounded-lg flex items-end px-2 pb-2 gap-px">
+            {[28,35,32,44,48,54,58,65,70,76,82,88,92,96].map((h, i) => (
+              <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
+            ))}
+          </div>
+          <div className="flex justify-between shrink-0">
+            {[
+              { label: '시가',  val: '74,200' },
+              { label: '고가',  val: '75,800' },
+              { label: '저가',  val: '73,900' },
+              { label: '거래량', val: '12.4M'  },
+              { label: '시총',  val: '450조'  },
+            ].map(({ label, val }) => (
+              <div key={label} className="text-center">
+                <div className="text-[7px] text-foreground-disabled">{label}</div>
+                <div className="text-[8px] font-semibold text-foreground">{val}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+
+    /* 환율 — 3통화 3×1 */
+    case 'exchange-3x1':
+      return (
+        <div className="flex flex-col h-full gap-1">
+          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">환율</span>
+          <div className="flex flex-1 min-h-0 divide-x divide-stroke">
+            {[
+              { pair: 'USD/KRW', rate: '1,378.50', chg: '-0.17%', up: false, bars: [60,58,62,55,58,52,56,50] },
+              { pair: 'JPY/KRW', rate: '9.18',     chg: '+0.11%', up: true,  bars: [45,48,50,52,49,54,52,56] },
+              { pair: 'EUR/KRW', rate: '1,502.30', chg: '-0.05%', up: false, bars: [55,53,57,52,54,50,52,49] },
+            ].map(({ pair, rate, chg, up, bars }) => (
+              <div key={pair} className="flex-1 flex flex-col justify-between px-2">
+                <span className="text-[8px] text-foreground-disabled">{pair}</span>
+                <div className="flex items-end gap-px h-5 w-full my-1">
+                  {bars.map((h, i) => (
+                    <div key={i} className={`flex-1 rounded-sm ${up ? 'bg-up/40' : 'bg-down/40'}`} style={{ height: `${h}%` }} />
+                  ))}
+                </div>
+                <div>
+                  <div className="text-[11px] font-extrabold text-foreground leading-none">{rate}</div>
+                  <span className={`text-[9px] ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+
+    /* 환율 — 대형 (구 2×2, 미사용) */
     case 'exchange-2x2':
       return (
         <div className="flex flex-col h-full gap-2">
@@ -701,6 +831,65 @@ function PreviewContent({ type }) {
         </div>
       )
 
+    /* 종목별 뉴스 — 헤드라인 1×1 */
+    case 'stock-news-sm':
+      return (
+        <div className="flex flex-col h-full gap-2">
+          <div className="flex items-center justify-between shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled">종목별 뉴스</span>
+            <span className="text-[8px] font-semibold text-primary bg-primary-light px-1.5 py-px rounded">삼성전자</span>
+          </div>
+          <p className="text-[10px] text-foreground-secondary leading-snug">
+            HBM 공급 본격화…<br />엔비디아향 납품 재개.<br />외국인 순매수 지속.
+          </p>
+        </div>
+      )
+
+    /* 종목별 뉴스 — 상세 2×1 */
+    case 'stock-news-wide':
+      return (
+        <div className="flex flex-col h-full gap-1.5">
+          <div className="flex items-center justify-between shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled">종목별 뉴스</span>
+            <span className="text-[8px] font-semibold text-primary bg-primary-light px-1.5 py-px rounded">삼성전자</span>
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {[
+              'HBM 공급 본격화 — 엔비디아향 납품 재개',
+              '외국인 6거래일 연속 순매수',
+            ].map((headline, i) => (
+              <div key={i} className="flex items-start gap-1">
+                <span className="text-[8px] text-foreground-disabled mt-px shrink-0">{i + 1}</span>
+                <p className="text-[9px] text-foreground-secondary leading-snug">{headline}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+
+    /* 종목별 뉴스 — 대형 2×2 */
+    case 'stock-news-2x2':
+      return (
+        <div className="flex flex-col h-full gap-1.5">
+          <div className="flex items-center justify-between shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled">종목별 뉴스</span>
+            <span className="text-[8px] font-semibold text-primary bg-primary-light px-1.5 py-px rounded">삼성전자</span>
+          </div>
+          <div className="flex flex-col gap-2">
+            {[
+              'HBM 공급 본격화 — 엔비디아향 납품 재개',
+              '외국인 6거래일 연속 순매수',
+              '파운드리 2나노 시범 생산 개시',
+            ].map((title, i) => (
+              <div key={i} className="flex items-start gap-1.5">
+                <span className="text-[8px] text-foreground-disabled shrink-0 mt-0.5">{i + 1}</span>
+                <p className="text-[9px] text-foreground leading-snug">{title}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+
     /* 오늘의 시황 — 대형 2×2 */
     case 'market-2x2':
       return (
@@ -717,60 +906,6 @@ function PreviewContent({ type }) {
               <div key={i} className="flex items-start gap-1.5">
                 <span className="text-[8px] text-foreground-disabled shrink-0 mt-0.5">{i + 1}</span>
                 <p className="text-[9px] text-foreground leading-snug">{title}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-
-    /* 관심종목 — 대형 2×2 */
-    case 'watchlist-2x2':
-      return (
-        <div className="flex flex-col h-full gap-1">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
-          <div className="flex flex-col gap-2">
-            {[
-              { name: '삼성전자',       price: '75,400',  pct: '+1.62%', up: true  },
-              { name: '현대차',         price: '221,500', pct: '-0.43%', up: false },
-              { name: 'LG에너지솔루션', price: '412,000', pct: '+0.91%', up: true  },
-              { name: 'POSCO홀딩스',    price: '378,500', pct: '+0.53%', up: true  },
-              { name: 'SK하이닉스',     price: '182,000', pct: '-0.82%', up: false },
-            ].map(({ name, price, pct, up }) => (
-              <div key={name} className="flex items-center justify-between">
-                <span className="text-[10px] font-medium text-foreground">{name}</span>
-                <div className="text-right">
-                  <div className="text-[10px] font-semibold text-foreground">{price}</div>
-                  <div className={`text-[9px] ${up ? 'text-up' : 'text-down'}`}>{pct}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-
-    /* 증권사 리포트 — 대형 2×2 */
-    case 'report-2x2':
-      return (
-        <div className="flex flex-col h-full gap-1.5">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">증권사 리포트</span>
-          <div className="flex flex-col gap-2">
-            {[
-              { title: '삼성전자 목표가 상향',         firm: '키움증권',    date: '3.18', desc: '반도체 업황 회복 기대감' },
-              { title: 'SK하이닉스 HBM 수요 긍정적',   firm: '삼성증권',    date: '3.17', desc: 'AI 서버 수요 지속 증가' },
-              { title: 'LG에너지 실적 전망 하향',      firm: 'NH투자증권',  date: '3.16', desc: 'EV 시장 성장 둔화 우려' },
-              { title: '현대차 글로벌 판매 호조 지속', firm: '한국투자증권', date: '3.15', desc: '북미 SUV 수요 견조' },
-              { title: '삼성바이오 수주 확대 기대',    firm: '미래에셋',    date: '3.14', desc: 'CMO 수주 파이프라인 확대' },
-              { title: 'NAVER 광고 회복세 긍정적',     firm: 'KB증권',      date: '3.13', desc: '디스플레이 광고 반등' },
-            ].map(({ title, firm, date, desc }, i) => (
-              <div key={i} className="border-b border-stroke last:border-0 pb-1.5 last:pb-0">
-                <div className="flex items-start justify-between gap-1">
-                  <span className="text-[10px] font-semibold text-foreground leading-snug">{title}</span>
-                  <span className="text-[8px] text-foreground-disabled shrink-0 mt-0.5">{date}</span>
-                </div>
-                <div className="flex items-center gap-1 mt-0.5">
-                  <span className="text-[8px] text-primary">{firm}</span>
-                  <span className="text-[8px] text-foreground-disabled">· {desc}</span>
-                </div>
               </div>
             ))}
           </div>
