@@ -3,18 +3,25 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { useNavigate } from 'react-router-dom'
 import AccountStep from '@/components/signup/AccountStep'
+import AccountSetupStep from '@/components/signup/AccountSetupStep'
 import AccountIntroStep from '@/components/signup/AccountIntroStep'
 import BasicInfoStep from '@/components/signup/BasicInfoStep'
 import BrandPanel from '@/components/signup/BrandPanel'
+import { CONSENT_INITIAL_STATE, FINANCE_KEYS, SAFETY_KEYS } from '@/components/signup/consentData'
 import PreOpenCheckStep from '@/components/signup/PreOpenCheckStep'
-import ConsentStep, { CONSENT_INITIAL_STATE, FINANCE_KEYS, SAFETY_KEYS } from '@/components/signup/ConsentStep'
+import ConsentStep from '@/components/signup/ConsentStep'
 import StepIndicator from '@/components/signup/StepIndicator'
-import { signupBasicInfoDefaultValues, signupBasicInfoSchema } from '@/components/signup/signupSchema'
+import {
+  signupAccountSetupDefaultValues,
+  signupAccountSetupSchema,
+  signupBasicInfoDefaultValues,
+  signupBasicInfoSchema,
+} from '@/components/signup/signupSchema'
 import { authApi } from '@/api/auth'
 import useEmailVerification from '@/hooks/useEmailVerification'
 
-const INDICATOR_STEPS = ['계좌개설', '기본정보', '계좌설정']
-const STEP_TO_INDICATOR = [0, 1, 1, 1, 2]
+const INDICATOR_STEPS = ['계좌개설', '기본정보', '사전확인', '동의서', '계좌설정']
+const STEP_TO_INDICATOR = [0, 1, 2, 3, 4, 4]
 
 export default function SignupPage() {
   const navigate = useNavigate()
@@ -25,14 +32,26 @@ export default function SignupPage() {
     defaultValues: signupBasicInfoDefaultValues,
   })
   const {
-    control,
-    clearErrors,
-    handleSubmit,
-    setError: setFieldError,
+    control: basicInfoControl,
+    clearErrors: clearBasicInfoErrors,
+    handleSubmit: handleBasicInfoSubmit,
+    setError: setBasicInfoFieldError,
     trigger,
     watch,
-    formState: { errors },
+    formState: { errors: basicInfoErrors },
   } = basicInfoForm
+  const accountSetupForm = useForm({
+    resolver: zodResolver(signupAccountSetupSchema),
+    mode: 'onChange',
+    defaultValues: signupAccountSetupDefaultValues,
+  })
+  const {
+    control: accountSetupControl,
+    clearErrors: clearAccountSetupErrors,
+    handleSubmit: handleAccountSetupSubmit,
+    setError: setAccountSetupFieldError,
+    formState: { errors: accountSetupErrors },
+  } = accountSetupForm
   const email = watch('email')
   const name = watch('name')
   const phone = watch('phone')
@@ -49,7 +68,7 @@ export default function SignupPage() {
   })
 
   function handleEmailChange() {
-    clearErrors('email')
+    clearBasicInfoErrors('email')
     setError('')
     setEmailCheckError('')
     if (sendDone) {
@@ -61,7 +80,7 @@ export default function SignupPage() {
     const isEmailValid = await trigger('email')
     if (!isEmailValid) return
 
-    clearErrors('email')
+    clearBasicInfoErrors('email')
     setError('')
     setEmailCheckError('')
 
@@ -71,7 +90,7 @@ export default function SignupPage() {
     if (result.error?.code === 'DUPLICATE_EMAIL') {
       const message = result.error.message ?? '이미 등록된 이메일입니다'
       setEmailCheckError(message)
-      setFieldError('email', {
+      setBasicInfoFieldError('email', {
         type: 'server',
         message,
       })
@@ -82,12 +101,12 @@ export default function SignupPage() {
   }
 
   function handleBasicInfoStep() {
-    handleSubmit(() => {
+    handleBasicInfoSubmit(() => {
       setError('')
       setVerifyHighlight(false)
 
       if (emailCheckError) {
-        setFieldError('email', {
+        setBasicInfoFieldError('email', {
           type: 'server',
           message: emailCheckError,
         })
@@ -111,28 +130,62 @@ export default function SignupPage() {
     })()
   }
 
-  async function handleSignup() {
+  function handleConsentStep() {
     setError('')
-    setIsLoading(true)
-    try {
-      const serviceTermsAgreed = FINANCE_KEYS.every((key) => agreements[key])
-      const privacyTermsAgreed = SAFETY_KEYS.every((key) => agreements[key])
+    clearAccountSetupErrors()
+    setStep(4)
+  }
 
-      await authApi.signup({
-        email,
-        password,
-        passwordConfirm,
-        name,
-        phone: phone || null,
-        serviceTermsAgreed,
-        privacyTermsAgreed,
-      })
-      setStep(4)
-    } catch (err) {
-      setError(err?.message ?? '회원가입에 실패했습니다. 다시 시도해 주세요.')
-    } finally {
-      setIsLoading(false)
-    }
+  function handleSignup() {
+    handleAccountSetupSubmit(async ({ accountPin, investmentType }) => {
+      setError('')
+      clearAccountSetupErrors()
+      setIsLoading(true)
+      try {
+        const serviceTermsAgreed = FINANCE_KEYS.every((key) => agreements[key])
+        const privacyTermsAgreed = SAFETY_KEYS.every((key) => agreements[key])
+
+        await authApi.signup({
+          email,
+          password,
+          passwordConfirm,
+          name,
+          phone,
+          serviceTermsAgreed,
+          privacyTermsAgreed,
+          investmentType,
+          accountPin,
+        })
+        setStep(5)
+      } catch (err) {
+        const validationErrors = err?.errors ?? {}
+        let hasFieldError = false
+
+        if (validationErrors.accountPin) {
+          setAccountSetupFieldError('accountPin', {
+            type: 'server',
+            message: validationErrors.accountPin,
+          })
+          hasFieldError = true
+        }
+
+        if (validationErrors.investmentType) {
+          setAccountSetupFieldError('investmentType', {
+            type: 'server',
+            message: validationErrors.investmentType,
+          })
+          hasFieldError = true
+        }
+
+        if (hasFieldError) return
+
+        setError(err?.message ?? '회원가입에 실패했습니다. 다시 시도해 주세요.')
+      } finally {
+        setIsLoading(false)
+      }
+    }, () => {
+      setError('')
+    })()
   }
 
   return (
@@ -149,21 +202,24 @@ export default function SignupPage() {
             {step === 1 && (
             <BasicInfoStep
               password={password}
-              control={control}
+              control={basicInfoControl}
               isSending={isSending}
               sendDone={sendDone}
               emailVerified={emailVerified}
               verifyHighlight={verifyHighlight}
               error={error}
               fieldErrors={{
-                email: errors.email?.message,
-                name: errors.name?.message,
-                phone: errors.phone?.message,
-                password: errors.password?.message,
-                passwordConfirm: errors.passwordConfirm?.message,
+                email: basicInfoErrors.email?.message,
+                name: basicInfoErrors.name?.message,
+                phone: basicInfoErrors.phone?.message,
+                password: basicInfoErrors.password?.message,
+                passwordConfirm: basicInfoErrors.passwordConfirm?.message,
               }}
               onEmailInputChange={handleEmailChange}
-              onBack={() => setStep(0)}
+              onBack={() => {
+                setError('')
+                setStep(0)
+              }}
               onSendVerifyEmail={handleSendVerifyEmail}
               onNext={handleBasicInfoStep}
             />
@@ -171,8 +227,14 @@ export default function SignupPage() {
 
           {step === 2 && (
             <PreOpenCheckStep
-              onBack={() => setStep(1)}
-              onNext={() => setStep(3)}
+              onBack={() => {
+                setError('')
+                setStep(1)
+              }}
+              onNext={() => {
+                setError('')
+                setStep(3)
+              }}
             />
           )}
 
@@ -180,18 +242,40 @@ export default function SignupPage() {
             <ConsentStep
               agreements={agreements}
               onAgreementsChange={setAgreements}
-              onBack={() => setStep(2)}
-              onSubmit={handleSignup}
+              onBack={() => {
+                setError('')
+                setStep(2)
+              }}
+              onSubmit={handleConsentStep}
               isLoading={isLoading}
               error={error}
+              submitLabel="동의하고 계속하기"
             />
           )}
 
           {step === 4 && (
+            <AccountSetupStep
+              control={accountSetupControl}
+              fieldErrors={{
+                accountPin: accountSetupErrors.accountPin?.message,
+                accountPinConfirm: accountSetupErrors.accountPinConfirm?.message,
+                investmentType: accountSetupErrors.investmentType?.message,
+              }}
+              isLoading={isLoading}
+              error={error}
+              onBack={() => {
+                setError('')
+                setStep(3)
+              }}
+              onSubmit={handleSignup}
+            />
+          )}
+
+          {step === 5 && (
             <AccountStep onFinish={() => navigate('/login')} />
           )}
 
-          {step < 4 && (
+          {step < 5 && (
             <p className="text-center text-xs text-foreground-disabled mt-5">
               이미 계정이 있으신가요?
               <button type="button" onClick={() => navigate('/login')}

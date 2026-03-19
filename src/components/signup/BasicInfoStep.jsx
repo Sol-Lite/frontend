@@ -130,6 +130,7 @@ export default function BasicInfoStep({
           render={({ field }) => (
             <Input
               label="휴대폰 번호"
+              required
               type="tel"
               placeholder="010-0000-0000"
               {...field}
