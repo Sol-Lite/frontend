@@ -3,9 +3,10 @@ import useAuthStore from '@/store/useAuthStore'
 const BASE = '/api/auth'
 
 async function post(path, body, options = {}) {
+  const { headers: optionHeaders, ...restOptions } = options
   const headers = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...optionHeaders,
   }
 
   // 로그인/회원가입 제외 - accessToken 필요
@@ -21,7 +22,7 @@ async function post(path, body, options = {}) {
     headers,
     body: JSON.stringify(body),
     credentials: 'include',
-    ...options,
+    ...restOptions,
   })
   const data = await res.json()
   if (!res.ok) throw data
@@ -30,7 +31,8 @@ async function post(path, body, options = {}) {
 
 async function get(path, params, options = {}) {
   const query = params ? '?' + new URLSearchParams(params).toString() : ''
-  const headers = { ...options.headers }
+  const { headers: optionHeaders, ...restOptions } = options
+  const headers = { ...optionHeaders }
 
   // accessToken 필요한 경우
   if (!path.includes('/email/verify/status')) {
@@ -43,7 +45,7 @@ async function get(path, params, options = {}) {
   const res = await fetch(`${BASE}${path}${query}`, {
     headers,
     credentials: 'include',
-    ...options,
+    ...restOptions,
   })
   const data = await res.json()
   if (!res.ok) throw data

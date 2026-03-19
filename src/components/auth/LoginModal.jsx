@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Activity, X, Check } from 'lucide-react'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { authApi } from '@/api/auth'
+import { router } from '@/router'
 import useAuthStore from '@/store/useAuthStore'
 
 export default function LoginModal({ onClose }) {
@@ -36,8 +37,7 @@ export default function LoginModal({ onClose }) {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5 pointer-events-none">
       {/* 모달 */}
       <div
-        className="relative w-full max-w-[400px] bg-surface rounded-[6px] shadow-modal overflow-hidden pointer-events-auto"
-        style={{ animation: 'modal-in .2s ease both' }}
+        className="relative w-full max-w-[400px] bg-surface rounded-[6px] shadow-modal overflow-hidden pointer-events-auto animate-modal-in"
       >
         {/* 모달 헤더 */}
         <div className="flex items-center justify-between px-6 pt-[22px]">
@@ -76,7 +76,10 @@ export default function LoginModal({ onClose }) {
               <label className="text-[11px] font-semibold text-foreground-secondary">비밀번호</label>
               <button
                 type="button"
-                onClick={onClose}
+                onClick={() => {
+                  onClose()
+                  router.navigate('/forgot-password')
+                }}
                 className="text-[11px] text-primary font-medium hover:text-primary-hover transition-colors"
               >
                 비밀번호 찾기
@@ -118,8 +121,14 @@ export default function LoginModal({ onClose }) {
           {/* 회원가입 링크 */}
           <p className="text-center text-xs text-foreground-disabled mt-0.5">
             계정이 없으신가요?
-            <button type="button" onClick={onClose}
-              className="text-primary font-semibold ml-1">
+            <button
+              type="button"
+              onClick={() => {
+                onClose()
+                router.navigate('/signup')
+              }}
+              className="text-primary font-semibold ml-1"
+            >
               회원가입
             </button>
           </p>

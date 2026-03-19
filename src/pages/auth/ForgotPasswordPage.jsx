@@ -60,8 +60,7 @@ export default function ForgotPasswordPage() {
 
       {/* 모달 */}
       <div
-        className="relative z-20 w-full max-w-[400px] bg-surface rounded-[6px] shadow-modal overflow-hidden"
-        style={{ animation: 'modal-in .2s ease both' }}
+        className="relative z-20 w-full max-w-[400px] bg-surface rounded-[6px] shadow-modal overflow-hidden animate-modal-in"
       >
         {/* 모달 헤더 */}
         <div className="flex items-center justify-between px-6 pt-[22px]">
