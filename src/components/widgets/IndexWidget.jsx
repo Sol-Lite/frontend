@@ -15,7 +15,7 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
     const kospi = HOME_INDICES[0]
     const isUp = kospi.change > 0
     const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
-    const fill  = isUp ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
+    const fill  = isUp ? 'var(--color-up-fill)' : 'var(--color-down-fill)'
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
@@ -49,7 +49,7 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
             const isUp = idx.change > 0
             const { area, line } = PATHS[i]
             const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
-            const fill  = isUp ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
+            const fill  = isUp ? 'var(--color-up-fill)' : 'var(--color-down-fill)'
             return (
               <div key={idx.key} className="flex-1 flex flex-col items-center px-2">
                 <div className="flex-1 flex flex-col justify-center items-center text-center">
@@ -111,7 +111,7 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
           const isUp = idx.change > 0
           const { area, line } = WIDE_PATHS[i]
           const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
-          const fill  = isUp ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
+          const fill  = isUp ? 'var(--color-up-fill)' : 'var(--color-down-fill)'
           return (
             <div key={idx.key} className="flex-1 flex flex-col justify-between items-center px-3 py-1">
               <div className="text-center">

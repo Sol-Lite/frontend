@@ -58,7 +58,7 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
           {cols3x1.map(({ pair, rate, change, rateSize, flex, pr, pl }, i) => {
             const isUp = change > 0
             const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
-            const fill  = isUp ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
+            const fill  = isUp ? 'var(--color-up-fill)' : 'var(--color-down-fill)'
             const { area, line } = WIDE_3X1_CHART_DATA[i]
             return (
               <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>
@@ -99,7 +99,7 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
           {cols2x1.map(({ pair, rate, change, rateSize, flex, pr, pl }, i) => {
             const isUp = change > 0
             const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
-            const fill  = isUp ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
+            const fill  = isUp ? 'var(--color-up-fill)' : 'var(--color-down-fill)'
             const { area, line } = WIDE_CHART_DATA[i]
             return (
               <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>

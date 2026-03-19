@@ -1003,16 +1003,7 @@ function VariantPreview({ variant }) {
       className="w-full border border-stroke rounded-xl bg-surface overflow-hidden relative"
       style={{ aspectRatio: ratio }}
     >
-      <div
-        className="absolute p-3"
-        style={{
-          top: 0, left: 0,
-          width: '150%',
-          height: '150%',
-          transformOrigin: 'top left',
-          transform: 'scale(0.6667)',
-        }}
-      >
+      <div className="absolute top-0 left-0 w-[150%] h-[150%] origin-top-left scale-[0.6667] p-3">
         <PreviewContent type={variant.preview} />
       </div>
     </div>

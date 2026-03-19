@@ -3,12 +3,10 @@ import useAuthStore from '@/store/useAuthStore'
 import WidgetCard from './WidgetCard'
 import { PORTFOLIO } from '@/mocks/home'
 
-const PIE_BG = 'conic-gradient(var(--color-chart-1) 0% 34%, var(--color-chart-2) 34% 54%, var(--color-chart-3) 54% 69%, var(--color-chart-4) 69% 81%, var(--color-chart-5) 81% 100%)'
-
 function PieDonut({ size = 52, innerSize = 32 }) {
   return (
     <div className="relative shrink-0">
-      <div className="rounded-full" style={{ width: size, height: size, background: PIE_BG }} />
+      <div className="rounded-full pie-donut-bg" style={{ width: size, height: size }} />
       <div className="absolute inset-0 flex items-center justify-center">
         <div
           className="rounded-full bg-surface shadow-inner flex items-center justify-center"
