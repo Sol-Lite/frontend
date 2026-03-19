@@ -1,0 +1,43 @@
+/* 공통 스타일 — widget-sizes 프리뷰 페이지 */
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Pretendard', -apple-system, sans-serif; background: #F4F6FA; height: 100vh; overflow: hidden; display: flex; flex-direction: column; color: #191F28; }
+
+.topbar { height: 52px; background: #fff; border-bottom: 1px solid #EAECF0; display: flex; align-items: center; padding: 0 16px; gap: 12px; flex-shrink: 0; }
+.nav-btn { padding: 4px 12px; border-radius: 8px; border: 1px solid #E5E7EB; background: #fff; font-size: 11px; font-weight: 500; color: #374151; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
+.nav-btn:hover { border-color: #0046FF; color: #0046FF; }
+
+.grid-area { flex: 1; min-height: 0; padding: 10px; }
+.preview-grid { display: grid; grid-template-columns: repeat(6, 1fr); grid-template-rows: 1fr 2fr; gap: 8px; height: 100%; }
+
+/* grid 배치 */
+.cell-1x1 { grid-column: 1; grid-row: 1; }
+.cell-2x1 { grid-column: 2 / 4; grid-row: 1; }
+.cell-3x1 { grid-column: 4 / 7; grid-row: 1; }
+.cell-1x2 { grid-column: 1; grid-row: 2; }
+.cell-2x2 { grid-column: 2 / 4; grid-row: 2; }
+.cell-3x2 { grid-column: 4 / 7; grid-row: 2; }
+
+.card { background: #fff; border: 1px solid #EAECF0; border-radius: 14px; padding: 12px 14px; display: flex; flex-direction: column; overflow: hidden; position: relative; }
+.card.adopted { border: 2px solid #00A878; }
+.card.maybe { border: 2px solid #F59E0B; }
+.card.not-adopted { border: 1px dashed #D1D5DB; background: #F9FAFB; }
+
+.size-tag { position: absolute; top: 8px; left: 8px; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #F3F4F6; color: #6B7280; }
+.adopted-tag { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #ECFDF5; color: #00A878; }
+.maybe-tag { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 700; padding: 2px 6px; border-radius: 4px; background: #FFFBEB; color: #F59E0B; }
+.reject-tag { position: absolute; top: 8px; right: 8px; font-size: 9px; font-weight: 600; padding: 2px 6px; border-radius: 4px; background: #F3F4F6; color: #9CA3AF; }
+.reject-reason { position: absolute; bottom: 8px; left: 0; right: 0; text-align: center; font-size: 9px; color: #9CA3AF; padding: 0 8px; }
+
+.up { color: #E8393E; }
+.down { color: #0075E8; }
+.up-bg { background: #FFF0F1; color: #E8393E; }
+.down-bg { background: #EFF6FF; color: #0075E8; }
+.lbl { font-size: 9px; font-weight: 600; color: #9CA3AF; letter-spacing: .05em; text-transform: uppercase; }
+.bar { border-radius: 2px; align-self: flex-end; }
+.pie { border-radius: 50%; background: conic-gradient(#0046FF 0% 34%, #00A878 34% 54%, #FF9500 54% 69%, #EF4444 69% 81%, #8B5CF6 81% 100%); flex-shrink: 0; }
+.tag { font-size: 8px; font-weight: 600; padding: 1px 5px; border-radius: 3px; }
+
+.legend { height: 38px; display: flex; align-items: center; justify-content: center; gap: 20px; font-size: 10px; border-top: 1px solid #EAECF0; background: #fff; flex-shrink: 0; }
+.leg-item { display: flex; align-items: center; gap: 5px; }
+.leg-dot { width: 8px; height: 8px; border-radius: 50%; }

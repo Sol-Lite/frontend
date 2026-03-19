@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<title>거래내역 — 사이즈 프리뷰</title>
+<link rel="stylesheet" href="_common.css"/>
+</head>
+<body>
+<div class="topbar">
+  <a href="08-exchange.html" class="nav-btn">← 이전</a>
+  <div style="flex:1;text-align:center;">
+    <span style="font-size:14px;font-weight:700;">거래내역</span>
+    <span style="font-size:11px;color:#9CA3AF;margin-left:8px;">달력 · 목록 뷰</span>
+  </div>
+  <span style="font-size:11px;color:#9CA3AF;font-weight:600;">9 / 10</span>
+  <a href="10-report.html" class="nav-btn">다음 →</a>
+</div>
+
+<div class="grid-area">
+<div class="preview-grid">
+
+  <!-- 1×1 ✅ -->
+  <div class="card adopted cell-1x1">
+    <div class="size-tag">1×1</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
+      <span class="lbl">거래내역</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:3px;"><span class="tag up-bg">매수</span><span style="font-size:10px;">삼성전자</span></div><span style="font-size:9px;color:#9CA3AF;">10주</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:3px;"><span class="tag down-bg">매도</span><span style="font-size:10px;">SK하이닉스</span></div><span style="font-size:9px;color:#9CA3AF;">5주</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:3px;"><span class="tag up-bg">매수</span><span style="font-size:10px;">LG에너지</span></div><span style="font-size:9px;color:#9CA3AF;">3주</span></div>
+    </div>
+  </div>
+
+  <!-- 2×1 ✅ -->
+  <div class="card adopted cell-2x1">
+    <div class="size-tag">2×1</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:8px;color:#9CA3AF;padding-bottom:3px;border-bottom:1px solid #F3F4F6;"><span>구분</span><span>종목</span><span>수량</span><span>체결가</span><span>체결금액</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;"><span class="tag up-bg" style="flex-shrink:0;">매수</span><span style="flex:2;text-align:center;">삼성전자</span><span style="flex:1;text-align:center;">10주</span><span style="flex:1;text-align:right;">75,400</span><span style="flex:1;text-align:right;">754,000</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;"><span class="tag down-bg" style="flex-shrink:0;">매도</span><span style="flex:2;text-align:center;">SK하이닉스</span><span style="flex:1;text-align:center;">5주</span><span style="flex:1;text-align:right;">182,000</span><span style="flex:1;text-align:right;">910,000</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;"><span class="tag up-bg" style="flex-shrink:0;">매수</span><span style="flex:2;text-align:center;">LG에너지솔루션</span><span style="flex:1;text-align:center;">3주</span><span style="flex:1;text-align:right;">398,000</span><span style="flex:1;text-align:right;">1,194,000</span></div>
+    </div>
+  </div>
+
+  <!-- 3×1 미채택 -->
+  <div class="card not-adopted cell-3x1">
+    <div class="size-tag">3×1</div>
+    <div class="reject-tag">— 미채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden;opacity:0.4;">
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:8px;color:#9CA3AF;padding-bottom:3px;border-bottom:1px solid #F3F4F6;"><span>구분</span><span>종목</span><span>수량</span><span>체결가</span><span>체결금액</span><span>수익률</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;"><span class="tag up-bg" style="flex-shrink:0;">매수</span><span style="flex:2;text-align:center;">삼성전자</span><span style="flex:1;text-align:center;">10주</span><span style="flex:1;text-align:right;">75,400</span><span style="flex:1;text-align:right;">754,000</span><span style="flex:1;text-align:right;" class="up">+1.62%</span></div>
+    </div>
+    <div class="reject-reason">행 높이가 낮아 날짜·상세 정보 표시 어려움 — 2×1 권장</div>
+  </div>
+
+  <!-- 1×2 미채택 -->
+  <div class="card not-adopted cell-1x2">
+    <div class="size-tag">1×2</div>
+    <div class="reject-tag">— 미채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden;opacity:0.4;">
+      <div style="display:flex;align-items:center;justify-content:space-between;"><span class="tag up-bg">매수</span><span style="font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60px;">삼성전자</span><span style="font-size:8px;color:#9CA3AF;">10주</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><span class="tag down-bg">매도</span><span style="font-size:9px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60px;">SK하이닉스</span><span style="font-size:8px;color:#9CA3AF;">5주</span></div>
+    </div>
+    <div class="reject-reason">너비가 좁아 종목명·금액 동시 표시 어려움</div>
+  </div>
+
+  <!-- 2×2 ✅ (캘린더형) -->
+  <div class="card adopted cell-2x2">
+    <div class="size-tag">2×2</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:4px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;margin-bottom:2px;">
+        <span class="lbl">거래내역</span>
+        <span style="font-size:9px;color:#9CA3AF;">2026년 3월</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:8px;color:#9CA3AF;text-align:center;margin-bottom:2px;">
+        <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;flex:1;min-height:0;">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;visibility:hidden;">0</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;visibility:hidden;">0</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;visibility:hidden;">0</span></div>
+
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">1</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">2</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+          <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">3</span>
+          <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#0075E8;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">삼성</span></div>
+          <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#E8393E;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">SK하이</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">4</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">5</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">6</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+          <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">7</span>
+            <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#0075E8;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">현대차</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">8</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">9</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">10</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">11</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+          <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">12</span>
+          <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#0075E8;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">LG에너</span></div>
+          <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#E8393E;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">NAVER</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">13</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">14</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">15</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">16</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">17</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+          <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">18</span>
+          <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#0075E8;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">삼성</span></div>
+          <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#E8393E;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">SK</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">19</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">20</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">21</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">22</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">23</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">24</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+          <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">25</span>
+          <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#E8393E;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">포스코</span></div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">26</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">27</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">28</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">29</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">30</span></div>
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">31</span></div>
+
+        <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;visibility:hidden;">0</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3×2 ✅ (캘린더 + 목록) -->
+  <div class="card adopted cell-3x2">
+    <div class="size-tag">3×2</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;gap:12px;">
+      <!-- 캘린더 -->
+      <div style="flex:1;display:flex;flex-direction:column;gap:4px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+          <span class="lbl">거래내역</span>
+          <span style="font-size:9px;color:#9CA3AF;">2026년 3월</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;font-size:8px;color:#9CA3AF;text-align:center;margin-bottom:2px;">
+          <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;flex:1;min-height:0;">
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;visibility:hidden;">0</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;visibility:hidden;">0</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;visibility:hidden;">0</span></div>
+
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">1</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">2</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+            <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">3</span>
+            <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#0075E8;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">삼성</span></div>
+            <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#E8393E;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">SK하이</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">4</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">5</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">6</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+            <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">7</span>
+            <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#0075E8;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">현대차</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">8</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">9</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">10</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">11</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+            <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">12</span>
+            <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#0075E8;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">LG에너</span></div>
+            <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#E8393E;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">NAVER</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">13</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">14</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">15</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">16</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">17</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+            <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">18</span>
+            <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#0075E8;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">삼성</span></div>
+            <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#E8393E;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">SK</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">19</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">20</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">21</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">22</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">23</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">24</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;">
+            <span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">25</span>
+            <div style="display:flex;align-items:center;gap:1px;width:100%;"><div style="width:2px;border-radius:999px;align-self:stretch;background:#E8393E;"></div><span style="font-size:7px;line-height:1.2;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">포스코</span></div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">26</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">27</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">28</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">29</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">30</span></div>
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;color:#111827;margin-bottom:1px;">31</span></div>
+
+          <div style="display:flex;flex-direction:column;align-items:flex-start;padding:2px;border-radius:4px;"><span style="font-size:9px;line-height:1;visibility:hidden;">0</span></div>
+        </div>
+      </div>
+      <!-- 목록 -->
+      <div style="border-left:1px solid #F3F4F6;padding-left:12px;flex:1;display:flex;flex-direction:column;gap:5px;overflow:hidden;">
+        <div style="font-size:9px;color:#9CA3AF;font-weight:600;margin-bottom:2px;">거래 내역</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;"><div style="display:flex;align-items:center;gap:4px;"><span class="tag up-bg">매수</span><span>삼성전자</span></div><div style="text-align:right;"><div>75,400원</div><div style="font-size:8px;color:#9CA3AF;">10주 · 03.19</div></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;"><div style="display:flex;align-items:center;gap:4px;"><span class="tag down-bg">매도</span><span>SK하이닉스</span></div><div style="text-align:right;"><div>182,000원</div><div style="font-size:8px;color:#9CA3AF;">5주 · 03.18</div></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;"><div style="display:flex;align-items:center;gap:4px;"><span class="tag up-bg">매수</span><span>LG에너지</span></div><div style="text-align:right;"><div>398,000원</div><div style="font-size:8px;color:#9CA3AF;">3주 · 03.14</div></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;"><div style="display:flex;align-items:center;gap:4px;"><span class="tag down-bg">매도</span><span>POSCO홀딩스</span></div><div style="text-align:right;"><div>543,000원</div><div style="font-size:8px;color:#9CA3AF;">7주 · 03.12</div></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;font-size:10px;"><div style="display:flex;align-items:center;gap:4px;"><span class="tag up-bg">매수</span><span>현대차</span></div><div style="text-align:right;"><div>241,500원</div><div style="font-size:8px;color:#9CA3AF;">4주 · 03.07</div></div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:#00A878;"></div><span>✅ 채택</span></div>
+  <div class="leg-item"><div class="leg-dot" style="background:#D1D5DB;"></div><span>— 미채택</span></div>
+</div>
+</body>
+</html>
