@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<title>주가/차트 — 사이즈 프리뷰</title>
+<link rel="stylesheet" href="_common.css"/>
+</head>
+<body>
+<div class="topbar">
+  <a href="03-portfolio.html" class="nav-btn">← 이전</a>
+  <div style="flex:1;text-align:center;">
+    <span style="font-size:14px;font-weight:700;">주가 / 차트</span>
+    <span style="font-size:11px;color:#9CA3AF;margin-left:8px;">종목 현재가 · 차트 · 지표</span>
+  </div>
+  <span style="font-size:11px;color:#9CA3AF;font-weight:600;">4 / 10</span>
+  <a href="05-ranking.html" class="nav-btn">다음 →</a>
+</div>
+
+<div class="grid-area">
+<div class="preview-grid">
+
+  <!-- 1×1 ✅ -->
+  <div class="card adopted cell-1x1">
+    <div class="size-tag">1×1</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;justify-content:space-between;">
+      <div style="display:flex;align-items:center;justify-content:space-between;"><span style="font-size:10px;font-weight:700;">삼성전자</span><span style="font-size:8px;color:#9CA3AF;">005930</span></div>
+      <div style="flex:1;display:flex;align-items:flex-end;gap:1px;min-height:0;margin:4px 0;">
+        <div class="bar" style="flex:1;background:#FECACA;height:40%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:52%;"></div><div class="bar" style="flex:1;background:#F87171;height:60%;"></div><div class="bar" style="flex:1;background:#EF4444;height:72%;"></div><div class="bar" style="flex:1;background:#DC2626;height:82%;"></div>
+      </div>
+      <div><div style="font-size:16px;font-weight:800;line-height:1.1;">75,400</div><div style="font-size:9px;" class="up">▲ +1,200 (+1.62%)</div></div>
+    </div>
+  </div>
+
+  <!-- 2×1 ✅ -->
+  <div class="card adopted cell-2x1">
+    <div class="size-tag">2×1</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;gap:10px;">
+      <div style="min-width:90px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div><div style="font-size:11px;font-weight:700;">삼성전자</div><div style="font-size:8px;color:#9CA3AF;">005930 · KOSPI</div></div>
+        <div><div style="font-size:18px;font-weight:800;line-height:1.1;">75,400</div><div style="font-size:9px;" class="up">▲ +1,200 (+1.62%)</div></div>
+      </div>
+      <div style="flex:1;display:flex;align-items:flex-end;gap:2px;">
+        <div class="bar" style="flex:1;background:#FECACA;height:35%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:48%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:42%;"></div><div class="bar" style="flex:1;background:#F87171;height:55%;"></div><div class="bar" style="flex:1;background:#F87171;height:60%;"></div><div class="bar" style="flex:1;background:#EF4444;height:70%;"></div><div class="bar" style="flex:1;background:#EF4444;height:78%;"></div><div class="bar" style="flex:1;background:#DC2626;height:88%;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3×1 미채택 -->
+  <div class="card not-adopted cell-3x1">
+    <div class="size-tag">3×1</div>
+    <div class="reject-tag">— 미채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;gap:12px;opacity:0.4;">
+      <div style="min-width:100px;display:flex;flex-direction:column;justify-content:space-between;">
+        <div><div style="font-size:11px;font-weight:700;">삼성전자</div><div style="font-size:8px;color:#9CA3AF;">005930</div></div>
+        <div><div style="font-size:18px;font-weight:800;">75,400</div><div style="font-size:9px;" class="up">▲ +1.62%</div></div>
+      </div>
+      <div style="flex:1;display:flex;align-items:flex-end;gap:2px;">
+        <div class="bar" style="flex:1;background:#FECACA;height:35%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:48%;"></div><div class="bar" style="flex:1;background:#F87171;height:62%;"></div><div class="bar" style="flex:1;background:#EF4444;height:75%;"></div><div class="bar" style="flex:1;background:#DC2626;height:88%;"></div>
+      </div>
+    </div>
+    <div class="reject-reason">너비 대비 행 높이가 얕아 차트 가독성 낮음 — 2×1 권장</div>
+  </div>
+
+  <!-- 1×2 미채택 -->
+  <div class="card not-adopted cell-1x2">
+    <div class="size-tag">1×2</div>
+    <div class="reject-tag">— 미채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;justify-content:space-between;opacity:0.4;">
+      <div><div style="font-size:10px;font-weight:700;">삼성전자</div><div style="font-size:8px;color:#9CA3AF;">005930</div></div>
+      <div style="flex:1;display:flex;align-items:flex-end;gap:1px;min-height:0;margin:6px 0;">
+        <div class="bar" style="flex:1;background:#FECACA;height:40%;"></div><div class="bar" style="flex:1;background:#F87171;height:65%;"></div><div class="bar" style="flex:1;background:#DC2626;height:88%;"></div>
+      </div>
+      <div><div style="font-size:16px;font-weight:800;">75,400</div><div style="font-size:9px;" class="up">▲ +1.62%</div></div>
+    </div>
+    <div class="reject-reason">너비가 좁아 차트 막대가 뭉개짐</div>
+  </div>
+
+  <!-- 2×2 ✅ -->
+  <div class="card adopted cell-2x2">
+    <div class="size-tag">2×2</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;justify-content:space-between;flex-shrink:0;">
+        <div><div style="font-size:12px;font-weight:700;">삼성전자</div><div style="font-size:8px;color:#9CA3AF;">005930 · KOSPI</div></div>
+        <div style="text-align:right;"><div style="font-size:17px;font-weight:800;line-height:1.1;">75,400</div><div style="font-size:9px;" class="up">▲ +1,200 (+1.62%)</div></div>
+      </div>
+      <div style="background:#F9FAFB;border-radius:10px;flex:1;display:flex;align-items:flex-end;padding:8px;gap:2px;min-height:0;">
+        <div class="bar" style="flex:1;background:#FECACA;height:32%;"></div><div class="bar" style="flex:1;background:#FECACA;height:40%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:36%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:50%;"></div><div class="bar" style="flex:1;background:#F87171;height:55%;"></div><div class="bar" style="flex:1;background:#F87171;height:62%;"></div><div class="bar" style="flex:1;background:#EF4444;height:68%;"></div><div class="bar" style="flex:1;background:#EF4444;height:74%;"></div><div class="bar" style="flex:1;background:#DC2626;height:80%;"></div><div class="bar" style="flex:1;background:#DC2626;height:86%;"></div><div class="bar" style="flex:1;background:#B91C1C;height:92%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;flex-shrink:0;font-size:9px;">
+        <div style="text-align:center;"><div style="color:#9CA3AF;">시가</div><div style="font-weight:600;">74,200</div></div>
+        <div style="text-align:center;"><div style="color:#9CA3AF;">고가</div><div class="up" style="font-weight:600;">75,800</div></div>
+        <div style="text-align:center;"><div style="color:#9CA3AF;">저가</div><div class="down" style="font-weight:600;">73,900</div></div>
+        <div style="text-align:center;"><div style="color:#9CA3AF;">거래량</div><div style="font-weight:600;">12.4M</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3×2 ✅ -->
+  <div class="card adopted cell-3x2">
+    <div class="size-tag">3×2</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-shrink:0;">
+        <div>
+          <div style="font-size:13px;font-weight:700;">삼성전자</div>
+          <div style="font-size:9px;color:#9CA3AF;">005930 · KOSPI · 반도체</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-size:20px;font-weight:800;line-height:1.1;">75,400</div>
+          <div style="font-size:9px;" class="up">▲ +1,200 (+1.62%)</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:2px;font-size:9px;">
+        <span style="padding:2px 6px;border-radius:4px;background:#EEF2FF;color:#0046FF;font-weight:600;">1일</span>
+        <span style="padding:2px 6px;border-radius:4px;color:#9CA3AF;">1주</span>
+        <span style="padding:2px 6px;border-radius:4px;color:#9CA3AF;">1달</span>
+        <span style="padding:2px 6px;border-radius:4px;color:#9CA3AF;">3달</span>
+      </div>
+      <div style="background:#F9FAFB;border-radius:10px;flex:1;display:flex;align-items:flex-end;padding:10px;gap:2px;min-height:0;">
+        <div class="bar" style="flex:1;background:#FECACA;height:28%;"></div><div class="bar" style="flex:1;background:#FECACA;height:35%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:32%;"></div><div class="bar" style="flex:1;background:#FCA5A5;height:44%;"></div><div class="bar" style="flex:1;background:#F87171;height:48%;"></div><div class="bar" style="flex:1;background:#F87171;height:54%;"></div><div class="bar" style="flex:1;background:#EF4444;height:58%;"></div><div class="bar" style="flex:1;background:#EF4444;height:65%;"></div><div class="bar" style="flex:1;background:#DC2626;height:70%;"></div><div class="bar" style="flex:1;background:#DC2626;height:76%;"></div><div class="bar" style="flex:1;background:#B91C1C;height:82%;"></div><div class="bar" style="flex:1;background:#B91C1C;height:88%;"></div><div class="bar" style="flex:1;background:#991B1B;height:92%;"></div><div class="bar" style="flex:1;background:#991B1B;height:96%;"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;flex-shrink:0;font-size:9px;">
+        <div style="text-align:center;"><div style="color:#9CA3AF;">시가</div><div style="font-weight:600;">74,200</div></div>
+        <div style="text-align:center;"><div style="color:#9CA3AF;">고가</div><div class="up" style="font-weight:600;">75,800</div></div>
+        <div style="text-align:center;"><div style="color:#9CA3AF;">저가</div><div class="down" style="font-weight:600;">73,900</div></div>
+        <div style="text-align:center;"><div style="color:#9CA3AF;">거래량</div><div style="font-weight:600;">12.4M</div></div>
+        <div style="text-align:center;"><div style="color:#9CA3AF;">시총</div><div style="font-weight:600;">450조</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:#00A878;"></div><span>✅ 채택</span></div>
+  <div class="leg-item"><div class="leg-dot" style="background:#D1D5DB;"></div><span>— 미채택</span></div>
+</div>
+</body>
+</html>

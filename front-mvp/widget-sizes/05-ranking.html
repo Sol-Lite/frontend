@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<title>실시간 순위 — 사이즈 프리뷰</title>
+<link rel="stylesheet" href="_common.css"/>
+</head>
+<body>
+<div class="topbar">
+  <a href="04-stock-chart.html" class="nav-btn">← 이전</a>
+  <div style="flex:1;text-align:center;">
+    <span style="font-size:14px;font-weight:700;">실시간 순위</span>
+    <span style="font-size:11px;color:#9CA3AF;margin-left:8px;">거래대금 · 상승률 · 거래량</span>
+  </div>
+  <span style="font-size:11px;color:#9CA3AF;font-weight:600;">5 / 10</span>
+  <a href="06-watchlist.html" class="nav-btn">다음 →</a>
+</div>
+
+<div class="grid-area">
+<div class="preview-grid">
+
+  <!-- 1×1 미채택 -->
+  <div class="card not-adopted cell-1x1">
+    <div class="size-tag">1×1</div>
+    <div class="reject-tag">— 미채택</div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:3px;overflow:hidden;opacity:0.4;margin-top:22px;">
+      <div style="display:flex;justify-content:space-between;font-size:9px;"><span>삼성전자</span><span class="up">+1.62%</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60px;">SK하이…</span><span class="up">+2.35%</span></div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60px;">LG에너…</span><span class="down">−0.87%</span></div>
+    </div>
+    <div class="reject-reason">종목명 잘림 — 랭킹 목록 표시 불가</div>
+  </div>
+
+  <!-- 2×1 ✅ -->
+  <div class="card adopted cell-2x1">
+    <div class="size-tag">2×1</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:3px;">
+      <div style="display:flex;gap:4px;margin-bottom:4px;">
+        <span class="tag" style="background:#EEF2FF;color:#0046FF;">거래대금</span>
+        <span class="tag" style="color:#9CA3AF;">상승률</span>
+        <span class="tag" style="color:#9CA3AF;">거래량</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">1</span><span style="font-size:11px;font-weight:500;">삼성전자</span></div><span style="font-size:10px;font-weight:600;" class="up">+1.62%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">2</span><span style="font-size:11px;font-weight:500;">SK하이닉스</span></div><span style="font-size:10px;font-weight:600;" class="up">+2.35%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">3</span><span style="font-size:11px;font-weight:500;">LG에너지솔루션</span></div><span style="font-size:10px;font-weight:600;" class="down">−0.87%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">4</span><span style="font-size:11px;font-weight:500;">POSCO홀딩스</span></div><span style="font-size:10px;font-weight:600;" class="up">+0.54%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">5</span><span style="font-size:11px;font-weight:500;">현대차</span></div><span style="font-size:10px;font-weight:600;" class="down">−1.20%</span></div>
+    </div>
+  </div>
+
+  <!-- 3×1 미채택 -->
+  <div class="card not-adopted cell-3x1">
+    <div class="size-tag">3×1</div>
+    <div class="reject-tag">— 미채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;gap:12px;opacity:0.4;">
+      <div style="flex:1;display:flex;flex-direction:column;gap:3px;">
+        <div style="display:flex;gap:4px;margin-bottom:4px;">
+          <span class="tag" style="background:#EEF2FF;color:#0046FF;">거래대금</span>
+          <span class="tag" style="color:#9CA3AF;">상승률</span>
+          <span class="tag" style="color:#9CA3AF;">거래량</span>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">1</span><span style="font-size:11px;font-weight:500;">삼성전자</span></div><span style="font-size:10px;font-weight:600;" class="up">+1.62%</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">2</span><span style="font-size:11px;font-weight:500;">SK하이닉스</span></div><span style="font-size:10px;font-weight:600;" class="up">+2.35%</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">3</span><span style="font-size:11px;font-weight:500;">LG에너지솔루션</span></div><span style="font-size:10px;font-weight:600;" class="down">−0.87%</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">4</span><span style="font-size:11px;font-weight:500;">POSCO홀딩스</span></div><span style="font-size:10px;font-weight:600;" class="up">+0.54%</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">5</span><span style="font-size:11px;font-weight:500;">현대차</span></div><span style="font-size:10px;font-weight:600;" class="down">−1.20%</span></div>
+      </div>
+      <div style="border-left:1px solid #F3F4F6;padding-left:12px;flex:1;display:flex;flex-direction:column;font-size:9px;">
+        <div style="color:#9CA3AF;font-weight:600;margin-bottom:7px;">거래대금 TOP</div>
+        <div style="display:flex;flex-direction:column;gap:4px;">
+          <div style="display:flex;justify-content:space-between;"><span>삼성전자</span><span style="color:#9CA3AF;">12.4조</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>SK하이닉스</span><span style="color:#9CA3AF;">8.1조</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>LG에너지</span><span style="color:#9CA3AF;">5.6조</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>POSCO홀딩스</span><span style="color:#9CA3AF;">3.2조</span></div>
+          <div style="display:flex;justify-content:space-between;"><span>현대차</span><span style="color:#9CA3AF;">2.8조</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="reject-reason">2×1로 충분한 정보 표시 가능 — 가로 공간 낭비</div>
+  </div>
+
+  <!-- 1×2 미채택 -->
+  <div class="card not-adopted cell-1x2">
+    <div class="size-tag">1×2</div>
+    <div class="reject-tag">— 미채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden;opacity:0.4;">
+      <div style="display:flex;gap:3px;margin-bottom:3px;">
+        <span class="tag" style="background:#EEF2FF;color:#0046FF;font-size:7px;">거래대금</span>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span style="font-size:9px;color:#9CA3AF;width:8px;">1</span><span style="font-size:10px;font-weight:500;">삼성전자</span></div><span style="font-size:9px;font-weight:600;" class="up">+1.62%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span style="font-size:9px;color:#9CA3AF;width:8px;">2</span><span style="font-size:10px;font-weight:500;">SK하이닉스</span></div><span style="font-size:9px;font-weight:600;" class="up">+2.35%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span style="font-size:9px;color:#9CA3AF;width:8px;">3</span><span style="font-size:10px;font-weight:500;">LG에너지</span></div><span style="font-size:9px;font-weight:600;" class="down">−0.87%</span></div>
+      <div style="height:1px;background:#F3F4F6;margin:2px 0;"></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span style="font-size:9px;color:#9CA3AF;width:8px;">4</span><span style="font-size:10px;font-weight:500;">POSCO홀딩스</span></div><span style="font-size:9px;font-weight:600;" class="up">+0.54%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span style="font-size:9px;color:#9CA3AF;width:8px;">5</span><span style="font-size:10px;font-weight:500;">현대차</span></div><span style="font-size:9px;font-weight:600;" class="down">−1.20%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span style="font-size:9px;color:#9CA3AF;width:8px;">6</span><span style="font-size:10px;font-weight:500;">카카오뱅크</span></div><span style="font-size:9px;font-weight:600;" class="up">+0.91%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span style="font-size:9px;color:#9CA3AF;width:8px;">7</span><span style="font-size:10px;font-weight:500;">셀트리온</span></div><span style="font-size:9px;font-weight:600;" class="down">−0.33%</span></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:4px;"><span style="font-size:9px;color:#9CA3AF;width:8px;">8</span><span style="font-size:10px;font-weight:500;">현대모비스</span></div><span style="font-size:9px;font-weight:600;" class="up">+1.10%</span></div>
+    </div>
+    <div class="reject-reason">세로형 — 2×2로 더 많은 정보 표시 가능</div>
+  </div>
+
+  <!-- 2×2 ✅ -->
+  <div class="card adopted cell-2x2">
+    <div class="size-tag">2×2</div>
+    <div class="adopted-tag">✅ 채택</div>
+    <div style="margin-top:22px;flex:1;display:flex;flex-direction:column;gap:6px;">
+      <div style="display:flex;gap:4px;">
+        <span class="tag" style="background:#EEF2FF;color:#0046FF;padding:3px 8px;">거래대금</span>
+        <span class="tag" style="background:#F3F4F6;color:#6B7280;padding:3px 8px;">상승률</span>
+        <span class="tag" style="background:#F3F4F6;color:#6B7280;padding:3px 8px;">거래량</span>
+      </div>
+      <div style="flex:1;display:flex;gap:10px;min-height:0;">
+        <div style="flex:1;display:flex;flex-direction:column;gap:4px;overflow:hidden;">
+          <div style="font-size:8px;color:#9CA3AF;font-weight:600;">순위</div>
+          <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">1</span><span style="font-size:11px;font-weight:500;">삼성전자</span></div><span style="font-size:10px;font-weight:600;" class="up">+1.62%</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">2</span><span style="font-size:11px;font-weight:500;">SK하이닉스</span></div><span style="font-size:10px;font-weight:600;" class="up">+2.35%</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">3</span><span style="font-size:11px;font-weight:500;">LG에너지솔루션</span></div><span style="font-size:10px;font-weight:600;" class="down">−0.87%</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">4</span><span style="font-size:11px;font-weight:500;">POSCO홀딩스</span></div><span style="font-size:10px;font-weight:600;" class="up">+0.54%</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">5</span><span style="font-size:11px;font-weight:500;">현대차</span></div><span style="font-size:10px;font-weight:600;" class="down">−1.20%</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">6</span><span style="font-size:11px;font-weight:500;">카카오뱅크</span></div><span style="font-size:10px;font-weight:600;" class="up">+0.91%</span></div>
+          <div style="display:flex;align-items:center;justify-content:space-between;"><div style="display:flex;align-items:center;gap:6px;"><span style="font-size:9px;color:#9CA3AF;width:10px;">7</span><span style="font-size:11px;font-weight:500;">셀트리온</span></div><span style="font-size:10px;font-weight:600;" class="down">−0.33%</span></div>
+        </div>
+        <div style="border-left:1px solid #F3F4F6;padding-left:10px;min-width:80px;display:flex;flex-direction:column;gap:5px;font-size:9px;">
+          <div style="color:#9CA3AF;font-weight:600;margin-bottom:4px;">거래대금</div>
+          <div>12.4조</div><div>8.1조</div><div>5.6조</div><div>3.2조</div><div>2.8조</div><div>1.9조</div><div>1.4조</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3×2 미채택 -->
+  <div class="card not-adopted cell-3x2">
+    <div class="size-tag">3×2</div>
+    <div class="reject-tag">— 미채택</div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;opacity:0.4;">
+      <div style="text-align:center;color:#9CA3AF;">
+        <div style="font-size:11px;font-weight:600;margin-bottom:6px;">실시간 순위</div>
+        <div style="font-size:9px;">목록 내용은 2×2로 충분</div>
+      </div>
+    </div>
+    <div class="reject-reason">2×2로 충분한 순위 표시 가능 — 빈 공간 낭비</div>
+  </div>
+
+</div>
+</div>
+<div class="legend">
+  <div class="leg-item"><div class="leg-dot" style="background:#00A878;"></div><span>✅ 채택</span></div>
+  <div class="leg-item"><div class="leg-dot" style="background:#D1D5DB;"></div><span>— 미채택</span></div>
+</div>
+</body>
+</html>
