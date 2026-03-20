@@ -1,7 +1,8 @@
 import { ArrowRight, Smartphone, FileText, CreditCard } from 'lucide-react'
-import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 export default function AccountIntroStep({ onNext }) {
+  const navigate = useNavigate()
   return (
     <div className="w-full min-h-screen relative overflow-hidden px-8 py-11 flex flex-col justify-center">
       {/* 배경 장식 요소들 */}
@@ -77,7 +78,7 @@ export default function AccountIntroStep({ onNext }) {
           </button>
 
           <p className="text-sm text-foreground-secondary mt-6">
-            이미 계좌가 있으신가요? <Link to="/login" className="text-primary hover:underline font-semibold">로그인</Link>
+            이미 계좌가 있으신가요? <button type="button" onClick={() => navigate('/', { state: { openLogin: true } })} className="text-primary hover:underline font-semibold">로그인</button>
           </p>
         </div>
       </div>

@@ -20,11 +20,13 @@ import {
 import { authApi } from '@/api/auth'
 import useEmailVerification from '@/hooks/useEmailVerification'
 
+
 const INDICATOR_STEPS = ['계좌개설', '기본정보', '계좌설정']
 const STEP_TO_INDICATOR = [0, 1, 1, 1, 2, 2]
 
 export default function SignupPage() {
   const navigate = useNavigate()
+
   const [step, setStep] = useState(0)
   const basicInfoForm = useForm({
     resolver: zodResolver(signupBasicInfoSchema),
@@ -272,13 +274,13 @@ export default function SignupPage() {
           )}
 
           {step === 5 && (
-            <AccountStep onFinish={() => navigate('/login')} />
+            <AccountStep onFinish={() => navigate('/', { state: { openLogin: true } })} />
           )}
 
           {step < 5 && (
             <p className="text-center text-xs text-foreground-disabled mt-5">
               이미 계정이 있으신가요?
-              <button type="button" onClick={() => navigate('/login')}
+              <button type="button" onClick={() => navigate('/', { state: { openLogin: true } })}
                 className="text-primary font-semibold ml-1">
                 로그인
               </button>
