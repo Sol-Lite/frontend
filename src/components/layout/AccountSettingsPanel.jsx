@@ -530,7 +530,7 @@ function CloseAccountForm({ onSuccess }) {
       <button
         type="submit"
         disabled={isLoading || !agreed}
-        className="px-4 py-2 rounded-lg bg-up text-white text-[12px] font-medium hover:bg-[#d03239] transition-colors disabled:opacity-60 mt-2"
+        className="px-4 py-2 rounded-lg bg-up text-white text-[12px] font-medium hover:opacity-90 transition-colors disabled:opacity-60 mt-2"
       >
         {isLoading ? '처리 중...' : '해지'}
       </button>
