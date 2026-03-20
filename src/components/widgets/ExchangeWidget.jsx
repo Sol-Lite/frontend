@@ -28,7 +28,7 @@ function ExchangeRow({ flag, pair, rate, change }) {
 }
 
 export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, rowSpan = 1, onDelete }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isRestoring } = useAuthStore()
   const usd = EXCHANGE[0]
 
   if (variant === 'exchange-wide') {
@@ -55,7 +55,7 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
             )
           })}
         </div>
-        {!isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
+        {!isRestoring && !isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
       </WidgetCard>
     )
   }
@@ -104,7 +104,7 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
         >
           환전하기 →
         </button>
-        {!isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
+        {!isRestoring && !isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
       </WidgetCard>
     )
   }
@@ -125,7 +125,7 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
           환전하기 →
         </button>
       </div>
-      {!isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
+      {!isRestoring && !isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
     </WidgetCard>
   )
 }

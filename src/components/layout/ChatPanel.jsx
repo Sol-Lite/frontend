@@ -72,14 +72,20 @@ function ChatMessages() {
 }
 
 export default function ChatPanel() {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isRestoring } = useAuthStore()
   const { isEditMode } = useEditModeStore()
 
   if (isEditMode) return <EditPanel />
 
   return (
     <aside className="w-chat-panel flex flex-col bg-surface border-l border-stroke shrink-0">
-      {isAuthenticated ? (
+      {isRestoring ? (
+        <>
+          <ChatHeader />
+          <ChatMessages />
+          <ChatInput />
+        </>
+      ) : isAuthenticated ? (
         <>
           <ChatHeader />
           <ChatMessages />

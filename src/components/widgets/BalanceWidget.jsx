@@ -5,7 +5,7 @@ import WidgetCard from './WidgetCard'
 import { BALANCE } from '@/mocks/home'
 
 export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, rowSpan = 1, onDelete }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isRestoring } = useAuthStore()
 
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
@@ -97,7 +97,7 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
         </div>
       )}
 
-      {!isAuthenticated && <LockedOverlay message="계좌 정보를 보려면" />}
+      {!isRestoring && !isAuthenticated && <LockedOverlay message="계좌 정보를 보려면" />}
     </WidgetCard>
   )
 }

@@ -7,10 +7,13 @@ import LoginModal from '@/components/auth/LoginModal'
 export default function App() {
   const showLoginModal = useAuthStore((s) => s.showLoginModal)
   const closeLoginModal = useAuthStore((s) => s.closeLoginModal)
+  const isRestoring = useAuthStore((s) => s.isRestoring)
 
   useEffect(() => {
     useAuthStore.getState().restoreAuth()
   }, [])
+
+  if (isRestoring) return null
 
   return (
     <>
