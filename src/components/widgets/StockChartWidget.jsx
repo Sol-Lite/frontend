@@ -19,10 +19,10 @@ export default function StockChartWidget({ variant = 'stock-sm', colSpan = 1, ro
           <div className="flex flex-col justify-between shrink-0">
             <div>
               <div className="text-[11px] font-bold text-foreground leading-none">{stock.name}</div>
-              <div className="text-[9px] text-foreground-disabled">{stock.code} · KOSPI</div>
+              <div className="text-[9px] text-foreground-disabled">{stock.code} · {stock.market}</div>
             </div>
             <div>
-              <div className={`text-[18px] font-bold leading-tight ${isUp ? 'text-up' : 'text-down'}`}>{stock.price}</div>
+              <div className={`text-[18px] font-bold leading-tight text-foreground`}>{stock.price}</div>
               <div className={`text-[10px] ${isUp ? 'text-up' : 'text-down'}`}>
                 {isUp ? '▲' : '▼'} {stock.changeAmt}원 ({isUp ? '+' : ''}{stock.change}%)
               </div>
@@ -46,11 +46,11 @@ export default function StockChartWidget({ variant = 'stock-sm', colSpan = 1, ro
             <StockAvatar name={stock.label} color={stock.color} size="sm" />
             <div>
               <div className="text-[13px] font-bold text-foreground">{stock.name}</div>
-              <div className="text-[9px] text-foreground-disabled">{stock.code} · KOSPI · 반도체</div>
+              <div className="text-[9px] text-foreground-disabled">{stock.code} · {stock.market} · 반도체</div>
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-[20px] font-bold leading-tight ${isUp ? 'text-up' : 'text-down'}`}>{stock.price}</div>
+            <div className={`text-[20px] font-bold leading-tight text-foreground`}>{stock.price}</div>
             <PriceChange value={stock.change} className="text-[10px]" />
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function StockChartWidget({ variant = 'stock-sm', colSpan = 1, ro
             </div>
           </div>
           <div className="text-right">
-            <div className={`text-[18px] font-bold leading-tight ${isUp ? 'text-up' : 'text-down'}`}>{stock.price}</div>
+            <div className={`text-[18px] font-bold leading-tight text-foreground`}>{stock.price}</div>
             <PriceChange value={stock.change} className="text-[10px]" />
           </div>
         </div>
@@ -128,12 +128,12 @@ export default function StockChartWidget({ variant = 'stock-sm', colSpan = 1, ro
   /* stock-sm (default) */
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-      <div className="flex items-center justify-between mb-1 shrink-0">
+      <div className="flex items-center justify-between shrink-0">
         <span className="text-[12px] font-bold text-foreground leading-none">{stock.name}</span>
         <span className="text-[9px] text-foreground-disabled">{stock.code}</span>
       </div>
-      <div className="flex-1 flex flex-col justify-center min-h-0">
-        <div className={`text-[18px] font-bold leading-tight tracking-tight ${isUp ? 'text-up' : 'text-down'}`}>
+      <div className="flex-1 flex flex-col justify-end min-h-0">
+        <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground">
           {stock.price}
         </div>
         <div className={`text-[10px] mt-0.5 ${isUp ? 'text-up' : 'text-down'}`}>

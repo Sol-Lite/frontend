@@ -19,7 +19,7 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
-        <div className="flex-1 flex flex-col justify-center items-center text-center min-h-0">
+        <div className="flex-1 flex flex-col justify-start items-center text-center min-h-0 pt-1">
           <div className="text-[9px] text-foreground-disabled">{kospi.label}</div>
           <div className="text-[18px] font-bold text-foreground leading-tight">{kospi.value}</div>
           <PriceChange value={kospi.change} className="text-[9px]" />
@@ -52,7 +52,7 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
             const fill  = isUp ? 'var(--color-up-fill)' : 'var(--color-down-fill)'
             return (
               <div key={idx.key} className="flex-1 flex flex-col items-center px-2">
-                <div className="flex-1 flex flex-col justify-center items-center text-center">
+                <div className="flex-1 flex flex-col justify-start items-center text-center pt-1">
                   <div className="text-[9px] text-foreground-disabled">{idx.label}</div>
                   <div className="text-[17px] font-bold text-foreground leading-tight">{idx.value}</div>
                   <PriceChange value={idx.change} className="text-[10px]" />

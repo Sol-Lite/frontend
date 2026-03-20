@@ -8,7 +8,6 @@ import MarketOverviewWidget from './MarketOverviewWidget'
 import StockNewsWidget from './StockNewsWidget'
 import ExchangeWidget from './ExchangeWidget'
 import TradeHistoryWidget from './TradeHistoryWidget'
-import ReportWidget from './ReportWidget'
 
 export const WIDGET_REGISTRY = {
   'balance':         BalanceWidget,
@@ -21,5 +20,4 @@ export const WIDGET_REGISTRY = {
   'stock-news':      StockNewsWidget,
   'exchange':        ExchangeWidget,
   'trade-history':   TradeHistoryWidget,
-  'report':          ReportWidget,
 }

@@ -34,7 +34,7 @@ export function canFitInGrid(widgets, colSpan, rowSpan) {
 // 6열 × 4행 (24셀) 기본 레이아웃
 // Row 1:   index-3x1(3) + balance-sm(1) + portfolio-sm(1) + exchange-sm(1)       = 6
 // Row 2–3: stock-3x2(3×2) + ranking-lg(2×2) + watchlist-sm(1) + market-sm(1)    = 6×2
-// Row 4:   trade-wide(2) + stock-news-wide(2) + report-wide(2)                   = 6
+// Row 4:   trade-wide(2) + stock-news-wide(2) + [빈 2칸]                         = 6
 const INITIAL_WIDGETS = [
   { instanceId: 'w1',  widgetTypeId: 'index',           variantId: 'index-3x1',      colSpan: 3, rowSpan: 1 },
   { instanceId: 'w2',  widgetTypeId: 'balance',         variantId: 'balance-sm',     colSpan: 1, rowSpan: 1 },
@@ -46,7 +46,6 @@ const INITIAL_WIDGETS = [
   { instanceId: 'w8',  widgetTypeId: 'market-overview', variantId: 'market-sm',      colSpan: 1, rowSpan: 1 },
   { instanceId: 'w9',  widgetTypeId: 'trade-history',   variantId: 'trade-wide',     colSpan: 2, rowSpan: 1 },
   { instanceId: 'w10', widgetTypeId: 'stock-news',      variantId: 'stock-news-wide', colSpan: 2, rowSpan: 1 },
-  { instanceId: 'w11', widgetTypeId: 'report',          variantId: 'report-wide',    colSpan: 2, rowSpan: 1 },
 ]
 
 const useWidgetStore = create((set) => ({
