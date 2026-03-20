@@ -8,6 +8,7 @@ export default function InvestOrderSection({
   currentPrice,
   changeRate,
   defaultPrice,
+  orderBook,
 }) {
   const [side, setSide] = useState('buy')
   const [orderType, setOrderType] = useState('market')
@@ -75,6 +76,7 @@ export default function InvestOrderSection({
         selectedPrice={selectedPrice}
         currentPrice={currentPrice}
         changeRate={changeRate}
+        orderBook={orderBook}
         onSelectPrice={handleSelectPrice}
       />
 

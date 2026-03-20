@@ -1,14 +1,27 @@
 import PriceChange from '@/components/ui/PriceChange'
 import { formatNumber } from '@/features/invest/formatters'
-import { ORDER_BOOK } from '@/mocks/invest'
 import { cn } from '@/lib/cn'
 
 export default function InvestOrderBookPanel({
   selectedPrice,
   currentPrice,
   changeRate,
+  orderBook,
   onSelectPrice,
 }) {
+  if (!orderBook) {
+    return (
+      <section className="flex w-[170px] shrink-0 flex-col overflow-hidden border-r border-stroke bg-surface">
+        <div className="flex items-center justify-between border-b border-stroke px-2.5 py-2 shrink-0">
+          <span className="text-[11px] font-bold text-foreground">호가창</span>
+        </div>
+        <div className="flex flex-1 items-center justify-center px-3 py-4">
+          <span className="text-[10px] text-foreground-disabled">호가 정보를 불러올 수 없습니다.</span>
+        </div>
+      </section>
+    )
+  }
+
   return (
     <section className="flex w-[170px] shrink-0 flex-col overflow-hidden border-r border-stroke bg-surface">
       <div className="flex items-center justify-between border-b border-stroke px-2.5 py-2 shrink-0">
@@ -18,11 +31,11 @@ export default function InvestOrderBookPanel({
 
       <div className="flex items-center justify-between bg-down-bg px-2 py-1 shrink-0">
         <span className="text-[9px] font-semibold text-down">매도잔량</span>
-        <span className="text-[10px] font-bold text-down">{formatNumber(ORDER_BOOK.askTotal)}</span>
+        <span className="text-[10px] font-bold text-down">{formatNumber(orderBook.askTotal)}</span>
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {ORDER_BOOK.asks.map((row) => (
+        {orderBook.asks.map((row) => (
           <button
             key={`ask-${row.price}`}
             onClick={() => onSelectPrice(row.price)}
@@ -44,7 +57,7 @@ export default function InvestOrderBookPanel({
           )}
         </div>
 
-        {ORDER_BOOK.bids.map((row) => (
+        {orderBook.bids.map((row) => (
           <button
             key={`bid-${row.price}`}
             onClick={() => onSelectPrice(row.price)}
@@ -62,7 +75,7 @@ export default function InvestOrderBookPanel({
 
       <div className="flex items-center justify-between border-t border-stroke bg-up-bg px-2 py-1 shrink-0">
         <span className="text-[9px] font-semibold text-up">매수잔량</span>
-        <span className="text-[10px] font-bold text-up">{formatNumber(ORDER_BOOK.bidTotal)}</span>
+        <span className="text-[10px] font-bold text-up">{formatNumber(orderBook.bidTotal)}</span>
       </div>
     </section>
   )
