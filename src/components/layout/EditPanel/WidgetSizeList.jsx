@@ -1,4 +1,4 @@
-import { ChevronLeft, Plus } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
 import { useDraggable } from '@dnd-kit/core'
 import { cn } from '@/lib/cn'
 import useGridStore from '@/store/useGridStore'
@@ -1027,7 +1027,6 @@ function VariantPreview({ variant }) {
 
 /* ── DraggableVariantItem ───────────────────────────────── */
 function DraggableVariantItem({ variant, widgetType, canAdd }) {
-  const { addWidget } = useWidgetStore()
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `new-widget-${variant.id}`,
     disabled: !canAdd,
@@ -1048,20 +1047,15 @@ function DraggableVariantItem({ variant, widgetType, canAdd }) {
     >
       <VariantPreview variant={variant} />
       {canAdd ? (
-        /* hover 추가 오버레이 */
-        <button
-          aria-label={`${variant.label} 추가`}
-          onPointerDown={(e) => e.stopPropagation()}
-          onClick={() => addWidget(widgetType.id, variant)}
-          className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-primary/10 border border-primary flex items-center justify-center transition-opacity duration-[150ms] cursor-pointer"
-        >
-          <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-primary-btn">
-            <Plus className="w-3.5 h-3.5 text-white" />
-          </div>
-        </button>
+        /* hover 드래그 힌트 오버레이 — pointer-events-none으로 drag 이벤트 차단 안 함 */
+        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-primary/10 border border-primary flex items-center justify-center transition-opacity duration-[150ms] pointer-events-none">
+          <span className="text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">
+            드래그하여 추가
+          </span>
+        </div>
       ) : (
         /* 공간 부족 오버레이 — 항상 표시 */
-        <div className="absolute inset-0 rounded-xl bg-background/60 border border-stroke flex items-center justify-center">
+        <div className="absolute inset-0 rounded-xl bg-background/60 border border-stroke flex items-center justify-center pointer-events-none">
           <span className="text-[10px] text-foreground-disabled font-medium">공간 부족</span>
         </div>
       )}
@@ -1107,7 +1101,7 @@ export default function WidgetSizeList({ widgetType, onBack }) {
           })}
         </div>
         <p className="text-[10px] text-foreground-disabled mt-4 text-center">
-          클릭하거나 대시보드로 드래그하여 추가
+          대시보드로 드래그하여 추가
         </p>
       </div>
     </>

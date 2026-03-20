@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from 'react'
 import { Pencil } from 'lucide-react'
-import { SortableContext, rectSortingStrategy } from '@dnd-kit/sortable'
+import { SortableContext } from '@dnd-kit/sortable'
 import { useDroppable, useDndContext } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
@@ -98,7 +98,9 @@ export default function HomePage() {
         isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
         {/* 위젯 그리드: 6열 × 4행, 뷰포트 채움 / 최솟값 이하면 고정 */}
-        <SortableContext items={widgets.map((w) => w.instanceId)} strategy={rectSortingStrategy}>
+        {/* noopSortingStrategy: col-span/row-span이 혼재한 그리드에서 rectSortingStrategy 사용 시
+            드래그 중 위젯 크기/위치 왜곡이 발생하므로 시각적 이동을 비활성화. */}
+        <SortableContext items={widgets.map((w) => w.instanceId)} strategy={() => null}>
           <div
             ref={setGridRef}
             className={cn(
