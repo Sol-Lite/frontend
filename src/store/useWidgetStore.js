@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { arrayMove } from '@dnd-kit/sortable'
 import { GRID_COLS, GRID_ROWS } from '@/lib/gridConstants'
 
 /* ── 그리드 배치 시뮬레이션 ────────────────────────────────
@@ -78,6 +79,13 @@ const useWidgetStore = create((set) => ({
     set((state) => ({
       widgets: state.widgets.filter((w) => w.instanceId !== instanceId),
     })),
+  reorderWidgets: (activeId, overId) =>
+    set((state) => {
+      const oldIndex = state.widgets.findIndex((w) => w.instanceId === activeId)
+      const newIndex = state.widgets.findIndex((w) => w.instanceId === overId)
+      if (oldIndex === -1 || newIndex === -1) return state
+      return { widgets: arrayMove(state.widgets, oldIndex, newIndex) }
+    }),
 }))
 
 export default useWidgetStore
