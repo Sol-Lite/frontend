@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import NavTabs from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
 import { useMyAccount } from '@/api/account'
-import useChatPanelStore from '@/store/useChatPanelStore'
+import useRightPanelStore from '@/store/useRightPanelStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore from '@/store/useWidgetStore'
 
@@ -25,7 +25,7 @@ function Logo() {
 function UserArea() {
   const { isAuthenticated, user } = useAuthStore()
   const { data: accountInfo } = useMyAccount()
-  const setAccountSettingsMode = useChatPanelStore((s) => s.setAccountSettingsMode)
+  const setAccountSettingsMode = useRightPanelStore((s) => s.setAccountSettingsMode)
 
   if (isAuthenticated && user) {
     return (
