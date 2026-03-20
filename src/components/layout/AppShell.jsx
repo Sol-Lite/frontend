@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef } from 'react'
 import { Outlet } from 'react-router-dom'
 import {
   DndContext,
@@ -34,12 +34,9 @@ export default function AppShell() {
   const lastOverId = useRef(null)
   const pointerPos = useRef({ x: 0, y: 0 })
 
-  // 포인터 좌표를 실시간으로 추적 (handleDragMove에서 사용)
-  useEffect(() => {
-    const onMove = (e) => { pointerPos.current = { x: e.clientX, y: e.clientY } }
-    window.addEventListener('pointermove', onMove)
-    return () => window.removeEventListener('pointermove', onMove)
-  }, [])
+  // 포인터 좌표를 drag 중에만 추적 (handleDragMove에서 사용)
+  // 동일 참조로 등록·해제할 수 있도록 useRef에 저장
+  const onPointerMove = useRef((e) => { pointerPos.current = { x: e.clientX, y: e.clientY } }).current
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -48,6 +45,7 @@ export default function AppShell() {
   function handleDragStart({ active }) {
     const type = active.data.current?.type
     setActiveDrag({ id: active.id, data: active.data.current })
+    window.addEventListener('pointermove', onPointerMove)
     if (type === 'existing-widget') {
       preDragOrder.current = [...widgets]
       lastOverId.current = null
@@ -106,6 +104,7 @@ export default function AppShell() {
   }
 
   function handleDragEnd({ active, over }) {
+    window.removeEventListener('pointermove', onPointerMove)
     const savedPhantom = phantomWidget
     setActiveDrag(null)
     lastOverId.current = null
@@ -140,6 +139,7 @@ export default function AppShell() {
   }
 
   function handleDragCancel() {
+    window.removeEventListener('pointermove', onPointerMove)
     clearPhantom()
     setIsDraggingNewWidget(false)
     resyncWiggle()
