@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { marketApi } from '@/api/market'
 import { DAY_MS, DEFAULT_MINUTE_INTERVAL } from '@/features/invest/constants'
 import { formatApiDate } from '@/features/invest/formatters'
@@ -24,6 +24,7 @@ const STALE = {
 export default function useDomesticMarketData(stockCode, { enabled }) {
   const [selectedChartPeriod, setSelectedChartPeriod] = useState('MINUTE')
   const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(DEFAULT_MINUTE_INTERVAL)
+  const [liveCandle, setLiveCandle] = useState(null)
 
   const endDate = formatApiDate(new Date())
   const startDate = formatApiDate(new Date(Date.now() - 180 * DAY_MS))
@@ -100,12 +101,55 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
   const dailySeries = normalizeDailySeries(dailyChartQuery.data?.data)
   const minuteSeries = normalizeMinuteSeries(minuteChartQuery.data?.data)
 
+  const liveTrade = useStompSubscription(enabled ? `/topic/stock/trade/${stockCode}` : null)
+
+  useEffect(() => {
+    setLiveCandle(null)
+  }, [stockCode, selectedMinuteInterval])
+
+  useEffect(() => {
+    if (!liveTrade) return
+    const price = Number(liveTrade.price)
+    const volume = Number(liveTrade.cvolume)
+    if (!price || !volume) return
+
+    const chetime = liveTrade.chetime ?? ''
+    const hh = parseInt(chetime.slice(0, 2), 10)
+    const mm = parseInt(chetime.slice(2, 4), 10)
+    const bucketMm = Math.floor(mm / selectedMinuteInterval) * selectedMinuteInterval
+    const now = new Date()
+    const bucketTs = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, bucketMm, 0).getTime()
+    const sessionDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+
+    setLiveCandle((prev) => {
+      if (!prev || prev.timestamp !== bucketTs) {
+        return { timestamp: bucketTs, sessionDate, open: price, high: price, low: price, close: price, volume }
+      }
+      return { ...prev, high: Math.max(prev.high, price), low: Math.min(prev.low, price), close: price, volume: prev.volume + volume }
+    })
+  }, [liveTrade, selectedMinuteInterval])
+
+  const minuteSeriesWithLive = useMemo(() => {
+    if (!liveCandle || minuteSeries.length === 0) return minuteSeries
+    const last = minuteSeries.at(-1)
+    if (liveCandle.timestamp === last.timestamp) {
+      return [
+        ...minuteSeries.slice(0, -1),
+        { ...last, high: Math.max(last.high, liveCandle.high), low: Math.min(last.low, liveCandle.low), close: liveCandle.close, volume: last.volume + liveCandle.volume },
+      ]
+    }
+    if (liveCandle.timestamp > last.timestamp) {
+      return [...minuteSeries, liveCandle]
+    }
+    return minuteSeries
+  }, [minuteSeries, liveCandle])
+
   const marketState = {
     isLoading: priceQuery.isLoading || dailyChartQuery.isLoading || minuteChartQuery.isLoading || orderBookQuery.isLoading,
     errorMessage: (priceQuery.error || dailyChartQuery.error || minuteChartQuery.error || orderBookQuery.error)?.message ?? '',
     priceData: priceQuery.data ?? null,
     dailySeries,
-    minuteSeries,
+    minuteSeries: minuteSeriesWithLive,
     orderBook: orderBookQuery.data ?? null,
   }
 
@@ -133,7 +177,7 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
 
   const previousClose = dailySeries.at(-2)?.close ?? null
   const dailyRows = buildDailyRows(dailySeries)
-  const realtimeRows = buildRealtimeRows(getLatestMinuteSession(minuteSeries), previousClose)
+  const realtimeRows = buildRealtimeRows(getLatestMinuteSession(minuteSeriesWithLive), previousClose)
 
   function handleMinuteIntervalChange(nextMinuteInterval) {
     setSelectedMinuteInterval(nextMinuteInterval)
