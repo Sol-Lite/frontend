@@ -25,26 +25,23 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
       <div className="flex items-center justify-between mb-1 shrink-0">
-        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">포트폴리오</span>
-        <span className="text-[10px] font-semibold text-primary">5종목</span>
+        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
+        <span className="text-[10px] font-semibold text-up">{PORTFOLIO.returnRate}</span>
       </div>
 
       {variant === 'portfolio-wide' ? (
-        <div className="flex items-center gap-3 flex-1">
-          <PieDonut />
-          <div className="flex-1 flex flex-col gap-2">
-            {PORTFOLIO.items.map((item) => (
-              <div key={item.name}>
-                <div className="flex justify-between mb-0.5">
-                  <span className="text-[10px] text-foreground-tertiary">{item.name}</span>
-                  <span className="text-[10px] font-semibold text-foreground">{item.ratio}%</span>
-                </div>
-                <div className="h-[3px] bg-surface-muted rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${item.ratio}%`, background: item.color }} />
-                </div>
+        <div className="flex flex-col gap-2 flex-1 min-h-0">
+          {PORTFOLIO.items.slice(0, 3).map((item) => (
+            <div key={item.name}>
+              <div className="flex justify-between mb-0.5">
+                <span className="text-[10px] text-foreground-secondary">{item.name}</span>
+                <span className="text-[10px] font-semibold text-foreground">{item.ratio}%</span>
               </div>
-            ))}
-          </div>
+              <div className="h-[3px] bg-surface-muted rounded-full overflow-hidden">
+                <div className="h-full rounded-full" style={{ width: `${item.ratio}%`, background: item.color }} />
+              </div>
+            </div>
+          ))}
         </div>
       ) : variant === 'portfolio-2x2' ? (
         <div className="flex flex-col flex-1 gap-3">
@@ -72,19 +69,13 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
         </div>
       ) : (
         /* portfolio-sm (default) */
-        <div className="flex items-center gap-2.5 flex-1">
+        <div className="flex items-center gap-2.5 flex-1 min-h-0">
           <PieDonut />
-          <div className="flex-1 flex flex-col gap-[3px]">
+          <div className="flex flex-col gap-1">
             {PORTFOLIO.items.map((item) => (
-              <div key={item.name} className="flex items-center justify-between">
-                <div className="flex items-center gap-1">
-                  <div className="w-[6px] h-[6px] rounded-sm shrink-0" style={{ background: item.color }} />
-                  <span className="text-[10px] text-foreground-tertiary">{item.name}</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="h-[3px] rounded-full opacity-80" style={{ width: item.barWidth, background: item.color }} />
-                  <span className="text-[9px] font-medium text-foreground">{item.ratio}%</span>
-                </div>
+              <div key={item.name} className="flex items-center gap-1">
+                <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: item.color }} />
+                <span className="text-[10px] text-foreground-secondary">{item.name}</span>
               </div>
             ))}
           </div>
