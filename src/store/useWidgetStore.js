@@ -121,11 +121,7 @@ const useWidgetStore = create((set) => ({
   isDraggingNewWidget: false,
   setIsDraggingNewWidget: (v) => set({ isDraggingNewWidget: v }),
 
-  // existing-widget 드래그 중 wiggle animation 일시정지용
-  isDraggingExistingWidget: false,
-  setIsDraggingExistingWidget: (v) => set({ isDraggingExistingWidget: v }),
-
-  // 드래그 중 ghost placeholder (new-widget 드래그 시 push-aside 표시용)
+// 드래그 중 ghost placeholder (new-widget 드래그 시 push-aside 표시용)
   phantomWidget: null,
   setPhantom: (phantom) => set({ phantomWidget: phantom }),
   clearPhantom: () => set({ phantomWidget: null }),

@@ -11,7 +11,7 @@ import {
 import AppHeader from './AppHeader'
 import RightPanel from './RightPanel'
 import useWidgetStore, { canFitInGrid, canReorderWidgets, findInsertIndex } from '@/store/useWidgetStore'
-
+import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_GAP, GRID_COLS, GRID_ROWS, gridElementRef } from '@/lib/gridConstants'
@@ -27,8 +27,8 @@ export default function AppShell() {
     clearPhantom,
     phantomWidget,
     setIsDraggingNewWidget,
-    setIsDraggingExistingWidget,
   } = useWidgetStore()
+  const { resyncWiggle } = useEditModeStore()
   const { cellWidth, cellHeight } = useGridStore()
   const preDragOrder = useRef(null)
   const lastOverId = useRef(null)
@@ -49,7 +49,6 @@ export default function AppShell() {
     const type = active.data.current?.type
     setActiveDrag({ id: active.id, data: active.data.current })
     if (type === 'existing-widget') {
-      setIsDraggingExistingWidget(true)
       preDragOrder.current = [...widgets]
       lastOverId.current = null
     } else if (type === 'new-widget') {
@@ -112,7 +111,7 @@ export default function AppShell() {
     lastOverId.current = null
     clearPhantom()
     setIsDraggingNewWidget(false)
-    setIsDraggingExistingWidget(false)
+    resyncWiggle()
 
     const type = active.data.current?.type
 
@@ -143,7 +142,7 @@ export default function AppShell() {
   function handleDragCancel() {
     clearPhantom()
     setIsDraggingNewWidget(false)
-    setIsDraggingExistingWidget(false)
+    resyncWiggle()
     if (preDragOrder.current) {
       setWidgetsOrder(preDragOrder.current)
     }
