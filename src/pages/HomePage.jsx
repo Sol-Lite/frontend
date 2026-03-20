@@ -3,7 +3,7 @@ import { Pencil } from 'lucide-react'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
-import useWidgetStore from '@/store/useWidgetStore'
+import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
@@ -81,7 +81,7 @@ export default function HomePage() {
       {/* 스크롤 래퍼: 최솟값 이하로 줄어들면 스크롤 */}
       <div className={cn(
         'flex-1 min-h-0',
-        isEditMode ? 'overflow-hidden' : 'overflow-auto',
+        isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
         {/* 위젯 그리드: 6열 × 4행, 뷰포트 채움 / 최솟값 이하면 고정 */}
         <div
@@ -106,7 +106,7 @@ export default function HomePage() {
               />
             )
           })}
-          {!isEditMode && <AddWidgetSlot />}
+          {!isEditMode && canFitInGrid(widgets, 1, 1) && <AddWidgetSlot />}
         </div>
       </div>
     </div>
