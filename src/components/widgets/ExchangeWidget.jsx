@@ -62,7 +62,7 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
             const { area, line } = WIDE_3X1_CHART_DATA[i]
             return (
               <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>
-                <div>
+                <div className="text-center">
                   <div className="text-[9px] text-foreground-disabled">{pair}</div>
                   <div className={`${rateSize} font-bold text-foreground leading-tight`}>{rate}</div>
                   <div className={`text-[9px] ${isUp ? 'text-up' : 'text-down'}`}>
@@ -103,7 +103,7 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
             const { area, line } = WIDE_CHART_DATA[i]
             return (
               <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>
-                <div>
+                <div className="text-center">
                   <div className="text-[9px] text-foreground-disabled">{pair}</div>
                   <div className={`${rateSize} font-bold text-foreground leading-tight`}>{rate}</div>
                   <div className={`text-[9px] ${isUp ? 'text-up' : 'text-down'}`}>

@@ -86,7 +86,7 @@ export default function HomePage() {
         {/* 위젯 그리드: 6열 × 4행, 뷰포트 채움 / 최솟값 이하면 고정 */}
         <div
           ref={gridRef}
-          className="grid grid-cols-6 grid-rows-4 gap-[10px] w-full h-full"
+          className="grid grid-cols-6 grid-rows-4 grid-flow-dense gap-[10px] w-full h-full"
           style={{
             minWidth: `${MIN_GRID_WIDTH}px`,
             minHeight: `${MIN_GRID_HEIGHT}px`,
