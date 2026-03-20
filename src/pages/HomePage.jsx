@@ -1,6 +1,5 @@
-import { useEffect, useRef, useMemo } from 'react'
+import { useEffect, useRef } from 'react'
 import { Pencil } from 'lucide-react'
-import { SortableContext } from '@dnd-kit/sortable'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
@@ -10,11 +9,6 @@ import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
-
-/* col-span/row-span이 혼재한 그리드에서 rectSortingStrategy 사용 시
-   드래그 중 위젯 크기/위치 왜곡 발생 → 시각적 이동 비활성화.
-   모듈 레벨 정의로 참조 고정 — 인라인 정의 시 useDndContext 구독 루프 유발. */
-const noopSortingStrategy = () => null
 
 /* new-widget 드래그 중 삽입 예정 위치를 표시하는 placeholder.
    pointer-events-none으로 drag 이벤트를 그대로 통과시킨다. */
@@ -61,10 +55,7 @@ export default function HomePage() {
     return () => observer.disconnect()
   }, [setCellSize, setPreviewCellSize])
 
-  // widgets 참조가 바뀔 때만 새 배열 생성 — 안정적 참조로 SortableContext 재측정 루프 방지
-  const sortableItems = useMemo(() => widgets.map((w) => w.instanceId), [widgets])
-
-  // phantom을 지정 인덱스에 삽입한 display 전용 배열 (SortableContext items와 분리)
+  // phantom을 지정 인덱스에 삽입한 display 전용 배열
   const displayWidgets = phantomWidget
     ? [
         ...widgets.slice(0, phantomWidget.insertIndex),
@@ -113,47 +104,43 @@ export default function HomePage() {
         'flex-1 min-h-0',
         isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
-        {/* SortableContext items는 실제 위젯만 (phantom 제외).
-            useMemo로 참조 안정화 → droppableRects 재측정 루프 방지 */}
-        <SortableContext items={sortableItems} strategy={noopSortingStrategy}>
-          <div
-            ref={gridRef}
-            className={cn(
-              'grid grid-cols-6 grid-rows-4 grid-flow-dense gap-[10px] w-full h-full rounded-2xl transition-[outline] duration-[150ms]',
-              isDraggingNewWidget && 'outline outline-2 outline-primary',
-              isDraggingNewWidget && phantomWidget && 'bg-primary-light/30',
-            )}
-            style={{
-              minWidth: `${MIN_GRID_WIDTH}px`,
-              minHeight: `${MIN_GRID_HEIGHT}px`,
-            }}
-          >
-            {displayWidgets.map((w) => {
-              if (w.instanceId === '__phantom__') {
-                return <PhantomSlot key="__phantom__" colSpan={w.colSpan} rowSpan={w.rowSpan} />
-              }
-              const Component = WIDGET_REGISTRY[w.widgetTypeId]
-              if (!Component) return null
-              return (
-                <SortableWidgetCard
-                  key={w.instanceId}
-                  instanceId={w.instanceId}
+        <div
+          ref={gridRef}
+          className={cn(
+            'grid grid-cols-6 grid-rows-4 grid-flow-dense gap-[10px] w-full h-full rounded-2xl transition-[outline] duration-[150ms]',
+            isDraggingNewWidget && 'outline outline-2 outline-primary',
+            isDraggingNewWidget && phantomWidget && 'bg-primary-light/30',
+          )}
+          style={{
+            minWidth: `${MIN_GRID_WIDTH}px`,
+            minHeight: `${MIN_GRID_HEIGHT}px`,
+          }}
+        >
+          {displayWidgets.map((w) => {
+            if (w.instanceId === '__phantom__') {
+              return <PhantomSlot key="__phantom__" colSpan={w.colSpan} rowSpan={w.rowSpan} />
+            }
+            const Component = WIDGET_REGISTRY[w.widgetTypeId]
+            if (!Component) return null
+            return (
+              <SortableWidgetCard
+                key={w.instanceId}
+                instanceId={w.instanceId}
+                colSpan={w.colSpan}
+                rowSpan={w.rowSpan}
+              >
+                <Component
+                  variant={w.variantId}
                   colSpan={w.colSpan}
                   rowSpan={w.rowSpan}
-                >
-                  <Component
-                    variant={w.variantId}
-                    colSpan={w.colSpan}
-                    rowSpan={w.rowSpan}
-                    config={w.config}
-                    onDelete={() => removeWidget(w.instanceId)}
-                  />
-                </SortableWidgetCard>
-              )
-            })}
-            {!isEditMode && !phantomWidget && canFitInGrid(widgets, 1, 1) && <AddWidgetSlot />}
-          </div>
-        </SortableContext>
+                  config={w.config}
+                  onDelete={() => removeWidget(w.instanceId)}
+                />
+              </SortableWidgetCard>
+            )
+          })}
+          {!isEditMode && !phantomWidget && canFitInGrid(widgets, 1, 1) && <AddWidgetSlot />}
+        </div>
       </div>
     </div>
   )
