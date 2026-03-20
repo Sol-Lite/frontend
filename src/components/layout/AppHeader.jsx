@@ -23,43 +23,46 @@ function Logo() {
 }
 
 function UserArea() {
+  const navigate = useNavigate()
   const { isAuthenticated, user } = useAuthStore()
   const { data: accountInfo } = useMyAccount()
   const setAccountSettingsMode = useRightPanelStore((s) => s.setAccountSettingsMode)
 
-  if (isAuthenticated && user) {
+  if (!isAuthenticated || !user) {
     return (
-      <button
-        onClick={() => setAccountSettingsMode()}
-        className="pl-2 pr-3 py-2 border-l border-stroke flex items-center gap-2 hover:bg-surface-muted rounded-lg transition-colors"
-      >
-        <div className="text-right">
-          <div className="text-[12px] font-bold leading-none text-foreground">
-            {user.name}
-          </div>
-          <div className="text-[10px] text-foreground-disabled mt-0.5">
-            {accountInfo?.accountNumber ?? '-'}
-          </div>
-        </div>
-      </button>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => navigate('/login')}
+          className="flex items-center px-4 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
+        >
+          로그인
+        </button>
+        <button
+          onClick={() => navigate('/signup')}
+          className="flex items-center px-4 py-1.5 rounded-xl border border-primary text-primary text-[12px] font-semibold hover:bg-primary-light transition-colors duration-[150ms]"
+        >
+          회원가입
+        </button>
+      </div>
     )
   }
 
+  const accountNumber = accountInfo?.accountNumber ?? '-'
+
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => navigate('/login')}
-        className="flex items-center px-4 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
-      >
-        로그인
-      </button>
-      <button
-        onClick={() => navigate('/signup')}
-        className="flex items-center px-4 py-1.5 rounded-xl border border-primary text-primary text-[12px] font-semibold hover:bg-primary-light transition-colors duration-[150ms]"
-      >
-        회원가입
-      </button>
-    </div>
+    <button
+      onClick={() => setAccountSettingsMode()}
+      className="pl-2 pr-3 py-2 border-l border-stroke flex items-center gap-2 hover:bg-surface-muted rounded-lg transition-colors"
+    >
+      <div className="text-right">
+        <div className="text-[13px] font-bold leading-none text-foreground">
+          {user.name}
+        </div>
+        <div className="text-[12px] text-foreground-secondary mt-1">
+          {accountNumber}
+        </div>
+      </div>
+    </button>
   )
 }
 

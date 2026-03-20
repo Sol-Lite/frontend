@@ -1,7 +1,6 @@
-import { useQuery } from '@tanstack/react-query'
 import useAuthStore from '@/store/useAuthStore'
 
-const BASE = '/api/accounts'
+const BASE = '/api/users'
 
 async function request(path, method = 'GET', body = null, options = {}) {
   const { headers: optionHeaders, ...restOptions } = options
@@ -28,21 +27,8 @@ async function request(path, method = 'GET', body = null, options = {}) {
   return data
 }
 
-export const accountApi = {
-  getMyAccount: () => request('/me', 'GET'),
-  changePin: (currentPin, newPin) => request('/me/pin', 'PATCH', { currentPin, newPin }),
-  reset: (accountPin) => request('/reset', 'POST', { accountPin }),
-  closeAccount: (accountPin) => request('', 'DELETE', { accountPin }),
-}
-
-// React Query Hook
-export const useMyAccount = () => {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
-
-  return useQuery({
-    queryKey: ['account', 'me'],
-    queryFn: () => accountApi.getMyAccount(),
-    enabled: isAuthenticated,
-    staleTime: 1000 * 60 * 10,
-  })
+export const userApi = {
+  getProfile: () => request('/me', 'GET'),
+  changePassword: (currentPassword, newPassword) =>
+    request('/me/password', 'PATCH', { currentPassword, newPassword, newPasswordConfirm: newPassword }),
 }
