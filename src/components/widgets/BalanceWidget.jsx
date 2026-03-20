@@ -1,4 +1,3 @@
-import LiveDot from '@/components/ui/LiveDot'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 import WidgetCard from './WidgetCard'
@@ -9,9 +8,8 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
 
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-      <div className="flex items-center justify-between mb-2 shrink-0">
+      <div className="mb-2 shrink-0">
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">계좌 잔고</span>
-        <LiveDot />
       </div>
 
       {variant === 'balance-lg' ? (

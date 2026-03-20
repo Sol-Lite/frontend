@@ -1,4 +1,3 @@
-import LiveDot from '@/components/ui/LiveDot'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 import WidgetCard from './WidgetCard'
@@ -50,9 +49,8 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
     ]
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-        <div className="flex items-center justify-between mb-1 shrink-0">
+        <div className="mb-1 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
-          <LiveDot />
         </div>
         <div className="flex flex-1 min-h-0 divide-x divide-stroke">
           {cols3x1.map(({ pair, rate, change, rateSize, flex, pr, pl }, i) => {
@@ -91,9 +89,8 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
     ]
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-        <div className="flex items-center justify-between mb-1 shrink-0">
+        <div className="mb-1 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
-          <LiveDot />
         </div>
         <div className="flex flex-1 min-h-0 divide-x divide-stroke">
           {cols2x1.map(({ pair, rate, change, rateSize, flex, pr, pl }, i) => {
@@ -128,9 +125,8 @@ export default function ExchangeWidget({ variant = 'exchange-sm', colSpan = 1, r
   if (variant === 'exchange-2x2') {
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-        <div className="flex items-center justify-between mb-1 shrink-0">
+        <div className="mb-1 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
-          <LiveDot />
         </div>
         <div className="shrink-0">
           <div className="text-[9px] text-foreground-disabled">USD / KRW</div>

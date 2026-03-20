@@ -1,4 +1,5 @@
-import { ChevronLeft, Plus } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
+import { useDraggable } from '@dnd-kit/core'
 import { cn } from '@/lib/cn'
 import useGridStore from '@/store/useGridStore'
 import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
@@ -1024,9 +1025,47 @@ function VariantPreview({ variant }) {
   )
 }
 
+/* ── DraggableVariantItem ───────────────────────────────── */
+function DraggableVariantItem({ variant, widgetType, canAdd }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `new-widget-${variant.id}`,
+    disabled: !canAdd,
+    data: { type: 'new-widget', widgetTypeId: widgetType.id, variant },
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'relative group',
+        widthClass(variant.colSpan),
+        canAdd ? 'cursor-grab' : 'cursor-default',
+        isDragging && 'opacity-40',
+      )}
+      {...attributes}
+      {...listeners}
+    >
+      <VariantPreview variant={variant} />
+      {canAdd ? (
+        /* hover 드래그 힌트 오버레이 — pointer-events-none으로 drag 이벤트 차단 안 함 */
+        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-primary/10 border border-primary flex items-center justify-center transition-opacity duration-[150ms] pointer-events-none">
+          <span className="text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">
+            드래그하여 추가
+          </span>
+        </div>
+      ) : (
+        /* 공간 부족 오버레이 — 항상 표시 */
+        <div className="absolute inset-0 rounded-xl bg-background/60 border border-stroke flex items-center justify-center pointer-events-none">
+          <span className="text-[10px] text-foreground-disabled font-medium">공간 부족</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── WidgetSizeList ─────────────────────────────────────── */
 export default function WidgetSizeList({ widgetType, onBack }) {
-  const { widgets, addWidget } = useWidgetStore()
+  const { widgets } = useWidgetStore()
 
   return (
     <>
@@ -1052,34 +1091,17 @@ export default function WidgetSizeList({ widgetType, onBack }) {
           {widgetType.variants.map((variant) => {
             const canAdd = canFitInGrid(widgets, variant.colSpan, variant.rowSpan)
             return (
-              <div
+              <DraggableVariantItem
                 key={variant.id}
-                className={cn('relative group', widthClass(variant.colSpan))}
-              >
-                <VariantPreview variant={variant} />
-                {canAdd ? (
-                  /* hover 추가 오버레이 */
-                  <button
-                    aria-label={`${variant.label} 추가`}
-                    onClick={() => { addWidget(widgetType.id, variant) }}
-                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-primary/10 border border-primary flex items-center justify-center transition-opacity duration-[150ms]"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-primary-btn">
-                      <Plus className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  </button>
-                ) : (
-                  /* 공간 부족 오버레이 — 항상 표시 */
-                  <div className="absolute inset-0 rounded-xl bg-background/60 border border-stroke flex items-center justify-center">
-                    <span className="text-[10px] text-foreground-disabled font-medium">공간 부족</span>
-                  </div>
-                )}
-              </div>
+                variant={variant}
+                widgetType={widgetType}
+                canAdd={canAdd}
+              />
             )
           })}
         </div>
         <p className="text-[10px] text-foreground-disabled mt-4 text-center">
-          클릭하여 대시보드에 추가
+          대시보드로 드래그하여 추가
         </p>
       </div>
     </>

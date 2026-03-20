@@ -1,20 +1,46 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { Pencil } from 'lucide-react'
+import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
-import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
+import useWidgetStore, { canFitInGrid, computeLayout } from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
+import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
-import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
+import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT, gridElementRef } from '@/lib/gridConstants'
+
+/* new-widget 드래그 중 삽입 예정 위치를 표시하는 placeholder.
+   pointer-events-none으로 drag 이벤트를 그대로 통과시킨다. */
+function PhantomSlot({ colSpan, rowSpan, gridCol, gridRow }) {
+  return (
+    <div
+      className="rounded-2xl border-2 border-dashed border-primary bg-primary-light/30 pointer-events-none"
+      style={
+        gridCol && gridRow
+          ? { gridColumn: `${gridCol} / span ${colSpan}`, gridRow: `${gridRow} / span ${rowSpan}` }
+          : undefined
+      }
+    />
+  )
+}
 
 export default function HomePage() {
   const { isEditMode } = useEditModeStore()
   const { setCellSize, setPreviewCellSize } = useGridStore()
-  const { widgets, removeWidget } = useWidgetStore()
+  const { widgets, removeWidget, phantomWidget, isDraggingNewWidget } = useWidgetStore()
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
+
+  // 빈 대시보드에서도 드롭 가능하도록 그리드 전체를 droppable로 등록
+  const { setNodeRef: setGridDroppableRef } = useDroppable({ id: 'dashboard-grid' })
+
+  const setGridRef = useCallback((node) => {
+    gridRef.current = node
+    setGridDroppableRef(node)
+    gridElementRef.current = node
+  }, [setGridDroppableRef])
 
   useEffect(() => {
     isEditModeRef.current = isEditMode
@@ -24,7 +50,6 @@ export default function HomePage() {
     const el = gridRef.current
     if (!el) return
 
-    // ResizeObserver 콜백은 비동기 → 초기값을 MIN으로 설정해 측정 전 공백 방지
     setCellSize(MIN_CELL_WIDTH, MIN_CELL_HEIGHT)
 
     const observer = new ResizeObserver(([entry]) => {
@@ -32,7 +57,6 @@ export default function HomePage() {
       const cellWidth = (width - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
       const cellHeight = (height - GRID_GAP * (GRID_ROWS - 1)) / GRID_ROWS
       setCellSize(cellWidth, cellHeight)
-      // EditPanel 미열림 상태(full grid)의 셀 크기만 preview 기준으로 저장
       if (!isEditModeRef.current) {
         setPreviewCellSize(cellWidth, cellHeight)
       }
@@ -41,6 +65,18 @@ export default function HomePage() {
     observer.observe(el)
     return () => observer.disconnect()
   }, [setCellSize, setPreviewCellSize])
+
+  // phantom을 지정 인덱스에 삽입한 display 전용 배열
+  const displayWidgets = phantomWidget
+    ? [
+        ...widgets.slice(0, phantomWidget.insertIndex),
+        { instanceId: '__phantom__', colSpan: phantomWidget.colSpan, rowSpan: phantomWidget.rowSpan },
+        ...widgets.slice(phantomWidget.insertIndex),
+      ]
+    : widgets
+
+  // CSS auto-placement 대신 명시적 grid 좌표를 계산해 레이아웃 불일치/overflow 방지
+  const layout = computeLayout(displayWidgets)
 
   return (
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
@@ -62,7 +98,6 @@ export default function HomePage() {
         </div>
         {isEditMode && (
           <div className="flex items-center gap-2">
-            {/* 페이지 인디케이터 */}
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-1.5 rounded-full bg-primary" />
               <div className="w-1.5 h-1.5 rounded-full bg-stroke-input" />
@@ -78,35 +113,58 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* 스크롤 래퍼: 최솟값 이하로 줄어들면 스크롤 */}
+      {/* 스크롤 래퍼 */}
       <div className={cn(
         'flex-1 min-h-0',
         isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
-        {/* 위젯 그리드: 6열 × 4행, 뷰포트 채움 / 최솟값 이하면 고정 */}
         <div
-          ref={gridRef}
-          className="grid grid-cols-6 grid-rows-4 grid-flow-dense gap-[10px] w-full h-full"
+          ref={setGridRef}
+          className={cn(
+            'grid grid-cols-6 grid-rows-4 gap-[10px] w-full h-full rounded-2xl transition-[outline] duration-[150ms]',
+            isDraggingNewWidget && 'outline outline-2 outline-primary',
+            isDraggingNewWidget && phantomWidget && 'bg-primary-light/30',
+          )}
           style={{
             minWidth: `${MIN_GRID_WIDTH}px`,
             minHeight: `${MIN_GRID_HEIGHT}px`,
           }}
         >
-          {widgets.map((w) => {
+          {displayWidgets.map((w, i) => {
+            const pos = layout[i]
+            if (w.instanceId === '__phantom__') {
+              return (
+                <PhantomSlot
+                  key="__phantom__"
+                  colSpan={w.colSpan}
+                  rowSpan={w.rowSpan}
+                  gridCol={pos?.col}
+                  gridRow={pos?.row}
+                />
+              )
+            }
             const Component = WIDGET_REGISTRY[w.widgetTypeId]
             if (!Component) return null
             return (
-              <Component
+              <SortableWidgetCard
                 key={w.instanceId}
-                variant={w.variantId}
+                instanceId={w.instanceId}
                 colSpan={w.colSpan}
                 rowSpan={w.rowSpan}
-                config={w.config}
-                onDelete={() => removeWidget(w.instanceId)}
-              />
+                gridCol={pos?.col}
+                gridRow={pos?.row}
+              >
+                <Component
+                  variant={w.variantId}
+                  colSpan={w.colSpan}
+                  rowSpan={w.rowSpan}
+                  config={w.config}
+                  onDelete={() => removeWidget(w.instanceId)}
+                />
+              </SortableWidgetCard>
             )
           })}
-          {!isEditMode && canFitInGrid(widgets, 1, 1) && <AddWidgetSlot />}
+          {!isEditMode && !phantomWidget && canFitInGrid(widgets, 1, 1) && <AddWidgetSlot />}
         </div>
       </div>
     </div>
