@@ -1,5 +1,6 @@
 import { Controller } from 'react-hook-form'
 import { CheckCircle, Mail } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { formatPhoneNumber } from '@/components/signup/phoneNumber'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { getPasswordChecks } from '@/components/signup/passwordValidation'
@@ -109,7 +110,7 @@ export default function BasicInfoStep({
               <p className="text-[11px] font-semibold text-up">{fieldErrors.email}</p>
               <p className="text-[11px] text-foreground-secondary">
                 이미 가입된 계정이 있으신가요?{' '}
-                <a href="/login" className="text-primary font-semibold hover:underline">로그인</a>
+                <Link to="/login" className="text-primary font-semibold hover:underline">로그인</Link>
               </p>
             </div>
           )}
@@ -130,6 +131,7 @@ export default function BasicInfoStep({
           render={({ field }) => (
             <Input
               label="휴대폰 번호"
+              required
               type="tel"
               placeholder="010-0000-0000"
               {...field}

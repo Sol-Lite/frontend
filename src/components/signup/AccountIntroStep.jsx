@@ -1,4 +1,5 @@
 import { ArrowRight, Smartphone, FileText, CreditCard } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 export default function AccountIntroStep({ onNext }) {
   return (
@@ -76,7 +77,7 @@ export default function AccountIntroStep({ onNext }) {
           </button>
 
           <p className="text-sm text-foreground-secondary mt-6">
-            이미 계좌가 있으신가요? <a href="#" className="text-primary hover:underline font-semibold">로그인</a>
+            이미 계좌가 있으신가요? <Link to="/login" className="text-primary hover:underline font-semibold">로그인</Link>
           </p>
         </div>
       </div>
