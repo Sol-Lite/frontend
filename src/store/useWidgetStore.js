@@ -76,6 +76,10 @@ const useWidgetStore = create((set) => ({
     set((state) => ({ widgets: state._snapshot ?? state.widgets, _snapshot: null })),
   clearSnapshot: () => set({ _snapshot: null }),
 
+  // new-widget 드래그 중 대시보드 outline 표시용 (useDndContext 구독 없이)
+  isDraggingNewWidget: false,
+  setIsDraggingNewWidget: (v) => set({ isDraggingNewWidget: v }),
+
   // 드래그 중 ghost placeholder (new-widget 드래그 시 push-aside 표시용)
   phantomWidget: null,
   setPhantom: (phantom) => set({ phantomWidget: phantom }),

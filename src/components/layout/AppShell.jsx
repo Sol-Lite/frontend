@@ -11,6 +11,7 @@ import {
 import AppHeader from './AppHeader'
 import RightPanel from './RightPanel'
 import useWidgetStore, { canFitInGrid, canReorderWidgets } from '@/store/useWidgetStore'
+
 import useGridStore from '@/store/useGridStore'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_GAP } from '@/lib/gridConstants'
@@ -25,6 +26,7 @@ export default function AppShell() {
     setPhantom,
     clearPhantom,
     phantomWidget,
+    setIsDraggingNewWidget,
   } = useWidgetStore()
   const { cellWidth, cellHeight } = useGridStore()
   const preDragOrder = useRef(null)
@@ -35,10 +37,13 @@ export default function AppShell() {
   )
 
   function handleDragStart({ active }) {
+    const type = active.data.current?.type
     setActiveDrag({ id: active.id, data: active.data.current })
-    if (active.data.current?.type === 'existing-widget') {
+    if (type === 'existing-widget') {
       preDragOrder.current = [...widgets]
       lastOverId.current = null
+    } else if (type === 'new-widget') {
+      setIsDraggingNewWidget(true)
     }
   }
 
@@ -71,6 +76,7 @@ export default function AppShell() {
     setActiveDrag(null)
     lastOverId.current = null
     clearPhantom()
+    setIsDraggingNewWidget(false)
 
     const type = active.data.current?.type
 
@@ -85,8 +91,7 @@ export default function AppShell() {
     preDragOrder.current = null
 
     if (type === 'new-widget') {
-      const isOverDashboard =
-        over.id === 'dashboard' || widgets.some((w) => w.instanceId === over.id)
+      const isOverDashboard = widgets.some((w) => w.instanceId === over.id)
       if (isOverDashboard) {
         const { widgetTypeId, variant } = active.data.current
         const insertIndex = savedPhantom?.insertIndex ?? widgets.length
@@ -98,6 +103,7 @@ export default function AppShell() {
 
   function handleDragCancel() {
     clearPhantom()
+    setIsDraggingNewWidget(false)
     if (preDragOrder.current) {
       setWidgetsOrder(preDragOrder.current)
     }

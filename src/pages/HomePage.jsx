@@ -1,7 +1,6 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useMemo } from 'react'
 import { Pencil } from 'lucide-react'
 import { SortableContext } from '@dnd-kit/sortable'
-import { useDroppable, useDndContext } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
@@ -14,7 +13,7 @@ import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CE
 
 /* col-span/row-span이 혼재한 그리드에서 rectSortingStrategy 사용 시
    드래그 중 위젯 크기/위치 왜곡 발생 → 시각적 이동 비활성화.
-   모듈 레벨 정의로 참조 고정 (인라인 정의 시 매 렌더마다 새 참조 → SortableContext 무한 루프). */
+   모듈 레벨 정의로 참조 고정 — 인라인 정의 시 useDndContext 구독 루프 유발. */
 const noopSortingStrategy = () => null
 
 /* new-widget 드래그 중 삽입 예정 위치를 표시하는 placeholder.
@@ -34,18 +33,9 @@ function PhantomSlot({ colSpan, rowSpan }) {
 export default function HomePage() {
   const { isEditMode } = useEditModeStore()
   const { setCellSize, setPreviewCellSize } = useGridStore()
-  const { widgets, removeWidget, phantomWidget } = useWidgetStore()
+  const { widgets, removeWidget, phantomWidget, isDraggingNewWidget } = useWidgetStore()
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
-
-  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: 'dashboard' })
-  const { active } = useDndContext()
-  const isDraggingNewWidget = active?.data?.current?.type === 'new-widget'
-
-  const setGridRef = useCallback((el) => {
-    gridRef.current = el
-    setDropRef(el)
-  }, [setDropRef])
 
   useEffect(() => {
     isEditModeRef.current = isEditMode
@@ -70,6 +60,9 @@ export default function HomePage() {
     observer.observe(el)
     return () => observer.disconnect()
   }, [setCellSize, setPreviewCellSize])
+
+  // widgets 참조가 바뀔 때만 새 배열 생성 — 안정적 참조로 SortableContext 재측정 루프 방지
+  const sortableItems = useMemo(() => widgets.map((w) => w.instanceId), [widgets])
 
   // phantom을 지정 인덱스에 삽입한 display 전용 배열 (SortableContext items와 분리)
   const displayWidgets = phantomWidget
@@ -120,14 +113,15 @@ export default function HomePage() {
         'flex-1 min-h-0',
         isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
-        {/* SortableContext items는 실제 위젯만 (phantom 제외) */}
-        <SortableContext items={widgets.map((w) => w.instanceId)} strategy={noopSortingStrategy}>
+        {/* SortableContext items는 실제 위젯만 (phantom 제외).
+            useMemo로 참조 안정화 → droppableRects 재측정 루프 방지 */}
+        <SortableContext items={sortableItems} strategy={noopSortingStrategy}>
           <div
-            ref={setGridRef}
+            ref={gridRef}
             className={cn(
               'grid grid-cols-6 grid-rows-4 grid-flow-dense gap-[10px] w-full h-full rounded-2xl transition-[outline] duration-[150ms]',
               isDraggingNewWidget && 'outline outline-2 outline-primary',
-              isDraggingNewWidget && isOver && 'bg-primary-light/30',
+              isDraggingNewWidget && phantomWidget && 'bg-primary-light/30',
             )}
             style={{
               minWidth: `${MIN_GRID_WIDTH}px`,
