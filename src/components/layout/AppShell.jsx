@@ -48,11 +48,16 @@ export default function AppShell() {
   }
 
   function handleDragOver({ active, over }) {
-    if (!over) return
+    const type = active.data.current?.type
+
+    if (!over) {
+      lastOverId.current = null
+      if (type === 'new-widget') clearPhantom()
+      return
+    }
+
     if (over.id === lastOverId.current) return
     lastOverId.current = over.id
-
-    const type = active.data.current?.type
 
     if (type === 'existing-widget') {
       if (active.id === over.id) return
