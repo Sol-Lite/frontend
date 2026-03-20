@@ -124,14 +124,14 @@ export default function AppShell() {
     preDragOrder.current = null
 
     if (type === 'new-widget') {
-      // 'dashboard-grid' droppable 또는 개별 위젯 위에 drop된 경우 모두 허용
+      // savedPhantom이 있어야만 대시보드 위에 유효하게 hover했다고 판단
+      // phantom 없으면 EditPanel 영역에서 drop한 것으로 간주해 추가하지 않음
       const isOverDashboard =
-        over.id === 'dashboard-grid' ||
-        widgets.some((w) => w.instanceId === over.id)
+        savedPhantom != null &&
+        (over.id === 'dashboard-grid' || widgets.some((w) => w.instanceId === over.id))
       if (isOverDashboard) {
         const { widgetTypeId, variant } = active.data.current
-        const insertIndex = savedPhantom?.insertIndex ?? widgets.length
-        addWidgetAt(widgetTypeId, variant, insertIndex)
+        addWidgetAt(widgetTypeId, variant, savedPhantom.insertIndex)
       }
     }
     // existing-widget: onDragOver에서 이미 reorder 완료
