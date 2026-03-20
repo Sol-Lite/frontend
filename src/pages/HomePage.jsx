@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
-import useWidgetStore, { canFitInGrid, computeLayout } from '@/store/useWidgetStore'
+import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
@@ -66,17 +66,10 @@ export default function HomePage() {
     return () => observer.disconnect()
   }, [setCellSize, setPreviewCellSize])
 
-  // phantom을 지정 인덱스에 삽입한 display 전용 배열
+  // phantom은 좌표를 직접 보유 — 배열에 삽입하지 않고 displayWidgets 끝에 append
   const displayWidgets = phantomWidget
-    ? [
-        ...widgets.slice(0, phantomWidget.insertIndex),
-        { instanceId: '__phantom__', colSpan: phantomWidget.colSpan, rowSpan: phantomWidget.rowSpan },
-        ...widgets.slice(phantomWidget.insertIndex),
-      ]
+    ? [...widgets, { instanceId: '__phantom__', ...phantomWidget }]
     : widgets
-
-  // CSS auto-placement 대신 명시적 grid 좌표를 계산해 레이아웃 불일치/overflow 방지
-  const layout = computeLayout(displayWidgets)
 
   return (
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
@@ -130,16 +123,15 @@ export default function HomePage() {
             minHeight: `${MIN_GRID_HEIGHT}px`,
           }}
         >
-          {displayWidgets.map((w, i) => {
-            const pos = layout[i]
+          {displayWidgets.map((w) => {
             if (w.instanceId === '__phantom__') {
               return (
                 <PhantomSlot
                   key="__phantom__"
                   colSpan={w.colSpan}
                   rowSpan={w.rowSpan}
-                  gridCol={pos?.col}
-                  gridRow={pos?.row}
+                  gridCol={w.gridCol}
+                  gridRow={w.gridRow}
                 />
               )
             }
@@ -151,8 +143,8 @@ export default function HomePage() {
                 instanceId={w.instanceId}
                 colSpan={w.colSpan}
                 rowSpan={w.rowSpan}
-                gridCol={pos?.col}
-                gridRow={pos?.row}
+                gridCol={w.gridCol}
+                gridRow={w.gridRow}
               >
                 <Component
                   variant={w.variantId}
