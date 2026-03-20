@@ -5,13 +5,13 @@ import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { GRID_GAP, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
 
 /* ── 너비 클래스 ─────────────────────────────────────────────
-   EditPanel 가로폭을 6등분하여 colSpan 비율을 정확히 반영.
-   colSpan=1 → w-1/6,  colSpan=2 → w-1/3,  colSpan=3 → w-1/2,  colSpan≥4 → w-full
+   EditPanel 가로폭을 3등분하여 colSpan 비율을 반영.
+   6열 그리드 기준: 1열=소형(1/3), 2열=와이드(2/3), 3열=하프(full)
+   colSpan=1 → w-1/3,  colSpan=2 → w-2/3,  colSpan≥3 → w-full
 ─────────────────────────────────────────────────────────── */
 function widthClass(colSpan) {
-  if (colSpan === 1) return 'w-1/6'
-  if (colSpan === 2) return 'w-1/3'
-  if (colSpan === 3) return 'w-1/2'
+  if (colSpan === 1) return 'w-1/3'
+  if (colSpan === 2) return 'w-2/3'
   return 'w-full'
 }
 
