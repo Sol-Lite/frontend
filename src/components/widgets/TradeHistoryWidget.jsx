@@ -2,11 +2,11 @@ import WidgetCard from './WidgetCard'
 import { cn } from '@/lib/cn'
 
 const TRADES = [
-  { name: '삼성전자',       type: '매수', qty: '10주', date: '3.18' },
-  { name: 'SK하이닉스',     type: '매도', qty: '5주',  date: '3.17' },
-  { name: 'LG에너지솔루션', type: '매수', qty: '3주',  date: '3.16' },
-  { name: 'NAVER',          type: '매도', qty: '2주',  date: '3.15' },
-  { name: '현대차',         type: '매수', qty: '7주',  date: '3.14' },
+  { name: '삼성전자',       type: '매수', qty: '10주', price: '754,000',  date: '3.18' },
+  { name: 'SK하이닉스',     type: '매도', qty: '5주',  price: '977,500',  date: '3.17' },
+  { name: 'LG에너지솔루션', type: '매수', qty: '3주',  price: '1,146,000',date: '3.16' },
+  { name: 'NAVER',          type: '매도', qty: '2주',  price: '420,000',  date: '3.15' },
+  { name: '현대차',         type: '매수', qty: '7주',  price: '1,435,000',date: '3.14' },
 ]
 
 const WEEK_DAYS = ['일', '월', '화', '수', '목', '금', '토']
@@ -33,6 +33,69 @@ const TRADE_MAP = {
 }
 
 export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1, rowSpan = 1, onDelete }) {
+  /* ── trade-3x2: 캘린더 + 목록 3×2 ── */
+  if (variant === 'trade-3x2') {
+    return (
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+        <div className="flex items-center justify-between mb-2 shrink-0">
+          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
+          <span className="text-[9px] text-foreground-disabled">2026년 3월</span>
+        </div>
+        <div className="flex flex-1 min-h-0 gap-4">
+          {/* 좌: 캘린더 */}
+          <div className="flex flex-col flex-1 min-h-0 min-w-0">
+            <div className="grid grid-cols-7 gap-0.5 shrink-0 mb-1">
+              {WEEK_DAYS.map((d) => (
+                <div key={d} className="text-center text-[8px] font-semibold text-foreground-disabled">{d}</div>
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-0.5 flex-1 min-h-0">
+              {MONTH_CELLS.map((d, i) => {
+                const trades = d ? TRADE_MAP[d] : null
+                return (
+                  <div key={i} className="flex flex-col items-start rounded p-0.5">
+                    <span className={cn('text-[9px] leading-none mb-px', d ? 'text-foreground' : 'invisible')}>
+                      {d ?? '0'}
+                    </span>
+                    {trades && trades.slice(0, 2).map((tr, j) => (
+                      <div key={j} className="flex items-center gap-px w-full">
+                        <div className={cn('w-0.5 rounded-full shrink-0 self-stretch', tr.t ? 'bg-up' : 'bg-down')} />
+                        <span className="text-[7px] leading-snug truncate text-foreground">{tr.s}</span>
+                      </div>
+                    ))}
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+          {/* 우: 목록 */}
+          <div className="flex flex-col min-h-0 border-l border-stroke pl-4 shrink-0 w-[40%]">
+            <span className="text-[9px] font-semibold text-foreground-disabled mb-1 shrink-0">거래 내역</span>
+            <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1.5">
+              {TRADES.map(({ name, type, qty, price, date }) => (
+                <div key={`${name}-${date}`} className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className={cn(
+                      'text-[8px] font-semibold px-1 py-px rounded shrink-0',
+                      type === '매수' ? 'text-up bg-up/10' : 'text-down bg-down/10',
+                    )}>
+                      {type}
+                    </span>
+                    <span className="text-[10px] text-foreground truncate">{name}</span>
+                  </div>
+                  <div className="flex flex-col items-end shrink-0">
+                    <span className="text-[9px] font-semibold text-foreground">{price}</span>
+                    <span className="text-[8px] text-foreground-disabled">{qty} · {date}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </WidgetCard>
+    )
+  }
+
   /* ── trade-wide: 주간 캘린더 2×1 ── */
   if (variant === 'trade-wide') {
     return (

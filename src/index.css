@@ -26,9 +26,11 @@
   --color-up:           #E8393E;
   --color-up-bg:        #FFF0F1;
   --color-up-border:    #FFBFC1;
+  --color-up-fill:      rgba(232,57,62,0.1);
   --color-down:         #0075E8;
   --color-down-bg:      #EFF6FF;
   --color-down-border:  #BFDBFE;
+  --color-down-fill:    rgba(0,117,232,0.1);
 
   /* ── Semantic (DESIGN.md: live / danger / warning) ── */
   --color-live:    #12B76A;
@@ -172,4 +174,19 @@ input, button, select, textarea {
 
 button {
   cursor: pointer;
+}
+
+/* ─────────────────────────────────────────────
+   Custom Utilities
+───────────────────────────────────────────── */
+@layer utilities {
+  .pie-donut-bg {
+    background: conic-gradient(
+      var(--color-chart-1) 0% 34%,
+      var(--color-chart-2) 34% 54%,
+      var(--color-chart-3) 54% 69%,
+      var(--color-chart-4) 69% 81%,
+      var(--color-chart-5) 81% 100%
+    );
+  }
 }

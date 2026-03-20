@@ -4,6 +4,8 @@ export const BALANCE = {
   profitRate: '+2.61%',
   krw: '72,100,000',
   usd: '$8,924',
+  invested: '82,168,000',
+  available: '74,780,000',
 }
 
 export const HOME_INDICES = [
@@ -69,11 +71,15 @@ export const WATCHLIST = [
 
 export const MARKET_OVERVIEW = {
   time: '14:32',
-  headline: '美 CPI 하회… 나스닥 1% 상승, 반도체 강세',
-  bullets: ['外人 순매수 4,200억 · 반도체↑', '원달러 1,378원 소폭 하락 마감'],
+  news: [
+    { title: '美 CPI 예상치 하회… 나스닥 1% 상승, 반도체 강세', desc: '인플레이션 둔화 신호로 긴축 우려 완화. AI 관련주 중심 반등.' },
+    { title: '外人 순매수 4,200억 · 반도체↑', desc: '3거래일 연속 외국인 매수세 유입. 삼성전자·SK하이닉스 강세.' },
+    { title: '원달러 1,378원 소폭 하락 마감', desc: '美 금리 인하 기대감 반영. 수출주 수혜 예상.' },
+    { title: 'SK하이닉스 목표가 상향 조정', desc: 'HBM3E 공급 확대 기대. 증권사 12개사 목표가 상향.' },
+  ],
 }
 
 export const EXCHANGE = [
-  { flag: '🇺🇸', pair: 'USD / KRW', rate: '1,378.50', change: -2.30 },
-  { flag: '🇯🇵', pair: 'JPY / KRW', rate: '9.24',     change: 0.05 },
+  { flag: '🇺🇸', pair: 'USD / KRW', rate: '1,378.50', change: -2.30, pct: '-0.17%' },
+  { flag: '🇯🇵', pair: 'JPY / KRW', rate: '9.18',     change:  0.05, pct: '+0.54%' },
 ]
