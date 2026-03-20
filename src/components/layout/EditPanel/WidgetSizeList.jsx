@@ -1107,7 +1107,7 @@ export default function WidgetSizeList({ widgetType, onBack }) {
                   /* hover 추가 오버레이 */
                   <button
                     aria-label={`${variant.label} 추가`}
-                    onClick={() => { addWidget(widgetType.id, variant); onBack() }}
+                    onClick={() => { addWidget(widgetType.id, variant) }}
                     className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-primary/10 border border-primary flex items-center justify-center transition-opacity duration-[150ms]"
                   >
                     <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-primary-btn">
