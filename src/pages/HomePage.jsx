@@ -67,9 +67,23 @@ export default function HomePage() {
   }, [setCellSize, setPreviewCellSize])
 
   // phantom은 좌표를 직접 보유 — 배열에 삽입하지 않고 displayWidgets 끝에 append
-  const displayWidgets = phantomWidget
-    ? [...widgets, { instanceId: '__phantom__', ...phantomWidget }]
-    : widgets
+  // swap 미리보기: B를 A의 원래 위치로 임시 이동해 렌더링
+  // → phantom(A의 목적지)과 B가 같은 셀에 겹치는 현상 방지
+  const displayWidgets = (() => {
+    if (!phantomWidget) return widgets
+    let base = widgets
+    if (phantomWidget.swapWithId && phantomWidget.activeId) {
+      const wA = widgets.find((w) => w.instanceId === phantomWidget.activeId)
+      if (wA) {
+        base = widgets.map((w) =>
+          w.instanceId === phantomWidget.swapWithId
+            ? { ...w, gridCol: wA.gridCol, gridRow: wA.gridRow }
+            : w,
+        )
+      }
+    }
+    return [...base, { instanceId: '__phantom__', ...phantomWidget }]
+  })()
 
   return (
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
