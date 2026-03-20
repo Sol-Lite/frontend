@@ -10,7 +10,7 @@ import useEditModeStore from '@/store/useEditModeStore'
  * - isEditMode일 때만 drag 활성화
  * - isDragging 시 원본 자리 placeholder 유지 (opacity: 0)
  */
-export default function SortableWidgetCard({ instanceId, colSpan = 1, rowSpan = 1, children }) {
+export default function SortableWidgetCard({ instanceId, colSpan = 1, rowSpan = 1, gridCol, gridRow, children }) {
   const { isEditMode } = useEditModeStore()
 
   const { attributes, listeners, setNodeRef: setDraggableRef, isDragging } = useDraggable({
@@ -35,13 +35,12 @@ export default function SortableWidgetCard({ instanceId, colSpan = 1, rowSpan = 
   return (
     <div
       ref={setNodeRef}
-      className={cn(
-        'h-full',
-        isEditMode && 'cursor-grab',
-        colSpan === 3 ? 'col-span-3' : colSpan === 2 ? 'col-span-2' : 'col-span-1',
-        rowSpan === 2 ? 'row-span-2' : '',
-        isDragging && 'opacity-0',
-      )}
+      className={cn('h-full', isEditMode && 'cursor-grab', isDragging && 'opacity-0')}
+      style={
+        gridCol && gridRow
+          ? { gridColumn: `${gridCol} / span ${colSpan}`, gridRow: `${gridRow} / span ${rowSpan}` }
+          : undefined
+      }
       {...attributes}
       {...listeners}
     >

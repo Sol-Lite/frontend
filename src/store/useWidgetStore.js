@@ -34,6 +34,31 @@ function _simulatePlacement(widgets) {
   return true
 }
 
+/* 위젯 배열을 시뮬레이션해 각 위젯의 CSS grid 좌표(1-indexed)를 반환.
+   CSS auto-placement 대신 이 좌표를 직접 style에 적용해 레이아웃 불일치를 방지. */
+export function computeLayout(items) {
+  const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false))
+  return items.map(({ colSpan, rowSpan }) => {
+    for (let row = 0; row <= GRID_ROWS - rowSpan; row++) {
+      for (let col = 0; col <= GRID_COLS - colSpan; col++) {
+        let ok = true
+        check: for (let r = row; r < row + rowSpan; r++) {
+          for (let c = col; c < col + colSpan; c++) {
+            if (grid[r][c]) { ok = false; break check }
+          }
+        }
+        if (ok) {
+          for (let r = row; r < row + rowSpan; r++)
+            for (let c = col; c < col + colSpan; c++)
+              grid[r][c] = true
+          return { row: row + 1, col: col + 1 } // CSS grid는 1-indexed
+        }
+      }
+    }
+    return null // canReorderWidgets/canFitInGrid가 정상 작동하면 발생 안 함
+  })
+}
+
 /* 포인터가 위치한 grid cell(row, col) 기준으로 삽입 인덱스 계산.
    위젯 배치를 시뮬레이션해 target cell 이후 첫 번째 위젯 앞에 삽입. */
 export function findInsertIndex(widgets, targetRow, targetCol) {

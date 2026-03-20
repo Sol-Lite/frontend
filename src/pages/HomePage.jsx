@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
-import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
+import useWidgetStore, { canFitInGrid, computeLayout } from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
@@ -13,14 +13,15 @@ import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CE
 
 /* new-widget 드래그 중 삽입 예정 위치를 표시하는 placeholder.
    pointer-events-none으로 drag 이벤트를 그대로 통과시킨다. */
-function PhantomSlot({ colSpan, rowSpan }) {
+function PhantomSlot({ colSpan, rowSpan, gridCol, gridRow }) {
   return (
     <div
-      className={cn(
-        'rounded-2xl border-2 border-dashed border-primary bg-primary-light/30 pointer-events-none',
-        colSpan === 3 ? 'col-span-3' : colSpan === 2 ? 'col-span-2' : 'col-span-1',
-        rowSpan === 2 ? 'row-span-2' : '',
-      )}
+      className="rounded-2xl border-2 border-dashed border-primary bg-primary-light/30 pointer-events-none"
+      style={
+        gridCol && gridRow
+          ? { gridColumn: `${gridCol} / span ${colSpan}`, gridRow: `${gridRow} / span ${rowSpan}` }
+          : undefined
+      }
     />
   )
 }
@@ -74,6 +75,9 @@ export default function HomePage() {
       ]
     : widgets
 
+  // CSS auto-placement 대신 명시적 grid 좌표를 계산해 레이아웃 불일치/overflow 방지
+  const layout = computeLayout(displayWidgets)
+
   return (
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
       {/* 서브바 */}
@@ -126,9 +130,18 @@ export default function HomePage() {
             minHeight: `${MIN_GRID_HEIGHT}px`,
           }}
         >
-          {displayWidgets.map((w) => {
+          {displayWidgets.map((w, i) => {
+            const pos = layout[i]
             if (w.instanceId === '__phantom__') {
-              return <PhantomSlot key="__phantom__" colSpan={w.colSpan} rowSpan={w.rowSpan} />
+              return (
+                <PhantomSlot
+                  key="__phantom__"
+                  colSpan={w.colSpan}
+                  rowSpan={w.rowSpan}
+                  gridCol={pos?.col}
+                  gridRow={pos?.row}
+                />
+              )
             }
             const Component = WIDGET_REGISTRY[w.widgetTypeId]
             if (!Component) return null
@@ -138,6 +151,8 @@ export default function HomePage() {
                 instanceId={w.instanceId}
                 colSpan={w.colSpan}
                 rowSpan={w.rowSpan}
+                gridCol={pos?.col}
+                gridRow={pos?.row}
               >
                 <Component
                   variant={w.variantId}
