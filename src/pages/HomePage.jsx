@@ -4,7 +4,7 @@ import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
-import useWidgetStore, { canFitInGrid, computeLayout } from '@/store/useWidgetStore'
+import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
@@ -29,7 +29,7 @@ function PhantomSlot({ colSpan, rowSpan, gridCol, gridRow }) {
 export default function HomePage() {
   const { isEditMode } = useEditModeStore()
   const { setCellSize, setPreviewCellSize } = useGridStore()
-  const { widgets, removeWidget, phantomWidget, isDraggingNewWidget, isDraggingExistingWidget } = useWidgetStore()
+  const { widgets, removeWidget, phantomWidget, isDraggingNewWidget } = useWidgetStore()
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
 
@@ -70,10 +70,6 @@ export default function HomePage() {
   const displayWidgets = phantomWidget
     ? [...widgets, { instanceId: '__phantom__', ...phantomWidget }]
     : widgets
-
-  // existing-widget 드래그 중: arrayMove로 바뀐 배열 순서 기준 computeLayout으로 렌더링
-  // → push-aside 효과. 정적 상태에서는 각 위젯의 명시적 gridCol/gridRow 사용.
-  const dragLayout = isDraggingExistingWidget ? computeLayout(displayWidgets) : null
 
   return (
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
@@ -127,20 +123,15 @@ export default function HomePage() {
             minHeight: `${MIN_GRID_HEIGHT}px`,
           }}
         >
-          {displayWidgets.map((w, i) => {
-            // existing-widget 드래그 중: computeLayout 좌표 / 정적: 명시적 좌표
-            const pos = dragLayout?.[i]
-            const gridCol = pos?.col ?? w.gridCol
-            const gridRow = pos?.row ?? w.gridRow
-
+          {displayWidgets.map((w) => {
             if (w.instanceId === '__phantom__') {
               return (
                 <PhantomSlot
                   key="__phantom__"
                   colSpan={w.colSpan}
                   rowSpan={w.rowSpan}
-                  gridCol={gridCol}
-                  gridRow={gridRow}
+                  gridCol={w.gridCol}
+                  gridRow={w.gridRow}
                 />
               )
             }
@@ -152,8 +143,8 @@ export default function HomePage() {
                 instanceId={w.instanceId}
                 colSpan={w.colSpan}
                 rowSpan={w.rowSpan}
-                gridCol={gridCol}
-                gridRow={gridRow}
+                gridCol={w.gridCol}
+                gridRow={w.gridRow}
               >
                 <Component
                   variant={w.variantId}

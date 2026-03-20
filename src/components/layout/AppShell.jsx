@@ -10,7 +10,7 @@ import {
 } from '@dnd-kit/core'
 import AppHeader from './AppHeader'
 import RightPanel from './RightPanel'
-import useWidgetStore, { canPlaceAt, canReorderWidgets } from '@/store/useWidgetStore'
+import useWidgetStore, { canPlaceAt, canSwap } from '@/store/useWidgetStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
@@ -20,20 +20,16 @@ export default function AppShell() {
   const [activeDrag, setActiveDrag] = useState(null)
   const {
     widgets,
-    reorderWidgets,
-    setWidgetsOrder,
-    commitLayout,
     addWidgetAt,
+    moveWidgetTo,
+    swapWidgets,
     setPhantom,
     clearPhantom,
     phantomWidget,
     setIsDraggingNewWidget,
-    setIsDraggingExistingWidget,
   } = useWidgetStore()
   const { resyncWiggle } = useEditModeStore()
   const { cellWidth, cellHeight } = useGridStore()
-  const preDragOrder = useRef(null)
-  const lastOverId = useRef(null)
   const pointerPos = useRef({ x: 0, y: 0 })
 
   // 포인터 좌표를 drag 중에만 추적 (handleDragMove에서 사용)
@@ -48,19 +44,22 @@ export default function AppShell() {
     const type = active.data.current?.type
     setActiveDrag({ id: active.id, data: active.data.current })
     window.addEventListener('pointermove', onPointerMove)
-    if (type === 'existing-widget') {
-      preDragOrder.current = [...widgets]
-      lastOverId.current = null
-      setIsDraggingExistingWidget(true)
-    } else if (type === 'new-widget') {
+    if (type === 'new-widget') {
       setIsDraggingNewWidget(true)
     }
   }
 
-  /* new-widget 전용: 포인터가 위치한 빈 셀에 phantom 표시.
-     existing-widget은 handleDragOver의 live reorder로 push-aside 처리. */
+  /* 포인터 좌표 → 1-indexed grid cell → phantom 업데이트.
+     new-widget / existing-widget 모두 처리.
+
+     existing-widget 배치 규칙:
+       1. 빈 셀 위 → 드래그 위젯만 그 위치로 이동 (phantom 표시)
+       2. 점유 셀 위 → canSwap 통과 시에만 swap 허용 (phantom 표시)
+       3. 그 외 → phantom 제거 (drop 불가)
+     → 드래그한 위젯 외 다른 위젯은 절대 의도치 않게 이동하지 않음. */
   function handleDragMove({ active }) {
-    if (active.data.current?.type !== 'new-widget') return
+    const type = active.data.current?.type
+    if (type !== 'new-widget' && type !== 'existing-widget') return
 
     const el = gridElementRef.current
     if (!el || !cellWidth || !cellHeight) return
@@ -73,68 +72,83 @@ export default function AppShell() {
       return
     }
 
-    const { variant } = active.data.current
     // 1-indexed target cell (포인터 셀의 top-left 기준)
     const targetCol = Math.max(1, Math.min(Math.floor((x - rect.left) / (cellWidth + GRID_GAP)) + 1, GRID_COLS))
     const targetRow = Math.max(1, Math.min(Math.floor((y - rect.top) / (cellHeight + GRID_GAP)) + 1, GRID_ROWS))
 
-    if (canPlaceAt(widgets, targetCol, targetRow, variant.colSpan, variant.rowSpan)) {
-      setPhantom({ gridCol: targetCol, gridRow: targetRow, colSpan: variant.colSpan, rowSpan: variant.rowSpan })
+    if (type === 'new-widget') {
+      const { variant } = active.data.current
+      if (canPlaceAt(widgets, targetCol, targetRow, variant.colSpan, variant.rowSpan)) {
+        setPhantom({ gridCol: targetCol, gridRow: targetRow, colSpan: variant.colSpan, rowSpan: variant.rowSpan })
+      } else {
+        clearPhantom()
+      }
+      return
+    }
+
+    // existing-widget
+    const activeWidget = widgets.find((w) => w.instanceId === active.id)
+    if (!activeWidget) return
+
+    // Case 1: 빈 셀 → 이동
+    if (canPlaceAt(widgets, targetCol, targetRow, activeWidget.colSpan, activeWidget.rowSpan, active.id)) {
+      setPhantom({
+        gridCol: targetCol,
+        gridRow: targetRow,
+        colSpan: activeWidget.colSpan,
+        rowSpan: activeWidget.rowSpan,
+        activeId: active.id,
+      })
+      return
+    }
+
+    // Case 2: 점유 셀 → 해당 위젯과 swap 가능 여부 확인
+    const targetWidget = widgets.find(
+      (w) =>
+        w.instanceId !== active.id &&
+        targetCol >= w.gridCol && targetCol < w.gridCol + w.colSpan &&
+        targetRow >= w.gridRow && targetRow < w.gridRow + w.rowSpan,
+    )
+    if (targetWidget && canSwap(widgets, active.id, targetWidget.instanceId)) {
+      // phantom은 active 위젯이 이동할 자리(= targetWidget의 top-left)에 표시
+      setPhantom({
+        gridCol: targetWidget.gridCol,
+        gridRow: targetWidget.gridRow,
+        colSpan: activeWidget.colSpan,
+        rowSpan: activeWidget.rowSpan,
+        activeId: active.id,
+        swapWithId: targetWidget.instanceId,
+      })
     } else {
       clearPhantom()
     }
   }
 
-  /* existing-widget: 드래그 대상 위에서 live reorder → push-aside 효과.
-     new-widget phantom은 handleDragMove에서 처리. */
   function handleDragOver({ active, over }) {
-    const type = active.data.current?.type
-
-    if (!over) {
-      lastOverId.current = null
-      if (type === 'new-widget') clearPhantom()
-      return
-    }
-
-    if (over.id === lastOverId.current) return
-    lastOverId.current = over.id
-
-    if (type === 'existing-widget') {
-      if (active.id === over.id) return
-      if (canReorderWidgets(widgets, active.id, over.id)) {
-        reorderWidgets(active.id, over.id)
-      }
-    }
+    // phantom은 handleDragMove(pointer 좌표 기반)에서 관리
+    // new-widget이 그리드 외부로 벗어났을 때 phantom 제거 보조
+    if (!over && active.data.current?.type === 'new-widget') clearPhantom()
   }
 
-  function handleDragEnd({ active, over }) {
+  function handleDragEnd({ active }) {
     window.removeEventListener('pointermove', onPointerMove)
     const savedPhantom = phantomWidget
     setActiveDrag(null)
-    lastOverId.current = null
     clearPhantom()
     setIsDraggingNewWidget(false)
-    setIsDraggingExistingWidget(false)
     resyncWiggle()
 
     const type = active.data.current?.type
 
-    if (!over) {
-      if (type === 'existing-widget' && preDragOrder.current) {
-        setWidgetsOrder(preDragOrder.current)
-      }
-      preDragOrder.current = null
-      return
-    }
-
-    preDragOrder.current = null
-
     if (type === 'new-widget' && savedPhantom) {
       const { widgetTypeId, variant } = active.data.current
       addWidgetAt(widgetTypeId, variant, savedPhantom.gridCol, savedPhantom.gridRow)
-    } else if (type === 'existing-widget') {
-      // arrayMove로 바뀐 배열 순서를 computeLayout으로 확정 → gridCol/gridRow commit
-      commitLayout()
+    } else if (type === 'existing-widget' && savedPhantom?.activeId) {
+      if (savedPhantom.swapWithId) {
+        swapWidgets(savedPhantom.activeId, savedPhantom.swapWithId)
+      } else {
+        moveWidgetTo(savedPhantom.activeId, savedPhantom.gridCol, savedPhantom.gridRow)
+      }
     }
   }
 
@@ -142,13 +156,7 @@ export default function AppShell() {
     window.removeEventListener('pointermove', onPointerMove)
     clearPhantom()
     setIsDraggingNewWidget(false)
-    setIsDraggingExistingWidget(false)
     resyncWiggle()
-    if (preDragOrder.current) {
-      setWidgetsOrder(preDragOrder.current)
-    }
-    preDragOrder.current = null
-    lastOverId.current = null
     setActiveDrag(null)
   }
 

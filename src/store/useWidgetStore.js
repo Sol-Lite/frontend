@@ -1,8 +1,7 @@
 import { create } from 'zustand'
-import { arrayMove } from '@dnd-kit/sortable'
 import { GRID_COLS, GRID_ROWS } from '@/lib/gridConstants'
 
-/* ── 명시적 좌표 충돌 판정 ──────────────────────────────────
+/* ── 충돌 판정 ──────────────────────────────────────────────
    모든 좌표는 1-indexed (CSS grid와 동일).
 ──────────────────────────────────────────────────────────── */
 function _overlap(ax, ay, aw, ah, bx, by, bw, bh) {
@@ -21,69 +20,37 @@ export function canPlaceAt(widgets, targetCol, targetRow, colSpan, rowSpan, excl
   )
 }
 
-/* ── 배열 순서 기반 배치 시뮬레이션 (push-aside 드래그용) ──
-   existing-widget 드래그 중 arrayMove 후 전체 레이아웃 계산에 사용.
-──────────────────────────────────────────────────────────── */
-function _tryPlace(grid, colSpan, rowSpan) {
-  for (let row = 0; row <= GRID_ROWS - rowSpan; row++) {
-    for (let col = 0; col <= GRID_COLS - colSpan; col++) {
-      let ok = true
-      outer: for (let r = row; r < row + rowSpan; r++) {
-        for (let c = col; c < col + colSpan; c++) {
-          if (grid[r][c]) { ok = false; break outer }
-        }
-      }
-      if (ok) {
-        for (let r = row; r < row + rowSpan; r++)
-          for (let c = col; c < col + colSpan; c++)
-            grid[r][c] = true
-        return true
-      }
-    }
-  }
-  return false
-}
+/* 두 위젯이 서로의 위치를 교환할 수 있는지 확인.
+   - A가 B의 좌표에, B가 A의 좌표에 배치될 때 다른 위젯과 충돌하지 않아야 함.
+   - 크기가 달라도 각자의 새 위치에 물리적으로 맞으면 swap 허용. */
+export function canSwap(widgets, idA, idB) {
+  const wA = widgets.find((w) => w.instanceId === idA)
+  const wB = widgets.find((w) => w.instanceId === idB)
+  if (!wA || !wB) return false
 
-function _simulatePlacement(widgets) {
-  const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false))
-  for (const w of widgets) {
-    if (!_tryPlace(grid, w.colSpan, w.rowSpan)) return false
-  }
-  return true
-}
+  // A가 B의 위치에 배치 가능한지 (A, B 자신 제외)
+  const aFitsAtB =
+    wB.gridCol + wA.colSpan - 1 <= GRID_COLS &&
+    wB.gridRow + wA.rowSpan - 1 <= GRID_ROWS &&
+    !widgets.some(
+      (w) =>
+        w.instanceId !== idA &&
+        w.instanceId !== idB &&
+        _overlap(wB.gridCol, wB.gridRow, wA.colSpan, wA.rowSpan, w.gridCol, w.gridRow, w.colSpan, w.rowSpan),
+    )
 
-/* 배열 순서대로 top-left 스캔해 각 위젯의 1-indexed CSS 좌표 계산.
-   existing-widget 드래그 중 push-aside 레이아웃 렌더링에 사용.
-   drop 시 이 결과를 gridCol/gridRow에 commit해 일관성 유지. */
-export function computeLayout(items) {
-  const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false))
-  return items.map(({ colSpan, rowSpan }) => {
-    for (let row = 0; row <= GRID_ROWS - rowSpan; row++) {
-      for (let col = 0; col <= GRID_COLS - colSpan; col++) {
-        let ok = true
-        check: for (let r = row; r < row + rowSpan; r++) {
-          for (let c = col; c < col + colSpan; c++) {
-            if (grid[r][c]) { ok = false; break check }
-          }
-        }
-        if (ok) {
-          for (let r = row; r < row + rowSpan; r++)
-            for (let c = col; c < col + colSpan; c++)
-              grid[r][c] = true
-          return { row: row + 1, col: col + 1 }
-        }
-      }
-    }
-    return null
-  })
-}
+  // B가 A의 위치에 배치 가능한지 (A, B 자신 제외)
+  const bFitsAtA =
+    wA.gridCol + wB.colSpan - 1 <= GRID_COLS &&
+    wA.gridRow + wB.rowSpan - 1 <= GRID_ROWS &&
+    !widgets.some(
+      (w) =>
+        w.instanceId !== idA &&
+        w.instanceId !== idB &&
+        _overlap(wA.gridCol, wA.gridRow, wB.colSpan, wB.rowSpan, w.gridCol, w.gridRow, w.colSpan, w.rowSpan),
+    )
 
-/* reorder 후 전체 위젯이 그리드에 정상 배치 가능한지 검증 */
-export function canReorderWidgets(widgets, activeId, overId) {
-  const oldIndex = widgets.findIndex((w) => w.instanceId === activeId)
-  const newIndex = widgets.findIndex((w) => w.instanceId === overId)
-  if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return false
-  return _simulatePlacement(arrayMove([...widgets], oldIndex, newIndex))
+  return aFitsAtB && bFitsAtA
 }
 
 /* 그리드에 해당 크기의 위젯을 배치할 빈 공간이 있는지 확인 */
@@ -137,36 +104,10 @@ const useWidgetStore = create((set) => ({
   isDraggingNewWidget: false,
   setIsDraggingNewWidget: (v) => set({ isDraggingNewWidget: v }),
 
-  // existing-widget 드래그 중 — computeLayout 렌더링 모드 전환용
-  isDraggingExistingWidget: false,
-  setIsDraggingExistingWidget: (v) => set({ isDraggingExistingWidget: v }),
-
-  // 드래그 중 drop 예정 위치를 보여주는 ghost placeholder (new-widget 전용)
+  // 드래그 중 drop 예정 위치를 보여주는 ghost placeholder
   phantomWidget: null,
   setPhantom: (phantom) => set({ phantomWidget: phantom }),
   clearPhantom: () => set({ phantomWidget: null }),
-
-  // 배열 순서만 변경 (existing-widget push-aside 드래그용)
-  // gridCol/gridRow는 drop 시 commitLayout으로 일괄 확정
-  setWidgetsOrder: (ordered) => set({ widgets: ordered }),
-  reorderWidgets: (activeId, overId) =>
-    set((state) => {
-      const oldIndex = state.widgets.findIndex((w) => w.instanceId === activeId)
-      const newIndex = state.widgets.findIndex((w) => w.instanceId === overId)
-      if (oldIndex === -1 || newIndex === -1) return state
-      return { widgets: arrayMove(state.widgets, oldIndex, newIndex) }
-    }),
-
-  // drop 시 computeLayout 결과를 각 위젯의 gridCol/gridRow에 commit
-  commitLayout: () =>
-    set((state) => {
-      const layout = computeLayout(state.widgets)
-      return {
-        widgets: state.widgets.map((w, i) =>
-          layout[i] ? { ...w, gridCol: layout[i].col, gridRow: layout[i].row } : w,
-        ),
-      }
-    }),
 
   // 첫 번째 빈 셀에 위젯 추가 (AddWidgetSlot 클릭 등)
   addWidget: (widgetTypeId, variant) =>
@@ -214,13 +155,28 @@ const useWidgetStore = create((set) => ({
       widgets: state.widgets.filter((w) => w.instanceId !== instanceId),
     })),
 
-  // 기존 위젯을 지정 좌표로 이동 (단일 위젯 이동)
+  // 위젯을 지정 좌표로 이동 (빈 셀 drop)
   moveWidgetTo: (instanceId, gridCol, gridRow) =>
     set((state) => ({
       widgets: state.widgets.map((w) =>
         w.instanceId === instanceId ? { ...w, gridCol, gridRow } : w,
       ),
     })),
+
+  // 두 위젯의 위치를 교환 (occupied 셀 drop)
+  swapWidgets: (idA, idB) =>
+    set((state) => {
+      const wA = state.widgets.find((w) => w.instanceId === idA)
+      const wB = state.widgets.find((w) => w.instanceId === idB)
+      if (!wA || !wB) return state
+      return {
+        widgets: state.widgets.map((w) => {
+          if (w.instanceId === idA) return { ...w, gridCol: wB.gridCol, gridRow: wB.gridRow }
+          if (w.instanceId === idB) return { ...w, gridCol: wA.gridCol, gridRow: wA.gridRow }
+          return w
+        }),
+      }
+    }),
 }))
 
 export default useWidgetStore
