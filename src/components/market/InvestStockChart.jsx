@@ -205,28 +205,16 @@ const InvestStockChart = memo(function InvestStockChart({
         </div>
         <div className="flex flex-col items-end gap-1">
           <div className="flex flex-wrap justify-end gap-1">
-            {periodOptions.map((option) => (
-              <button
-                key={option.key}
-                type="button"
-                onClick={() => onPeriodChange?.(option.key)}
-                className={cn(
-                  'rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors',
-                  selectedPeriod === option.key
-                    ? 'border-primary bg-primary text-white'
-                    : 'border-stroke bg-surface text-foreground-secondary hover:border-primary hover:text-primary',
-                )}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          {selectedPeriod === 'MINUTE' && (
             <DropdownMenu.Root>
               <DropdownMenu.Trigger asChild>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-1 rounded-md border border-foreground bg-surface px-2.5 py-1 text-[10px] font-semibold text-foreground transition-colors hover:bg-surface-subtle"
+                  className={cn(
+                    'inline-flex items-center gap-1 rounded-md border px-2.5 py-1 text-[10px] font-semibold transition-colors',
+                    selectedPeriod === 'MINUTE'
+                      ? 'border-primary bg-primary text-white'
+                      : 'border-stroke bg-surface text-foreground-secondary hover:border-primary hover:text-primary',
+                  )}
                 >
                   <span>{minuteInterval}분</span>
                   <ChevronDown className="h-3 w-3" strokeWidth={2.25} />
@@ -258,7 +246,23 @@ const InvestStockChart = memo(function InvestStockChart({
                 </DropdownMenu.Content>
               </DropdownMenu.Portal>
             </DropdownMenu.Root>
-          )}
+
+            {periodOptions.map((option) => (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => onPeriodChange?.(option.key)}
+                className={cn(
+                  'rounded-md border px-2 py-1 text-[10px] font-semibold transition-colors',
+                  selectedPeriod === option.key
+                    ? 'border-primary bg-primary text-white'
+                    : 'border-stroke bg-surface text-foreground-secondary hover:border-primary hover:text-primary',
+                )}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
           <div className="text-[9px] text-foreground-disabled">
             {periodLabel} · {stockCode}
           </div>
