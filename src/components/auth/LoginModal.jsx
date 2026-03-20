@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import { Activity, X, Check } from 'lucide-react'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { authApi } from '@/api/auth'
@@ -6,6 +7,7 @@ import { router } from '@/router'
 import useAuthStore from '@/store/useAuthStore'
 
 export default function LoginModal({ onClose }) {
+  const queryClient = useQueryClient()
   const setAuth = useAuthStore((s) => s.setAuth)
 
   const [email, setEmail] = useState('')
@@ -25,6 +27,8 @@ export default function LoginModal({ onClose }) {
         user:        res.user,
         autoLogin,
       })
+      // 계좌 정보 쿼리 유효화 (다음 호출 시 새로 fetch)
+      queryClient.invalidateQueries({ queryKey: ['account', 'me'] })
       onClose()
     } catch (err) {
       setError(err?.message ?? '이메일 또는 비밀번호를 확인해 주세요.')

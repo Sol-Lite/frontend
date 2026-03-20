@@ -1,6 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import AppHeader from './AppHeader'
-import ChatPanel from './ChatPanel'
+import RightPanel from './RightPanel'
 
 export default function AppShell() {
   return (
@@ -10,7 +10,7 @@ export default function AppShell() {
         <main className="flex-1 overflow-hidden bg-background">
           <Outlet />
         </main>
-        <ChatPanel />
+        <RightPanel />
       </div>
     </div>
   )

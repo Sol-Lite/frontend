@@ -1,8 +1,9 @@
-import { Activity, LayoutGrid, LogOut } from 'lucide-react'
+import { Activity, LayoutGrid } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import NavTabs from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
-import { authApi } from '@/api/auth'
+import { useMyAccount } from '@/api/account'
+import useRightPanelStore from '@/store/useRightPanelStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore from '@/store/useWidgetStore'
 
@@ -23,60 +24,45 @@ function Logo() {
 
 function UserArea() {
   const navigate = useNavigate()
-  const { isAuthenticated, user, logout } = useAuthStore()
+  const { isAuthenticated, user } = useAuthStore()
+  const { data: accountInfo } = useMyAccount()
+  const setAccountSettingsMode = useRightPanelStore((s) => s.setAccountSettingsMode)
 
-  async function handleLogout() {
-    try {
-      await authApi.logout()
-    } finally {
-      logout()
-      navigate('/')
-    }
-  }
-
-  if (isAuthenticated && user) {
+  if (!isAuthenticated || !user) {
     return (
-      <div className="flex items-center gap-2 pl-2 border-l border-stroke">
-        <div className="flex items-center gap-1.5">
-          <div className="w-7 h-7 rounded-full bg-primary text-white text-[11px] font-bold flex items-center justify-center">
-            {user.name?.[0] ?? '김'}
-          </div>
-          <div className="hidden sm:block">
-            <div className="text-[11px] font-semibold leading-none text-foreground">
-              {user.name ?? '김SOL'}
-            </div>
-            <div className="text-[9px] text-foreground-disabled mt-0.5">
-              주문가능 {user.availableAmount ?? '7,478만원'}
-            </div>
-          </div>
-        </div>
+      <div className="flex items-center gap-2">
         <button
-          onClick={handleLogout}
-          aria-label="로그아웃"
-          className="p-2 text-foreground-tertiary hover:text-foreground hover:bg-surface-muted rounded-lg transition-colors"
-          title="로그아웃"
+          onClick={() => navigate('/login')}
+          className="flex items-center px-4 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
         >
-          <LogOut className="w-5 h-5" strokeWidth={2} />
+          로그인
+        </button>
+        <button
+          onClick={() => navigate('/signup')}
+          className="flex items-center px-4 py-1.5 rounded-xl border border-primary text-primary text-[12px] font-semibold hover:bg-primary-light transition-colors duration-[150ms]"
+        >
+          회원가입
         </button>
       </div>
     )
   }
 
+  const accountNumber = accountInfo?.accountNumber ?? '-'
+
   return (
-    <div className="flex items-center gap-2">
-      <button
-        onClick={() => navigate('/login')}
-        className="flex items-center px-4 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
-      >
-        로그인
-      </button>
-      <button
-        onClick={() => navigate('/signup')}
-        className="flex items-center px-4 py-1.5 rounded-xl border border-primary text-primary text-[12px] font-semibold hover:bg-primary-light transition-colors duration-[150ms]"
-      >
-        회원가입
-      </button>
-    </div>
+    <button
+      onClick={() => setAccountSettingsMode()}
+      className="pl-2 pr-3 py-2 border-l border-stroke flex items-center gap-2 hover:bg-surface-muted rounded-lg transition-colors"
+    >
+      <div className="text-right">
+        <div className="text-[13px] font-bold leading-none text-foreground">
+          {user.name}
+        </div>
+        <div className="text-[12px] text-foreground-secondary mt-1">
+          {accountNumber}
+        </div>
+      </div>
+    </button>
   )
 }
 
