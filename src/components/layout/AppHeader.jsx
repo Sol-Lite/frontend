@@ -1,8 +1,9 @@
-import { Activity, LayoutGrid, LogOut } from 'lucide-react'
+import { Activity, LayoutGrid } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import NavTabs from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
-import { authApi } from '@/api/auth'
+import { useMyAccount } from '@/api/account'
+import useChatPanelStore from '@/store/useChatPanelStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore from '@/store/useWidgetStore'
 
@@ -22,43 +23,25 @@ function Logo() {
 }
 
 function UserArea() {
-  const navigate = useNavigate()
-  const { isAuthenticated, user, logout } = useAuthStore()
-
-  async function handleLogout() {
-    try {
-      await authApi.logout()
-    } finally {
-      logout()
-      navigate('/')
-    }
-  }
+  const { isAuthenticated, user } = useAuthStore()
+  const { data: accountInfo } = useMyAccount()
+  const setAccountSettingsMode = useChatPanelStore((s) => s.setAccountSettingsMode)
 
   if (isAuthenticated && user) {
     return (
-      <div className="flex items-center gap-2 pl-2 border-l border-stroke">
-        <div className="flex items-center gap-1.5">
-          <div className="w-7 h-7 rounded-full bg-primary text-white text-[11px] font-bold flex items-center justify-center">
-            {user.name?.[0] ?? '김'}
+      <button
+        onClick={() => setAccountSettingsMode()}
+        className="pl-2 pr-3 py-2 border-l border-stroke flex items-center gap-2 hover:bg-surface-muted rounded-lg transition-colors"
+      >
+        <div className="text-right">
+          <div className="text-[12px] font-bold leading-none text-foreground">
+            {user.name}
           </div>
-          <div className="hidden sm:block">
-            <div className="text-[11px] font-semibold leading-none text-foreground">
-              {user.name ?? '김SOL'}
-            </div>
-            <div className="text-[9px] text-foreground-disabled mt-0.5">
-              주문가능 {user.availableAmount ?? '7,478만원'}
-            </div>
+          <div className="text-[10px] text-foreground-disabled mt-0.5">
+            {accountInfo?.accountNumber ?? '-'}
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          aria-label="로그아웃"
-          className="p-2 text-foreground-tertiary hover:text-foreground hover:bg-surface-muted rounded-lg transition-colors"
-          title="로그아웃"
-        >
-          <LogOut className="w-5 h-5" strokeWidth={2} />
-        </button>
-      </div>
+      </button>
     )
   }
 

@@ -1,8 +1,10 @@
-import { MessageSquare, Send, Lock } from 'lucide-react'
+import { MessageSquare, Send, Lock, X, RotateCcw, Trash2, Key } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import LiveDot from '@/components/ui/LiveDot'
 import useAuthStore from '@/store/useAuthStore'
 import useEditModeStore from '@/store/useEditModeStore'
+import useChatPanelStore from '@/store/useChatPanelStore'
+import { useMyAccount } from '@/api/account'
 import EditPanel from './EditPanel'
 
 function LoginPrompt() {
@@ -71,15 +73,97 @@ function ChatMessages() {
   )
 }
 
+function AccountSettingsHeader() {
+  const setChatMode = useChatPanelStore((s) => s.setChatMode)
+  return (
+    <div className="h-chat-header flex items-center justify-between px-4 border-b border-stroke shrink-0">
+      <span className="text-[13px] font-semibold text-foreground">계좌 설정</span>
+      <button
+        onClick={() => setChatMode()}
+        aria-label="닫기"
+        className="p-1 text-foreground-tertiary hover:text-foreground transition-colors"
+      >
+        <X className="w-4 h-4" />
+      </button>
+    </div>
+  )
+}
+
+function AccountSettingsContent() {
+  const setChatMode = useChatPanelStore((s) => s.setChatMode)
+  const { user } = useAuthStore()
+  const { data: accountInfo } = useMyAccount()
+
+  const handleMenuClick = (label) => {
+    console.log(label)
+    // TODO: 각 메뉴 항목에 대한 동작 구현
+  }
+
+  return (
+    <div className="flex-1 overflow-y-auto flex flex-col">
+      {/* 계좌 정보 */}
+      <div className="px-4 py-4 border-b border-stroke-subtle bg-surface-subtle shrink-0">
+        <div className="text-[12px] font-semibold text-foreground mb-1">
+          {user?.name}
+        </div>
+        <div className="text-[11px] text-foreground-secondary">
+          {accountInfo?.accountNumber}
+        </div>
+        <div className="text-[10px] text-foreground-disabled mt-2">
+          상태: {accountInfo?.accountStatus}
+        </div>
+      </div>
+
+      {/* 메뉴 */}
+      <div className="flex-1 flex flex-col">
+        <button
+          onClick={() => handleMenuClick('계좌 비밀번호 변경')}
+          className="flex items-center gap-3 px-4 py-3 text-[12px] text-foreground hover:bg-surface-muted transition-colors text-left border-b border-stroke-subtle"
+        >
+          <Lock className="w-4 h-4 text-foreground-tertiary shrink-0" strokeWidth={2} />
+          <span>계좌 비밀번호 변경</span>
+        </button>
+        <button
+          onClick={() => handleMenuClick('리셋')}
+          className="flex items-center gap-3 px-4 py-3 text-[12px] text-foreground hover:bg-surface-muted transition-colors text-left border-b border-stroke-subtle"
+        >
+          <RotateCcw className="w-4 h-4 text-foreground-tertiary shrink-0" strokeWidth={2} />
+          <span>리셋</span>
+        </button>
+        <button
+          onClick={() => handleMenuClick('계좌 해지 신청')}
+          className="flex items-center gap-3 px-4 py-3 text-[12px] text-up hover:bg-up-bg transition-colors text-left border-b border-stroke-subtle"
+        >
+          <Trash2 className="w-4 h-4 shrink-0" strokeWidth={2} />
+          <span>계좌 해지 신청</span>
+        </button>
+        <button
+          onClick={() => handleMenuClick('계정 비밀번호 변경')}
+          className="flex items-center gap-3 px-4 py-3 text-[12px] text-foreground hover:bg-surface-muted transition-colors text-left"
+        >
+          <Key className="w-4 h-4 text-foreground-tertiary shrink-0" strokeWidth={2} />
+          <span>계정 비밀번호 변경</span>
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export default function ChatPanel() {
   const { isAuthenticated, isRestoring } = useAuthStore()
   const { isEditMode } = useEditModeStore()
+  const mode = useChatPanelStore((s) => s.mode)
 
   if (isEditMode) return <EditPanel />
 
   return (
     <aside className="w-chat-panel flex flex-col bg-surface border-l border-stroke shrink-0">
-      {isRestoring ? (
+      {mode === 'account-settings' ? (
+        <>
+          <AccountSettingsHeader />
+          <AccountSettingsContent />
+        </>
+      ) : isRestoring ? (
         <>
           <ChatHeader />
           <ChatMessages />
