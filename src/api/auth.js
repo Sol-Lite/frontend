@@ -1,55 +1,27 @@
-import useAuthStore from '@/store/useAuthStore'
+import { fetchWithAuth } from '@/lib/fetchWithAuth'
 
 const BASE = '/api/auth'
 
-async function post(path, body, options = {}) {
-  const { headers: optionHeaders, ...restOptions } = options
-  const headers = {
-    'Content-Type': 'application/json',
-    ...optionHeaders,
-  }
+const NO_AUTH_PATHS = ['/login', '/signup', '/email/verify', '/password/reset', '/token/refresh']
 
-  // 로그인/회원가입 제외 - accessToken 필요
-  if (!path.includes('/login') && !path.includes('/signup') && !path.includes('/email/verify') && !path.includes('/password/reset') && !path.includes('/token/refresh')) {
-    const accessToken = useAuthStore.getState().accessToken
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`
-    }
-  }
-
-  const res = await fetch(`${BASE}${path}`, {
+function post(path, body, options = {}) {
+  const skipAuth = NO_AUTH_PATHS.some((p) => path.includes(p))
+  return fetchWithAuth(`${BASE}${path}`, {
     method: 'POST',
-    headers,
+    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
-    credentials: 'include',
-    ...restOptions,
+    skipAuth,
+    ...options,
   })
-  const data = await res.json()
-  if (!res.ok) throw data
-  return data
 }
 
-async function get(path, params, options = {}) {
+function get(path, params, options = {}) {
   const query = params ? '?' + new URLSearchParams(params).toString() : ''
-  const { headers: optionHeaders, ...restOptions } = options
-  const headers = { ...optionHeaders }
-
-  // accessToken 필요한 경우
-  if (!path.includes('/email/verify/status')) {
-    const accessToken = useAuthStore.getState().accessToken
-    if (accessToken) {
-      headers['Authorization'] = `Bearer ${accessToken}`
-    }
-  }
-
-  const res = await fetch(`${BASE}${path}${query}`, {
-    headers,
-    credentials: 'include',
-    ...restOptions,
+  const skipAuth = path.includes('/email/verify/status')
+  return fetchWithAuth(`${BASE}${path}${query}`, {
+    skipAuth,
+    ...options,
   })
-  const data = await res.json()
-  if (!res.ok) throw data
-  return data
 }
 
 export const authApi = {
