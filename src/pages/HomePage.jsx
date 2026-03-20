@@ -83,10 +83,10 @@ export default function HomePage() {
         'flex-1 min-h-0',
         isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
-        {/* 위젯 그리드: 4열 × 3행, 뷰포트 채움 / 최솟값 이하면 고정 */}
+        {/* 위젯 그리드: 6열 × 4행, 뷰포트 채움 / 최솟값 이하면 고정 */}
         <div
           ref={gridRef}
-          className="grid grid-cols-4 grid-rows-3 gap-[10px] w-full h-full"
+          className="grid grid-cols-6 grid-rows-4 gap-[10px] w-full h-full"
           style={{
             minWidth: `${MIN_GRID_WIDTH}px`,
             minHeight: `${MIN_GRID_HEIGHT}px`,

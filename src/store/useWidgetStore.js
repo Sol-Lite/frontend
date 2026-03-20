@@ -31,16 +31,22 @@ export function canFitInGrid(widgets, colSpan, rowSpan) {
   return _tryPlace(grid, colSpan, rowSpan)
 }
 
+// 6열 × 4행 (24셀) 기본 레이아웃
+// Row 1:   index-3x1(3) + balance-sm(1) + portfolio-sm(1) + exchange-sm(1)       = 6
+// Row 2–3: stock-3x2(3×2) + ranking-lg(2×2) + watchlist-sm(1) + market-sm(1)    = 6×2
+// Row 4:   trade-wide(2) + stock-news-wide(2) + report-wide(2)                   = 6
 const INITIAL_WIDGETS = [
-  { instanceId: 'w1', widgetTypeId: 'balance',         variantId: 'balance-sm',   colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w2', widgetTypeId: 'index',           variantId: 'index-wide',   colSpan: 2, rowSpan: 1 },
-  { instanceId: 'w3', widgetTypeId: 'portfolio',       variantId: 'portfolio-sm', colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w4', widgetTypeId: 'stock-chart',     variantId: 'stock-sm',     colSpan: 1, rowSpan: 1, config: { stockId: 'samsung'  } },
-  { instanceId: 'w5', widgetTypeId: 'ranking',         variantId: 'ranking-wide', colSpan: 2, rowSpan: 1 },
-  { instanceId: 'w6', widgetTypeId: 'watchlist',       variantId: 'watchlist-sm', colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w7', widgetTypeId: 'market-overview', variantId: 'market-sm',    colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w8', widgetTypeId: 'exchange',        variantId: 'exchange-sm',  colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w9', widgetTypeId: 'stock-chart',     variantId: 'stock-sm',     colSpan: 1, rowSpan: 1, config: { stockId: 'skhynix' } },
+  { instanceId: 'w1',  widgetTypeId: 'index',           variantId: 'index-3x1',      colSpan: 3, rowSpan: 1 },
+  { instanceId: 'w2',  widgetTypeId: 'balance',         variantId: 'balance-sm',     colSpan: 1, rowSpan: 1 },
+  { instanceId: 'w3',  widgetTypeId: 'portfolio',       variantId: 'portfolio-sm',   colSpan: 1, rowSpan: 1 },
+  { instanceId: 'w4',  widgetTypeId: 'exchange',        variantId: 'exchange-sm',    colSpan: 1, rowSpan: 1 },
+  { instanceId: 'w5',  widgetTypeId: 'stock-chart',     variantId: 'stock-3x2',      colSpan: 3, rowSpan: 2, config: { stockId: 'samsung' } },
+  { instanceId: 'w6',  widgetTypeId: 'ranking',         variantId: 'ranking-lg',     colSpan: 2, rowSpan: 2 },
+  { instanceId: 'w7',  widgetTypeId: 'watchlist',       variantId: 'watchlist-sm',   colSpan: 1, rowSpan: 1 },
+  { instanceId: 'w8',  widgetTypeId: 'market-overview', variantId: 'market-sm',      colSpan: 1, rowSpan: 1 },
+  { instanceId: 'w9',  widgetTypeId: 'trade-history',   variantId: 'trade-wide',     colSpan: 2, rowSpan: 1 },
+  { instanceId: 'w10', widgetTypeId: 'stock-news',      variantId: 'stock-news-wide', colSpan: 2, rowSpan: 1 },
+  { instanceId: 'w11', widgetTypeId: 'report',          variantId: 'report-wide',    colSpan: 2, rowSpan: 1 },
 ]
 
 const useWidgetStore = create((set) => ({

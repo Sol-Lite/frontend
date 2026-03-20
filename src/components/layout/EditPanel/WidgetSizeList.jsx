@@ -5,8 +5,9 @@ import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { GRID_GAP, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
 
 /* ── 너비 클래스 ─────────────────────────────────────────────
-   EditPanel 가로폭을 3등분하여 colSpan 비율을 정확히 반영.
-   colSpan=1 → w-1/3,  colSpan=2 → w-2/3,  colSpan=3 → w-full
+   EditPanel 가로폭을 3등분하여 colSpan 비율을 반영.
+   6열 그리드 기준: 1열=소형(1/3), 2열=와이드(2/3), 3열=하프(full)
+   colSpan=1 → w-1/3,  colSpan=2 → w-2/3,  colSpan≥3 → w-full
 ─────────────────────────────────────────────────────────── */
 function widthClass(colSpan) {
   if (colSpan === 1) return 'w-1/3'
@@ -978,6 +979,65 @@ function PreviewContent({ type }) {
             ))}
           </div>
           </div>
+        </div>
+      )
+    }
+
+    /* 증권사 리포트 — 단일 1×1 */
+    case 'report-sm': {
+      const r = { title: '삼성전자 목표가 9만원으로 상향', firm: '키움증권', desc: '반도체 업황 회복 기대감' }
+      return (
+        <div className="flex flex-col h-full justify-between">
+          <div>
+            <p className="text-[10px] font-bold text-foreground leading-snug">{r.title}</p>
+            <p className="text-[8px] text-foreground-disabled mt-1">{r.desc}</p>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] text-primary font-semibold">{r.firm}</span>
+          </div>
+        </div>
+      )
+    }
+
+    /* 증권사 리포트 — 목록형 2×1 */
+    case 'report-wide': {
+      const reports = [
+        { title: '삼성전자 목표가 상향', firm: '키움증권' },
+        { title: 'SK하이닉스 HBM 수요 긍정적', firm: '삼성증권' },
+        { title: 'LG에너지 실적 전망 하향', firm: 'NH투자' },
+      ]
+      return (
+        <div className="flex flex-col gap-1.5 h-full">
+          {reports.map(({ title, firm }) => (
+            <div key={title} className="flex items-start justify-between gap-2">
+              <p className="text-[9px] text-foreground leading-snug truncate">{title}</p>
+              <span className="text-[8px] text-primary shrink-0">{firm}</span>
+            </div>
+          ))}
+        </div>
+      )
+    }
+
+    /* 증권사 리포트 — 상세 2×2 */
+    case 'report-2x2': {
+      const reports = [
+        { title: '삼성전자 목표가 상향', firm: '키움증권', desc: '반도체 업황 회복 기대감' },
+        { title: 'SK하이닉스 HBM 수요 긍정적', firm: '삼성증권', desc: 'AI 서버 수요 지속 증가' },
+        { title: 'LG에너지 실적 전망 하향', firm: 'NH투자', desc: 'EV 시장 성장 둔화 우려' },
+      ]
+      return (
+        <div className="flex flex-col gap-2 h-full">
+          {reports.map(({ title, firm, desc }) => (
+            <div key={title} className="border-b border-stroke last:border-0 pb-2 last:pb-0">
+              <div className="flex items-start justify-between gap-1">
+                <span className="text-[10px] font-semibold text-foreground leading-snug">{title}</span>
+              </div>
+              <div className="flex items-center gap-1 mt-0.5">
+                <span className="text-[8px] text-primary">{firm}</span>
+                <span className="text-[8px] text-foreground-disabled">· {desc}</span>
+              </div>
+            </div>
+          ))}
         </div>
       )
     }
