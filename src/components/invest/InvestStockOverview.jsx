@@ -1,8 +1,10 @@
-import { Search, Star } from 'lucide-react'
+import { Star } from 'lucide-react'
 import InvestStockChart from '@/components/market/InvestStockChart'
+import InvestStockSearch from '@/components/invest/InvestStockSearch'
 import LiveDot from '@/components/ui/LiveDot'
 import PriceChange from '@/components/ui/PriceChange'
 import StockAvatar from '@/components/ui/StockAvatar'
+import { getStockLogoUrl } from '@/lib/stockLogo'
 import {
   CHART_PERIOD_OPTIONS,
   MINUTE_INTERVAL_OPTIONS,
@@ -54,11 +56,11 @@ export default function InvestStockOverview({
   return (
     <section className="flex min-w-0 basis-0 flex-1 flex-col overflow-hidden border-r border-stroke bg-surface">
       <div className="border-b border-stroke px-[14px] py-2.5 shrink-0">
-        <div className="flex items-center gap-2 rounded-[10px] border border-stroke-input bg-background px-3 py-2">
-          <Search className="h-[13px] w-[13px] shrink-0 text-foreground-disabled" />
-          <span className="text-[13px] font-bold text-foreground">{stockMeta.name}</span>
-          <span className="text-[11px] text-foreground-disabled">{stockMeta.code}</span>
-          <div className="ml-auto flex items-center gap-1">
+        <div className="flex items-center gap-2">
+          <div className="min-w-0 flex-1">
+            <InvestStockSearch stockMeta={stockMeta} />
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
             <LiveDot size="sm" />
             <span className="text-[9px] text-live">실시간</span>
           </div>
@@ -70,7 +72,16 @@ export default function InvestStockOverview({
 
       <div className="border-b border-stroke px-[14px] py-2.5 shrink-0">
         <div className="flex items-center gap-2">
-          <StockAvatar name={stockMeta.name} size="lg" className="border-2" />
+          {getStockLogoUrl(stockMeta.market, stockMeta.code) ? (
+            <img
+              src={getStockLogoUrl(stockMeta.market, stockMeta.code)}
+              alt={stockMeta.name}
+              className="h-9 w-9 shrink-0 rounded-full border-2 border-stroke bg-background object-contain"
+              onError={(e) => { e.target.replaceWith(Object.assign(document.createElement('span'), { className: e.target.className, textContent: stockMeta.name.slice(0, 2) })) }}
+            />
+          ) : (
+            <StockAvatar name={stockMeta.name} size="lg" className="border-2" />
+          )}
           <div className="min-w-0 flex-1">
             <div className="text-sm font-extrabold leading-tight text-foreground">{stockMeta.name}</div>
             <div className="mt-0.5 text-[9px] text-foreground-disabled">
