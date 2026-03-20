@@ -20,7 +20,7 @@ function PieDonut({ size = 52, innerSize = 32 }) {
 }
 
 export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1, rowSpan = 1, onDelete }) {
-  const { isAuthenticated } = useAuthStore()
+  const { isAuthenticated, isRestoring } = useAuthStore()
 
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
@@ -91,7 +91,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
         </div>
       )}
 
-      {!isAuthenticated && <LockedOverlay message="포트폴리오를 보려면" />}
+      {!isRestoring && !isAuthenticated && <LockedOverlay message="포트폴리오를 보려면" />}
     </WidgetCard>
   )
 }

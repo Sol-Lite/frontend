@@ -5,11 +5,13 @@ const useAuthStore = create((set, get) => ({
   user: null,           // { userId, email, name }
   accessToken: null,
   showLoginModal: false,
+  isRestoring: true,    // 앱 초기화 중 상태 복원 여부
 
   // 로그인 성공 시 호출
   setAuth: ({ accessToken, user, autoLogin }) => {
     const storage = autoLogin ? localStorage : sessionStorage
     storage.setItem('accessToken', accessToken)
+    storage.setItem('user', JSON.stringify(user))
     set({ isAuthenticated: true, user, accessToken })
   },
 
@@ -18,13 +20,19 @@ const useAuthStore = create((set, get) => ({
     const accessToken =
       localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken')
     if (accessToken) {
-      set({ isAuthenticated: true, accessToken })
+      const userStr = localStorage.getItem('user') ?? sessionStorage.getItem('user')
+      const user = userStr ? JSON.parse(userStr) : null
+      set({ isAuthenticated: true, user, accessToken, isRestoring: false })
+    } else {
+      set({ isRestoring: false })
     }
   },
 
   logout: () => {
     localStorage.removeItem('accessToken')
+    localStorage.removeItem('user')
     sessionStorage.removeItem('accessToken')
+    sessionStorage.removeItem('user')
     set({ isAuthenticated: false, user: null, accessToken: null })
   },
 
