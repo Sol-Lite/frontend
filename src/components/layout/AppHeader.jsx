@@ -23,8 +23,8 @@ function Logo() {
 }
 
 function UserArea() {
-  const navigate = useNavigate()
-  const { isAuthenticated, user } = useAuthStore()
+  const navigate = useNavigate()  // signup에 사용
+  const { isAuthenticated, user, openLoginModal } = useAuthStore()
   const { data: accountInfo } = useMyAccount()
   const setAccountSettingsMode = useRightPanelStore((s) => s.setAccountSettingsMode)
 
@@ -32,7 +32,7 @@ function UserArea() {
     return (
       <div className="flex items-center gap-2">
         <button
-          onClick={() => navigate('/login')}
+          onClick={openLoginModal}
           className="flex items-center px-4 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
         >
           로그인
