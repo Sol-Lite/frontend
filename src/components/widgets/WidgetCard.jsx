@@ -13,7 +13,7 @@ export default function WidgetCard({ children, colSpan = 1, rowSpan = 1, classNa
           ? 'animate-wiggle cursor-grab'
           : 'cursor-pointer transition-[transform] duration-[200ms] hover:-translate-y-px',
         colSpan === 3 ? 'col-span-3' : colSpan === 2 ? 'col-span-2' : 'col-span-1',
-        rowSpan === 3 ? 'row-span-3' : rowSpan === 2 ? 'row-span-2' : '',
+        rowSpan === 2 ? 'row-span-2' : '',
         className,
       )}
     >
