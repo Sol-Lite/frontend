@@ -45,7 +45,30 @@ async function get(path, params, options = {}) {
 
 export const marketApi = {
   getCurrentPrice: (stockCode) => get(`/stocks/${stockCode}/price`),
-  getDailyPrice: (stockCode, date) => get(`/stocks/${stockCode}/daily`, { date }),
+  getDailyPrice: (stockCode, params) => get(`/stocks/${stockCode}/daily`, params),
   getChart: (stockCode, params) => get(`/stocks/${stockCode}/chart`, params),
   getMinuteChart: (stockCode, params) => get(`/stocks/${stockCode}/minute-chart`, params),
+  getOrderBook: (stockCode) => get(`/stocks/${stockCode}/orderbook`),
+  getOpinion: (stockCode) => get(`/stocks/${stockCode}/opinion`),
+  getInvestor: (stockCode) => get(`/stocks/${stockCode}/investor`),
+  getFinance: (stockCode) => get(`/stocks/${stockCode}/finance`),
+  searchStocks: (keyword) => get('/stocks/search', { keyword }),
+}
+
+export const foreignMarketApi = {
+  getCurrentPrice: (symbol, exchcd) => get(`/foreign-stocks/${symbol}/price`, { exchcd }),
+  getOrderBook: (symbol, exchcd) => get(`/foreign-stocks/${symbol}/orderbook`, { exchcd }),
+  getInfo: (symbol, exchcd) => get(`/foreign-stocks/${symbol}/info`, { exchcd }),
+  getChart: (symbol, exchcd, params) => get(`/foreign-stocks/${symbol}/chart-advanced`, { exchcd, ...params }),
+  getMinuteChart: (symbol, exchcd, params) => get(`/foreign-stocks/${symbol}/chart-nmin`, { exchcd, ...params }),
+}
+
+const EXCHCD_MAP = {
+  NAS: '82',
+  NYS: '81',
+  AMS: '81',
+}
+
+export function getExchcd(exchangeCode) {
+  return EXCHCD_MAP[exchangeCode] ?? '82'
 }

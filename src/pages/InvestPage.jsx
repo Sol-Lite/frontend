@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useLocation, useParams } from 'react-router-dom'
 import InvestBottomPanels from '@/components/invest/InvestBottomPanels'
 import InvestOrderSection from '@/components/invest/InvestOrderSection'
 import InvestStockOverview from '@/components/invest/InvestStockOverview'
@@ -8,6 +8,7 @@ import { INVEST_STOCK } from '@/mocks/invest'
 
 export default function InvestPage() {
   const { stockCode: routeStockCode } = useParams()
+  const { state: locationState } = useLocation()
   const stockCode = routeStockCode ?? INVEST_STOCK.code
   const {
     stockMeta,
@@ -24,10 +25,15 @@ export default function InvestPage() {
     marketErrorMessage,
     dailyRows,
     realtimeRows,
+    orderBook,
+    opinion,
+    investor,
+    finance,
+    detailLoading,
     availableAmount,
     onChartPeriodChange,
     onMinuteIntervalChange,
-  } = useInvestMarketData(stockCode)
+  } = useInvestMarketData(stockCode, locationState)
 
   const [leftTab, setLeftTab] = useState('daily')
   const [rightTab, setRightTab] = useState('exec')
@@ -60,6 +66,7 @@ export default function InvestPage() {
             currentPrice={currentPrice}
             changeRate={changeRate}
             defaultPrice={currentPrice ?? stockMeta.price}
+            orderBook={orderBook}
           />
         </div>
 
@@ -68,6 +75,10 @@ export default function InvestPage() {
           rightTab={rightTab}
           dailyRows={dailyRows}
           realtimeRows={realtimeRows}
+          opinion={opinion}
+          investor={investor}
+          finance={finance}
+          detailLoading={detailLoading}
           isLoading={marketLoading}
           errorMessage={marketErrorMessage}
           onLeftTabChange={setLeftTab}

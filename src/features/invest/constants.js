@@ -1,6 +1,9 @@
 export const LEFT_TABS = [
   { key: 'daily', label: '일별시세' },
   { key: 'realtime', label: '실시간시세' },
+  { key: 'investor', label: '투자자' },
+  { key: 'opinion', label: '투자의견' },
+  { key: 'finance', label: '재무' },
 ]
 
 export const RIGHT_TABS = [
@@ -33,21 +36,25 @@ export const CHART_PERIOD_CONFIG = {
   },
   DAILY: {
     apiPeriod: 'DAILY',
+    foreignApiPeriod: 'DAY',
     lookbackDays: 180,
     periodLabel: '일봉 차트',
   },
   WEEKLY: {
     apiPeriod: 'WEEKLY',
+    foreignApiPeriod: 'WEEK',
     lookbackDays: 365 * 5,
     periodLabel: '주봉 차트',
   },
   MONTHLY: {
     apiPeriod: 'MONTHLY',
+    foreignApiPeriod: 'MONTH',
     lookbackDays: 365 * 15,
     periodLabel: '월봉 차트',
   },
   YEARLY: {
     apiPeriod: 'YEARLY',
+    foreignApiPeriod: 'YEAR',
     lookbackDays: 365 * 30,
     periodLabel: '년봉 차트',
   },

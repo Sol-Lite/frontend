@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { marketApi } from '@/api/market'
+import { marketApi, foreignMarketApi, getExchcd } from '@/api/market'
 import {
   DAY_MS,
   DEFAULT_MINUTE_INTERVAL,
@@ -13,8 +13,13 @@ import {
   getChartPeriodConfig,
   normalizeDailySeries,
   normalizeMinuteSeries,
+  normalizeForeignDailySeries,
+  normalizeForeignMinuteSeries,
+  normalizeOrderBook,
+  normalizeForeignOrderBook,
   resolveStockMeta,
 } from '@/features/invest/marketData'
+import useStompSubscription from '@/hooks/useStompSubscription'
 
 const INITIAL_MARKET_STATE = {
   isLoading: true,
@@ -22,6 +27,7 @@ const INITIAL_MARKET_STATE = {
   priceData: null,
   dailySeries: [],
   minuteSeries: [],
+  orderBook: null,
 }
 
 const INITIAL_CHART_STATE = {
@@ -30,24 +36,71 @@ const INITIAL_CHART_STATE = {
   series: [],
 }
 
-export default function useInvestMarketData(stockCode) {
-  const stockMeta = resolveStockMeta(stockCode)
+const INITIAL_DETAIL_STATE = {
+  isLoading: true,
+  opinion: null,
+  investor: null,
+  finance: null,
+}
+
+export default function useInvestMarketData(stockCode, locationState) {
+  const stockMeta = resolveStockMeta(stockCode, locationState)
+  const { isDomestic } = stockMeta
+  const exchcd = isDomestic ? null : getExchcd(stockMeta.exchangeCode)
+
   const [marketState, setMarketState] = useState(INITIAL_MARKET_STATE)
   const [selectedChartPeriod, setSelectedChartPeriod] = useState('MINUTE')
   const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(DEFAULT_MINUTE_INTERVAL)
   const [chartState, setChartState] = useState(INITIAL_CHART_STATE)
+  const [detailState, setDetailState] = useState(INITIAL_DETAIL_STATE)
 
+  // 국내주식 상세 데이터 (투자의견, 투자자, 재무)
+  useEffect(() => {
+    if (!isDomestic) {
+      setDetailState({ isLoading: false, opinion: null, investor: null, finance: null })
+      return
+    }
+
+    let isCancelled = false
+
+    async function loadDetailData() {
+      setDetailState(INITIAL_DETAIL_STATE)
+
+      const [opinion, investor, finance] = await Promise.allSettled([
+        marketApi.getOpinion(stockCode),
+        marketApi.getInvestor(stockCode),
+        marketApi.getFinance(stockCode),
+      ])
+
+      if (isCancelled) return
+
+      setDetailState({
+        isLoading: false,
+        opinion: opinion.status === 'fulfilled' ? opinion.value : null,
+        investor: investor.status === 'fulfilled' ? investor.value : null,
+        finance: finance.status === 'fulfilled' ? finance.value : null,
+      })
+    }
+
+    loadDetailData()
+
+    return () => {
+      isCancelled = true
+    }
+  }, [stockCode, isDomestic])
+
+  // 시장 데이터 (현재가, 차트, 호가)
   useEffect(() => {
     let isCancelled = false
 
-    async function loadMarketData() {
+    async function loadDomesticData() {
       setMarketState(INITIAL_MARKET_STATE)
 
       try {
         const endDate = new Date()
         const startDate = new Date(endDate.getTime() - 180 * DAY_MS)
 
-        const [priceData, chartData, minuteChartData] = await Promise.all([
+        const [priceData, chartData, minuteChartData, orderBookData] = await Promise.all([
           marketApi.getCurrentPrice(stockCode),
           marketApi.getChart(stockCode, {
             period: 'DAILY',
@@ -55,6 +108,7 @@ export default function useInvestMarketData(stockCode) {
             endDate: formatApiDate(endDate),
           }),
           marketApi.getMinuteChart(stockCode, { ncnt: DEFAULT_MINUTE_INTERVAL }),
+          marketApi.getOrderBook(stockCode),
         ])
 
         if (isCancelled) return
@@ -65,6 +119,7 @@ export default function useInvestMarketData(stockCode) {
           priceData,
           dailySeries: normalizeDailySeries(chartData?.data),
           minuteSeries: normalizeMinuteSeries(minuteChartData?.data),
+          orderBook: orderBookData,
         })
       } catch (error) {
         if (isCancelled) return
@@ -75,17 +130,69 @@ export default function useInvestMarketData(stockCode) {
           priceData: null,
           dailySeries: [],
           minuteSeries: [],
+          orderBook: null,
         })
       }
     }
 
-    loadMarketData()
+    async function loadForeignData() {
+      setMarketState(INITIAL_MARKET_STATE)
+
+      try {
+        const endDate = new Date()
+        const startDate = new Date(endDate.getTime() - 180 * DAY_MS)
+
+        const [priceData, chartData, minuteChartData, orderBookData] = await Promise.all([
+          foreignMarketApi.getCurrentPrice(stockCode, exchcd),
+          foreignMarketApi.getChart(stockCode, exchcd, {
+            period: 'DAY',
+            startDate: formatApiDate(startDate),
+            endDate: formatApiDate(endDate),
+          }),
+          foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: DEFAULT_MINUTE_INTERVAL }),
+          foreignMarketApi.getOrderBook(stockCode, exchcd),
+        ])
+
+        if (isCancelled) return
+
+        setMarketState({
+          isLoading: false,
+          errorMessage: '',
+          priceData: {
+            currentPrice: priceData.price,
+            changeAmount: priceData.diff,
+            changeRate: priceData.rate,
+          },
+          dailySeries: normalizeForeignDailySeries(chartData?.dataPoints),
+          minuteSeries: normalizeForeignMinuteSeries(minuteChartData?.dataPoints),
+          orderBook: orderBookData,
+        })
+      } catch (error) {
+        if (isCancelled) return
+
+        setMarketState({
+          isLoading: false,
+          errorMessage: error?.message ?? '시장 데이터를 불러오지 못했습니다.',
+          priceData: null,
+          dailySeries: [],
+          minuteSeries: [],
+          orderBook: null,
+        })
+      }
+    }
+
+    if (isDomestic) {
+      loadDomesticData()
+    } else {
+      loadForeignData()
+    }
 
     return () => {
       isCancelled = true
     }
-  }, [stockCode])
+  }, [stockCode, isDomestic, exchcd])
 
+  // 차트 기간 변경
   useEffect(() => {
     const usesBaseMinuteData = selectedChartPeriod === 'MINUTE'
       && selectedMinuteInterval === DEFAULT_MINUTE_INTERVAL
@@ -103,19 +210,33 @@ export default function useInvestMarketData(stockCode) {
         let nextSeries = []
 
         if (selectedChartPeriod === 'MINUTE') {
-          const minuteChartData = await marketApi.getMinuteChart(stockCode, { ncnt: selectedMinuteInterval })
-          nextSeries = normalizeMinuteSeries(minuteChartData?.data)
+          if (isDomestic) {
+            const minuteChartData = await marketApi.getMinuteChart(stockCode, { ncnt: selectedMinuteInterval })
+            nextSeries = normalizeMinuteSeries(minuteChartData?.data)
+          } else {
+            const minuteChartData = await foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: selectedMinuteInterval })
+            nextSeries = normalizeForeignMinuteSeries(minuteChartData?.dataPoints)
+          }
         } else {
           const config = getChartPeriodConfig(selectedChartPeriod)
           const endDate = new Date()
           const startDate = new Date(endDate.getTime() - config.lookbackDays * DAY_MS)
-          const chartData = await marketApi.getChart(stockCode, {
-            period: config.apiPeriod,
-            startDate: formatApiDate(startDate),
-            endDate: formatApiDate(endDate),
-          })
 
-          nextSeries = normalizeDailySeries(chartData?.data)
+          if (isDomestic) {
+            const chartData = await marketApi.getChart(stockCode, {
+              period: config.apiPeriod,
+              startDate: formatApiDate(startDate),
+              endDate: formatApiDate(endDate),
+            })
+            nextSeries = normalizeDailySeries(chartData?.data)
+          } else {
+            const chartData = await foreignMarketApi.getChart(stockCode, exchcd, {
+              period: config.foreignApiPeriod,
+              startDate: formatApiDate(startDate),
+              endDate: formatApiDate(endDate),
+            })
+            nextSeries = normalizeForeignDailySeries(chartData?.dataPoints)
+          }
         }
 
         if (isCancelled) return
@@ -141,7 +262,7 @@ export default function useInvestMarketData(stockCode) {
     return () => {
       isCancelled = true
     }
-  }, [stockCode, selectedChartPeriod, selectedMinuteInterval])
+  }, [stockCode, selectedChartPeriod, selectedMinuteInterval, isDomestic, exchcd])
 
   const latestDaily = marketState.dailySeries.at(-1)
   const previousClose = marketState.dailySeries.at(-2)?.close ?? stockMeta.previousClose
@@ -174,6 +295,13 @@ export default function useInvestMarketData(stockCode) {
   const chartLoading = usesBaseChartData ? marketState.isLoading : chartState.isLoading
   const chartErrorMessage = usesBaseChartData ? marketState.errorMessage : chartState.errorMessage
 
+  const stompTopic = isDomestic
+    ? `/topic/asking/${stockCode}`
+    : `/topic/foreign/quote/${stockCode}`
+  const liveOrderBook = useStompSubscription(stompTopic)
+  const normalizeOB = isDomestic ? normalizeOrderBook : normalizeForeignOrderBook
+  const orderBook = normalizeOB(liveOrderBook) ?? normalizeOB(marketState.orderBook)
+
   function handleMinuteIntervalChange(nextMinuteInterval) {
     setSelectedMinuteInterval(nextMinuteInterval)
     setSelectedChartPeriod('MINUTE')
@@ -194,6 +322,11 @@ export default function useInvestMarketData(stockCode) {
     marketErrorMessage: marketState.errorMessage,
     dailyRows: buildDailyRows(marketState.dailySeries),
     realtimeRows: buildRealtimeRows(getLatestMinuteSession(marketState.minuteSeries), previousClose),
+    orderBook,
+    opinion: detailState.opinion,
+    investor: detailState.investor,
+    finance: detailState.finance,
+    detailLoading: detailState.isLoading,
     defaultSelectedPrice: currentPrice ?? stockMeta.price,
     availableAmount: stockMeta.availableAmount,
     onChartPeriodChange: setSelectedChartPeriod,
