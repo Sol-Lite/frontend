@@ -115,6 +115,17 @@ export const WIDGET_TYPES = [
       { id: 'trade-3x2',  label: '캘린더+목록', colSpan: 3, rowSpan: 2, preview: 'trade-3x2'  },
     ],
   },
+  {
+    id: 'report',
+    name: '증권사 리포트',
+    category: '기타',
+    description: '증권사 분석 리포트 헤드라인',
+    variants: [
+      { id: 'report-sm',   label: '단일',  colSpan: 1, rowSpan: 1, preview: 'report-sm' },
+      { id: 'report-wide', label: '목록형', colSpan: 2, rowSpan: 1, preview: 'report-wide' },
+      { id: 'report-2x2',  label: '상세',  colSpan: 2, rowSpan: 2, preview: 'report-2x2' },
+    ],
+  },
 ]
 
 export const WIDGET_CATEGORIES = ['전체', ...new Set(WIDGET_TYPES.map((w) => w.category))]
