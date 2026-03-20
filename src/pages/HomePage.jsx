@@ -117,7 +117,7 @@ export default function HomePage() {
         <div
           ref={setGridRef}
           className={cn(
-            'grid grid-cols-6 grid-rows-4 grid-flow-dense gap-[10px] w-full h-full rounded-2xl transition-[outline] duration-[150ms]',
+            'grid grid-cols-6 grid-rows-4 gap-[10px] w-full h-full rounded-2xl transition-[outline] duration-[150ms]',
             isDraggingNewWidget && 'outline outline-2 outline-primary',
             isDraggingNewWidget && phantomWidget && 'bg-primary-light/30',
           )}

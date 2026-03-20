@@ -1,11 +1,9 @@
 import useEditModeStore from '@/store/useEditModeStore'
-import useWidgetStore from '@/store/useWidgetStore'
 import EditHandle from './EditHandle'
 import { cn } from '@/lib/cn'
 
 export default function WidgetCard({ children, className = '', onDelete }) {
   const { isEditMode, wiggleDelay, wiggleSyncKey } = useEditModeStore()
-  const { isDraggingNewWidget } = useWidgetStore()
 
   return (
     /* 바깥 div는 안정적 — EditHandle의 absolute 기준점 역할 */
@@ -20,10 +18,7 @@ export default function WidgetCard({ children, className = '', onDelete }) {
             ? 'animate-wiggle'
             : 'cursor-pointer transition-[transform] duration-[200ms] hover:-translate-y-px',
         )}
-        style={isEditMode ? {
-          animationDelay: `${wiggleDelay}ms`,
-          animationPlayState: isDraggingNewWidget ? 'paused' : 'running',
-        } : undefined}
+        style={isEditMode ? { animationDelay: `${wiggleDelay}ms` } : undefined}
       >
         <div
           className={cn(
