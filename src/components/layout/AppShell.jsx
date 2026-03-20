@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Outlet } from 'react-router-dom'
 import {
   DndContext,
@@ -10,11 +10,11 @@ import {
 } from '@dnd-kit/core'
 import AppHeader from './AppHeader'
 import RightPanel from './RightPanel'
-import useWidgetStore, { canFitInGrid, canReorderWidgets } from '@/store/useWidgetStore'
+import useWidgetStore, { canFitInGrid, canReorderWidgets, findInsertIndex } from '@/store/useWidgetStore'
 
 import useGridStore from '@/store/useGridStore'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
-import { GRID_GAP } from '@/lib/gridConstants'
+import { GRID_GAP, GRID_COLS, GRID_ROWS, gridElementRef } from '@/lib/gridConstants'
 
 export default function AppShell() {
   const [activeDrag, setActiveDrag] = useState(null)
@@ -31,6 +31,14 @@ export default function AppShell() {
   const { cellWidth, cellHeight } = useGridStore()
   const preDragOrder = useRef(null)
   const lastOverId = useRef(null)
+  const pointerPos = useRef({ x: 0, y: 0 })
+
+  // 포인터 좌표를 실시간으로 추적 (handleDragMove에서 사용)
+  useEffect(() => {
+    const onMove = (e) => { pointerPos.current = { x: e.clientX, y: e.clientY } }
+    window.addEventListener('pointermove', onMove)
+    return () => window.removeEventListener('pointermove', onMove)
+  }, [])
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -47,6 +55,34 @@ export default function AppShell() {
     }
   }
 
+  /* new-widget 드래그 중 포인터 좌표 → grid cell → insertIndex 계산.
+     onDragOver보다 높은 빈도로 발생해 더 정확한 위치를 반영한다. */
+  function handleDragMove({ active }) {
+    if (active.data.current?.type !== 'new-widget') return
+    const el = gridElementRef.current
+    if (!el || !cellWidth || !cellHeight) return
+
+    const { variant } = active.data.current
+    if (!canFitInGrid(widgets, variant.colSpan, variant.rowSpan)) {
+      clearPhantom()
+      return
+    }
+
+    const rect = el.getBoundingClientRect()
+    const { x, y } = pointerPos.current
+
+    // 그리드 영역 밖이면 phantom 제거
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      clearPhantom()
+      return
+    }
+
+    const col = Math.max(0, Math.min(Math.floor((x - rect.left) / (cellWidth + GRID_GAP)), GRID_COLS - 1))
+    const row = Math.max(0, Math.min(Math.floor((y - rect.top) / (cellHeight + GRID_GAP)), GRID_ROWS - 1))
+    const insertIndex = findInsertIndex(widgets, row, col)
+    setPhantom({ insertIndex, colSpan: variant.colSpan, rowSpan: variant.rowSpan })
+  }
+
   function handleDragOver({ active, over }) {
     const type = active.data.current?.type
 
@@ -59,20 +95,12 @@ export default function AppShell() {
     if (over.id === lastOverId.current) return
     lastOverId.current = over.id
 
+    // existing-widget 재정렬만 처리 (new-widget phantom은 handleDragMove에서 처리)
     if (type === 'existing-widget') {
       if (active.id === over.id) return
       if (canReorderWidgets(widgets, active.id, over.id)) {
         reorderWidgets(active.id, over.id)
       }
-    } else if (type === 'new-widget') {
-      const { variant } = active.data.current
-      if (!canFitInGrid(widgets, variant.colSpan, variant.rowSpan)) {
-        clearPhantom()
-        return
-      }
-      const overIndex = widgets.findIndex((w) => w.instanceId === over.id)
-      const insertIndex = overIndex !== -1 ? overIndex : widgets.length
-      setPhantom({ insertIndex, colSpan: variant.colSpan, rowSpan: variant.rowSpan })
     }
   }
 
@@ -96,7 +124,10 @@ export default function AppShell() {
     preDragOrder.current = null
 
     if (type === 'new-widget') {
-      const isOverDashboard = widgets.some((w) => w.instanceId === over.id)
+      // 'dashboard-grid' droppable 또는 개별 위젯 위에 drop된 경우 모두 허용
+      const isOverDashboard =
+        over.id === 'dashboard-grid' ||
+        widgets.some((w) => w.instanceId === over.id)
       if (isOverDashboard) {
         const { widgetTypeId, variant } = active.data.current
         const insertIndex = savedPhantom?.insertIndex ?? widgets.length
@@ -155,6 +186,7 @@ export default function AppShell() {
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragMove={handleDragMove}
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
       onDragCancel={handleDragCancel}

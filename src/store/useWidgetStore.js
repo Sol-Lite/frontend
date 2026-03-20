@@ -34,6 +34,47 @@ function _simulatePlacement(widgets) {
   return true
 }
 
+/* 포인터가 위치한 grid cell(row, col) 기준으로 삽입 인덱스 계산.
+   위젯 배치를 시뮬레이션해 target cell 이후 첫 번째 위젯 앞에 삽입. */
+export function findInsertIndex(widgets, targetRow, targetCol) {
+  if (widgets.length === 0) return 0
+
+  const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(-1))
+  const positions = []
+
+  for (let i = 0; i < widgets.length; i++) {
+    const { colSpan, rowSpan } = widgets[i]
+    let found = false
+    outer: for (let row = 0; row <= GRID_ROWS - rowSpan; row++) {
+      for (let col = 0; col <= GRID_COLS - colSpan; col++) {
+        let ok = true
+        check: for (let r = row; r < row + rowSpan; r++) {
+          for (let c = col; c < col + colSpan; c++) {
+            if (grid[r][c] !== -1) { ok = false; break check }
+          }
+        }
+        if (ok) {
+          for (let r = row; r < row + rowSpan; r++)
+            for (let c = col; c < col + colSpan; c++)
+              grid[r][c] = i
+          positions.push({ row, col })
+          found = true
+          break outer
+        }
+      }
+    }
+    if (!found) positions.push(null)
+  }
+
+  const targetOrder = targetRow * GRID_COLS + targetCol
+  for (let i = 0; i < positions.length; i++) {
+    if (!positions[i]) continue
+    const order = positions[i].row * GRID_COLS + positions[i].col
+    if (order >= targetOrder) return i
+  }
+  return widgets.length
+}
+
 export function canFitInGrid(widgets, colSpan, rowSpan) {
   const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false))
   for (const w of widgets) _tryPlace(grid, w.colSpan, w.rowSpan)

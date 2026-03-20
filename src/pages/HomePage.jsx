@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import { Pencil } from 'lucide-react'
+import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
@@ -8,7 +9,7 @@ import { cn } from '@/lib/cn'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
-import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
+import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT, gridElementRef } from '@/lib/gridConstants'
 
 /* new-widget 드래그 중 삽입 예정 위치를 표시하는 placeholder.
    pointer-events-none으로 drag 이벤트를 그대로 통과시킨다. */
@@ -30,6 +31,15 @@ export default function HomePage() {
   const { widgets, removeWidget, phantomWidget, isDraggingNewWidget } = useWidgetStore()
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
+
+  // 빈 대시보드에서도 드롭 가능하도록 그리드 전체를 droppable로 등록
+  const { setNodeRef: setGridDroppableRef } = useDroppable({ id: 'dashboard-grid' })
+
+  const setGridRef = useCallback((node) => {
+    gridRef.current = node
+    setGridDroppableRef(node)
+    gridElementRef.current = node
+  }, [setGridDroppableRef])
 
   useEffect(() => {
     isEditModeRef.current = isEditMode
@@ -105,7 +115,7 @@ export default function HomePage() {
         isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
         <div
-          ref={gridRef}
+          ref={setGridRef}
           className={cn(
             'grid grid-cols-6 grid-rows-4 grid-flow-dense gap-[10px] w-full h-full rounded-2xl transition-[outline] duration-[150ms]',
             isDraggingNewWidget && 'outline outline-2 outline-primary',
