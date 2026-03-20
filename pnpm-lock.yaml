@@ -23,6 +23,9 @@ importers:
       '@radix-ui/react-primitive':
         specifier: ^2.0.1
         version: 2.1.4(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      '@stomp/stompjs':
+        specifier: ^7.3.0
+        version: 7.3.0
       '@tanstack/react-query':
         specifier: ^5.91.2
         version: 5.91.2(react@19.2.4)
@@ -702,6 +705,9 @@ packages:
 
   '@standard-schema/utils@0.3.0':
     resolution: {integrity: sha512-e7Mew686owMaPJVNNLs55PUvgz371nKgwsc4vxE49zsODpJEnxgxRo2y/OKrqueavXgZNMDVj3DdHFlaSAeU8g==}
+
+  '@stomp/stompjs@7.3.0':
+    resolution: {integrity: sha512-nKMLoFfJhrQAqkvvKd1vLq/cVBGCMwPRCD0LqW7UT1fecRx9C3GoKEIR2CYwVuErGeZu8w0kFkl2rlhPlqHVgQ==}
 
   '@tailwindcss/node@4.2.1':
     resolution: {integrity: sha512-jlx6sLk4EOwO6hHe1oCGm1Q4AN/s0rSrTTPBGPM0/RQ6Uylwq17FuU8IeJJKEjtc6K6O07zsvP+gDO6MMWo7pg==}
@@ -2197,6 +2203,8 @@ snapshots:
   '@rolldown/pluginutils@1.0.0-rc.9': {}
 
   '@standard-schema/utils@0.3.0': {}
+
+  '@stomp/stompjs@7.3.0': {}
 
   '@tailwindcss/node@4.2.1':
     dependencies:
