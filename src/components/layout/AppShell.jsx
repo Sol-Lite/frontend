@@ -27,6 +27,7 @@ export default function AppShell() {
     clearPhantom,
     phantomWidget,
     setIsDraggingNewWidget,
+    setIsDraggingExistingWidget,
   } = useWidgetStore()
   const { cellWidth, cellHeight } = useGridStore()
   const preDragOrder = useRef(null)
@@ -48,6 +49,7 @@ export default function AppShell() {
     const type = active.data.current?.type
     setActiveDrag({ id: active.id, data: active.data.current })
     if (type === 'existing-widget') {
+      setIsDraggingExistingWidget(true)
       preDragOrder.current = [...widgets]
       lastOverId.current = null
     } else if (type === 'new-widget') {
@@ -110,6 +112,7 @@ export default function AppShell() {
     lastOverId.current = null
     clearPhantom()
     setIsDraggingNewWidget(false)
+    setIsDraggingExistingWidget(false)
 
     const type = active.data.current?.type
 
@@ -140,6 +143,7 @@ export default function AppShell() {
   function handleDragCancel() {
     clearPhantom()
     setIsDraggingNewWidget(false)
+    setIsDraggingExistingWidget(false)
     if (preDragOrder.current) {
       setWidgetsOrder(preDragOrder.current)
     }

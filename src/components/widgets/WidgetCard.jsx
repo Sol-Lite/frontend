@@ -1,9 +1,11 @@
 import useEditModeStore from '@/store/useEditModeStore'
+import useWidgetStore from '@/store/useWidgetStore'
 import EditHandle from './EditHandle'
 import { cn } from '@/lib/cn'
 
 export default function WidgetCard({ children, className = '', onDelete }) {
-  const { isEditMode } = useEditModeStore()
+  const { isEditMode, wiggleDelay } = useEditModeStore()
+  const { isDraggingExistingWidget } = useWidgetStore()
 
   return (
     <div
@@ -14,6 +16,10 @@ export default function WidgetCard({ children, className = '', onDelete }) {
           : 'cursor-pointer transition-[transform] duration-[200ms] hover:-translate-y-px',
         className,
       )}
+      style={isEditMode ? {
+        animationDelay: `${wiggleDelay}ms`,
+        animationPlayState: isDraggingExistingWidget ? 'paused' : 'running',
+      } : undefined}
     >
       {isEditMode && <EditHandle onDelete={onDelete} />}
       {/* 콘텐츠 클리핑 래퍼 — 핸들은 relative 부모 기준으로 바깥에 위치 */}

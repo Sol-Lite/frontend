@@ -101,7 +101,7 @@
   /* ── Animation ── */
   --animate-pulse-dot:  pulse-dot 2000ms ease-in-out infinite;
   --animate-bubble-in:  bubble-in 220ms ease both;
-  --animate-wiggle:     wiggle 550ms ease-in-out infinite;
+  --animate-wiggle:     wiggle 900ms ease-in-out infinite;
   --animate-modal-in:   modal-in 200ms ease both;
 }
 
@@ -119,9 +119,9 @@
 }
 
 @keyframes wiggle {
-  0%, 100% { transform: rotate(0deg) translateY(0); }
-  20%       { transform: rotate(-1.2deg) translateY(-1px); }
-  60%       { transform: rotate(1.2deg) translateY(-1px); }
+  0%   { transform: rotate(-1.2deg) translateY(-0.8px); }
+  50%  { transform: rotate(1.2deg) translateY(-0.8px); }
+  100% { transform: rotate(-1.2deg) translateY(-0.8px); }
 }
 
 @keyframes modal-in {
