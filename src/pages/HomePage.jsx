@@ -12,19 +12,31 @@ import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
 
+/* new-widget 드래그 중 삽입 예정 위치를 표시하는 placeholder.
+   pointer-events-none으로 drag 이벤트를 그대로 통과시킨다. */
+function PhantomSlot({ colSpan, rowSpan }) {
+  return (
+    <div
+      className={cn(
+        'rounded-2xl border-2 border-dashed border-primary bg-primary-light/30 pointer-events-none',
+        colSpan === 3 ? 'col-span-3' : colSpan === 2 ? 'col-span-2' : 'col-span-1',
+        rowSpan === 2 ? 'row-span-2' : '',
+      )}
+    />
+  )
+}
+
 export default function HomePage() {
   const { isEditMode } = useEditModeStore()
   const { setCellSize, setPreviewCellSize } = useGridStore()
-  const { widgets, removeWidget } = useWidgetStore()
+  const { widgets, removeWidget, phantomWidget } = useWidgetStore()
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
 
-  // new-widget 드래그 중 대시보드 드롭존 활성화
   const { setNodeRef: setDropRef, isOver } = useDroppable({ id: 'dashboard' })
   const { active } = useDndContext()
   const isDraggingNewWidget = active?.data?.current?.type === 'new-widget'
 
-  // gridRef + dropRef 병합
   const setGridRef = useCallback((el) => {
     gridRef.current = el
     setDropRef(el)
@@ -38,7 +50,6 @@ export default function HomePage() {
     const el = gridRef.current
     if (!el) return
 
-    // ResizeObserver 콜백은 비동기 → 초기값을 MIN으로 설정해 측정 전 공백 방지
     setCellSize(MIN_CELL_WIDTH, MIN_CELL_HEIGHT)
 
     const observer = new ResizeObserver(([entry]) => {
@@ -46,7 +57,6 @@ export default function HomePage() {
       const cellWidth = (width - GRID_GAP * (GRID_COLS - 1)) / GRID_COLS
       const cellHeight = (height - GRID_GAP * (GRID_ROWS - 1)) / GRID_ROWS
       setCellSize(cellWidth, cellHeight)
-      // EditPanel 미열림 상태(full grid)의 셀 크기만 preview 기준으로 저장
       if (!isEditModeRef.current) {
         setPreviewCellSize(cellWidth, cellHeight)
       }
@@ -55,6 +65,15 @@ export default function HomePage() {
     observer.observe(el)
     return () => observer.disconnect()
   }, [setCellSize, setPreviewCellSize])
+
+  // phantom을 지정 인덱스에 삽입한 display 전용 배열 (SortableContext items와 분리)
+  const displayWidgets = phantomWidget
+    ? [
+        ...widgets.slice(0, phantomWidget.insertIndex),
+        { instanceId: '__phantom__', colSpan: phantomWidget.colSpan, rowSpan: phantomWidget.rowSpan },
+        ...widgets.slice(phantomWidget.insertIndex),
+      ]
+    : widgets
 
   return (
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
@@ -76,7 +95,6 @@ export default function HomePage() {
         </div>
         {isEditMode && (
           <div className="flex items-center gap-2">
-            {/* 페이지 인디케이터 */}
             <div className="flex items-center gap-1.5">
               <div className="w-4 h-1.5 rounded-full bg-primary" />
               <div className="w-1.5 h-1.5 rounded-full bg-stroke-input" />
@@ -92,14 +110,12 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* 스크롤 래퍼: 최솟값 이하로 줄어들면 스크롤 */}
+      {/* 스크롤 래퍼 */}
       <div className={cn(
         'flex-1 min-h-0',
         isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
-        {/* 위젯 그리드: 6열 × 4행, 뷰포트 채움 / 최솟값 이하면 고정 */}
-        {/* noopSortingStrategy: col-span/row-span이 혼재한 그리드에서 rectSortingStrategy 사용 시
-            드래그 중 위젯 크기/위치 왜곡이 발생하므로 시각적 이동을 비활성화. */}
+        {/* SortableContext items는 실제 위젯만 (phantom 제외) */}
         <SortableContext items={widgets.map((w) => w.instanceId)} strategy={() => null}>
           <div
             ref={setGridRef}
@@ -113,7 +129,10 @@ export default function HomePage() {
               minHeight: `${MIN_GRID_HEIGHT}px`,
             }}
           >
-            {widgets.map((w) => {
+            {displayWidgets.map((w) => {
+              if (w.instanceId === '__phantom__') {
+                return <PhantomSlot key="__phantom__" colSpan={w.colSpan} rowSpan={w.rowSpan} />
+              }
               const Component = WIDGET_REGISTRY[w.widgetTypeId]
               if (!Component) return null
               return (
@@ -133,7 +152,7 @@ export default function HomePage() {
                 </SortableWidgetCard>
               )
             })}
-            {!isEditMode && canFitInGrid(widgets, 1, 1) && <AddWidgetSlot />}
+            {!isEditMode && !phantomWidget && canFitInGrid(widgets, 1, 1) && <AddWidgetSlot />}
           </div>
         </SortableContext>
       </div>

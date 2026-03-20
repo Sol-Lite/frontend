@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Outlet } from 'react-router-dom'
 import {
   DndContext,
@@ -10,12 +10,25 @@ import {
 } from '@dnd-kit/core'
 import AppHeader from './AppHeader'
 import RightPanel from './RightPanel'
-import useWidgetStore from '@/store/useWidgetStore'
+import useWidgetStore, { canFitInGrid, canReorderWidgets } from '@/store/useWidgetStore'
+import useGridStore from '@/store/useGridStore'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
+import { GRID_GAP } from '@/lib/gridConstants'
 
 export default function AppShell() {
   const [activeDrag, setActiveDrag] = useState(null)
-  const { widgets, reorderWidgets, addWidget } = useWidgetStore()
+  const {
+    widgets,
+    reorderWidgets,
+    addWidgetAt,
+    setWidgetsOrder,
+    setPhantom,
+    clearPhantom,
+    phantomWidget,
+  } = useWidgetStore()
+  const { cellWidth, cellHeight } = useGridStore()
+  const preDragOrder = useRef(null)
+  const lastOverId = useRef(null)
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -23,45 +36,107 @@ export default function AppShell() {
 
   function handleDragStart({ active }) {
     setActiveDrag({ id: active.id, data: active.data.current })
+    if (active.data.current?.type === 'existing-widget') {
+      preDragOrder.current = [...widgets]
+      lastOverId.current = null
+    }
+  }
+
+  function handleDragOver({ active, over }) {
+    if (!over) return
+    if (over.id === lastOverId.current) return
+    lastOverId.current = over.id
+
+    const type = active.data.current?.type
+
+    if (type === 'existing-widget') {
+      if (active.id === over.id) return
+      if (canReorderWidgets(widgets, active.id, over.id)) {
+        reorderWidgets(active.id, over.id)
+      }
+    } else if (type === 'new-widget') {
+      const { variant } = active.data.current
+      if (!canFitInGrid(widgets, variant.colSpan, variant.rowSpan)) {
+        clearPhantom()
+        return
+      }
+      const overIndex = widgets.findIndex((w) => w.instanceId === over.id)
+      const insertIndex = overIndex !== -1 ? overIndex : widgets.length
+      setPhantom({ insertIndex, colSpan: variant.colSpan, rowSpan: variant.rowSpan })
+    }
   }
 
   function handleDragEnd({ active, over }) {
+    const savedPhantom = phantomWidget
     setActiveDrag(null)
-    if (!over) return
-    const { type } = active.data.current ?? {}
+    lastOverId.current = null
+    clearPhantom()
 
-    if (type === 'existing-widget' && active.id !== over.id) {
-      reorderWidgets(active.id, over.id)
-    } else if (type === 'new-widget') {
-      // 대시보드 grid 위 또는 grid 내 어느 위젯 위에 드롭해도 추가
+    const type = active.data.current?.type
+
+    if (!over) {
+      if (type === 'existing-widget' && preDragOrder.current) {
+        setWidgetsOrder(preDragOrder.current)
+      }
+      preDragOrder.current = null
+      return
+    }
+
+    preDragOrder.current = null
+
+    if (type === 'new-widget') {
       const isOverDashboard =
         over.id === 'dashboard' || widgets.some((w) => w.instanceId === over.id)
       if (isOverDashboard) {
         const { widgetTypeId, variant } = active.data.current
-        addWidget(widgetTypeId, variant)
+        const insertIndex = savedPhantom?.insertIndex ?? widgets.length
+        addWidgetAt(widgetTypeId, variant, insertIndex)
       }
     }
+    // existing-widget: onDragOver에서 이미 reorder 완료
   }
 
-  // DragOverlay: existing-widget 드래그 시 위젯 미리보기
-  let overlayContent = null
-  if (activeDrag?.data?.type === 'existing-widget') {
-    const w = widgets.find((w) => w.instanceId === activeDrag.id)
-    const Comp = w ? WIDGET_REGISTRY[w.widgetTypeId] : null
-    if (Comp && w) {
-      overlayContent = (
-        <div className="opacity-90 rotate-1 scale-105 shadow-widget-edit rounded-2xl cursor-grabbing">
-          <Comp variant={w.variantId} colSpan={w.colSpan} rowSpan={w.rowSpan} config={w.config} />
-        </div>
-      )
+  function handleDragCancel() {
+    clearPhantom()
+    if (preDragOrder.current) {
+      setWidgetsOrder(preDragOrder.current)
     }
-  } else if (activeDrag?.data?.type === 'new-widget') {
-    const { variant } = activeDrag.data
-    overlayContent = (
-      <div className="opacity-90 rotate-1 scale-105 rounded-2xl bg-surface border-2 border-primary shadow-widget-edit cursor-grabbing flex items-center justify-center px-3 py-2">
-        <span className="text-[11px] text-primary font-semibold">{variant?.label}</span>
-      </div>
-    )
+    preDragOrder.current = null
+    lastOverId.current = null
+    setActiveDrag(null)
+  }
+
+  // ── DragOverlay 렌더링 ────────────────────────────────────
+  let overlayContent = null
+
+  if (activeDrag && cellWidth && cellHeight) {
+    const type = activeDrag.data?.type
+
+    if (type === 'existing-widget') {
+      const w = widgets.find((w) => w.instanceId === activeDrag.id)
+      const Comp = w ? WIDGET_REGISTRY[w.widgetTypeId] : null
+      if (Comp && w) {
+        const ow = w.colSpan * cellWidth + (w.colSpan - 1) * GRID_GAP
+        const oh = w.rowSpan * cellHeight + (w.rowSpan - 1) * GRID_GAP
+        overlayContent = (
+          <div className="opacity-90 shadow-widget-edit cursor-grabbing" style={{ width: ow, height: oh }}>
+            <Comp variant={w.variantId} colSpan={w.colSpan} rowSpan={w.rowSpan} config={w.config} />
+          </div>
+        )
+      }
+    } else if (type === 'new-widget') {
+      const { widgetTypeId, variant } = activeDrag.data
+      const Comp = WIDGET_REGISTRY[widgetTypeId]
+      if (Comp) {
+        const ow = variant.colSpan * cellWidth + (variant.colSpan - 1) * GRID_GAP
+        const oh = variant.rowSpan * cellHeight + (variant.rowSpan - 1) * GRID_GAP
+        overlayContent = (
+          <div className="opacity-90 shadow-widget-edit cursor-grabbing" style={{ width: ow, height: oh }}>
+            <Comp variant={variant.id} colSpan={variant.colSpan} rowSpan={variant.rowSpan} />
+          </div>
+        )
+      }
+    }
   }
 
   return (
@@ -69,7 +144,9 @@ export default function AppShell() {
       sensors={sensors}
       collisionDetection={closestCenter}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
+      onDragCancel={handleDragCancel}
     >
       <div className="flex flex-col h-screen overflow-hidden">
         <AppHeader />

@@ -26,10 +26,27 @@ function _tryPlace(grid, colSpan, rowSpan) {
   return false
 }
 
+function _simulatePlacement(widgets) {
+  const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false))
+  for (const w of widgets) {
+    if (!_tryPlace(grid, w.colSpan, w.rowSpan)) return false
+  }
+  return true
+}
+
 export function canFitInGrid(widgets, colSpan, rowSpan) {
   const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false))
   for (const w of widgets) _tryPlace(grid, w.colSpan, w.rowSpan)
   return _tryPlace(grid, colSpan, rowSpan)
+}
+
+/* 재배치 후 전체 위젯이 그리드에 정상 배치 가능한지 검증.
+   false 반환 시 해당 순서 변경은 허용하지 않는다. */
+export function canReorderWidgets(widgets, activeId, overId) {
+  const oldIndex = widgets.findIndex((w) => w.instanceId === activeId)
+  const newIndex = widgets.findIndex((w) => w.instanceId === overId)
+  if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return false
+  return _simulatePlacement(arrayMove([...widgets], oldIndex, newIndex))
 }
 
 // 6열 × 4행 (24셀) 기본 레이아웃
@@ -59,6 +76,13 @@ const useWidgetStore = create((set) => ({
     set((state) => ({ widgets: state._snapshot ?? state.widgets, _snapshot: null })),
   clearSnapshot: () => set({ _snapshot: null }),
 
+  // 드래그 중 ghost placeholder (new-widget 드래그 시 push-aside 표시용)
+  phantomWidget: null,
+  setPhantom: (phantom) => set({ phantomWidget: phantom }),
+  clearPhantom: () => set({ phantomWidget: null }),
+
+  setWidgetsOrder: (ordered) => set({ widgets: ordered }),
+
   addWidget: (widgetTypeId, variant) =>
     set((state) => {
       if (!canFitInGrid(state.widgets, variant.colSpan, variant.rowSpan)) return state
@@ -75,10 +99,28 @@ const useWidgetStore = create((set) => ({
         ],
       }
     }),
+
+  // 지정 인덱스에 위젯 삽입 (new-widget drag-to-add 용)
+  addWidgetAt: (widgetTypeId, variant, insertIndex) =>
+    set((state) => {
+      if (!canFitInGrid(state.widgets, variant.colSpan, variant.rowSpan)) return state
+      const newWidget = {
+        instanceId: crypto.randomUUID(),
+        widgetTypeId,
+        variantId: variant.id,
+        colSpan: variant.colSpan,
+        rowSpan: variant.rowSpan,
+      }
+      const next = [...state.widgets]
+      next.splice(Math.min(insertIndex, next.length), 0, newWidget)
+      return { widgets: next }
+    }),
+
   removeWidget: (instanceId) =>
     set((state) => ({
       widgets: state.widgets.filter((w) => w.instanceId !== instanceId),
     })),
+
   reorderWidgets: (activeId, overId) =>
     set((state) => {
       const oldIndex = state.widgets.findIndex((w) => w.instanceId === activeId)
