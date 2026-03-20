@@ -3,7 +3,7 @@ import { Pencil } from 'lucide-react'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
-import useWidgetStore from '@/store/useWidgetStore'
+import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
@@ -106,7 +106,7 @@ export default function HomePage() {
               />
             )
           })}
-          {!isEditMode && <AddWidgetSlot />}
+          {!isEditMode && canFitInGrid(widgets, 1, 1) && <AddWidgetSlot />}
         </div>
       </div>
     </div>
