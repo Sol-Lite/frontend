@@ -53,6 +53,94 @@ export function canSwap(widgets, idA, idB) {
   return aFitsAtB && bFitsAtA
 }
 
+/* 지정 위치에서 가장 가까운 빈 셀 탐색 (push-aside용).
+   excludeIds: 충돌 판정에서 제외할 instanceId 목록 (드래그 중인 위젯 + 밀리는 위젯). */
+export function findNearestFreeCell(widgets, colSpan, rowSpan, fromCol, fromRow, excludeIds = []) {
+  const others = widgets.filter((w) => !excludeIds.includes(w.instanceId))
+  let best = null
+  let bestDist = Infinity
+  for (let r = 1; r <= GRID_ROWS - rowSpan + 1; r++) {
+    for (let c = 1; c <= GRID_COLS - colSpan + 1; c++) {
+      if (canPlaceAt(others, c, r, colSpan, rowSpan)) {
+        const dist = Math.abs(c - fromCol) + Math.abs(r - fromRow)
+        if (dist < bestDist) {
+          bestDist = dist
+          best = { gridCol: c, gridRow: r }
+        }
+      }
+    }
+  }
+  return best
+}
+
+/* active를 over의 자리로 이동시키기 위해 필요한 push-aside 이동 계획 생성.
+   - active의 target footprint와 겹치는 모든 위젯(blockers)을 연쇄적으로 가장 가까운 빈 셀로 이동
+   - blockers를 모두 재배치할 수 있으면 plan 반환, 아니면 null */
+export function findPushAsidePlan(widgets, activeId, overId) {
+  const active = widgets.find((w) => w.instanceId === activeId)
+  const over = widgets.find((w) => w.instanceId === overId)
+  if (!active || !over) return null
+
+  return findPushAsidePlanAt(widgets, activeId, over.gridCol, over.gridRow)
+}
+
+/* active를 지정 target 좌표(top-left)로 이동시키기 위해 필요한 push-aside 이동 계획 생성.
+   - active의 target footprint와 겹치는 모든 위젯(blockers)을 연쇄적으로 가장 가까운 빈 셀로 이동
+   - blockers를 모두 재배치할 수 있으면 plan 반환, 아니면 null */
+export function findPushAsidePlanAt(widgets, activeId, targetCol, targetRow) {
+  const active = widgets.find((w) => w.instanceId === activeId)
+  if (!active) return null
+
+  // active가 over 기준 좌표에 물리적으로 들어갈 수 있어야 함
+  if (targetCol + active.colSpan - 1 > GRID_COLS || targetRow + active.rowSpan - 1 > GRID_ROWS) {
+    return null
+  }
+
+  // active가 target에 들어갈 때 겹치는 위젯들(본인 제외)
+  const blockers = widgets.filter(
+    (w) =>
+      w.instanceId !== activeId &&
+      _overlap(targetCol, targetRow, active.colSpan, active.rowSpan, w.gridCol, w.gridRow, w.colSpan, w.rowSpan),
+  )
+  if (blockers.length === 0) return null
+
+  // 큰 위젯을 먼저 배치하면 성공률이 높다.
+  const sortedBlockers = [...blockers].sort((a, b) => {
+    const areaDiff = b.colSpan * b.rowSpan - a.colSpan * a.rowSpan
+    if (areaDiff !== 0) return areaDiff
+    const da = Math.abs(a.gridCol - targetCol) + Math.abs(a.gridRow - targetRow)
+    const db = Math.abs(b.gridCol - targetCol) + Math.abs(b.gridRow - targetRow)
+    return da - db
+  })
+
+  const blockerIds = new Set(sortedBlockers.map((w) => w.instanceId))
+  const working = widgets
+    .filter((w) => w.instanceId !== activeId && !blockerIds.has(w.instanceId))
+    .concat({
+      instanceId: '__ghost_active__',
+      gridCol: targetCol,
+      gridRow: targetRow,
+      colSpan: active.colSpan,
+      rowSpan: active.rowSpan,
+    })
+
+  const moves = []
+  for (const blocker of sortedBlockers) {
+    const cell = findNearestFreeCell(working, blocker.colSpan, blocker.rowSpan, blocker.gridCol, blocker.gridRow)
+    if (!cell) return null
+    moves.push({ instanceId: blocker.instanceId, gridCol: cell.gridCol, gridRow: cell.gridRow })
+    working.push({
+      instanceId: blocker.instanceId,
+      colSpan: blocker.colSpan,
+      rowSpan: blocker.rowSpan,
+      gridCol: cell.gridCol,
+      gridRow: cell.gridRow,
+    })
+  }
+
+  return { activeId, targetCol, targetRow, moves }
+}
+
 /* 그리드에 해당 크기의 위젯을 배치할 빈 공간이 있는지 확인 */
 export function canFitInGrid(widgets, colSpan, rowSpan) {
   for (let r = 1; r <= GRID_ROWS - rowSpan + 1; r++) {
@@ -163,16 +251,33 @@ const useWidgetStore = create((set) => ({
       ),
     })),
 
-  // 두 위젯의 위치를 교환 (occupied 셀 drop)
-  swapWidgets: (idA, idB) =>
+  // A → B의 자리, B → pushAsideCol/Row (nearest free cell)
+  pushAsideWidget: (activeId, pushAsideId, pushAsideCol, pushAsideRow) =>
     set((state) => {
-      const wA = state.widgets.find((w) => w.instanceId === idA)
-      const wB = state.widgets.find((w) => w.instanceId === idB)
+      const wA = state.widgets.find((w) => w.instanceId === activeId)
+      const wB = state.widgets.find((w) => w.instanceId === pushAsideId)
       if (!wA || !wB) return state
       return {
         widgets: state.widgets.map((w) => {
-          if (w.instanceId === idA) return { ...w, gridCol: wB.gridCol, gridRow: wB.gridRow }
-          if (w.instanceId === idB) return { ...w, gridCol: wA.gridCol, gridRow: wA.gridRow }
+          if (w.instanceId === activeId) return { ...w, gridCol: wB.gridCol, gridRow: wB.gridRow }
+          if (w.instanceId === pushAsideId) return { ...w, gridCol: pushAsideCol, gridRow: pushAsideRow }
+          return w
+        }),
+      }
+    }),
+
+  // 연쇄 push-aside 적용: active를 target으로 이동 + blockers를 계획된 좌표로 이동
+  applyPushAsidePlan: (plan) =>
+    set((state) => {
+      if (!plan?.activeId) return state
+      const moveMap = new Map((plan.moves || []).map((m) => [m.instanceId, m]))
+      return {
+        widgets: state.widgets.map((w) => {
+          if (w.instanceId === plan.activeId) {
+            return { ...w, gridCol: plan.targetCol, gridRow: plan.targetRow }
+          }
+          const m = moveMap.get(w.instanceId)
+          if (m) return { ...w, gridCol: m.gridCol, gridRow: m.gridRow }
           return w
         }),
       }
