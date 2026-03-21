@@ -1,118 +1,165 @@
 import { create } from 'zustand'
-import { arrayMove } from '@dnd-kit/sortable'
 import { GRID_COLS, GRID_ROWS } from '@/lib/gridConstants'
 
-/* ── 그리드 배치 시뮬레이션 ────────────────────────────────
-   CSS grid auto-placement(row-first)를 모방해 빈 셀 탐색.
-   widgets를 순서대로 배치 후 새 위젯이 들어갈 자리가 있는지 확인.
+/* ── 충돌 판정 ──────────────────────────────────────────────
+   모든 좌표는 1-indexed (CSS grid와 동일).
 ──────────────────────────────────────────────────────────── */
-function _tryPlace(grid, colSpan, rowSpan) {
-  for (let row = 0; row <= GRID_ROWS - rowSpan; row++) {
-    for (let col = 0; col <= GRID_COLS - colSpan; col++) {
-      let ok = true
-      outer: for (let r = row; r < row + rowSpan; r++) {
-        for (let c = col; c < col + colSpan; c++) {
-          if (grid[r][c]) { ok = false; break outer }
+function _overlap(ax, ay, aw, ah, bx, by, bw, bh) {
+  return ax < bx + bw && ax + aw > bx && ay < by + bh && ay + ah > by
+}
+
+/* 지정 셀에 위젯을 배치할 수 있는지 확인.
+   excludeId: 드래그 중인 위젯을 충돌 대상에서 제외할 때 사용. */
+export function canPlaceAt(widgets, targetCol, targetRow, colSpan, rowSpan, excludeId = null) {
+  if (targetCol < 1 || targetRow < 1) return false
+  if (targetCol + colSpan - 1 > GRID_COLS || targetRow + rowSpan - 1 > GRID_ROWS) return false
+  return !widgets.some(
+    (w) =>
+      w.instanceId !== excludeId &&
+      _overlap(targetCol, targetRow, colSpan, rowSpan, w.gridCol, w.gridRow, w.colSpan, w.rowSpan),
+  )
+}
+
+/* 두 위젯이 서로의 위치를 교환할 수 있는지 확인.
+   - A가 B의 좌표에, B가 A의 좌표에 배치될 때 다른 위젯과 충돌하지 않아야 함.
+   - 크기가 달라도 각자의 새 위치에 물리적으로 맞으면 swap 허용. */
+export function canSwap(widgets, idA, idB) {
+  const wA = widgets.find((w) => w.instanceId === idA)
+  const wB = widgets.find((w) => w.instanceId === idB)
+  if (!wA || !wB) return false
+
+  // A가 B의 위치에 배치 가능한지 (A, B 자신 제외)
+  const aFitsAtB =
+    wB.gridCol + wA.colSpan - 1 <= GRID_COLS &&
+    wB.gridRow + wA.rowSpan - 1 <= GRID_ROWS &&
+    !widgets.some(
+      (w) =>
+        w.instanceId !== idA &&
+        w.instanceId !== idB &&
+        _overlap(wB.gridCol, wB.gridRow, wA.colSpan, wA.rowSpan, w.gridCol, w.gridRow, w.colSpan, w.rowSpan),
+    )
+
+  // B가 A의 위치에 배치 가능한지 (A, B 자신 제외)
+  const bFitsAtA =
+    wA.gridCol + wB.colSpan - 1 <= GRID_COLS &&
+    wA.gridRow + wB.rowSpan - 1 <= GRID_ROWS &&
+    !widgets.some(
+      (w) =>
+        w.instanceId !== idA &&
+        w.instanceId !== idB &&
+        _overlap(wA.gridCol, wA.gridRow, wB.colSpan, wB.rowSpan, w.gridCol, w.gridRow, w.colSpan, w.rowSpan),
+    )
+
+  return aFitsAtB && bFitsAtA
+}
+
+/* 지정 위치에서 가장 가까운 빈 셀 탐색 (push-aside용).
+   excludeIds: 충돌 판정에서 제외할 instanceId 목록 (드래그 중인 위젯 + 밀리는 위젯). */
+export function findNearestFreeCell(widgets, colSpan, rowSpan, fromCol, fromRow, excludeIds = []) {
+  const others = widgets.filter((w) => !excludeIds.includes(w.instanceId))
+  let best = null
+  let bestDist = Infinity
+  for (let r = 1; r <= GRID_ROWS - rowSpan + 1; r++) {
+    for (let c = 1; c <= GRID_COLS - colSpan + 1; c++) {
+      if (canPlaceAt(others, c, r, colSpan, rowSpan)) {
+        const dist = Math.abs(c - fromCol) + Math.abs(r - fromRow)
+        if (dist < bestDist) {
+          bestDist = dist
+          best = { gridCol: c, gridRow: r }
         }
       }
-      if (ok) {
-        for (let r = row; r < row + rowSpan; r++)
-          for (let c = col; c < col + colSpan; c++)
-            grid[r][c] = true
-        return true
-      }
+    }
+  }
+  return best
+}
+
+/* active를 over의 자리로 이동시키기 위해 필요한 push-aside 이동 계획 생성.
+   - active의 target footprint와 겹치는 모든 위젯(blockers)을 연쇄적으로 가장 가까운 빈 셀로 이동
+   - blockers를 모두 재배치할 수 있으면 plan 반환, 아니면 null */
+export function findPushAsidePlan(widgets, activeId, overId) {
+  const active = widgets.find((w) => w.instanceId === activeId)
+  const over = widgets.find((w) => w.instanceId === overId)
+  if (!active || !over) return null
+
+  return findPushAsidePlanAt(widgets, activeId, over.gridCol, over.gridRow)
+}
+
+/* active를 지정 target 좌표(top-left)로 이동시키기 위해 필요한 push-aside 이동 계획 생성.
+   - active의 target footprint와 겹치는 모든 위젯(blockers)을 연쇄적으로 가장 가까운 빈 셀로 이동
+   - blockers를 모두 재배치할 수 있으면 plan 반환, 아니면 null */
+export function findPushAsidePlanAt(widgets, activeId, targetCol, targetRow) {
+  const active = widgets.find((w) => w.instanceId === activeId)
+  if (!active) return null
+
+  // active가 over 기준 좌표에 물리적으로 들어갈 수 있어야 함
+  if (targetCol + active.colSpan - 1 > GRID_COLS || targetRow + active.rowSpan - 1 > GRID_ROWS) {
+    return null
+  }
+
+  // active가 target에 들어갈 때 겹치는 위젯들(본인 제외)
+  const blockers = widgets.filter(
+    (w) =>
+      w.instanceId !== activeId &&
+      _overlap(targetCol, targetRow, active.colSpan, active.rowSpan, w.gridCol, w.gridRow, w.colSpan, w.rowSpan),
+  )
+  if (blockers.length === 0) return null
+
+  // 큰 위젯을 먼저 배치하면 성공률이 높다.
+  // 주의: greedy 휴리스틱이라 최적 해가 존재해도 null을 반환할 수 있다.
+  const sortedBlockers = [...blockers].sort((a, b) => {
+    const areaDiff = b.colSpan * b.rowSpan - a.colSpan * a.rowSpan
+    if (areaDiff !== 0) return areaDiff
+    const da = Math.abs(a.gridCol - targetCol) + Math.abs(a.gridRow - targetRow)
+    const db = Math.abs(b.gridCol - targetCol) + Math.abs(b.gridRow - targetRow)
+    return da - db
+  })
+
+  const blockerIds = new Set(sortedBlockers.map((w) => w.instanceId))
+  const working = widgets
+    .filter((w) => w.instanceId !== activeId && !blockerIds.has(w.instanceId))
+    .concat({
+      instanceId: '__ghost_active__',
+      gridCol: targetCol,
+      gridRow: targetRow,
+      colSpan: active.colSpan,
+      rowSpan: active.rowSpan,
+    })
+
+  const moves = []
+  for (const blocker of sortedBlockers) {
+    const cell = findNearestFreeCell(working, blocker.colSpan, blocker.rowSpan, blocker.gridCol, blocker.gridRow)
+    if (!cell) return null
+    moves.push({ instanceId: blocker.instanceId, gridCol: cell.gridCol, gridRow: cell.gridRow })
+    working.push({
+      instanceId: blocker.instanceId,
+      colSpan: blocker.colSpan,
+      rowSpan: blocker.rowSpan,
+      gridCol: cell.gridCol,
+      gridRow: cell.gridRow,
+    })
+  }
+
+  return { activeId, targetCol, targetRow, moves }
+}
+
+/* 그리드에 해당 크기의 위젯을 배치할 빈 공간이 있는지 확인 */
+export function canFitInGrid(widgets, colSpan, rowSpan) {
+  for (let r = 1; r <= GRID_ROWS - rowSpan + 1; r++) {
+    for (let c = 1; c <= GRID_COLS - colSpan + 1; c++) {
+      if (canPlaceAt(widgets, c, r, colSpan, rowSpan)) return true
     }
   }
   return false
 }
 
-function _simulatePlacement(widgets) {
-  const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false))
-  for (const w of widgets) {
-    if (!_tryPlace(grid, w.colSpan, w.rowSpan)) return false
-  }
-  return true
-}
-
-/* 위젯 배열을 시뮬레이션해 각 위젯의 CSS grid 좌표(1-indexed)를 반환.
-   CSS auto-placement 대신 이 좌표를 직접 style에 적용해 레이아웃 불일치를 방지. */
-export function computeLayout(items) {
-  const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false))
-  return items.map(({ colSpan, rowSpan }) => {
-    for (let row = 0; row <= GRID_ROWS - rowSpan; row++) {
-      for (let col = 0; col <= GRID_COLS - colSpan; col++) {
-        let ok = true
-        check: for (let r = row; r < row + rowSpan; r++) {
-          for (let c = col; c < col + colSpan; c++) {
-            if (grid[r][c]) { ok = false; break check }
-          }
-        }
-        if (ok) {
-          for (let r = row; r < row + rowSpan; r++)
-            for (let c = col; c < col + colSpan; c++)
-              grid[r][c] = true
-          return { row: row + 1, col: col + 1 } // CSS grid는 1-indexed
-        }
-      }
+/* 첫 번째 빈 셀 탐색 (addWidget 자동 배치용) */
+function _findFirstFreeCell(widgets, colSpan, rowSpan) {
+  for (let r = 1; r <= GRID_ROWS - rowSpan + 1; r++) {
+    for (let c = 1; c <= GRID_COLS - colSpan + 1; c++) {
+      if (canPlaceAt(widgets, c, r, colSpan, rowSpan)) return { gridCol: c, gridRow: r }
     }
-    return null // canReorderWidgets/canFitInGrid가 정상 작동하면 발생 안 함
-  })
-}
-
-/* 포인터가 위치한 grid cell(row, col) 기준으로 삽입 인덱스 계산.
-   위젯 배치를 시뮬레이션해 target cell 이후 첫 번째 위젯 앞에 삽입. */
-export function findInsertIndex(widgets, targetRow, targetCol) {
-  if (widgets.length === 0) return 0
-
-  const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(-1))
-  const positions = []
-
-  for (let i = 0; i < widgets.length; i++) {
-    const { colSpan, rowSpan } = widgets[i]
-    let found = false
-    outer: for (let row = 0; row <= GRID_ROWS - rowSpan; row++) {
-      for (let col = 0; col <= GRID_COLS - colSpan; col++) {
-        let ok = true
-        check: for (let r = row; r < row + rowSpan; r++) {
-          for (let c = col; c < col + colSpan; c++) {
-            if (grid[r][c] !== -1) { ok = false; break check }
-          }
-        }
-        if (ok) {
-          for (let r = row; r < row + rowSpan; r++)
-            for (let c = col; c < col + colSpan; c++)
-              grid[r][c] = i
-          positions.push({ row, col })
-          found = true
-          break outer
-        }
-      }
-    }
-    if (!found) positions.push(null)
   }
-
-  const targetOrder = targetRow * GRID_COLS + targetCol
-  for (let i = 0; i < positions.length; i++) {
-    if (!positions[i]) continue
-    const order = positions[i].row * GRID_COLS + positions[i].col
-    if (order >= targetOrder) return i
-  }
-  return widgets.length
-}
-
-export function canFitInGrid(widgets, colSpan, rowSpan) {
-  const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false))
-  for (const w of widgets) _tryPlace(grid, w.colSpan, w.rowSpan)
-  return _tryPlace(grid, colSpan, rowSpan)
-}
-
-/* 재배치 후 전체 위젯이 그리드에 정상 배치 가능한지 검증.
-   false 반환 시 해당 순서 변경은 허용하지 않는다. */
-export function canReorderWidgets(widgets, activeId, overId) {
-  const oldIndex = widgets.findIndex((w) => w.instanceId === activeId)
-  const newIndex = widgets.findIndex((w) => w.instanceId === overId)
-  if (oldIndex === -1 || newIndex === -1 || oldIndex === newIndex) return false
-  return _simulatePlacement(arrayMove([...widgets], oldIndex, newIndex))
+  return null
 }
 
 // 6열 × 4행 (24셀) 기본 레이아웃
@@ -120,16 +167,16 @@ export function canReorderWidgets(widgets, activeId, overId) {
 // Row 2–3: stock-3x2(3×2) + ranking-lg(2×2) + watchlist-sm(1) + market-sm(1)    = 6×2
 // Row 4:   trade-wide(2) + stock-news-wide(2) + [빈 2칸]                         = 6
 const INITIAL_WIDGETS = [
-  { instanceId: 'w1',  widgetTypeId: 'index',           variantId: 'index-3x1',      colSpan: 3, rowSpan: 1 },
-  { instanceId: 'w2',  widgetTypeId: 'balance',         variantId: 'balance-sm',     colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w3',  widgetTypeId: 'portfolio',       variantId: 'portfolio-sm',   colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w4',  widgetTypeId: 'exchange',        variantId: 'exchange-sm',    colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w5',  widgetTypeId: 'stock-chart',     variantId: 'stock-3x2',      colSpan: 3, rowSpan: 2, config: { stockId: 'samsung' } },
-  { instanceId: 'w6',  widgetTypeId: 'ranking',         variantId: 'ranking-lg',     colSpan: 2, rowSpan: 2 },
-  { instanceId: 'w7',  widgetTypeId: 'watchlist',       variantId: 'watchlist-sm',   colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w8',  widgetTypeId: 'market-overview', variantId: 'market-sm',      colSpan: 1, rowSpan: 1 },
-  { instanceId: 'w9',  widgetTypeId: 'trade-history',   variantId: 'trade-wide',     colSpan: 2, rowSpan: 1 },
-  { instanceId: 'w10', widgetTypeId: 'stock-news',      variantId: 'stock-news-wide', colSpan: 2, rowSpan: 1 },
+  { instanceId: 'w1',  widgetTypeId: 'index',           variantId: 'index-3x1',       colSpan: 3, rowSpan: 1, gridCol: 1, gridRow: 1 },
+  { instanceId: 'w2',  widgetTypeId: 'balance',         variantId: 'balance-sm',      colSpan: 1, rowSpan: 1, gridCol: 4, gridRow: 1 },
+  { instanceId: 'w3',  widgetTypeId: 'portfolio',       variantId: 'portfolio-sm',    colSpan: 1, rowSpan: 1, gridCol: 5, gridRow: 1 },
+  { instanceId: 'w4',  widgetTypeId: 'exchange',        variantId: 'exchange-sm',     colSpan: 1, rowSpan: 1, gridCol: 6, gridRow: 1 },
+  { instanceId: 'w5',  widgetTypeId: 'stock-chart',     variantId: 'stock-3x2',       colSpan: 3, rowSpan: 2, gridCol: 1, gridRow: 2, config: { stockId: 'samsung' } },
+  { instanceId: 'w6',  widgetTypeId: 'ranking',         variantId: 'ranking-lg',      colSpan: 2, rowSpan: 2, gridCol: 4, gridRow: 2 },
+  { instanceId: 'w7',  widgetTypeId: 'watchlist',       variantId: 'watchlist-sm',    colSpan: 1, rowSpan: 1, gridCol: 6, gridRow: 2 },
+  { instanceId: 'w8',  widgetTypeId: 'market-overview', variantId: 'market-sm',       colSpan: 1, rowSpan: 1, gridCol: 6, gridRow: 3 },
+  { instanceId: 'w9',  widgetTypeId: 'trade-history',   variantId: 'trade-wide',      colSpan: 2, rowSpan: 1, gridCol: 1, gridRow: 4 },
+  { instanceId: 'w10', widgetTypeId: 'stock-news',      variantId: 'stock-news-wide', colSpan: 2, rowSpan: 1, gridCol: 3, gridRow: 4 },
 ]
 
 const useWidgetStore = create((set) => ({
@@ -142,20 +189,20 @@ const useWidgetStore = create((set) => ({
     set((state) => ({ widgets: state._snapshot ?? state.widgets, _snapshot: null })),
   clearSnapshot: () => set({ _snapshot: null }),
 
-  // new-widget 드래그 중 대시보드 outline 표시용 (useDndContext 구독 없이)
+  // new-widget 드래그 중 대시보드 outline 표시용
   isDraggingNewWidget: false,
   setIsDraggingNewWidget: (v) => set({ isDraggingNewWidget: v }),
 
-  // 드래그 중 ghost placeholder (new-widget 드래그 시 push-aside 표시용)
+  // 드래그 중 drop 예정 위치를 보여주는 ghost placeholder
   phantomWidget: null,
   setPhantom: (phantom) => set({ phantomWidget: phantom }),
   clearPhantom: () => set({ phantomWidget: null }),
 
-  setWidgetsOrder: (ordered) => set({ widgets: ordered }),
-
+  // 첫 번째 빈 셀에 위젯 추가 (AddWidgetSlot 클릭 등)
   addWidget: (widgetTypeId, variant) =>
     set((state) => {
-      if (!canFitInGrid(state.widgets, variant.colSpan, variant.rowSpan)) return state
+      const pos = _findFirstFreeCell(state.widgets, variant.colSpan, variant.rowSpan)
+      if (!pos) return state
       return {
         widgets: [
           ...state.widgets,
@@ -165,25 +212,31 @@ const useWidgetStore = create((set) => ({
             variantId: variant.id,
             colSpan: variant.colSpan,
             rowSpan: variant.rowSpan,
+            gridCol: pos.gridCol,
+            gridRow: pos.gridRow,
           },
         ],
       }
     }),
 
-  // 지정 인덱스에 위젯 삽입 (new-widget drag-to-add 용)
-  addWidgetAt: (widgetTypeId, variant, insertIndex) =>
+  // 지정 좌표에 위젯 추가 (new-widget drag-to-add 용)
+  addWidgetAt: (widgetTypeId, variant, gridCol, gridRow) =>
     set((state) => {
-      if (!canFitInGrid(state.widgets, variant.colSpan, variant.rowSpan)) return state
-      const newWidget = {
-        instanceId: crypto.randomUUID(),
-        widgetTypeId,
-        variantId: variant.id,
-        colSpan: variant.colSpan,
-        rowSpan: variant.rowSpan,
+      if (!canPlaceAt(state.widgets, gridCol, gridRow, variant.colSpan, variant.rowSpan)) return state
+      return {
+        widgets: [
+          ...state.widgets,
+          {
+            instanceId: crypto.randomUUID(),
+            widgetTypeId,
+            variantId: variant.id,
+            colSpan: variant.colSpan,
+            rowSpan: variant.rowSpan,
+            gridCol,
+            gridRow,
+          },
+        ],
       }
-      const next = [...state.widgets]
-      next.splice(Math.min(insertIndex, next.length), 0, newWidget)
-      return { widgets: next }
     }),
 
   removeWidget: (instanceId) =>
@@ -191,12 +244,29 @@ const useWidgetStore = create((set) => ({
       widgets: state.widgets.filter((w) => w.instanceId !== instanceId),
     })),
 
-  reorderWidgets: (activeId, overId) =>
+  // 위젯을 지정 좌표로 이동 (빈 셀 drop)
+  moveWidgetTo: (instanceId, gridCol, gridRow) =>
+    set((state) => ({
+      widgets: state.widgets.map((w) =>
+        w.instanceId === instanceId ? { ...w, gridCol, gridRow } : w,
+      ),
+    })),
+
+  // 연쇄 push-aside 적용: active를 target으로 이동 + blockers를 계획된 좌표로 이동
+  applyPushAsidePlan: (plan) =>
     set((state) => {
-      const oldIndex = state.widgets.findIndex((w) => w.instanceId === activeId)
-      const newIndex = state.widgets.findIndex((w) => w.instanceId === overId)
-      if (oldIndex === -1 || newIndex === -1) return state
-      return { widgets: arrayMove(state.widgets, oldIndex, newIndex) }
+      if (!plan?.activeId) return state
+      const moveMap = new Map((plan.moves || []).map((m) => [m.instanceId, m]))
+      return {
+        widgets: state.widgets.map((w) => {
+          if (w.instanceId === plan.activeId) {
+            return { ...w, gridCol: plan.targetCol, gridRow: plan.targetRow }
+          }
+          const m = moveMap.get(w.instanceId)
+          if (m) return { ...w, gridCol: m.gridCol, gridRow: m.gridRow }
+          return w
+        }),
+      }
     }),
 }))
 
