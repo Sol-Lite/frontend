@@ -105,6 +105,7 @@ export function findPushAsidePlanAt(widgets, activeId, targetCol, targetRow) {
   if (blockers.length === 0) return null
 
   // 큰 위젯을 먼저 배치하면 성공률이 높다.
+  // 주의: greedy 휴리스틱이라 최적 해가 존재해도 null을 반환할 수 있다.
   const sortedBlockers = [...blockers].sort((a, b) => {
     const areaDiff = b.colSpan * b.rowSpan - a.colSpan * a.rowSpan
     if (areaDiff !== 0) return areaDiff
@@ -250,21 +251,6 @@ const useWidgetStore = create((set) => ({
         w.instanceId === instanceId ? { ...w, gridCol, gridRow } : w,
       ),
     })),
-
-  // A → B의 자리, B → pushAsideCol/Row (nearest free cell)
-  pushAsideWidget: (activeId, pushAsideId, pushAsideCol, pushAsideRow) =>
-    set((state) => {
-      const wA = state.widgets.find((w) => w.instanceId === activeId)
-      const wB = state.widgets.find((w) => w.instanceId === pushAsideId)
-      if (!wA || !wB) return state
-      return {
-        widgets: state.widgets.map((w) => {
-          if (w.instanceId === activeId) return { ...w, gridCol: wB.gridCol, gridRow: wB.gridRow }
-          if (w.instanceId === pushAsideId) return { ...w, gridCol: pushAsideCol, gridRow: pushAsideRow }
-          return w
-        }),
-      }
-    }),
 
   // 연쇄 push-aside 적용: active를 target으로 이동 + blockers를 계획된 좌표로 이동
   applyPushAsidePlan: (plan) =>

@@ -22,7 +22,6 @@ export default function AppShell() {
     widgets,
     addWidgetAt,
     moveWidgetTo,
-    pushAsideWidget,
     applyPushAsidePlan,
     setPhantom,
     clearPhantom,
@@ -173,9 +172,6 @@ export default function AppShell() {
     } else if (type === 'existing-widget' && savedPhantom?.activeId) {
       if (savedPhantom.pushAsidePlan) {
         applyPushAsidePlan(savedPhantom.pushAsidePlan)
-      } else if (savedPhantom.pushAsideId) {
-        // 이전 단일 push-aside 포맷과 호환 (혹시 남아있는 phantom 대비)
-        pushAsideWidget(savedPhantom.activeId, savedPhantom.pushAsideId, savedPhantom.pushAsideCol, savedPhantom.pushAsideRow)
       } else {
         moveWidgetTo(savedPhantom.activeId, savedPhantom.gridCol, savedPhantom.gridRow)
       }
