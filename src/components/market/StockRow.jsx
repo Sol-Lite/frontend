@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import StockAvatar from '@/components/ui/StockAvatar'
@@ -8,22 +7,6 @@ import RatioBar from '@/components/ui/RatioBar'
 const GRID_WITH_VOL    = 'grid-cols-[32px_36px_1fr_110px_80px_88px_120px]'
 const GRID_WITHOUT_VOL = 'grid-cols-[32px_36px_1fr_110px_80px_120px]'
 
-function StockLogo({ stockCode, name, color }) {
-  const [stage, setStage] = useState(0)
-  // 0 = KOSPI, 1 = KOSDAQ, 2 = avatar fallback
-
-  if (stage === 2) return <StockAvatar name={name.slice(0, 2)} color={color} size="md" />
-
-  const dir = stage === 0 ? 'KOSPI-logo' : 'KOSDAQ-logo'
-  return (
-    <img
-      src={`/${dir}/${stockCode}.png`}
-      alt={name}
-      className="w-8 h-8 shrink-0 rounded-full object-contain bg-surface-subtle"
-      onError={() => setStage((s) => s + 1)}
-    />
-  )
-}
 
 export default function StockRow({ stock, showVolume = true, isWatched, onWatchToggle }) {
   const navigate = useNavigate()
@@ -53,7 +36,7 @@ export default function StockRow({ stock, showVolume = true, isWatched, onWatchT
 
       {/* 종목명 */}
       <div className="flex items-center gap-2 min-w-0">
-        <StockLogo stockCode={stock.stockCode} name={stock.name} color={stock.color} />
+        <StockAvatar name={stock.name} stockCode={stock.stockCode} marketType={stock.market ?? stock.marketType} color={stock.color} size="md" />
         <span className="text-[13px] font-semibold text-foreground truncate">{stock.name}</span>
         {stock.consecutiveDays > 0 && (
           <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[9px] font-bold ${

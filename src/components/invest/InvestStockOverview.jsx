@@ -1,11 +1,9 @@
-import { useState } from 'react'
 import { Star } from 'lucide-react'
 import InvestStockChart from '@/components/market/InvestStockChart'
 import InvestStockSearch from '@/components/invest/InvestStockSearch'
 import LiveDot from '@/components/ui/LiveDot'
 import PriceChange from '@/components/ui/PriceChange'
 import StockAvatar from '@/components/ui/StockAvatar'
-import { getStockLogoUrl } from '@/lib/stockLogo'
 import {
   CHART_PERIOD_OPTIONS,
   MINUTE_INTERVAL_OPTIONS,
@@ -17,27 +15,6 @@ import {
 import { getChartPeriodLabel } from '@/features/invest/marketData'
 import { cn } from '@/lib/cn'
 
-function InvestStockLogo({ market, code, name }) {
-  const MARKETS = ['KOSPI', 'KOSDAQ']
-  const initialIdx = MARKETS.indexOf(market) === -1 ? 0 : MARKETS.indexOf(market)
-  const [idx, setIdx] = useState(initialIdx)
-
-  const url = getStockLogoUrl(MARKETS[idx], code)
-
-  if (!url || idx >= MARKETS.length) {
-    return <StockAvatar name={name} size="lg" />
-  }
-
-  return (
-    <img
-      key={url}
-      src={url}
-      alt={name}
-      className="h-9 w-9 shrink-0 rounded-full border-2 border-stroke bg-background object-contain"
-      onError={() => setIdx((i) => i + 1)}
-    />
-  )
-}
 
 function MiniMetric({ label, value, tone = 'neutral' }) {
   return (
@@ -95,7 +72,7 @@ export default function InvestStockOverview({
 
       <div className="border-b border-stroke px-[14px] py-2.5 shrink-0">
         <div className="flex items-center gap-2">
-          <InvestStockLogo market={stockMeta.market} code={stockMeta.code} name={stockMeta.name} />
+          <StockAvatar name={stockMeta.name} stockCode={stockMeta.code} marketType={stockMeta.market} size="lg" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-extrabold leading-tight text-foreground">{stockMeta.name}</div>
             <div className="mt-0.5 text-[9px] text-foreground-disabled">
