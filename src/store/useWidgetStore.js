@@ -236,6 +236,17 @@ const useWidgetStore = create((set) => ({
       pages: state.pages.map((p) => (p.id === pageId ? { ...p, name } : p)),
     })),
 
+  // ── 페이지 편집 모달에서 staged 변경사항 일괄 적용 ────────
+  applyPageChanges: (newPages, newCurrentId) =>
+    set(() => {
+      const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
+      return {
+        pages: newPages,
+        currentPageId: currentPage.id,
+        widgets: currentPage.widgets,
+      }
+    }),
+
   // ── 편집 모드 스냅샷 (현재 페이지 스코프) ────────────────
   _snapshot: null,
   snapshotWidgets: () =>

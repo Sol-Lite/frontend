@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback, useState } from 'react'
 import { Pencil } from 'lucide-react'
 import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
@@ -8,6 +8,7 @@ import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
+import PageEditModal from '@/components/layout/PageEditModal'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT, gridElementRef } from '@/lib/gridConstants'
 
@@ -30,6 +31,7 @@ export default function HomePage() {
   const { isEditMode } = useEditModeStore()
   const { setCellSize, setPreviewCellSize } = useGridStore()
   const { widgets, removeWidget, phantomWidget, isDraggingNewWidget, pages, currentPageId, switchPage } = useWidgetStore()
+  const [isPageEditOpen, setIsPageEditOpen] = useState(false)
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
 
@@ -83,6 +85,7 @@ export default function HomePage() {
   })()
 
   return (
+    <>
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
       {/* 서브바 */}
       <div className="flex items-center justify-between shrink-0 px-1 h-7">
@@ -117,7 +120,10 @@ export default function HomePage() {
                 />
               ))}
             </div>
-            <button className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-stroke-input bg-surface text-foreground-tertiary text-[11px] font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-[150ms]">
+            <button
+              onClick={() => setIsPageEditOpen(true)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-stroke-input bg-surface text-foreground-tertiary text-[11px] font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-[150ms]"
+            >
               <svg className="w-[11px] h-[11px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h7" />
               </svg>
@@ -181,5 +187,8 @@ export default function HomePage() {
         </div>
       </div>
     </div>
+
+    {isPageEditOpen && <PageEditModal onClose={() => setIsPageEditOpen(false)} />}
+    </>
   )
 }
