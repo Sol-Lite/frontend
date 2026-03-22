@@ -30,7 +30,6 @@ export default function InvestPage() {
     investor,
     finance,
     detailLoading,
-    availableAmount,
     onChartPeriodChange,
     onMinuteIntervalChange,
   } = useInvestMarketData(stockCode, locationState)
@@ -61,8 +60,9 @@ export default function InvestPage() {
 
           <InvestOrderSection
             key={stockCode}
+            stockCode={stockCode}
+            marketType={stockMeta.market}
             stockName={stockMeta.name}
-            availableAmount={availableAmount}
             currentPrice={currentPrice}
             changeRate={changeRate}
             defaultPrice={currentPrice ?? stockMeta.price}
@@ -83,6 +83,8 @@ export default function InvestPage() {
           errorMessage={marketErrorMessage}
           onLeftTabChange={setLeftTab}
           onRightTabChange={setRightTab}
+          stockCode={stockCode}
+          currentPrice={currentPrice}
         />
       </div>
     </div>

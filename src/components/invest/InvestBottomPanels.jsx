@@ -7,6 +7,7 @@ import InvestorTable from '@/components/invest/panels/InvestorTable'
 import FinancePanel from '@/components/invest/panels/FinancePanel'
 import ExecutionHistoryPanel from '@/components/invest/panels/ExecutionHistoryPanel'
 import HoldingPanel from '@/components/invest/panels/HoldingPanel'
+import PendingOrdersPanel from '@/components/invest/panels/PendingOrdersPanel'
 
 function SectionTabs({ items, activeKey, onChange }) {
   return (
@@ -42,6 +43,8 @@ export default function InvestBottomPanels({
   errorMessage,
   onLeftTabChange,
   onRightTabChange,
+  stockCode,
+  currentPrice,
 }) {
   return (
     <div className="flex h-[210px] shrink-0 overflow-hidden border-t-2 border-stroke bg-surface">
@@ -57,11 +60,7 @@ export default function InvestBottomPanels({
       <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <SectionTabs items={RIGHT_TABS} activeKey={rightTab} onChange={onRightTabChange} />
         {rightTab === 'exec' && <ExecutionHistoryPanel />}
-        {rightTab === 'pending' && (
-          <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">
-            미체결 주문이 없습니다.
-          </div>
-        )}
+        {rightTab === 'pending' && <PendingOrdersPanel />}
         {rightTab === 'holding' && <HoldingPanel />}
       </section>
     </div>
