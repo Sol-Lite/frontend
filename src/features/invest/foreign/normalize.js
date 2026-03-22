@@ -1,5 +1,14 @@
 import { toLocalTimestamp, extractDateKey, computeDepth } from '@/features/invest/marketData'
 
+function toNumber(value, fallback = 0) {
+  const parsed = Number(value)
+  return Number.isFinite(parsed) ? parsed : fallback
+}
+
+function readOrderQuantity(entry) {
+  return toNumber(entry?.remaining ?? entry?.volume ?? entry?.quantity)
+}
+
 export function normalizeForeignDailySeries(dataPoints) {
   return (dataPoints ?? [])
     .map((item) => ({
@@ -36,11 +45,17 @@ export function normalizeForeignMinuteSeries(dataPoints) {
 export function normalizeForeignOrderBook(raw) {
   if (!raw) return null
 
-  const asks = (raw.asks ?? []).map((entry) => ({ price: entry.price, quantity: entry.remaining }))
-  const bids = (raw.bids ?? []).map((entry) => ({ price: entry.price, quantity: entry.remaining }))
+  const asks = (raw.asks ?? []).map((entry) => ({
+    price: toNumber(entry?.price),
+    quantity: readOrderQuantity(entry),
+  }))
+  const bids = (raw.bids ?? []).map((entry) => ({
+    price: toNumber(entry?.price),
+    quantity: readOrderQuantity(entry),
+  }))
 
-  const askTotal = asks.reduce((sum, a) => sum + a.quantity, 0)
-  const bidTotal = bids.reduce((sum, b) => sum + b.quantity, 0)
+  const askTotal = toNumber(raw.askTotal ?? raw.totOfferRem, asks.reduce((sum, a) => sum + a.quantity, 0))
+  const bidTotal = toNumber(raw.bidTotal ?? raw.totBidRem, bids.reduce((sum, b) => sum + b.quantity, 0))
   const maxVolume = Math.max(...asks.map((a) => a.quantity), ...bids.map((b) => b.quantity), 1)
 
   return {

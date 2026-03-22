@@ -24,15 +24,18 @@ export function getChartPeriodLabel(periodKey, minuteInterval) {
 
 export function resolveStockMeta(stockCode, locationState) {
   const known = STOCK_META_BY_CODE[stockCode]
-  const isDomestic = !locationState?.marketType
-    || ['KOSPI', 'KOSDAQ'].includes(locationState.marketType)
+  const marketType = locationState?.marketType ?? known?.market ?? null
+  const exchangeCode = locationState?.exchangeCode ?? null
+  const isDomestic = exchangeCode == null
+    ? (!marketType || ['KOSPI', 'KOSDAQ'].includes(marketType))
+    : ['KOSPI', 'KOSDAQ'].includes(marketType)
 
   return {
     name: known?.name ?? locationState?.stockName ?? stockCode,
     nameEn: locationState?.stockNameEn ?? null,
     code: stockCode,
-    market: known?.market ?? locationState?.marketType ?? '-',
-    exchangeCode: locationState?.exchangeCode ?? null,
+    market: known?.market ?? marketType ?? '-',
+    exchangeCode,
     sector: known?.sector ?? '-',
     isDomestic,
     availableAmount: known?.availableAmount ?? INVEST_STOCK.availableAmount,
