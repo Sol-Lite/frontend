@@ -2,33 +2,35 @@ import useEditModeStore from '@/store/useEditModeStore'
 import EditHandle from './EditHandle'
 import { cn } from '@/lib/cn'
 
-export default function WidgetCard({ children, colSpan = 1, rowSpan = 1, className = '', onDelete }) {
-  const { isEditMode } = useEditModeStore()
+export default function WidgetCard({ children, className = '', onDelete }) {
+  const { isEditMode, wiggleDelay, wiggleSyncKey } = useEditModeStore()
 
   return (
-    <div
-      className={cn(
-        'relative',
-        isEditMode
-          ? 'animate-wiggle cursor-grab'
-          : 'cursor-pointer transition-[transform] duration-[200ms] hover:-translate-y-px',
-        colSpan === 3 ? 'col-span-3' : colSpan === 2 ? 'col-span-2' : 'col-span-1',
-        rowSpan === 2 ? 'row-span-2' : '',
-        className,
-      )}
-    >
+    /* 바깥 div는 안정적 — EditHandle의 absolute 기준점 역할 */
+    <div className={cn('relative h-full', className)}>
       {isEditMode && <EditHandle onDelete={onDelete} />}
-      {/* 콘텐츠 클리핑 래퍼 — 핸들은 relative 부모 기준으로 바깥에 위치 */}
+      {/* animation wrapper: wiggleSyncKey 변경 시 remount → 모든 위젯 animation 동시 재시작 */}
       <div
+        key={isEditMode ? wiggleSyncKey : undefined}
         className={cn(
-          'h-full bg-surface border rounded-2xl p-[14px_16px]',
-          'flex flex-col overflow-hidden',
+          'h-full',
           isEditMode
-            ? 'border-stroke-input shadow-widget-edit'
-            : 'border-stroke transition-[border-color,box-shadow] duration-[200ms] hover:border-widget-border-hover hover:shadow-widget-hover',
+            ? 'animate-wiggle'
+            : 'cursor-pointer transition-[transform] duration-[200ms] hover:-translate-y-px',
         )}
+        style={isEditMode ? { animationDelay: `${wiggleDelay}ms` } : undefined}
       >
-        {children}
+        <div
+          className={cn(
+            'h-full bg-surface border rounded-2xl p-[14px_16px]',
+            'flex flex-col overflow-hidden',
+            isEditMode
+              ? 'border-stroke-input shadow-widget-edit'
+              : 'border-stroke transition-[border-color,box-shadow] duration-[200ms] hover:border-widget-border-hover hover:shadow-widget-hover',
+          )}
+        >
+          {children}
+        </div>
       </div>
     </div>
   )

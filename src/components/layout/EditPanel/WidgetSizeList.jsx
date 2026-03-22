@@ -1,4 +1,5 @@
-import { ChevronLeft, Plus } from 'lucide-react'
+import { ChevronLeft } from 'lucide-react'
+import { useDraggable } from '@dnd-kit/core'
 import { cn } from '@/lib/cn'
 import useGridStore from '@/store/useGridStore'
 import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
@@ -38,7 +39,7 @@ function PreviewContent({ type }) {
           <div>
             <div className="text-[8px] text-foreground-disabled mb-0.5">총 평가자산</div>
             <div className="text-[14px] font-extrabold text-foreground leading-none">84,320,000</div>
-            <div className="text-[10px] text-up font-semibold mt-1">▲ +2.61%</div>
+            <div className="text-[10px] text-up font-semibold mt-1">▲ +2,140,000 (+2.61%)</div>
           </div>
         </div>
       )
@@ -49,20 +50,20 @@ function PreviewContent({ type }) {
         <div className="flex flex-col h-full gap-1.5">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">계좌 잔고</span>
           <div className="shrink-0">
-            <div className="text-[8px] text-foreground-disabled">총 평가자산</div>
-            <div className="text-[14px] font-extrabold text-foreground leading-none">84,320,000</div>
-            <div className="text-[9px] text-up font-semibold">▲ +2,152,000 (+2.61%)</div>
+            <div className="text-[9px] text-foreground-disabled">총 평가자산</div>
+            <div className="text-[18px] font-extrabold text-foreground leading-tight">84,320,000</div>
+            <div className="text-[10px] text-up font-semibold">▲ +2,152,000 (+2.61%)</div>
           </div>
-          <div className="h-px bg-stroke-subtle shrink-0" />
-          <div className="flex gap-2 flex-1">
+          {/* <div className="h-px bg-stroke-subtle shrink-0" /> */}
+          <div className="flex gap-2 flex-1 items-end">
             {[
               { label: '투자원금', val: '82,168,000', color: 'text-foreground' },
               { label: '평가손익', val: '+2,152,000', color: 'text-up' },
               { label: '주문가능', val: '74,780,000', color: 'text-foreground' },
             ].map(({ label, val, color }) => (
               <div key={label} className="flex-1 min-w-0">
-                <div className="text-[8px] text-foreground-disabled">{label}</div>
-                <div className={`text-[10px] font-semibold truncate ${color}`}>{val}</div>
+                <div className="text-[9px] text-foreground-disabled">{label}</div>
+                <div className={`text-[12px] font-semibold truncate ${color}`}>{val}</div>
               </div>
             ))}
           </div>
@@ -128,7 +129,7 @@ function PreviewContent({ type }) {
                   <span className="text-[9px] text-foreground-disabled w-3">{rank}</span>
                   <span className="text-[10px] font-medium text-foreground">{name}</span>
                 </div>
-                <span className={`text-[10px] font-semibold ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
+                <span className={`text-[10px] font-semibold ${up ? 'text-up' : 'text-down'}`}>{up ? '▲' : '▼'} {chg}</span>
               </div>
             ))}
           </div>
@@ -162,7 +163,7 @@ function PreviewContent({ type }) {
                   <span className="text-[9px] text-foreground-disabled w-4">{rank}</span>
                   <span className="text-[10px] font-medium text-foreground">{name}</span>
                 </div>
-                <span className={`text-[10px] font-semibold ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
+                <span className={`text-[10px] font-semibold ${up ? 'text-up' : 'text-down'}`}>{up ? '▲' : '▼'} {chg}</span>
               </div>
             ))}
           </div>
@@ -174,7 +175,7 @@ function PreviewContent({ type }) {
       return (
         <div className="flex flex-col h-full">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
-          <div className="flex-1 flex flex-col justify-center items-center text-center min-h-0">
+          <div className="flex-1 flex flex-col justify-start items-center text-center min-h-0 pt-1">
             <div className="text-[8px] text-foreground-disabled">KOSPI</div>
             <div className="text-[15px] font-extrabold text-foreground leading-tight">2,685.42</div>
             <div className="text-[9px] text-up font-medium">▲ +0.46%</div>
@@ -308,7 +309,7 @@ function PreviewContent({ type }) {
               const fill  = up ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
               return (
                 <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>
-                  <div>
+                  <div className="text-center">
                     <div className="text-[8px] text-foreground-disabled">{pair}</div>
                     <div className={`${rateSize} font-extrabold text-foreground leading-tight`}>{rate}</div>
                     <span className={`text-[8px] ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
@@ -457,17 +458,20 @@ function PreviewContent({ type }) {
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">거래내역</span>
           <div className="flex flex-col gap-1.5">
             {[
-              { name: '삼성전자',   type: '매수', qty: '10주' },
-              { name: 'SK하이닉스', type: '매도', qty: '5주'  },
-              { name: 'LG에너지',   type: '매수', qty: '3주'  },
-              { name: 'NAVER',      type: '매도', qty: '2주'  },
-              { name: '현대차',     type: '매수', qty: '7주'  },
-            ].map(({ name, type, qty }, i) => (
+              { name: '삼성전자',   type: '매수', qty: '10주', date: '3.18' },
+              { name: 'SK하이닉스', type: '매도', qty: '5주',  date: '3.17' },
+              { name: 'LG에너지',   type: '매수', qty: '3주',  date: '3.16' },
+              { name: 'NAVER',      type: '매도', qty: '2주',  date: '3.15' },
+              { name: '현대차',     type: '매수', qty: '7주',  date: '3.14' },
+            ].map(({ name, type, qty, date }, i) => (
               <div key={i} className="flex items-center justify-between">
-                <span className="text-[10px] text-foreground">{name}</span>
-                <div className="flex items-center gap-1">
-                  <span className={`text-[8px] font-semibold px-1 py-px rounded ${type === '매수' ? 'text-up bg-up/10' : 'text-down bg-down/10'}`}>{type}</span>
-                  <span className="text-[9px] text-foreground-disabled">{qty}</span>
+                <div className="flex items-center gap-1 min-w-0">
+                  <span className={`text-[7px] font-semibold px-1 py-px rounded shrink-0 ${type === '매수' ? 'text-up bg-up/10' : 'text-down bg-down/10'}`}>{type}</span>
+                  <span className="text-[9px] text-foreground truncate">{name}</span>
+                </div>
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="text-[8px] text-foreground-disabled">{qty}</span>
+                  <span className="text-[7px] text-foreground-disabled">{date}</span>
                 </div>
               </div>
             ))}
@@ -593,9 +597,14 @@ function PreviewContent({ type }) {
       return (
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-start justify-between shrink-0">
-            <div>
-              <div className="text-[11px] font-bold text-foreground">삼성전자</div>
-              <div className="text-[9px] text-foreground-disabled">005930 · KOSPI</div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-7 h-7 rounded-full bg-primary-light border border-primary-border flex items-center justify-center shrink-0">
+                <span className="text-[9px] font-extrabold text-primary">삼성</span>
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-foreground">삼성전자</div>
+                <div className="text-[9px] text-foreground-disabled">005930</div>
+              </div>
             </div>
             <div className="text-right">
               <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
@@ -639,7 +648,7 @@ function PreviewContent({ type }) {
               const fill  = up ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
               return (
                 <div key={name} className="flex-1 flex flex-col items-center px-2">
-                  <div className="flex-1 flex flex-col justify-center items-center text-center">
+                  <div className="flex-1 flex flex-col justify-start items-center text-center pt-1">
                     <div className="text-[8px] text-foreground-disabled">{name}</div>
                     <div className="text-[11px] font-extrabold text-foreground leading-tight">{val}</div>
                     <span className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
@@ -731,9 +740,14 @@ function PreviewContent({ type }) {
       return (
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-start justify-between shrink-0">
-            <div>
-              <div className="text-[11px] font-bold text-foreground">삼성전자</div>
-              <div className="text-[8px] text-foreground-disabled">005930 · KOSPI · 반도체</div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-7 h-7 rounded-full bg-primary-light border border-primary-border flex items-center justify-center shrink-0">
+                <span className="text-[9px] font-extrabold text-primary">삼성</span>
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-foreground">삼성전자</div>
+                <div className="text-[8px] text-foreground-disabled">005930 · KOSPI · 반도체</div>
+              </div>
             </div>
             <div className="text-right">
               <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
@@ -783,7 +797,7 @@ function PreviewContent({ type }) {
               const fill  = up ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
               return (
                 <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>
-                  <div>
+                  <div className="text-center">
                     <div className="text-[8px] text-foreground-disabled">{pair}</div>
                     <div className={`${rateSize} font-extrabold text-foreground leading-tight`}>{rate}</div>
                     <span className={`text-[8px] ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
@@ -983,65 +997,6 @@ function PreviewContent({ type }) {
       )
     }
 
-    /* 증권사 리포트 — 단일 1×1 */
-    case 'report-sm': {
-      const r = { title: '삼성전자 목표가 9만원으로 상향', firm: '키움증권', desc: '반도체 업황 회복 기대감' }
-      return (
-        <div className="flex flex-col h-full justify-between">
-          <div>
-            <p className="text-[10px] font-bold text-foreground leading-snug">{r.title}</p>
-            <p className="text-[8px] text-foreground-disabled mt-1">{r.desc}</p>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-[9px] text-primary font-semibold">{r.firm}</span>
-          </div>
-        </div>
-      )
-    }
-
-    /* 증권사 리포트 — 목록형 2×1 */
-    case 'report-wide': {
-      const reports = [
-        { title: '삼성전자 목표가 상향', firm: '키움증권' },
-        { title: 'SK하이닉스 HBM 수요 긍정적', firm: '삼성증권' },
-        { title: 'LG에너지 실적 전망 하향', firm: 'NH투자' },
-      ]
-      return (
-        <div className="flex flex-col gap-1.5 h-full">
-          {reports.map(({ title, firm }) => (
-            <div key={title} className="flex items-start justify-between gap-2">
-              <p className="text-[9px] text-foreground leading-snug truncate">{title}</p>
-              <span className="text-[8px] text-primary shrink-0">{firm}</span>
-            </div>
-          ))}
-        </div>
-      )
-    }
-
-    /* 증권사 리포트 — 상세 2×2 */
-    case 'report-2x2': {
-      const reports = [
-        { title: '삼성전자 목표가 상향', firm: '키움증권', desc: '반도체 업황 회복 기대감' },
-        { title: 'SK하이닉스 HBM 수요 긍정적', firm: '삼성증권', desc: 'AI 서버 수요 지속 증가' },
-        { title: 'LG에너지 실적 전망 하향', firm: 'NH투자', desc: 'EV 시장 성장 둔화 우려' },
-      ]
-      return (
-        <div className="flex flex-col gap-2 h-full">
-          {reports.map(({ title, firm, desc }) => (
-            <div key={title} className="border-b border-stroke last:border-0 pb-2 last:pb-0">
-              <div className="flex items-start justify-between gap-1">
-                <span className="text-[10px] font-semibold text-foreground leading-snug">{title}</span>
-              </div>
-              <div className="flex items-center gap-1 mt-0.5">
-                <span className="text-[8px] text-primary">{firm}</span>
-                <span className="text-[8px] text-foreground-disabled">· {desc}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      )
-    }
-
     default:
       return null
   }
@@ -1070,9 +1025,47 @@ function VariantPreview({ variant }) {
   )
 }
 
+/* ── DraggableVariantItem ───────────────────────────────── */
+function DraggableVariantItem({ variant, widgetType, canAdd }) {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: `new-widget-${variant.id}`,
+    disabled: !canAdd,
+    data: { type: 'new-widget', widgetTypeId: widgetType.id, variant },
+  })
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        'relative group',
+        widthClass(variant.colSpan),
+        canAdd ? 'cursor-grab' : 'cursor-default',
+        isDragging && 'opacity-40',
+      )}
+      {...attributes}
+      {...listeners}
+    >
+      <VariantPreview variant={variant} />
+      {canAdd ? (
+        /* hover 드래그 힌트 오버레이 — pointer-events-none으로 drag 이벤트 차단 안 함 */
+        <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-primary/10 border border-primary flex items-center justify-center transition-opacity duration-[150ms] pointer-events-none">
+          <span className="text-[10px] text-primary font-semibold bg-primary/10 px-2 py-0.5 rounded-full">
+            드래그하여 추가
+          </span>
+        </div>
+      ) : (
+        /* 공간 부족 오버레이 — 항상 표시 */
+        <div className="absolute inset-0 rounded-xl bg-background/60 border border-stroke flex items-center justify-center pointer-events-none">
+          <span className="text-[10px] text-foreground-disabled font-medium">공간 부족</span>
+        </div>
+      )}
+    </div>
+  )
+}
+
 /* ── WidgetSizeList ─────────────────────────────────────── */
 export default function WidgetSizeList({ widgetType, onBack }) {
-  const { widgets, addWidget } = useWidgetStore()
+  const { widgets } = useWidgetStore()
 
   return (
     <>
@@ -1098,34 +1091,17 @@ export default function WidgetSizeList({ widgetType, onBack }) {
           {widgetType.variants.map((variant) => {
             const canAdd = canFitInGrid(widgets, variant.colSpan, variant.rowSpan)
             return (
-              <div
+              <DraggableVariantItem
                 key={variant.id}
-                className={cn('relative group', widthClass(variant.colSpan))}
-              >
-                <VariantPreview variant={variant} />
-                {canAdd ? (
-                  /* hover 추가 오버레이 */
-                  <button
-                    aria-label={`${variant.label} 추가`}
-                    onClick={() => { addWidget(widgetType.id, variant) }}
-                    className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 bg-primary/10 border border-primary flex items-center justify-center transition-opacity duration-[150ms]"
-                  >
-                    <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center shadow-primary-btn">
-                      <Plus className="w-3.5 h-3.5 text-white" />
-                    </div>
-                  </button>
-                ) : (
-                  /* 공간 부족 오버레이 — 항상 표시 */
-                  <div className="absolute inset-0 rounded-xl bg-background/60 border border-stroke flex items-center justify-center">
-                    <span className="text-[10px] text-foreground-disabled font-medium">공간 부족</span>
-                  </div>
-                )}
-              </div>
+                variant={variant}
+                widgetType={widgetType}
+                canAdd={canAdd}
+              />
             )
           })}
         </div>
         <p className="text-[10px] text-foreground-disabled mt-4 text-center">
-          클릭하여 대시보드에 추가
+          대시보드로 드래그하여 추가
         </p>
       </div>
     </>
