@@ -15,25 +15,6 @@ import {
 import { getChartPeriodLabel } from '@/features/invest/marketData'
 import { cn } from '@/lib/cn'
 
-
-function MiniMetric({ label, value, tone = 'neutral' }) {
-  return (
-    <div className="py-0.5">
-      <div className="text-[8px] text-foreground-disabled">{label}</div>
-      <div
-        className={cn(
-          'text-[11px] font-bold',
-          tone === 'up' && 'text-up',
-          tone === 'down' && 'text-down',
-          tone === 'neutral' && 'text-foreground',
-        )}
-      >
-        {value}
-      </div>
-    </div>
-  )
-}
-
 export default function InvestStockOverview({
   stockMeta,
   currentPrice,
@@ -102,17 +83,11 @@ export default function InvestStockOverview({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-0 border-b border-stroke px-[14px] py-1.5 shrink-0">
-        <MiniMetric label="시가" value={formatNumber(overview.open)} />
-        <MiniMetric label="고가" value={formatNumber(overview.high)} tone="up" />
-        <MiniMetric label="저가" value={formatNumber(overview.low)} tone="down" />
-        <MiniMetric label="전일종가" value={formatNumber(overview.previousClose)} />
-      </div>
-
       <div className="flex min-h-0 flex-1 flex-col px-[14px] pb-2 pt-2.5">
         <InvestStockChart
           stockCode={stockMeta.code}
           stockName={stockMeta.name}
+          overview={overview}
           series={chartSeries}
           selectedPeriod={chartPeriod}
           periodLabel={getChartPeriodLabel(chartPeriod, minuteInterval)}
