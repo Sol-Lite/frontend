@@ -1,11 +1,9 @@
-import { useState } from 'react'
 import { Star } from 'lucide-react'
 import InvestStockChart from '@/components/market/InvestStockChart'
 import InvestStockSearch from '@/components/invest/InvestStockSearch'
 import LiveDot from '@/components/ui/LiveDot'
 import PriceChange from '@/components/ui/PriceChange'
 import StockAvatar from '@/components/ui/StockAvatar'
-import { getStockLogoUrl } from '@/lib/stockLogo'
 import {
   CHART_PERIOD_OPTIONS,
   MINUTE_INTERVAL_OPTIONS,
@@ -16,46 +14,6 @@ import {
 } from '@/features/invest/formatters'
 import { getChartPeriodLabel } from '@/features/invest/marketData'
 import { cn } from '@/lib/cn'
-
-function InvestStockLogo({ market, code, name }) {
-  const MARKETS = ['KOSPI', 'KOSDAQ']
-  const initialIdx = MARKETS.indexOf(market) === -1 ? 0 : MARKETS.indexOf(market)
-  const [idx, setIdx] = useState(initialIdx)
-
-  const url = getStockLogoUrl(MARKETS[idx], code)
-
-  if (!url || idx >= MARKETS.length) {
-    return <StockAvatar name={name} size="lg" />
-  }
-
-  return (
-    <img
-      key={url}
-      src={url}
-      alt={name}
-      className="h-9 w-9 shrink-0 rounded-full border-2 border-stroke bg-background object-contain"
-      onError={() => setIdx((i) => i + 1)}
-    />
-  )
-}
-
-function MiniMetric({ label, value, tone = 'neutral' }) {
-  return (
-    <div className="py-0.5">
-      <div className="text-[8px] text-foreground-disabled">{label}</div>
-      <div
-        className={cn(
-          'text-[11px] font-bold',
-          tone === 'up' && 'text-up',
-          tone === 'down' && 'text-down',
-          tone === 'neutral' && 'text-foreground',
-        )}
-      >
-        {value}
-      </div>
-    </div>
-  )
-}
 
 export default function InvestStockOverview({
   stockMeta,
@@ -95,7 +53,7 @@ export default function InvestStockOverview({
 
       <div className="border-b border-stroke px-[14px] py-2.5 shrink-0">
         <div className="flex items-center gap-2">
-          <InvestStockLogo market={stockMeta.market} code={stockMeta.code} name={stockMeta.name} />
+          <StockAvatar name={stockMeta.name} stockCode={stockMeta.code} marketType={stockMeta.market} size="lg" />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-extrabold leading-tight text-foreground">{stockMeta.name}</div>
             <div className="mt-0.5 text-[9px] text-foreground-disabled">
@@ -125,17 +83,11 @@ export default function InvestStockOverview({
         </div>
       </div>
 
-      <div className="grid grid-cols-4 gap-0 border-b border-stroke px-[14px] py-1.5 shrink-0">
-        <MiniMetric label="시가" value={formatNumber(overview.open)} />
-        <MiniMetric label="고가" value={formatNumber(overview.high)} tone="up" />
-        <MiniMetric label="저가" value={formatNumber(overview.low)} tone="down" />
-        <MiniMetric label="전일종가" value={formatNumber(overview.previousClose)} />
-      </div>
-
       <div className="flex min-h-0 flex-1 flex-col px-[14px] pb-2 pt-2.5">
         <InvestStockChart
           stockCode={stockMeta.code}
           stockName={stockMeta.name}
+          overview={overview}
           series={chartSeries}
           selectedPeriod={chartPeriod}
           periodLabel={getChartPeriodLabel(chartPeriod, minuteInterval)}

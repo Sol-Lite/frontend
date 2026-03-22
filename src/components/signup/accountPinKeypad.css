@@ -146,6 +146,37 @@
   }
 }
 
+/* ── compact 변형 (투자 패널 인라인 키패드) ── */
+.sol-pin-keypad-compact .sol-pin-keypad-shell--desktop {
+  padding: 10px !important;
+  border-radius: 14px !important;
+  margin-top: 0 !important;
+}
+
+.sol-pin-keypad-compact .sol-pin-keyboard .hg-rows {
+  gap: 6px;
+}
+
+.sol-pin-keypad-compact .sol-pin-keyboard .hg-row {
+  gap: 6px;
+}
+
+.sol-pin-keypad-compact .sol-pin-keyboard .hg-button {
+  height: 38px !important;
+  font-size: 18px;
+  border-radius: 8px !important;
+}
+
+.sol-pin-keypad-compact .sol-pin-keyboard .hg-button.sol-pin-keyboard__action {
+  height: 34px !important;
+  font-size: 11px;
+}
+
+.sol-pin-keypad-compact .sol-pin-keyboard .sol-pin-keyboard__lock {
+  height: 20px !important;
+  width: 20px !important;
+}
+
 .sol-pin-keypad-shell--mobile .sol-pin-keyboard .hg-button {
   background: rgba(255, 255, 255, 0.96) !important;
   border-color: rgba(255, 255, 255, 0.14) !important;

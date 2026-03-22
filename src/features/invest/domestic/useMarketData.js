@@ -22,8 +22,12 @@ const STALE = {
 }
 
 export default function useDomesticMarketData(stockCode, { enabled }) {
-  const [selectedChartPeriod, setSelectedChartPeriod] = useState('MINUTE')
-  const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(DEFAULT_MINUTE_INTERVAL)
+  const [selectedChartPeriod, setSelectedChartPeriod] = useState(
+    () => localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
+  )
+  const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(
+    () => Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL,
+  )
   const [liveCandle, setLiveCandle] = useState(null)
 
   const endDate = formatApiDate(new Date())
@@ -178,6 +182,14 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
   const previousClose = dailySeries.at(-2)?.close ?? null
   const dailyRows = buildDailyRows(dailySeries)
   const realtimeRows = buildRealtimeRows(getLatestMinuteSession(minuteSeriesWithLive), previousClose)
+
+  useEffect(() => {
+    localStorage.setItem('invest.chartPeriod', selectedChartPeriod)
+  }, [selectedChartPeriod])
+
+  useEffect(() => {
+    localStorage.setItem('invest.minuteInterval', String(selectedMinuteInterval))
+  }, [selectedMinuteInterval])
 
   function handleMinuteIntervalChange(nextMinuteInterval) {
     setSelectedMinuteInterval(nextMinuteInterval)

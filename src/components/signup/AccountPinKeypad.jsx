@@ -15,7 +15,7 @@ const DISPLAY = {
   '{mark-b}': LOCK_ICON,
   '{shuffle}': '재배열',
   '{bksp}': '⌫',
-  '{done}': '입력완료',
+  '{done}': '완료',
   '{close}': '닫기',
 }
 
