@@ -208,28 +208,6 @@ const useWidgetStore = create((set) => ({
       return { currentPageId: pageId, widgets: page.widgets }
     }),
 
-  // ── 페이지 추가 (빈 대시보드) ────────────────────────────
-  addPage: () =>
-    set((state) => {
-      const newId = crypto.randomUUID()
-      const newIndex = state.pages.length + 1
-      const newPage = { id: newId, name: `대시보드 ${newIndex}`, widgets: [] }
-      const newPages = [...state.pages, newPage]
-      return { pages: newPages, currentPageId: newId, widgets: [] }
-    }),
-
-  // ── 페이지 삭제 (마지막 페이지는 삭제 불가) ──────────────
-  deletePage: (pageId) =>
-    set((state) => {
-      if (state.pages.length <= 1) return state
-      const newPages = state.pages.filter((p) => p.id !== pageId)
-      // 삭제한 페이지가 현재 페이지면 첫 번째 페이지로 전환
-      const newCurrentId =
-        state.currentPageId === pageId ? newPages[0].id : state.currentPageId
-      const newWidgets = newPages.find((p) => p.id === newCurrentId)?.widgets ?? []
-      return { pages: newPages, currentPageId: newCurrentId, widgets: newWidgets }
-    }),
-
   // ── 페이지 이름 변경 ─────────────────────────────────────
   renamePage: (pageId, name) =>
     set((state) => ({

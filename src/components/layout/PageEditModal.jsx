@@ -47,7 +47,7 @@ function PageThumbnail({ widgets }) {
 
 function PageCard({ page, isActive, canDelete, onDelete }) {
   return (
-    <div className="flex-1 min-w-[140px]">
+    <div className="w-[148px] shrink-0">
       <div className={cn(
         'rounded-[14px] overflow-hidden',
         isActive
@@ -80,7 +80,7 @@ function PageCard({ page, isActive, canDelete, onDelete }) {
           <button
             onClick={onDelete}
             aria-label={`${page.name} 삭제`}
-            className="flex items-center gap-0.5 px-2 py-0.5 rounded-lg border border-up-border bg-up-bg text-up text-[10px] font-semibold hover:opacity-80 transition-opacity shrink-0"
+            className="flex items-center gap-0.5 px-2 py-0.5 rounded-lg border border-danger/20 bg-danger/5 text-danger text-[10px] font-semibold hover:opacity-80 transition-opacity shrink-0"
           >
             <Trash2 className="w-[9px] h-[9px]" />
             삭제
