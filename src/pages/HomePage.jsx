@@ -29,7 +29,7 @@ function PhantomSlot({ colSpan, rowSpan, gridCol, gridRow }) {
 export default function HomePage() {
   const { isEditMode } = useEditModeStore()
   const { setCellSize, setPreviewCellSize } = useGridStore()
-  const { widgets, removeWidget, phantomWidget, isDraggingNewWidget } = useWidgetStore()
+  const { widgets, removeWidget, phantomWidget, isDraggingNewWidget, pages, currentPageId, switchPage } = useWidgetStore()
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
 
@@ -103,9 +103,19 @@ export default function HomePage() {
         {isEditMode && (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5">
-              <div className="w-4 h-1.5 rounded-full bg-primary" />
-              <div className="w-1.5 h-1.5 rounded-full bg-stroke-input" />
-              <div className="w-1.5 h-1.5 rounded-full bg-stroke-input" />
+              {pages.map((page) => (
+                <button
+                  key={page.id}
+                  aria-label={page.name}
+                  onClick={() => switchPage(page.id)}
+                  className={cn(
+                    'rounded-full transition-all duration-150',
+                    page.id === currentPageId
+                      ? 'w-4 h-1.5 bg-primary'
+                      : 'w-1.5 h-1.5 bg-stroke-input hover:bg-foreground-disabled',
+                  )}
+                />
+              ))}
             </div>
             <button className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-stroke-input bg-surface text-foreground-tertiary text-[11px] font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-[150ms]">
               <svg className="w-[11px] h-[11px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
