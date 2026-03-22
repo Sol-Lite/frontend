@@ -179,94 +179,152 @@ const INITIAL_WIDGETS = [
   { instanceId: 'w10', widgetTypeId: 'stock-news',      variantId: 'stock-news-wide', colSpan: 2, rowSpan: 1, gridCol: 3, gridRow: 4 },
 ]
 
+const INITIAL_PAGES = [
+  { id: 'page-1', name: '대시보드 1', widgets: INITIAL_WIDGETS },
+]
+
+/* 현재 페이지의 widgets를 업데이트하고 top-level widgets 키도 동기화.
+   top-level widgets는 기존 소비자(AppShell, HomePage 등) 하위 호환용. */
+function _setCurrentWidgets(state, newWidgets) {
+  const newPages = state.pages.map((p) =>
+    p.id === state.currentPageId ? { ...p, widgets: newWidgets } : p,
+  )
+  return { pages: newPages, widgets: newWidgets }
+}
+
 const useWidgetStore = create((set) => ({
+  // ── 멀티 페이지 상태 ─────────────────────────────────────
+  pages: INITIAL_PAGES,
+  currentPageId: 'page-1',
+
+  // top-level widgets: 항상 현재 페이지의 widgets를 미러링 (하위 호환)
   widgets: INITIAL_WIDGETS,
 
-  // 편집 모드 진입 시 스냅샷 저장 → 취소 시 복원
+  // ── 페이지 전환 ─────────────────────────────────────────
+  switchPage: (pageId) =>
+    set((state) => {
+      const page = state.pages.find((p) => p.id === pageId)
+      if (!page || page.id === state.currentPageId) return state
+      return { currentPageId: pageId, widgets: page.widgets }
+    }),
+
+  // ── 페이지 이름 변경 ─────────────────────────────────────
+  renamePage: (pageId, name) =>
+    set((state) => ({
+      pages: state.pages.map((p) => (p.id === pageId ? { ...p, name } : p)),
+    })),
+
+  // ── 페이지 편집 모달에서 staged 변경사항 일괄 적용 ────────
+  applyPageChanges: (newPages, newCurrentId) =>
+    set(() => {
+      const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
+      return {
+        pages: newPages,
+        currentPageId: currentPage.id,
+        widgets: currentPage.widgets,
+      }
+    }),
+
+  // ── 편집 모드 스냅샷 (전체 pages 스코프) ─────────────────
+  // 편집 중 페이지 전환을 지원하기 위해 전체 pages와 진입 시점 pageId를 저장.
+  // 취소 시 모든 페이지의 위젯 변경사항이 복원되고 원래 페이지로 돌아온다.
   _snapshot: null,
-  snapshotWidgets: () => set((state) => ({ _snapshot: state.widgets })),
+  snapshotWidgets: () =>
+    set((state) => ({
+      _snapshot: { pages: state.pages, currentPageId: state.currentPageId },
+    })),
   restoreSnapshot: () =>
-    set((state) => ({ widgets: state._snapshot ?? state.widgets, _snapshot: null })),
+    set((state) => {
+      if (!state._snapshot) return state
+      const { pages, currentPageId } = state._snapshot
+      const currentPage = pages.find((p) => p.id === currentPageId)
+      return {
+        pages,
+        currentPageId,
+        widgets: currentPage?.widgets ?? [],
+        _snapshot: null,
+      }
+    }),
   clearSnapshot: () => set({ _snapshot: null }),
 
-  // new-widget 드래그 중 대시보드 outline 표시용
+  // ── drag UI 상태 ─────────────────────────────────────────
   isDraggingNewWidget: false,
   setIsDraggingNewWidget: (v) => set({ isDraggingNewWidget: v }),
 
-  // 드래그 중 drop 예정 위치를 보여주는 ghost placeholder
   phantomWidget: null,
   setPhantom: (phantom) => set({ phantomWidget: phantom }),
   clearPhantom: () => set({ phantomWidget: null }),
+
+  // ── 위젯 CRUD ────────────────────────────────────────────
 
   // 첫 번째 빈 셀에 위젯 추가 (AddWidgetSlot 클릭 등)
   addWidget: (widgetTypeId, variant) =>
     set((state) => {
       const pos = _findFirstFreeCell(state.widgets, variant.colSpan, variant.rowSpan)
       if (!pos) return state
-      return {
-        widgets: [
-          ...state.widgets,
-          {
-            instanceId: crypto.randomUUID(),
-            widgetTypeId,
-            variantId: variant.id,
-            colSpan: variant.colSpan,
-            rowSpan: variant.rowSpan,
-            gridCol: pos.gridCol,
-            gridRow: pos.gridRow,
-          },
-        ],
-      }
+      const newWidgets = [
+        ...state.widgets,
+        {
+          instanceId: crypto.randomUUID(),
+          widgetTypeId,
+          variantId: variant.id,
+          colSpan: variant.colSpan,
+          rowSpan: variant.rowSpan,
+          gridCol: pos.gridCol,
+          gridRow: pos.gridRow,
+        },
+      ]
+      return _setCurrentWidgets(state, newWidgets)
     }),
 
   // 지정 좌표에 위젯 추가 (new-widget drag-to-add 용)
   addWidgetAt: (widgetTypeId, variant, gridCol, gridRow) =>
     set((state) => {
       if (!canPlaceAt(state.widgets, gridCol, gridRow, variant.colSpan, variant.rowSpan)) return state
-      return {
-        widgets: [
-          ...state.widgets,
-          {
-            instanceId: crypto.randomUUID(),
-            widgetTypeId,
-            variantId: variant.id,
-            colSpan: variant.colSpan,
-            rowSpan: variant.rowSpan,
-            gridCol,
-            gridRow,
-          },
-        ],
-      }
+      const newWidgets = [
+        ...state.widgets,
+        {
+          instanceId: crypto.randomUUID(),
+          widgetTypeId,
+          variantId: variant.id,
+          colSpan: variant.colSpan,
+          rowSpan: variant.rowSpan,
+          gridCol,
+          gridRow,
+        },
+      ]
+      return _setCurrentWidgets(state, newWidgets)
     }),
 
   removeWidget: (instanceId) =>
-    set((state) => ({
-      widgets: state.widgets.filter((w) => w.instanceId !== instanceId),
-    })),
+    set((state) => {
+      const newWidgets = state.widgets.filter((w) => w.instanceId !== instanceId)
+      return _setCurrentWidgets(state, newWidgets)
+    }),
 
   // 위젯을 지정 좌표로 이동 (빈 셀 drop)
   moveWidgetTo: (instanceId, gridCol, gridRow) =>
-    set((state) => ({
-      widgets: state.widgets.map((w) =>
+    set((state) => {
+      const newWidgets = state.widgets.map((w) =>
         w.instanceId === instanceId ? { ...w, gridCol, gridRow } : w,
-      ),
-    })),
+      )
+      return _setCurrentWidgets(state, newWidgets)
+    }),
 
   // 연쇄 push-aside 적용: active를 target으로 이동 + blockers를 계획된 좌표로 이동
   applyPushAsidePlan: (plan) =>
     set((state) => {
       if (!plan?.activeId) return state
       const moveMap = new Map((plan.moves || []).map((m) => [m.instanceId, m]))
-      return {
-        widgets: state.widgets.map((w) => {
-          if (w.instanceId === plan.activeId) {
-            return { ...w, gridCol: plan.targetCol, gridRow: plan.targetRow }
-          }
-          const m = moveMap.get(w.instanceId)
-          if (m) return { ...w, gridCol: m.gridCol, gridRow: m.gridRow }
-          return w
-        }),
-      }
+      const newWidgets = state.widgets.map((w) => {
+        if (w.instanceId === plan.activeId) {
+          return { ...w, gridCol: plan.targetCol, gridRow: plan.targetRow }
+        }
+        const m = moveMap.get(w.instanceId)
+        if (m) return { ...w, gridCol: m.gridCol, gridRow: m.gridRow }
+        return w
+      })
+      return _setCurrentWidgets(state, newWidgets)
     }),
 }))
 
