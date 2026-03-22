@@ -225,17 +225,23 @@ const useWidgetStore = create((set) => ({
       }
     }),
 
-  // ── 편집 모드 스냅샷 (현재 페이지 스코프) ────────────────
+  // ── 편집 모드 스냅샷 (전체 pages 스코프) ─────────────────
+  // 편집 중 페이지 전환을 지원하기 위해 전체 pages와 진입 시점 pageId를 저장.
+  // 취소 시 모든 페이지의 위젯 변경사항이 복원되고 원래 페이지로 돌아온다.
   _snapshot: null,
   snapshotWidgets: () =>
-    set((state) => ({ _snapshot: { pageId: state.currentPageId, widgets: state.widgets } })),
+    set((state) => ({
+      _snapshot: { pages: state.pages, currentPageId: state.currentPageId },
+    })),
   restoreSnapshot: () =>
     set((state) => {
       if (!state._snapshot) return state
-      // 스냅샷이 현재 페이지와 다를 경우 무시 (페이지 전환이 일어난 경우)
-      if (state._snapshot.pageId !== state.currentPageId) return { _snapshot: null }
+      const { pages, currentPageId } = state._snapshot
+      const currentPage = pages.find((p) => p.id === currentPageId)
       return {
-        ..._setCurrentWidgets(state, state._snapshot.widgets),
+        pages,
+        currentPageId,
+        widgets: currentPage?.widgets ?? [],
         _snapshot: null,
       }
     }),
