@@ -4,9 +4,8 @@ import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
-import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
+import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
-import AddWidgetSlot from '@/components/widgets/AddWidgetSlot'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
 import PageEditModal from '@/components/layout/PageEditModal'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
@@ -103,8 +102,8 @@ export default function HomePage() {
             </div>
           )}
         </div>
-        {isEditMode && (
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2">
+          {pages.length > 1 && (
             <div className="flex items-center gap-1.5">
               {pages.map((page) => (
                 <button
@@ -120,6 +119,8 @@ export default function HomePage() {
                 />
               ))}
             </div>
+          )}
+          {isEditMode && (
             <button
               onClick={() => setIsPageEditOpen(true)}
               className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-stroke-input bg-surface text-foreground-tertiary text-[11px] font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-[150ms]"
@@ -129,8 +130,8 @@ export default function HomePage() {
               </svg>
               페이지 편집
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* 스크롤 래퍼 */}
@@ -183,7 +184,6 @@ export default function HomePage() {
               </SortableWidgetCard>
             )
           })}
-          {!isEditMode && !phantomWidget && canFitInGrid(widgets, 1, 1) && <AddWidgetSlot />}
         </div>
       </div>
     </div>
