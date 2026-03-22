@@ -255,7 +255,7 @@ const InvestStockChart = memo(function InvestStockChart({
                 className={cn(
                   'rounded-md px-2.5 py-0.5 text-[10px] font-semibold transition-all',
                   chartType === type.key
-                    ? 'bg-surface text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                    ? 'bg-surface text-foreground shadow-control'
                     : 'text-foreground-disabled hover:text-foreground-secondary',
                 )}
               >
@@ -284,7 +284,7 @@ const InvestStockChart = memo(function InvestStockChart({
               <DropdownMenu.Content
                 align="end"
                 sideOffset={6}
-                className="z-50 min-w-[76px] rounded-lg border border-stroke bg-surface p-1 shadow-[0_10px_30px_rgba(15,23,42,0.12)]"
+                className="z-50 min-w-[76px] rounded-lg border border-stroke bg-surface p-1 shadow-dropdown"
               >
                 {minuteIntervalOptions.map((value) => (
                   <DropdownMenu.Item
@@ -315,7 +315,7 @@ const InvestStockChart = memo(function InvestStockChart({
                 className={cn(
                   'rounded-md px-2.5 py-0.5 text-[10px] font-semibold transition-all',
                   selectedPeriod === option.key
-                    ? 'bg-surface text-foreground shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                    ? 'bg-surface text-foreground shadow-control'
                     : 'text-foreground-disabled hover:text-foreground-secondary',
                 )}
               >

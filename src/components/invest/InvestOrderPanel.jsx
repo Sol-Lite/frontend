@@ -46,7 +46,7 @@ export default function InvestOrderPanel({
     ? {
         title:   'text-up',
         badge:   'bg-up text-white',
-        button:  'bg-up text-white shadow-[0_4px_14px_rgba(232,57,62,.30)] hover:opacity-90',
+        button:  'bg-up text-white shadow-up-btn hover:opacity-90',
         helper:  'text-up',
         wrapper: 'border-up-border bg-up-bg/50',
         cta:     '매수 주문',
@@ -54,7 +54,7 @@ export default function InvestOrderPanel({
     : {
         title:   'text-down',
         badge:   'bg-down text-white',
-        button:  'bg-down text-white shadow-[0_4px_14px_rgba(0,117,232,.25)] hover:opacity-90',
+        button:  'bg-down text-white shadow-down-btn hover:opacity-90',
         helper:  'text-down',
         wrapper: 'border-down-border bg-down-bg/60',
         cta:     '매도 주문',

@@ -56,6 +56,7 @@
   --color-widget-border-hover: #BFD0FF;  /* 위젯 카드 hover 테두리 */
 
   /* ── Stock Avatar 테마 (종목 아이콘 배경/테두리) ── */
+  --color-warning-bg:            #FFF8EE;
   --color-avatar-warning-bg:     #FFF3E0;
   --color-avatar-warning-border: #FED7AA;
   --color-avatar-green-bg:       #ECFDF5;
@@ -92,6 +93,10 @@
   --shadow-brand-glow:    0 0 14px rgba(0,70,255,.35);
   --shadow-brand-glow-sm: 0 0 14px rgba(0,70,255,.30);
   --shadow-primary-btn:   0 4px 14px rgba(0,70,255,.25);
+  --shadow-up-btn:        0 4px 14px rgba(232,57,62,.30);
+  --shadow-down-btn:      0 4px 14px rgba(0,117,232,.25);
+  --shadow-control:       0 1px 3px rgba(0,0,0,0.08);
+  --shadow-dropdown:      0 10px 30px rgba(15,23,42,0.12);
   --shadow-widget-hover:  0 4px 16px rgba(0,70,255,.08);
   --shadow-widget-edit:   0 4px 14px rgba(0,0,0,.07);
   --shadow-modal:         0 20px 50px rgba(0,0,0,.22);

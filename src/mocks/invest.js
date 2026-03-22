@@ -134,7 +134,7 @@ export const MOVING_AVERAGES = [
     period: 20,
     label: 'MA20',
     colorClass: 'text-warning',
-    toneClass: 'bg-[#FFF8EE] border-warning',
+    toneClass: 'bg-warning-bg border-warning',
     dotClass: 'bg-warning',
     path: 'M0,164 L36,155 L73,147 L110,148 L146,128 L182,108 L219,86 L255,64 L292,45',
     stroke: 'var(--color-warning)',
