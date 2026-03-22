@@ -56,7 +56,6 @@ function normalizeItem(item, sortFilter) {
   return {
     id: item.stockCode,
     rank: item.rank,
-    market: 'kr',
     name: item.name,
     label: item.name.slice(0, 2),
     color: pickColor(item.stockCode),

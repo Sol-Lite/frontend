@@ -9,7 +9,7 @@
  * @param {'sm'|'md'|'lg'} size
  * @param {string} className
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { getStockLogoUrl } from '@/lib/stockLogo'
 
 const COLOR_MAP = {
@@ -46,6 +46,10 @@ function buildUrlQueue(stockCode, marketType) {
 export default function StockAvatar({ name, stockCode, marketType, color = 'primary', size = 'md', className = '' }) {
   const urls = buildUrlQueue(stockCode, marketType)
   const [urlIdx, setUrlIdx] = useState(0)
+
+  useEffect(() => {
+    setUrlIdx(0)
+  }, [stockCode])
 
   const sizeClass = SIZE_MAP[size] ?? SIZE_MAP.md
   const base = `rounded-full border shrink-0 overflow-hidden flex items-center justify-center ${sizeClass} ${className}`

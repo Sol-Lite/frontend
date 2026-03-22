@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { foreignMarketApi } from '@/api/market'
 import { DAY_MS, DEFAULT_MINUTE_INTERVAL } from '@/features/invest/constants'
 import { formatApiDate } from '@/features/invest/formatters'
@@ -20,8 +20,12 @@ const STALE = {
 }
 
 export default function useForeignMarketData(stockCode, exchcd, { enabled }) {
-  const [selectedChartPeriod, setSelectedChartPeriod] = useState('MINUTE')
-  const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(DEFAULT_MINUTE_INTERVAL)
+  const [selectedChartPeriod, setSelectedChartPeriod] = useState(
+    () => localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
+  )
+  const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(
+    () => Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL,
+  )
 
   const endDate = formatApiDate(new Date())
   const startDate = formatApiDate(new Date(Date.now() - 180 * DAY_MS))
@@ -108,6 +112,14 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled }) {
   const previousClose = dailySeries.at(-2)?.close ?? null
   const dailyRows = buildDailyRows(dailySeries)
   const realtimeRows = buildRealtimeRows(getLatestMinuteSession(minuteSeries), previousClose)
+
+  useEffect(() => {
+    localStorage.setItem('invest.chartPeriod', selectedChartPeriod)
+  }, [selectedChartPeriod])
+
+  useEffect(() => {
+    localStorage.setItem('invest.minuteInterval', String(selectedMinuteInterval))
+  }, [selectedMinuteInterval])
 
   function handleMinuteIntervalChange(nextMinuteInterval) {
     setSelectedMinuteInterval(nextMinuteInterval)
