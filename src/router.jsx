@@ -20,11 +20,11 @@ export const router = createBrowserRouter([
       { path: 'invest',     element: <InvestPage /> },
       { path: 'invest/:stockCode', element: <InvestPage /> },
       { path: 'asset',      element: <AssetPage /> },
+      { path: 'password/reset', element: <PasswordResetPage /> },
     ],
   },
   { path: '/login',             element: <LoginPage /> },
   { path: '/signup',            element: <SignupPage /> },
   { path: '/email/verify',      element: <EmailVerifyPage /> },
   { path: '/forgot-password',   element: <ForgotPasswordPage /> },
-  { path: '/password/reset',    element: <PasswordResetPage /> },
 ])

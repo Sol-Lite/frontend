@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Activity, CheckCircle, XCircle } from 'lucide-react'
+import { X, XCircle } from 'lucide-react'
 import { PasswordInput } from '@/components/ui/Input'
 import { authApi } from '@/api/auth'
+import SolLiteBrand from '@/components/ui/SolLiteBrand'
+import SplashScreenFill from '@/components/ui/SplashScreenFill'
 
 const PW_RULES = [
   { key: 'length',  label: '최소 8자 이상',  check: (pw) => pw.length >= 8 },
@@ -32,11 +34,11 @@ export default function PasswordResetPage() {
   const navigate = useNavigate()
   const token = searchParams.get('token')
 
-  const [newPassword, setNewPassword]           = useState('')
+  const [newPassword, setNewPassword] = useState('')
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('')
-  const [isLoading, setIsLoading]               = useState(false)
-  const [status, setStatus]                     = useState('form') // 'form' | 'success' | 'error'
-  const [error, setError]                       = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [status, setStatus] = useState('form') // 'form' | 'animating' | 'success' | 'error'
+  const [error, setError] = useState('')
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -55,7 +57,8 @@ export default function PasswordResetPage() {
     setIsLoading(true)
     try {
       await authApi.confirmPasswordReset({ token, newPassword, newPasswordConfirm })
-      setStatus('success')
+      setStatus('animating')
+      setTimeout(() => setStatus('success'), 1600)
     } catch (err) {
       if (err?.code === 'TOKEN_EXPIRED' || err?.code === 'INVALID_TOKEN' || err?.code === 'TOKEN_ALREADY_USED') {
         setStatus('error')
@@ -67,38 +70,41 @@ export default function PasswordResetPage() {
     }
   }
 
-  // 토큰 없음
-  if (!token) {
-    return (
-      <ResultCard>
-        <XCircle className="w-12 h-12 text-up mx-auto mb-5" />
-        <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">유효하지 않은 링크</h2>
-        <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-8">
-          비밀번호 재설정 링크가 올바르지 않습니다.
-        </p>
-        <button onClick={() => navigate('/login')}
-          className="w-full py-[13px] bg-surface-muted border border-stroke text-foreground-secondary rounded-xl text-sm font-semibold hover:bg-stroke-subtle transition-colors">
-          로그인 페이지로
-        </button>
-      </ResultCard>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-5">
-      <div
-        className="w-full max-w-[400px] bg-surface rounded-xl shadow-modal overflow-hidden"
-        style={{ animation: 'modal-in .2s ease both' }}
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-5">
+      <div className="fixed inset-0 bg-black/40" onClick={() => navigate('/')} />
+
+      <div className="relative z-10 w-full max-w-[400px] bg-surface rounded-[6px] shadow-modal overflow-hidden animate-modal-in">
         {/* 헤더 */}
-        <div className="flex items-center gap-2.5 px-6 pt-[22px]">
-          <div className="w-[26px] h-[26px] rounded-[5px] bg-primary flex items-center justify-center">
-            <Activity className="w-[13px] h-[13px] text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-[15px] font-bold tracking-tight text-foreground-secondary">SOL Lite</span>
+        <div className="flex items-center justify-between px-6 pt-[22px]">
+          <SolLiteBrand />
+          <button
+            onClick={() => navigate('/')}
+            aria-label="닫기"
+            className="text-foreground-disabled hover:text-foreground-tertiary p-1 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
         </div>
 
-        {status === 'form' && (
+        {/* 토큰 없음 */}
+        {!token && (
+          <div className="px-6 py-8 text-center">
+            <XCircle className="w-12 h-12 text-up mx-auto mb-4" />
+            <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">유효하지 않은 링크</h2>
+            <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-6">
+              비밀번호 재설정 링크가 올바르지 않습니다.
+            </p>
+            <button
+              onClick={() => navigate('/', { state: { openLogin: true } })}
+              className="w-full py-[13px] bg-surface-muted border border-stroke text-foreground-secondary rounded-[4px] text-sm font-semibold hover:bg-stroke-subtle transition-colors"
+            >
+              로그인으로 돌아가기
+            </button>
+          </div>
+        )}
+
+        {token && status === 'form' && (
           <form onSubmit={handleSubmit} className="px-6 pt-5 pb-[26px] flex flex-col gap-3.5">
             <div>
               <h2 className="text-xl font-extrabold text-foreground tracking-tight">비밀번호 재설정</h2>
@@ -116,7 +122,6 @@ export default function PasswordResetPage() {
                 />
                 <PasswordRules password={newPassword} />
               </div>
-
               <PasswordInput
                 label="새 비밀번호 확인"
                 required
@@ -138,57 +143,43 @@ export default function PasswordResetPage() {
           </form>
         )}
 
-        {status === 'success' && (
-          <div className="px-6 py-8 text-center">
-            <CheckCircle className="w-12 h-12 text-live mx-auto mb-5" />
-            <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">변경 완료</h2>
-            <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-8">
-              비밀번호가 변경되었습니다.<br />새 비밀번호로 로그인해 주세요.
-            </p>
-            <button
-              onClick={() => navigate('/login')}
-              className="w-full py-[13px] bg-primary text-white rounded-xl text-sm font-bold shadow-primary-btn hover:bg-primary-hover transition-colors duration-[150ms]"
-            >
-              로그인하러 가기
-            </button>
+        {token && (status === 'animating' || status === 'success') && (
+          <div className="px-6 py-8 text-center min-h-[280px] flex flex-col items-center justify-center">
+            <div className="mb-6">
+              <SplashScreenFill inline animated={status === 'animating'} />
+            </div>
+            {status === 'success' && (
+              <>
+                <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">변경 완료</h2>
+                <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-6">
+                  비밀번호가 변경되었습니다.<br />새 비밀번호로 로그인해 주세요.
+                </p>
+                <button
+                  onClick={() => navigate('/', { state: { openLogin: true } })}
+                  className="w-full py-[13px] bg-primary text-white rounded-[4px] text-sm font-bold hover:bg-primary-hover transition-colors duration-[150ms]"
+                >
+                  로그인하러 가기
+                </button>
+              </>
+            )}
           </div>
         )}
 
-        {status === 'error' && (
+        {token && status === 'error' && (
           <div className="px-6 py-8 text-center">
-            <XCircle className="w-12 h-12 text-up mx-auto mb-5" />
+            <XCircle className="w-12 h-12 text-up mx-auto mb-4" />
             <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">링크 만료</h2>
-            <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-8">
+            <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-6">
               비밀번호 재설정 링크가 만료되었습니다.<br />다시 요청해 주세요.
             </p>
             <button
-              onClick={() => navigate('/login')}
-              className="w-full py-[13px] bg-surface-muted border border-stroke text-foreground-secondary rounded-xl text-sm font-semibold hover:bg-stroke-subtle transition-colors"
+              onClick={() => navigate('/', { state: { openLogin: true } })}
+              className="w-full py-[13px] bg-surface-muted border border-stroke text-foreground-secondary rounded-[4px] text-sm font-semibold hover:bg-stroke-subtle transition-colors"
             >
-              로그인 페이지로
+              로그인으로 돌아가기
             </button>
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-// 토큰 없는 경우 래퍼
-function ResultCard({ children }) {
-  return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-5">
-      <div
-        className="w-full max-w-[400px] bg-surface rounded-xl shadow-modal p-8 text-center"
-        style={{ animation: 'modal-in .2s ease both' }}
-      >
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center">
-            <Activity className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-[15px] font-bold tracking-tight text-foreground-secondary">SOL Lite</span>
-        </div>
-        {children}
       </div>
     </div>
   )
