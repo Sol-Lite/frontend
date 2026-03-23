@@ -103,8 +103,7 @@ export default function HomePage() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          {pages.length > 1 && (
-            <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
               {pages.map((page) => (
                 <button
                   key={page.id}
@@ -118,8 +117,7 @@ export default function HomePage() {
                   )}
                 />
               ))}
-            </div>
-          )}
+          </div>
           {isEditMode && (
             <button
               onClick={() => setIsPageEditOpen(true)}
