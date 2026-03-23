@@ -3,6 +3,8 @@ import StockAvatar from '@/components/ui/StockAvatar'
 import PriceChange from '@/components/ui/PriceChange'
 import WidgetCard from './WidgetCard'
 import { HOME_STOCKS } from '@/mocks/home'
+import useStockDetailStore from '@/store/useStockDetailStore'
+import useEditModeStore from '@/store/useEditModeStore'
 
 const PERIODS = ['1일', '1주', '1달', '3달']
 
@@ -11,10 +13,13 @@ export default function StockChartWidget({ variant = 'stock-sm', colSpan = 1, ro
   const stockId = config.stockId ?? 'samsung'
   const stock = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
   const isUp = stock.change > 0
+  const { openStock } = useStockDetailStore()
+  const { isEditMode } = useEditModeStore()
+  const handleCardClick = () => { if (!isEditMode) openStock(stock.id) }
 
   if (variant === 'stock-wide') {
     return (
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
         <div className="flex h-full gap-2.5 min-h-0">
           <div className="flex flex-col justify-between shrink-0">
             <div>
@@ -40,7 +45,7 @@ export default function StockChartWidget({ variant = 'stock-sm', colSpan = 1, ro
 
   if (variant === 'stock-3x2') {
     return (
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
         <div className="flex items-start justify-between mb-1.5 shrink-0">
           <div className="flex items-center gap-2">
             <StockAvatar name={stock.label} color={stock.color} size="sm" />
@@ -90,7 +95,7 @@ export default function StockChartWidget({ variant = 'stock-sm', colSpan = 1, ro
 
   if (variant === 'stock-2x2') {
     return (
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
         <div className="flex items-start justify-between mb-1.5 shrink-0">
           <div className="flex items-center gap-2">
             <StockAvatar name={stock.label} color={stock.color} size="sm" />
@@ -127,7 +132,7 @@ export default function StockChartWidget({ variant = 'stock-sm', colSpan = 1, ro
 
   /* stock-sm (default) */
   return (
-    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
       <div className="flex items-center justify-between shrink-0">
         <span className="text-[12px] font-bold text-foreground leading-none">{stock.name}</span>
         <span className="text-[9px] text-foreground-disabled">{stock.code}</span>

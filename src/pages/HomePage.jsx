@@ -8,6 +8,7 @@ import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
 import PageEditModal from '@/components/layout/PageEditModal'
+import StockDetailSheet from '@/components/home/StockDetailSheet'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT, gridElementRef } from '@/lib/gridConstants'
 
@@ -85,7 +86,7 @@ export default function HomePage() {
 
   return (
     <>
-    <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
+    <div className="relative flex flex-col h-full overflow-hidden p-3 gap-2.5">
       {/* 서브바 */}
       <div className="flex items-center justify-between shrink-0 px-1 h-7">
         <div className="flex items-center gap-2">
@@ -186,6 +187,7 @@ export default function HomePage() {
           })}
         </div>
       </div>
+      <StockDetailSheet />
     </div>
 
     {isPageEditOpen && <PageEditModal onClose={() => setIsPageEditOpen(false)} />}
