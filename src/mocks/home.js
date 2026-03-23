@@ -40,6 +40,8 @@ export const HOME_STOCKS = [
     open: '74,200', high: '76,100', low: '73,900',
     sparkPath: 'M0,18 L12,16 L24,14 L36,16 L48,10 L60,12 L72,7 L84,5 L96,3 L108,1.5 L120,1',
     fillPath:  'M0,18 L12,16 L24,14 L36,16 L48,10 L60,12 L72,7 L84,5 L96,3 L108,1.5 L120,1 L120,22 L0,22Z',
+    week52Low: '54,700', week52High: '89,800', week52Pct: 59,
+    volume: '18.2M', marketCap: '450.2조', per: '13.2x', pbr: '1.08x', turnover: '1.37조',
   },
   {
     id: 'skhynix',
@@ -54,6 +56,8 @@ export const HOME_STOCKS = [
     open: '191,500', high: '197,000', low: '190,500',
     sparkPath: 'M0,20 L12,18 L24,20 L36,14 L48,16 L60,10 L72,12 L84,7 L96,5 L108,3 L120,1',
     fillPath:  'M0,20 L12,18 L24,20 L36,14 L48,16 L60,10 L72,12 L84,7 L96,5 L108,3 L120,1 L120,22 L0,22Z',
+    week52Low: '120,000', week52High: '250,000', week52Pct: 58,
+    volume: '8.4M', marketCap: '142.1조', per: '18.5x', pbr: '2.12x', turnover: '1.64조',
   },
 ]
 
