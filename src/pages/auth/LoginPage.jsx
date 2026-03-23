@@ -1,41 +1,21 @@
-import { useState } from 'react'
 import { Activity, X, Check } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { Input, PasswordInput } from '@/components/ui/Input'
-import { authApi } from '@/api/auth'
+import useLogin from '@/hooks/useLogin'
 import useAuthStore from '@/store/useAuthStore'
-import useRightPanelStore from '@/store/useRightPanelStore'
 
 export default function LoginPage() {
-  const navigate  = useNavigate()
-  const setAuth     = useAuthStore((s) => s.setAuth)
-  const setChatMode = useRightPanelStore((s) => s.setChatMode)
-
-  const [email, setEmail]       = useState('')
-  const [password, setPassword] = useState('')
-  const [autoLogin, setAutoLogin] = useState(true)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError]         = useState('')
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
-    try {
-      const res = await authApi.login({ email, password, autoLogin })
-      setAuth({
-        accessToken: res.accessToken,
-        user:        res.user,
-        autoLogin,
-      })
-      setChatMode()
-      navigate('/')
-    } catch (err) {
-      setError(err?.message ?? '이메일 또는 비밀번호를 확인해 주세요.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const navigate = useNavigate()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  if (isAuthenticated) return <Navigate to="/" replace />
+  const {
+    email, setEmail,
+    password, setPassword,
+    autoLogin, setAutoLogin,
+    isLoading,
+    error,
+    handleSubmit,
+  } = useLogin({ onSuccess: () => navigate('/') })
 
   return (
     <div className="fixed inset-0 z-10 flex items-center justify-center p-5">

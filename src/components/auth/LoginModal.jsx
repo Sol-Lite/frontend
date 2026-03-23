@@ -1,44 +1,17 @@
-import { useState } from 'react'
-import { useQueryClient } from '@tanstack/react-query'
 import { Activity, X, Check } from 'lucide-react'
 import { Input, PasswordInput } from '@/components/ui/Input'
-import { authApi } from '@/api/auth'
 import { router } from '@/router'
-import useAuthStore from '@/store/useAuthStore'
-import useRightPanelStore from '@/store/useRightPanelStore'
+import useLogin from '@/hooks/useLogin'
 
 export default function LoginModal({ onClose }) {
-  const queryClient = useQueryClient()
-  const setAuth = useAuthStore((s) => s.setAuth)
-  const setChatMode = useRightPanelStore((s) => s.setChatMode)
-
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [autoLogin, setAutoLogin] = useState(true)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-
-  async function handleSubmit(e) {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
-    try {
-      const res = await authApi.login({ email, password, autoLogin })
-      setAuth({
-        accessToken: res.accessToken,
-        user:        res.user,
-        autoLogin,
-      })
-      // 계좌 정보 쿼리 유효화 (다음 호출 시 새로 fetch)
-      queryClient.invalidateQueries({ queryKey: ['account', 'me'] })
-      setChatMode()
-      onClose()
-    } catch (err) {
-      setError(err?.message ?? '이메일 또는 비밀번호를 확인해 주세요.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  const {
+    email, setEmail,
+    password, setPassword,
+    autoLogin, setAutoLogin,
+    isLoading,
+    error,
+    handleSubmit,
+  } = useLogin({ onSuccess: onClose })
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5 pointer-events-none">

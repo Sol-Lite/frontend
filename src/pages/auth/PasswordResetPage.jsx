@@ -57,7 +57,7 @@ export default function PasswordResetPage() {
       await authApi.confirmPasswordReset({ token, newPassword, newPasswordConfirm })
       setStatus('success')
     } catch (err) {
-      if (err?.message?.includes('만료') || err?.message?.includes('유효')) {
+      if (err?.code === 'TOKEN_EXPIRED' || err?.code === 'INVALID_TOKEN' || err?.code === 'TOKEN_ALREADY_USED') {
         setStatus('error')
       } else {
         setError(err?.message ?? '비밀번호 재설정에 실패했습니다. 다시 시도해 주세요.')
