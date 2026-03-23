@@ -32,11 +32,10 @@ function Header() {
       <div className="flex items-center gap-2">
         <button
           onClick={handleLogout}
-          aria-label="로그아웃"
-          className="p-1 text-foreground-tertiary hover:text-up transition-colors"
-          title="로그아웃"
+          className="flex items-center gap-1 px-2 py-1 rounded text-[11px] text-foreground-tertiary hover:text-up transition-colors"
         >
-          <LogOut className="w-4 h-4" strokeWidth={2} />
+          <LogOut className="w-3.5 h-3.5" strokeWidth={2} />
+          로그아웃
         </button>
         <button
           onClick={() => setChatMode()}
@@ -77,8 +76,8 @@ function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
         onClick={() => onSelectMenuItem('reset')}
         className={`px-4 py-2 text-[12px] font-medium border-b-2 transition-colors whitespace-nowrap ${
           selectedMenuItem === 'reset'
-            ? 'text-primary border-b-primary'
-            : 'text-foreground-secondary border-b-transparent hover:text-foreground'
+            ? 'text-up border-b-up'
+            : 'text-foreground-secondary border-b-transparent hover:text-up'
         }`}
       >
         리셋
@@ -411,9 +410,10 @@ function ResetForm({ onSuccess }) {
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <div className="p-3 bg-up-bg rounded-lg">
-        <p className="text-[11px] text-up leading-relaxed">
-          리셋하면 현재 라운드가 종료되고 새로운 라운드가 시작됩니다. 이 작업은 되돌릴 수 없습니다.
+      <div className="pl-3 border-l-2 border-up">
+        <p className="text-[11px] text-up font-semibold mb-0.5">이 작업은 되돌릴 수 없습니다.</p>
+        <p className="text-[11px] text-foreground-secondary leading-relaxed">
+          리셋하면 현재 라운드가 종료되고 새로운 라운드가 시작됩니다.
         </p>
       </div>
 
@@ -440,7 +440,7 @@ function ResetForm({ onSuccess }) {
       <button
         type="submit"
         disabled={isLoading}
-        className="px-4 py-2 rounded-lg bg-primary text-white text-[12px] font-medium hover:bg-primary-hover transition-colors disabled:opacity-60 mt-2"
+        className="px-4 py-2 rounded-lg bg-up text-white text-[12px] font-medium hover:opacity-90 transition-colors disabled:opacity-60 mt-2"
       >
         {isLoading ? '진행 중...' : '리셋'}
       </button>
@@ -448,93 +448,178 @@ function ResetForm({ onSuccess }) {
   )
 }
 
-function CloseAccountForm({ onSuccess }) {
-  const [accountPin, setAccountPin] = useState('')
+function CloseAccountForm() {
+  const navigate = useNavigate()
+  const logout = useAuthStore((s) => s.logout)
+
+  // 1단계: 현금 초기화
+  const [cashPin, setCashPin] = useState('')
+  const [cashKeyboardOpen, setCashKeyboardOpen] = useState(false)
+  const [cashLoading, setCashLoading] = useState(false)
+  const [cashError, setCashError] = useState('')
+  const [cashDone, setCashDone] = useState(false)
+
+  // 2단계: 계좌 해지
+  const [closePin, setClosePin] = useState('')
+  const [closeKeyboardOpen, setCloseKeyboardOpen] = useState(false)
   const [agreed, setAgreed] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
+  const [closeLoading, setCloseLoading] = useState(false)
+  const [closeError, setCloseError] = useState('')
 
-  const handleSubmit = async (e) => {
+  async function handleCashReset(e) {
     e.preventDefault()
-    setError('')
-
-    const validation = closeAccountSchema.safeParse({
-      accountPin,
-      agreed,
-    })
-
-    if (!validation.success) {
-      const fieldError = validation.error.errors[0]
-      setError(fieldError.message)
+    setCashError('')
+    if (!cashPin) {
+      setCashKeyboardOpen(true)
+      setCashError('비밀번호 입력이 필요합니다.')
       return
     }
-
-    setIsLoading(true)
+    const validation = resetAccountSchema.safeParse({ accountPin: cashPin })
+    if (!validation.success) {
+      setCashKeyboardOpen(true)
+      setCashError(validation.error.errors[0].message)
+      return
+    }
+    setCashLoading(true)
     try {
-      await accountApi.closeAccount(accountPin)
-      onSuccess('계좌가 해지되었습니다.')
-      setAccountPin('')
+      await accountApi.resetCashForClose(cashPin)
+      setCashDone(true)
+      setCashPin('')
     } catch (err) {
-      setError(err?.message ?? '계좌 해지에 실패했습니다.')
+      setCashError(err?.message ?? '현금 초기화에 실패했습니다.')
     } finally {
-      setIsLoading(false)
+      setCashLoading(false)
     }
   }
 
-  function handlePinChange(nextValue) {
-    const sanitizedValue = nextValue.replace(/\D/g, '').slice(0, 4)
-    setAccountPin(sanitizedValue)
+  async function handleCloseAccount(e) {
+    e.preventDefault()
+    setCloseError('')
+    if (!closePin) {
+      setCloseKeyboardOpen(true)
+      setCloseError('비밀번호 입력이 필요합니다.')
+      return
+    }
+    const validation = closeAccountSchema.safeParse({ accountPin: closePin, agreed })
+    if (!validation.success) {
+      setCloseKeyboardOpen(true)
+      setCloseError(validation.error.errors[0].message)
+      return
+    }
+    setCloseLoading(true)
+    try {
+      await accountApi.closeAccount(closePin)
+      logout()
+      navigate('/')
+    } catch (err) {
+      setCloseError(err?.message ?? '계좌 해지에 실패했습니다.')
+    } finally {
+      setCloseLoading(false)
+    }
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-      <div className="p-3 bg-up-bg rounded-lg">
-        <p className="text-[11px] text-up leading-relaxed">
-          계좌를 해지하면 모든 데이터가 삭제되며 되돌릴 수 없습니다.
+    <div className="flex flex-col gap-5">
+      <div className="pl-3 border-l-2 border-up flex gap-2">
+        <div className="flex flex-col gap-1">
+          <p className="text-[11px] text-up font-semibold">계좌 해지 전 순서대로 진행해 주세요.</p>
+          <ol className="flex flex-col gap-0.5">
+            {['미체결 주문 취소', '보유 종목 전량 매도', '현금 초기화', '계좌 해지'].map((step, i) => (
+              <li key={i} className="text-[11px] text-foreground-secondary flex items-center gap-1.5">
+                <span className="w-4 h-4 rounded-full bg-up text-white text-[9px] font-bold flex items-center justify-center shrink-0">
+                  {i + 1}
+                </span>
+                {step}
+              </li>
+            ))}
+          </ol>
+        </div>
+      </div>
+
+      {/* 1단계: 현금 초기화 */}
+      <form onSubmit={handleCashReset} className="flex flex-col gap-3">
+        <p className="text-[12px] font-semibold text-foreground">
+          1단계 — 현금 초기화
+          {cashDone && <span className="ml-2 text-live text-[11px]">완료</span>}
         </p>
-      </div>
+        {!cashDone && (
+          <>
+            <div>
+              <PinField
+                label="계좌 비밀번호 (4자리)"
+                value={cashPin}
+                active={cashKeyboardOpen}
+                error={undefined}
+                onClick={() => setCashKeyboardOpen(true)}
+              />
+              <AccountPinKeypad
+                variant="desktop"
+                isOpen={cashKeyboardOpen}
+                value={cashPin}
+                onChange={(v) => setCashPin(v.replace(/\D/g, '').slice(0, 4))}
+                onDone={() => setCashKeyboardOpen(false)}
+                onClose={() => setCashKeyboardOpen(false)}
+              />
+            </div>
+            {cashError && <p className="text-[11px] text-up">{cashError}</p>}
+            <button
+              type="submit"
+              disabled={cashLoading}
+              className="px-4 py-2 rounded-lg bg-up text-white text-[12px] font-medium hover:opacity-90 transition-colors disabled:opacity-60"
+            >
+              {cashLoading ? '처리 중...' : 'KRW·USD 현금 0원으로 초기화'}
+            </button>
+          </>
+        )}
+      </form>
 
-      <div>
-        <PinField
-          label="계좌 비밀번호 (4자리)"
-          value={accountPin}
-          active={isKeyboardOpen}
-          error={undefined}
-          onClick={() => setIsKeyboardOpen(true)}
-        />
-        <AccountPinKeypad
-          variant="desktop"
-          isOpen={isKeyboardOpen}
-          value={accountPin}
-          onChange={handlePinChange}
-          onDone={() => setIsKeyboardOpen(false)}
-          onClose={() => setIsKeyboardOpen(false)}
-        />
-      </div>
-
-      <label className="flex items-center gap-2 cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={agreed}
-          onChange={(e) => setAgreed(e.target.checked)}
-          className="w-4 h-4 accent-primary rounded cursor-pointer"
-        />
-        <span className="text-[11px] text-foreground-secondary">
-          계좌 해지에 동의합니다.
-        </span>
-      </label>
-
-      {error && <p className="text-[11px] text-up">{error}</p>}
-
-      <button
-        type="submit"
-        disabled={isLoading || !agreed}
-        className="px-4 py-2 rounded-lg bg-up text-white text-[12px] font-medium hover:opacity-90 transition-colors disabled:opacity-60 mt-2"
-      >
-        {isLoading ? '처리 중...' : '해지'}
-      </button>
-    </form>
+      {/* 2단계: 계좌 해지 */}
+      <form onSubmit={handleCloseAccount} className="flex flex-col gap-3">
+        <p className={`text-[12px] font-semibold ${cashDone ? 'text-foreground' : 'text-foreground-disabled'}`}>
+          2단계 — 계좌 해지
+        </p>
+        {cashDone && (
+          <>
+            <div>
+              <PinField
+                label="계좌 비밀번호 (4자리)"
+                value={closePin}
+                active={closeKeyboardOpen}
+                error={undefined}
+                onClick={() => setCloseKeyboardOpen(true)}
+              />
+              <AccountPinKeypad
+                variant="desktop"
+                isOpen={closeKeyboardOpen}
+                value={closePin}
+                onChange={(v) => setClosePin(v.replace(/\D/g, '').slice(0, 4))}
+                onDone={() => setCloseKeyboardOpen(false)}
+                onClose={() => setCloseKeyboardOpen(false)}
+              />
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="w-4 h-4 accent-primary rounded cursor-pointer"
+              />
+              <span className="text-[11px] text-foreground-secondary">
+                계좌 해지에 동의합니다. 이 작업은 되돌릴 수 없습니다.
+              </span>
+            </label>
+            {closeError && <p className="text-[11px] text-up">{closeError}</p>}
+            <button
+              type="submit"
+              disabled={closeLoading || !agreed}
+              className="px-4 py-2 rounded-lg bg-up text-white text-[12px] font-medium hover:opacity-90 transition-colors disabled:opacity-60"
+            >
+              {closeLoading ? '처리 중...' : '계좌 해지'}
+            </button>
+          </>
+        )}
+      </form>
+    </div>
   )
 }
 
@@ -554,7 +639,7 @@ function ContentArea({ selectedMenuItem, onSuccess }) {
       )}
 
       {selectedMenuItem === 'close-account' && (
-        <CloseAccountForm onSuccess={onSuccess} />
+        <CloseAccountForm />
       )}
 
       {!selectedMenuItem && (
