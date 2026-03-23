@@ -42,31 +42,8 @@ export async function fetchWithAuth(url, options = {}) {
     return data
   }
 
-  // 401 처리: 토큰 갱신
-  if (!isRefreshing) {
-    isRefreshing = true
-    try {
-      const data = await refreshToken()
-      const newToken = data.accessToken
-
-      // storage에도 갱신
-      const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
-      storage.setItem('accessToken', newToken)
-      useAuthStore.setState({ accessToken: newToken })
-
-      onRefreshed(newToken)
-    } catch {
-      isRefreshing = false
-      refreshSubscribers = []
-      useAuthStore.getState().logout()
-      useAuthStore.getState().openLoginModal()
-      throw { message: '세션이 만료되었습니다. 다시 로그인해주세요.' }
-    }
-    isRefreshing = false
-  }
-
-  // 갱신 완료 대기 후 재시도
-  return new Promise((resolve, reject) => {
+  // 401 처리: 모든 요청(첫 번째 포함)을 subscriber에 먼저 등록
+  const retryPromise = new Promise((resolve, reject) => {
     addRefreshSubscriber(async (newToken) => {
       try {
         const retryHeaders = { ...headers, Authorization: `Bearer ${newToken}` }
@@ -80,6 +57,29 @@ export async function fetchWithAuth(url, options = {}) {
       }
     })
   })
+
+  // 첫 번째 요청만 refresh 수행
+  if (!isRefreshing) {
+    isRefreshing = true
+    refreshToken()
+      .then((data) => {
+        const newToken = data.accessToken
+        const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
+        storage.setItem('accessToken', newToken)
+        useAuthStore.setState({ accessToken: newToken })
+        onRefreshed(newToken)
+      })
+      .catch(() => {
+        refreshSubscribers = []
+        useAuthStore.getState().logout()
+        useAuthStore.getState().openLoginModal()
+      })
+      .finally(() => {
+        isRefreshing = false
+      })
+  }
+
+  return retryPromise
 }
 
 function tryParseJson(text) {

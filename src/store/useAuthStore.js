@@ -1,4 +1,25 @@
 import { create } from 'zustand'
+import { queryClient } from '@/lib/queryClient'
+
+function isTokenExpired(token) {
+  try {
+    const payload = JSON.parse(atob(token.split('.')[1]))
+    return payload.exp * 1000 < Date.now()
+  } catch {
+    return true
+  }
+}
+
+async function silentRefresh() {
+  const res = await fetch('/api/auth/token/refresh', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('refresh failed')
+  return res.json()
+}
 
 const useAuthStore = create((set, get) => ({
   isAuthenticated: false,
@@ -16,14 +37,32 @@ const useAuthStore = create((set, get) => ({
   },
 
   // 앱 초기화 시 저장된 토큰 복원
-  restoreAuth: () => {
+  restoreAuth: async () => {
     const accessToken =
       localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken')
-    if (accessToken) {
-      const userStr = localStorage.getItem('user') ?? sessionStorage.getItem('user')
-      const user = userStr ? JSON.parse(userStr) : null
+
+    if (!accessToken) {
+      set({ isRestoring: false })
+      return
+    }
+
+    const userStr = localStorage.getItem('user') ?? sessionStorage.getItem('user')
+    const user = userStr ? JSON.parse(userStr) : null
+
+    if (!isTokenExpired(accessToken)) {
       set({ isAuthenticated: true, user, accessToken, isRestoring: false })
-    } else {
+      return
+    }
+
+    // 만료된 경우 refresh 시도
+    try {
+      const data = await silentRefresh()
+      const newToken = data.accessToken
+      const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
+      storage.setItem('accessToken', newToken)
+      set({ isAuthenticated: true, user, accessToken: newToken, isRestoring: false })
+    } catch {
+      get().logout()
       set({ isRestoring: false })
     }
   },
@@ -33,6 +72,7 @@ const useAuthStore = create((set, get) => ({
     localStorage.removeItem('user')
     sessionStorage.removeItem('accessToken')
     sessionStorage.removeItem('user')
+    queryClient.clear()
     set({ isAuthenticated: false, user: null, accessToken: null })
   },
 
