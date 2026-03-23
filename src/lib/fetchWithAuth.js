@@ -1,0 +1,91 @@
+import useAuthStore from '@/store/useAuthStore'
+
+let isRefreshing = false
+let refreshSubscribers = []
+
+function onRefreshed(newToken) {
+  refreshSubscribers.forEach((cb) => cb(newToken))
+  refreshSubscribers = []
+}
+
+function addRefreshSubscriber(cb) {
+  refreshSubscribers.push(cb)
+}
+
+async function refreshToken() {
+  const res = await fetch('/api/auth/token/refresh', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({}),
+    credentials: 'include',
+  })
+  if (!res.ok) throw new Error('refresh failed')
+  return res.json()
+}
+
+export async function fetchWithAuth(url, options = {}) {
+  const { skipAuth = false, ...fetchOptions } = options
+
+  const headers = { ...fetchOptions.headers }
+
+  if (!skipAuth) {
+    const token = useAuthStore.getState().accessToken
+    if (token) headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const res = await fetch(url, { ...fetchOptions, headers, credentials: 'include' })
+
+  if (res.status !== 401 || skipAuth) {
+    const text = await res.text()
+    const data = text ? tryParseJson(text) : null
+    if (!res.ok) throw data ?? { message: '요청에 실패했습니다.' }
+    return data
+  }
+
+  // 401 처리: 토큰 갱신
+  if (!isRefreshing) {
+    isRefreshing = true
+    try {
+      const data = await refreshToken()
+      const newToken = data.accessToken
+
+      // storage에도 갱신
+      const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
+      storage.setItem('accessToken', newToken)
+      useAuthStore.setState({ accessToken: newToken })
+
+      onRefreshed(newToken)
+    } catch {
+      isRefreshing = false
+      refreshSubscribers = []
+      useAuthStore.getState().logout()
+      useAuthStore.getState().openLoginModal()
+      throw { message: '세션이 만료되었습니다. 다시 로그인해주세요.' }
+    }
+    isRefreshing = false
+  }
+
+  // 갱신 완료 대기 후 재시도
+  return new Promise((resolve, reject) => {
+    addRefreshSubscriber(async (newToken) => {
+      try {
+        const retryHeaders = { ...headers, Authorization: `Bearer ${newToken}` }
+        const retryRes = await fetch(url, { ...fetchOptions, headers: retryHeaders, credentials: 'include' })
+        const text = await retryRes.text()
+        const data = text ? tryParseJson(text) : null
+        if (!retryRes.ok) throw data ?? { message: '요청에 실패했습니다.' }
+        resolve(data)
+      } catch (err) {
+        reject(err)
+      }
+    })
+  })
+}
+
+function tryParseJson(text) {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { message: text }
+  }
+}

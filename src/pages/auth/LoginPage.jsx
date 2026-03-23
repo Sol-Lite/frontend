@@ -4,10 +4,12 @@ import { useNavigate } from 'react-router-dom'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { authApi } from '@/api/auth'
 import useAuthStore from '@/store/useAuthStore'
+import useRightPanelStore from '@/store/useRightPanelStore'
 
 export default function LoginPage() {
   const navigate  = useNavigate()
-  const setAuth   = useAuthStore((s) => s.setAuth)
+  const setAuth     = useAuthStore((s) => s.setAuth)
+  const setChatMode = useRightPanelStore((s) => s.setChatMode)
 
   const [email, setEmail]       = useState('')
   const [password, setPassword] = useState('')
@@ -26,6 +28,7 @@ export default function LoginPage() {
         user:        res.user,
         autoLogin,
       })
+      setChatMode()
       navigate('/')
     } catch (err) {
       setError(err?.message ?? '이메일 또는 비밀번호를 확인해 주세요.')
@@ -58,7 +61,7 @@ export default function LoginPage() {
       </div>
 
       {/* 딤 오버레이 */}
-      <div className="fixed inset-0 bg-black/50 backdrop-blur-[6px] z-10" />
+      <div className="fixed inset-0 bg-black/50 z-10" />
 
       {/* 모달 */}
       <div

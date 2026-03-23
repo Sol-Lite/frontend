@@ -5,10 +5,12 @@ import { Input, PasswordInput } from '@/components/ui/Input'
 import { authApi } from '@/api/auth'
 import { router } from '@/router'
 import useAuthStore from '@/store/useAuthStore'
+import useRightPanelStore from '@/store/useRightPanelStore'
 
 export default function LoginModal({ onClose }) {
   const queryClient = useQueryClient()
   const setAuth = useAuthStore((s) => s.setAuth)
+  const setChatMode = useRightPanelStore((s) => s.setChatMode)
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -29,6 +31,7 @@ export default function LoginModal({ onClose }) {
       })
       // 계좌 정보 쿼리 유효화 (다음 호출 시 새로 fetch)
       queryClient.invalidateQueries({ queryKey: ['account', 'me'] })
+      setChatMode()
       onClose()
     } catch (err) {
       setError(err?.message ?? '이메일 또는 비밀번호를 확인해 주세요.')

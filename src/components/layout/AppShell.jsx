@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react'
-import { Outlet } from 'react-router-dom'
+import { useState, useRef, useEffect } from 'react'
+import { Outlet, useLocation, useNavigate } from 'react-router-dom'
 import {
   DndContext,
   DragOverlay,
@@ -10,13 +10,27 @@ import {
 } from '@dnd-kit/core'
 import AppHeader from './AppHeader'
 import RightPanel from './RightPanel'
+import CurrencySync from './CurrencySync'
 import useWidgetStore, { canPlaceAt, findPushAsidePlanAt } from '@/store/useWidgetStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
+import useAuthStore from '@/store/useAuthStore'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_GAP, GRID_COLS, GRID_ROWS, gridElementRef } from '@/lib/gridConstants'
 
 export default function AppShell() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const openLoginModal = useAuthStore((s) => s.openLoginModal)
+
+  useEffect(() => {
+    if (location.state?.openLogin) {
+      openLoginModal()
+      navigate(location.pathname, { replace: true, state: {} })
+    }
+  }, [location])
+
+
   const [activeDrag, setActiveDrag] = useState(null)
   const {
     widgets,
@@ -231,6 +245,7 @@ export default function AppShell() {
       onDragCancel={handleDragCancel}
     >
       <div className="flex flex-col h-screen overflow-hidden">
+        <CurrencySync />
         <AppHeader />
         <div className="flex flex-1 overflow-hidden">
           <main className="flex-1 overflow-hidden bg-background">

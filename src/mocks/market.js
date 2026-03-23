@@ -1,7 +1,6 @@
 export const MARKET_INDICES = [
   { key: 'kospi',   label: 'KOSPI',   value: '2,685.40', change: 0.46,  path: 'M0,22 L9,20 L18,18 L27,14 L36,10 L45,6 L56,3' },
   { key: 'kosdaq',  label: 'KOSDAQ',  value: '842.15',   change: -0.63, path: 'M0,6 L9,7 L18,8 L27,11 L36,14 L45,18 L56,22' },
-  { key: 'usdkrw',  label: '달러/원', value: '1,342.50', change: 1.2,   path: 'M0,20 L9,18 L18,22 L27,16 L36,12 L45,8 L56,5' },
   { key: 'nasdaq',  label: '나스닥',  value: '17,754.8', change: -0.92, path: 'M0,8 L9,6 L18,10 L27,12 L36,16 L45,20 L56,22' },
   { key: 'sp500',   label: 'S&P 500', value: '5,614.3',  change: -0.45, path: 'M0,10 L9,8 L18,9 L27,13 L36,15 L45,18 L56,20' },
 ]

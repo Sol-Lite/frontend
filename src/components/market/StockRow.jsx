@@ -1,22 +1,28 @@
+import { useNavigate } from 'react-router-dom'
 import { Heart } from 'lucide-react'
 import StockAvatar from '@/components/ui/StockAvatar'
 import PriceChange from '@/components/ui/PriceChange'
 import RatioBar from '@/components/ui/RatioBar'
 
-/**
- * 시세 페이지 종목 행
- * grid: 32px 36px 1fr 100px 80px 90px 120px
- */
-export default function StockRow({ stock, isWatched, onWatchToggle }) {
+const GRID_WITH_VOL    = 'grid-cols-[32px_36px_1fr_110px_80px_88px_120px]'
+const GRID_WITHOUT_VOL = 'grid-cols-[32px_36px_1fr_110px_80px_120px]'
+
+
+export default function StockRow({ stock, showVolume = true, isWatched, onWatchToggle }) {
+  const navigate = useNavigate()
   const isTop = stock.rank === 1
+  const grid = showVolume ? GRID_WITH_VOL : GRID_WITHOUT_VOL
 
   return (
-    <div className="grid grid-cols-[32px_36px_1fr_100px_80px_90px_120px] items-center px-4 py-2.5 border-b border-stroke-subtle hover:bg-surface-subtle transition-colors duration-[100ms] cursor-pointer last:border-b-0">
+    <div
+      className={`grid ${grid} items-center px-4 py-2.5 border-b border-stroke-subtle hover:bg-surface-subtle transition-colors duration-[100ms] cursor-pointer last:border-b-0`}
+      onClick={() => navigate(`/invest/${stock.stockCode}`, { state: { stockName: stock.name, marketType: 'KOSPI' } })}
+    >
       {/* 관심종목 */}
       <button
         aria-label={isWatched ? '관심종목 해제' : '관심종목 추가'}
         onClick={(e) => { e.stopPropagation(); onWatchToggle?.(stock.id) }}
-        className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors duration-[120ms] ${
+        className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors duration-[120ms] ${
           isWatched ? 'text-up' : 'text-stroke-input hover:text-up'
         }`}
       >
@@ -29,13 +35,20 @@ export default function StockRow({ stock, isWatched, onWatchToggle }) {
       </div>
 
       {/* 종목명 */}
-      <div className="flex items-center gap-2.5">
-        <StockAvatar name={stock.label} color={stock.color} size="md" />
-        <span className="text-[13px] font-bold text-foreground">{stock.name}</span>
+      <div className="flex items-center gap-2 min-w-0">
+        <StockAvatar name={stock.name} stockCode={stock.stockCode} marketType={stock.market ?? stock.marketType} color={stock.color} size="md" />
+        <span className="text-[13px] font-semibold text-foreground truncate">{stock.name}</span>
+        {stock.consecutiveDays > 0 && (
+          <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[9px] font-bold ${
+            stock.change >= 0 ? 'bg-up-bg text-up' : 'bg-down-bg text-down'
+          }`}>
+            {stock.consecutiveDays}일{stock.change >= 0 ? '↑' : '↓'}
+          </span>
+        )}
       </div>
 
       {/* 현재가 */}
-      <div className="text-right text-[14px] font-bold text-foreground">
+      <div className="text-right text-[13px] font-bold text-foreground">
         {stock.price}
       </div>
 
@@ -44,14 +57,19 @@ export default function StockRow({ stock, isWatched, onWatchToggle }) {
         <PriceChange value={stock.change} className="text-[12px]" />
       </div>
 
-      {/* 거래대금 */}
-      <div className="text-right text-[12px] font-semibold text-foreground-secondary">
-        {stock.volume}
-      </div>
+      {/* 거래대금 / 거래량 / 시가총액 */}
+      {showVolume && (
+        <div className="text-right text-[12px] font-medium text-foreground-secondary">
+          {stock.volume ?? '—'}
+        </div>
+      )}
 
-      {/* 매수/매도 비율 */}
+      {/* 거래 비율 */}
       <div className="pl-2">
-        <RatioBar buyRatio={stock.buyRatio} sellRatio={stock.sellRatio} />
+        {stock.buyRatio != null
+          ? <RatioBar buyRatio={stock.buyRatio} sellRatio={stock.sellRatio} />
+          : <span className="text-[11px] text-foreground-disabled select-none">—</span>
+        }
       </div>
     </div>
   )

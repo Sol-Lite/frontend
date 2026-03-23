@@ -18,6 +18,7 @@ export const router = createBrowserRouter([
       { index: true,        element: <HomePage /> },
       { path: 'market',     element: <MarketPage /> },
       { path: 'invest',     element: <InvestPage /> },
+      { path: 'invest/:stockCode', element: <InvestPage /> },
       { path: 'asset',      element: <AssetPage /> },
     ],
   },
