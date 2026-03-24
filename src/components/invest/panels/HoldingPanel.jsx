@@ -2,24 +2,31 @@ import { cn } from '@/lib/cn'
 import { formatCurrency, formatNumber } from '@/features/invest/formatters'
 import { useDomesticHoldings } from '@/api/balance'
 import StockAvatar from '@/components/ui/StockAvatar'
+import LockedOverlay from '@/components/ui/LockedOverlay'
+import useAuthStore from '@/store/useAuthStore'
 
-// FIXME: 실제 API 연동 후 제거
-const MOCK_HOLDINGS = [
-  { stockCode: '005930', marketType: 'KOSPI', stockName: '삼성전자',  holdingQuantity: 100, avgBuyPrice: 72300,  currentPrice: 74800  },
-  { stockCode: '000660', marketType: 'KOSPI', stockName: 'SK하이닉스', holdingQuantity: 20,  avgBuyPrice: 180000, currentPrice: 194500 },
-  { stockCode: '035420', marketType: 'KOSPI', stockName: 'NAVER',    holdingQuantity: 5,   avgBuyPrice: 195000, currentPrice: 211000 },
-]
 
 export default function HoldingPanel() {
-  const { data, isLoading } = useDomesticHoldings()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isRestoring = useAuthStore((s) => s.isRestoring)
+  const { data, isLoading } = useDomesticHoldings({ enabled: isAuthenticated && !isRestoring })
+
+  if (!isRestoring && !isAuthenticated) {
+    return (
+      <div className="relative flex flex-1 overflow-hidden">
+        <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">
+          로그인 후 보유 종목을 볼 수 있습니다.
+        </div>
+        <LockedOverlay message="보유 종목을 보려면" />
+      </div>
+    )
+  }
 
   if (isLoading) {
     return <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">불러오는 중...</div>
   }
 
-  // FIXME: API 정상 연동 시 MOCK_HOLDINGS 제거
-  const apiHoldings = data ?? null
-  const holdings = apiHoldings?.length ? apiHoldings : MOCK_HOLDINGS
+  const holdings = data ?? []
 
   if (!holdings.length) {
     return <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">보유 종목이 없습니다.</div>

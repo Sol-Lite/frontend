@@ -1,17 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import StockAvatar from '@/components/ui/StockAvatar'
+import LockedOverlay from '@/components/ui/LockedOverlay'
 import { cn } from '@/lib/cn'
 import { formatCurrency, formatNumber } from '@/features/invest/formatters'
 import { orderApi } from '@/api/order'
+import useAuthStore from '@/store/useAuthStore'
 
-// FIXME: 실제 API 연동 후 제거
-const MOCK_ROWS = [
-  { orderId: '1', orderSide: 'BUY',  stockCode: '005930', marketType: 'KOSPI',  stockName: '삼성전자',  filledPrice: 74800,  filledQuantity: 50, filledAt: '2026-03-23T14:32:07' },
-  { orderId: '2', orderSide: 'SELL', stockCode: '000660', marketType: 'KOSPI',  stockName: 'SK하이닉스', filledPrice: 194500, filledQuantity: 20, filledAt: '2026-03-23T13:58:44' },
-  { orderId: '3', orderSide: 'BUY',  stockCode: '005930', marketType: 'KOSPI',  stockName: '삼성전자',  filledPrice: 73100,  filledQuantity: 30, filledAt: '2026-03-23T11:22:19' },
-  { orderId: '4', orderSide: 'SELL', stockCode: '035420', marketType: 'KOSPI',  stockName: 'NAVER',    filledPrice: 211000, filledQuantity: 10, filledAt: '2026-03-23T10:47:03' },
-  { orderId: '5', orderSide: 'BUY',  stockCode: '373220', marketType: 'KOSPI',  stockName: 'LG에너지',  filledPrice: 378500, filledQuantity: 5,  filledAt: '2026-03-23T09:35:51' },
-]
 
 function formatTime(dateStr) {
   if (!dateStr) return '-'
@@ -20,15 +14,27 @@ function formatTime(dateStr) {
 }
 
 export default function ExecutionHistoryPanel() {
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isRestoring = useAuthStore((s) => s.isRestoring)
   const { data, isLoading } = useQuery({
     queryKey: ['orders', 'FILLED'],
     queryFn: () => orderApi.getOrders('FILLED'),
+    enabled: isAuthenticated && !isRestoring,
     staleTime: 1000 * 30,
   })
 
-  // FIXME: API 정상 연동 시 MOCK_ROWS 제거
-  const apiRows = data?.orders ?? data ?? null
-  const rows = apiRows?.length ? apiRows : MOCK_ROWS
+  const rows = data?.orders ?? data ?? []
+
+  if (!isRestoring && !isAuthenticated) {
+    return (
+      <div className="relative flex flex-1 overflow-hidden">
+        <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">
+          로그인 후 체결내역을 볼 수 있습니다.
+        </div>
+        <LockedOverlay message="체결내역을 보려면" />
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (
@@ -67,7 +73,7 @@ export default function ExecutionHistoryPanel() {
             key={row.orderId ?? row.id}
             className="grid grid-cols-[58px_minmax(0,1fr)_40px_72px_48px_90px] items-center gap-2 border-b border-stroke-subtle px-2.5 py-1.5"
           >
-            <span className="text-[10px] text-foreground-disabled">{formatTime(row.filledAt ?? row.createdAt)}</span>
+            <span className="text-[10px] text-foreground-disabled">{formatTime(row.filledAt ?? row.executedAt ?? row.requestedAt ?? row.createdAt)}</span>
             <div className="flex min-w-0 items-center gap-1.5">
               <StockAvatar name={row.stockName ?? row.stockCode} stockCode={row.stockCode} marketType={row.marketType} size="sm" />
               <span className="truncate text-[10px] font-semibold text-foreground">{row.stockName ?? row.stockCode}</span>

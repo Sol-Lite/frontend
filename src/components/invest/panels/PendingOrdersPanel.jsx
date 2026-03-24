@@ -5,18 +5,16 @@ import { formatCurrency, formatNumber } from '@/features/invest/formatters'
 import { orderApi } from '@/api/order'
 import AccountPinKeypad from '@/components/signup/AccountPinKeypad'
 import StockAvatar from '@/components/ui/StockAvatar'
+import LockedOverlay from '@/components/ui/LockedOverlay'
 import usePinAuth from '@/hooks/usePinAuth'
+import useAuthStore from '@/store/useAuthStore'
 
-// FIXME: 실제 API 연동 후 제거
-const MOCK_ROWS = [
-  { orderId: '1', orderSide: 'BUY',  stockCode: '005930', marketType: 'KOSPI', stockName: '삼성전자',  orderKind: 'LIMIT',  orderPrice: 73000,  orderQuantity: 100 },
-  { orderId: '2', orderSide: 'SELL', stockCode: '000660', marketType: 'KOSPI', stockName: 'SK하이닉스', orderKind: 'MARKET', orderPrice: null,   orderQuantity: 20  },
-  { orderId: '3', orderSide: 'BUY',  stockCode: '035420', marketType: 'KOSPI', stockName: 'NAVER',    orderKind: 'LIMIT',  orderPrice: 208000, orderQuantity: 5   },
-]
 
 export default function PendingOrdersPanel() {
   const queryClient = useQueryClient()
   const { isPinCached, verifyAndCachePin } = usePinAuth()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isRestoring = useAuthStore((s) => s.isRestoring)
   const [pinOpen, setPinOpen] = useState(false)
   const [pendingAction, setPendingAction] = useState(null)
   const [pin, setPin] = useState('')
@@ -27,12 +25,22 @@ export default function PendingOrdersPanel() {
   const { data, isLoading } = useQuery({
     queryKey: ['orders', 'PENDING'],
     queryFn: () => orderApi.getOrders('PENDING'),
+    enabled: isAuthenticated && !isRestoring,
     staleTime: 1000 * 15,
   })
 
-  // FIXME: API 정상 연동 시 MOCK_ROWS 제거
-  const apiRows = data?.orders ?? data ?? null
-  const rows = apiRows?.length ? apiRows : MOCK_ROWS
+  const rows = data?.orders ?? data ?? []
+
+  if (!isRestoring && !isAuthenticated) {
+    return (
+      <div className="relative flex flex-1 overflow-hidden">
+        <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">
+          로그인 후 미체결 주문을 볼 수 있습니다.
+        </div>
+        <LockedOverlay message="미체결 주문을 보려면" />
+      </div>
+    )
+  }
 
   async function executeAction(action) {
     if (action.type === 'all') {
