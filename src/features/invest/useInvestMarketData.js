@@ -1,7 +1,6 @@
 import { getExchcd } from '@/api/market'
 import { DEFAULT_MINUTE_INTERVAL } from '@/features/invest/constants'
 import {
-  getChartPeriodConfig,
   getRecentMinuteSessions,
   resolveStockMeta,
 } from '@/features/invest/marketData'
@@ -48,6 +47,7 @@ export default function useInvestMarketData(stockCode, locationState) {
     : selectedChartPeriod === 'DAILY'
       ? marketState.dailySeries
       : chartState.series
+  const resolvedChartSeries = active.chartSeries ?? chartSeries
 
   const chartLoading = usesBaseChartData ? marketState.isLoading : chartState.isLoading
   const chartErrorMessage = usesBaseChartData ? marketState.errorMessage : chartState.errorMessage
@@ -58,11 +58,14 @@ export default function useInvestMarketData(stockCode, locationState) {
     changeAmount,
     changeRate,
     overview,
-    chartSeries,
+    chartSeries: resolvedChartSeries,
     chartPeriod: selectedChartPeriod,
     minuteInterval: selectedMinuteInterval,
     chartLoading,
     chartErrorMessage,
+    chartHistoryLoading: active.chartHistoryLoading ?? false,
+    chartHistoryErrorMessage: active.chartHistoryErrorMessage ?? '',
+    hasMoreChartHistory: active.hasMoreChartHistory ?? false,
     marketLoading: marketState.isLoading,
     marketErrorMessage: marketState.errorMessage,
     dailyRows: active.dailyRows,
@@ -75,6 +78,7 @@ export default function useInvestMarketData(stockCode, locationState) {
     defaultSelectedPrice: currentPrice ?? stockMeta.price,
     availableAmount: stockMeta.availableAmount,
     onChartPeriodChange: active.setSelectedChartPeriod,
+    onLoadMoreChartHistory: active.loadMoreChartHistory ?? (async () => {}),
     onMinuteIntervalChange: active.handleMinuteIntervalChange,
   }
 }
