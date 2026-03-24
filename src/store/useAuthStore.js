@@ -26,6 +26,7 @@ const useAuthStore = create((set, get) => ({
   user: null,           // { userId, email, name }
   accessToken: null,
   showLoginModal: false,
+  authModalView: 'login',
   isRestoring: true,    // 앱 초기화 중 상태 복원 여부
 
   // 로그인 성공 시 호출
@@ -76,12 +77,12 @@ const useAuthStore = create((set, get) => ({
     set({ isAuthenticated: false, user: null, accessToken: null })
   },
 
-  openLoginModal: () => {
-    set({ showLoginModal: true })
+  openLoginModal: (view = 'login') => {
+    set({ showLoginModal: true, authModalView: view })
   },
 
   closeLoginModal: () => {
-    set({ showLoginModal: false })
+    set({ showLoginModal: false, authModalView: 'login' })
   },
 }))
 

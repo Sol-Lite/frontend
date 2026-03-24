@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Activity, X, Check, ArrowLeft } from 'lucide-react'
 import SplashScreenFill from '@/components/ui/SplashScreenFill'
 import { Input, PasswordInput } from '@/components/ui/Input'
@@ -6,16 +6,19 @@ import { router } from '@/router'
 import { authApi } from '@/api/auth'
 import useLogin from '@/hooks/useLogin'
 
-function LoginView({ onClose, onForgot }) {
-  const {
-    email, setEmail,
-    password, setPassword,
-    autoLogin, setAutoLogin,
-    isLoading,
-    error,
-    handleSubmit,
-  } = useLogin({ onSuccess: onClose })
-
+function LoginView({
+  email,
+  setEmail,
+  password,
+  setPassword,
+  autoLogin,
+  setAutoLogin,
+  isLoading,
+  error,
+  handleSubmit,
+  onClose,
+  onForgot,
+}) {
   return (
     <>
       <div className="px-6 pt-4">
@@ -91,11 +94,29 @@ function LoginView({ onClose, onForgot }) {
   )
 }
 
+function LoginLoadingView() {
+  return (
+    <div className="h-full px-6 py-8 text-center flex flex-col items-center justify-center">
+      <div className="mb-6">
+        <SplashScreenFill inline animated />
+      </div>
+      <h2 className="text-lg font-extrabold text-foreground tracking-tight mb-1">로그인 중</h2>
+      <p className="text-[13px] text-foreground-disabled leading-[1.8]">
+        계정 정보를 확인하고 있어요.<br />
+        잠시만 기다려주세요.
+      </p>
+    </div>
+  )
+}
+
 function ForgotView({ onBack }) {
   const [email, setEmail] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [status, setStatus] = useState('form') // 'form' | 'animating' | 'success'
+  const [status, setStatus] = useState('form') // 'form' | 'loading' | 'success'
   const [error, setError] = useState('')
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -104,24 +125,35 @@ function ForgotView({ onBack }) {
       setError('이메일을 입력해 주세요.')
       return
     }
-    setIsLoading(true)
+    setStatus('loading')
     try {
-      await authApi.requestPasswordReset({ email })
-      setStatus('animating')
-      setTimeout(() => setStatus('success'), 1600)
+      await Promise.all([
+        authApi.requestPasswordReset({ email }),
+        delay(1400),
+      ])
+      setStatus('success')
     } catch (err) {
+      await delay(1400)
+      setStatus('form')
       setError(err?.message ?? '요청 처리 중 오류가 발생했습니다.')
-    } finally {
-      setIsLoading(false)
     }
   }
 
-  if (status === 'animating' || status === 'success') {
+  if (status === 'loading' || status === 'success') {
     return (
       <div className="px-6 py-8 text-center min-h-[260px] flex flex-col items-center justify-center">
         <div className="mb-6">
-          <SplashScreenFill inline animated={status === 'animating'} />
+          <SplashScreenFill inline animated={status === 'loading'} />
         </div>
+        {status === 'loading' && (
+          <>
+            <h2 className="text-lg font-extrabold text-foreground tracking-tight mb-1">요청 처리 중</h2>
+            <p className="text-[13px] text-foreground-disabled leading-[1.8]">
+              재설정 링크를 준비하고 있어요.<br />
+              잠시만 기다려주세요.
+            </p>
+          </>
+        )}
         {status === 'success' && (
           <>
             <h2 className="text-lg font-extrabold text-foreground tracking-tight mb-1">요청 완료</h2>
@@ -167,18 +199,29 @@ function ForgotView({ onBack }) {
 
         <button
           type="submit"
-          disabled={isLoading}
           className="w-full py-[13px] bg-primary text-white border-none rounded-[4px] text-sm font-bold hover:bg-primary-hover transition-colors duration-[150ms] disabled:opacity-60 disabled:cursor-not-allowed"
         >
-          {isLoading ? '전송 중...' : '재설정 링크 받기'}
+          재설정 링크 받기
         </button>
       </form>
     </>
   )
 }
 
-export default function LoginModal({ onClose }) {
-  const [view, setView] = useState('login') // 'login' | 'forgot'
+export default function LoginModal({ onClose, initialView = 'login' }) {
+  const [view, setView] = useState(initialView) // 'login' | 'forgot'
+  const {
+    email, setEmail,
+    password, setPassword,
+    autoLogin, setAutoLogin,
+    isLoading,
+    error,
+    handleSubmit,
+  } = useLogin({ onSuccess: onClose, minLoadingMs: 1400 })
+
+  useEffect(() => {
+    setView(initialView)
+  }, [initialView])
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-5 pointer-events-none">
@@ -200,10 +243,28 @@ export default function LoginModal({ onClose }) {
           </button>
         </div>
 
-        {view === 'login'
-          ? <LoginView onClose={onClose} onForgot={() => setView('forgot')} />
-          : <ForgotView onBack={() => setView('login')} />
-        }
+        <div className="min-h-[340px] flex flex-col">
+          {view === 'login'
+            ? (isLoading
+                ? <LoginLoadingView />
+                : (
+                  <LoginView
+                    email={email}
+                    setEmail={setEmail}
+                    password={password}
+                    setPassword={setPassword}
+                    autoLogin={autoLogin}
+                    setAutoLogin={setAutoLogin}
+                    isLoading={isLoading}
+                    error={error}
+                    handleSubmit={handleSubmit}
+                    onClose={onClose}
+                    onForgot={() => setView('forgot')}
+                  />
+                ))
+            : <ForgotView onBack={() => setView('login')} />
+          }
+        </div>
       </div>
     </div>
   )

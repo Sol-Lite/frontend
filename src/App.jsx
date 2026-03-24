@@ -8,6 +8,7 @@ import LoginModal from '@/components/auth/LoginModal'
 
 export default function App() {
   const showLoginModal = useAuthStore((s) => s.showLoginModal)
+  const authModalView = useAuthStore((s) => s.authModalView)
   const closeLoginModal = useAuthStore((s) => s.closeLoginModal)
   const isRestoring = useAuthStore((s) => s.isRestoring)
 
@@ -26,7 +27,7 @@ export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
-      {showLoginModal && <LoginModal onClose={closeLoginModal} />}
+      {showLoginModal && <LoginModal initialView={authModalView} onClose={closeLoginModal} />}
     </QueryClientProvider>
   )
 }

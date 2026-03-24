@@ -15,13 +15,20 @@ const PW_RULES = [
 
 function PasswordRules({ password }) {
   return (
-    <div className="mt-[7px] bg-surface-subtle rounded-[10px] px-3 py-2.5 grid grid-cols-2 gap-x-3 gap-y-[5px]">
+    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
       {PW_RULES.map(({ key, label, check }) => {
         const ok = check(password)
         return (
-          <div key={key} className="flex items-center gap-[5px] text-[11px]">
-            <div className={['w-1 h-1 rounded-full shrink-0', ok ? 'bg-live' : 'bg-stroke-input'].join(' ')} />
-            <span className={ok ? 'text-live' : 'text-foreground-disabled'}>{label}</span>
+          <div key={key} className="flex items-center gap-1.5 text-[11px]">
+            <span
+              className={[
+                'h-1.5 w-1.5 shrink-0 rounded-full',
+                ok
+                  ? 'bg-primary'
+                  : 'bg-stroke-input',
+              ].join(' ')}
+            />
+            <span className={ok ? 'text-primary font-medium' : 'text-foreground-disabled'}>{label}</span>
           </div>
         )
       })}
@@ -96,7 +103,7 @@ export default function PasswordResetPage() {
               비밀번호 재설정 링크가 올바르지 않습니다.
             </p>
             <button
-              onClick={() => navigate('/', { state: { openLogin: true } })}
+              onClick={() => navigate('/', { state: { openAuthModal: 'login' } })}
               className="w-full py-[13px] bg-surface-muted border border-stroke text-foreground-secondary rounded-[4px] text-sm font-semibold hover:bg-stroke-subtle transition-colors"
             >
               로그인으로 돌아가기
@@ -155,7 +162,7 @@ export default function PasswordResetPage() {
                   비밀번호가 변경되었습니다.<br />새 비밀번호로 로그인해 주세요.
                 </p>
                 <button
-                  onClick={() => navigate('/', { state: { openLogin: true } })}
+                  onClick={() => navigate('/', { state: { openAuthModal: 'login' } })}
                   className="w-full py-[13px] bg-primary text-white rounded-[4px] text-sm font-bold hover:bg-primary-hover transition-colors duration-[150ms]"
                 >
                   로그인하러 가기
@@ -173,7 +180,7 @@ export default function PasswordResetPage() {
               비밀번호 재설정 링크가 만료되었습니다.<br />다시 요청해 주세요.
             </p>
             <button
-              onClick={() => navigate('/', { state: { openLogin: true } })}
+              onClick={() => navigate('/', { state: { openAuthModal: 'login' } })}
               className="w-full py-[13px] bg-surface-muted border border-stroke text-foreground-secondary rounded-[4px] text-sm font-semibold hover:bg-stroke-subtle transition-colors"
             >
               로그인으로 돌아가기

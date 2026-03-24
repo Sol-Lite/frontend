@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Activity, X, ArrowLeft, CheckCircle } from 'lucide-react'
+import { Activity, X, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import SplashScreenFill from '@/components/ui/SplashScreenFill'
 import { Input } from '@/components/ui/Input'
 import { authApi } from '@/api/auth'
 
@@ -8,9 +9,12 @@ export default function ForgotPasswordPage() {
   const navigate = useNavigate()
 
   const [email, setEmail] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [status, setStatus] = useState('form') // 'form' | 'success' | 'error'
+  const [status, setStatus] = useState('form') // 'form' | 'loading' | 'success'
   const [error, setError] = useState('')
+
+  function delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -21,14 +25,17 @@ export default function ForgotPasswordPage() {
       return
     }
 
-    setIsLoading(true)
+    setStatus('loading')
     try {
-      await authApi.requestPasswordReset({ email })
+      await Promise.all([
+        authApi.requestPasswordReset({ email }),
+        delay(1400),
+      ])
       setStatus('success')
     } catch (err) {
+      await delay(1400)
+      setStatus('form')
       setError(err?.message ?? '요청 처리 중 오류가 발생했습니다. 다시 시도해 주세요.')
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -71,7 +78,7 @@ export default function ForgotPasswordPage() {
             <span className="text-[15px] font-bold tracking-tight text-foreground-secondary">SOL Lite</span>
           </div>
           <button
-            onClick={() => navigate('/login')}
+            onClick={() => navigate('/', { state: { openAuthModal: 'login' } })}
             aria-label="닫기"
             className="text-foreground-disabled hover:text-foreground-tertiary p-1 transition-colors"
           >
@@ -79,62 +86,75 @@ export default function ForgotPasswordPage() {
           </button>
         </div>
 
-        {status === 'form' && (
-          <>
-            <div className="px-6 pt-4">
-              <button
-                onClick={() => navigate('/login')}
-                className="flex items-center gap-1 text-primary text-xs font-medium mb-3 hover:text-primary-hover transition-colors"
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                로그인으로 돌아가기
-              </button>
-              <h2 className="text-xl font-extrabold text-foreground tracking-tight">비밀번호 찾기</h2>
-              <p className="text-[13px] text-foreground-disabled mt-1">가입하신 이메일을 입력해 주세요.</p>
+        <div className="min-h-[340px] flex flex-col">
+          {status === 'form' && (
+            <>
+              <div className="px-6 pt-4">
+                <button
+                  onClick={() => navigate('/', { state: { openAuthModal: 'login' } })}
+                  className="flex items-center gap-1 text-primary text-xs font-medium mb-3 hover:text-primary-hover transition-colors"
+                >
+                  <ArrowLeft className="w-3.5 h-3.5" />
+                  로그인으로 돌아가기
+                </button>
+                <h2 className="text-xl font-extrabold text-foreground tracking-tight">비밀번호 찾기</h2>
+                <p className="text-[13px] text-foreground-disabled mt-1">가입하신 이메일을 입력해 주세요.</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="px-6 pt-4 pb-[26px] flex flex-col gap-3.5">
+                <Input
+                  label="이메일"
+                  type="email"
+                  placeholder="example@domain.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+
+                {error && <p className="text-[11px] text-up">{error}</p>}
+
+                <button
+                  type="submit"
+                  className="w-full py-[13px] bg-primary text-white border-none rounded-[4px] text-sm font-bold hover:bg-primary-hover transition-colors duration-[150ms]"
+                >
+                  재설정 링크 받기
+                </button>
+              </form>
+            </>
+          )}
+
+          {(status === 'loading' || status === 'success') && (
+            <div className="h-full px-6 py-8 text-center flex flex-col items-center justify-center">
+              <div className="mb-6">
+                <SplashScreenFill inline animated={status === 'loading'} />
+              </div>
+
+              {status === 'loading' && (
+                <>
+                  <h2 className="text-lg font-extrabold text-foreground tracking-tight mb-1">요청 처리 중</h2>
+                  <p className="text-[13px] text-foreground-disabled leading-[1.8]">
+                    재설정 링크를 준비하고 있어요.<br />
+                    잠시만 기다려주세요.
+                  </p>
+                </>
+              )}
+
+              {status === 'success' && (
+                <>
+                  <h2 className="text-lg font-extrabold text-foreground tracking-tight mb-1">요청 완료</h2>
+                  <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-6">
+                    비밀번호 재설정 링크를 이메일로 발송했습니다.
+                  </p>
+                  <button
+                    onClick={() => navigate('/', { state: { openAuthModal: 'login' } })}
+                    className="text-[12px] text-primary font-medium hover:text-primary-hover transition-colors"
+                  >
+                    로그인으로 돌아가기
+                  </button>
+                </>
+              )}
             </div>
-
-            {/* 폼 */}
-            <form onSubmit={handleSubmit} className="px-6 pt-4 pb-[26px] flex flex-col gap-3.5">
-              <Input
-                label="이메일"
-                type="email"
-                placeholder="example@domain.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-
-              {error && <p className="text-[11px] text-up">{error}</p>}
-
-              {/* 요청 버튼 */}
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full py-[13px] bg-primary text-white border-none rounded-[4px] text-sm font-bold hover:bg-primary-hover transition-colors duration-[150ms] disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                {isLoading ? '전송 중...' : '재설정 링크 받기'}
-              </button>
-            </form>
-          </>
-        )}
-
-        {status === 'success' && (
-          <div className="px-6 py-8 text-center">
-            <CheckCircle className="w-12 h-12 text-live mx-auto mb-5" />
-            <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">요청 완료</h2>
-            <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-2">
-              비밀번호 재설정 링크를 이메일로 발송했습니다.
-            </p>
-            <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-8">
-              이메일에서 링크를 클릭하여 새 비밀번호를 설정해 주세요.
-            </p>
-            <button
-              onClick={() => navigate('/login')}
-              className="w-full py-[13px] bg-primary text-white rounded-xl text-sm font-bold shadow-primary-btn hover:bg-primary-hover transition-colors duration-[150ms]"
-            >
-              로그인하러 가기
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   )

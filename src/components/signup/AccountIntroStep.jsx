@@ -78,7 +78,7 @@ export default function AccountIntroStep({ onNext }) {
           </button>
 
           <p className="text-sm text-foreground-secondary mt-6">
-            이미 계좌가 있으신가요? <button type="button" onClick={() => navigate('/', { state: { openLogin: true } })} className="text-primary hover:underline font-semibold">로그인</button>
+            이미 계좌가 있으신가요? <button type="button" onClick={() => navigate('/', { state: { openAuthModal: 'login' } })} className="text-primary hover:underline font-semibold">로그인</button>
           </p>
         </div>
       </div>

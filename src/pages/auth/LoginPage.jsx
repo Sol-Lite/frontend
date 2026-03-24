@@ -85,7 +85,7 @@ export default function LoginPage() {
               <label className="text-[11px] font-semibold text-foreground-secondary">비밀번호</label>
               <button
                 type="button"
-                onClick={() => navigate('/forgot-password')}
+                onClick={() => navigate('/', { state: { openAuthModal: 'forgot' } })}
                 className="text-[11px] text-primary font-medium hover:text-primary-hover transition-colors"
               >
                 비밀번호 찾기

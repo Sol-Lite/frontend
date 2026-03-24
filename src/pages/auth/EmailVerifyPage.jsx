@@ -72,7 +72,7 @@ export default function EmailVerifyPage() {
             <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">인증 실패</h2>
             <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-8">{message}</p>
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/', { state: { openAuthModal: 'login' } })}
               className="w-full py-[13px] bg-surface-muted border border-stroke text-foreground-secondary rounded-xl text-sm font-semibold hover:bg-stroke-subtle transition-colors"
             >
               로그인 페이지로

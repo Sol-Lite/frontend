@@ -24,11 +24,13 @@ export default function AppShell() {
   const openLoginModal = useAuthStore((s) => s.openLoginModal)
 
   useEffect(() => {
-    if (location.state?.openLogin) {
-      openLoginModal()
+    if (location.state?.openAuthModal) {
+      openLoginModal(location.state.openAuthModal)
       navigate(location.pathname, { replace: true, state: {} })
+      return
     }
-  }, [location])
+
+  }, [location, navigate, openLoginModal])
 
 
   const [activeDrag, setActiveDrag] = useState(null)
