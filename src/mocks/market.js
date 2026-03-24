@@ -6,9 +6,8 @@ export const MARKET_INDICES = [
 ]
 
 export const MARKET_FILTERS = [
-  { key: 'all', label: '전체' },
-  { key: 'kr',  label: '🇰🇷 국내' },
-  { key: 'us',  label: '🇺🇸 미국' },
+  { key: 'kr', label: '국내' },
+  { key: 'us', label: '미국' },
 ]
 
 export const SORT_FILTERS = [

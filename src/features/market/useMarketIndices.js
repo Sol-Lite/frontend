@@ -6,9 +6,23 @@ import { subscribeTopic } from '@/lib/stomp'
 // 백엔드 code → WebSocket topic 매핑
 const INDEX_TOPICS = {
   '001':      '/topic/index/domestic/001',
-  '101':      '/topic/index/domestic/101',
+  '301':      '/topic/index/domestic/301',
   'SPI@SPX':  '/topic/index/foreign/SPI@SPX',
   'NAS@IXIC': '/topic/index/foreign/NAS@IXIC',
+  USD:        '/topic/currency/USD',
+}
+
+function toNumberOrFallback(value, fallback) {
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? numeric : fallback
+}
+
+function normalizeSignedValue(sign, value, fallback) {
+  const numeric = toNumberOrFallback(value, fallback)
+  if (numeric == null || numeric === 0) return numeric
+  if (sign === '4' || sign === '5') return numeric > 0 ? -numeric : numeric
+  if (sign === '1' || sign === '2') return numeric < 0 ? -numeric : numeric
+  return numeric
 }
 
 export default function useMarketIndices() {
@@ -18,11 +32,7 @@ export default function useMarketIndices() {
     queryKey: ['market', 'indices'],
     queryFn: marketApi.getIndices,
     staleTime: 5 * 1000,
-    refetchInterval: (query) => {
-      // 4개 미만이면 5초마다 재시도, 다 채워지면 30초
-      const count = query.state.data?.length ?? 0
-      return count < 4 ? 5_000 : 30_000
-    },
+    refetchInterval: 10_000,
   })
 
   useEffect(() => {
@@ -38,9 +48,10 @@ export default function useMarketIndices() {
               item.code === idx.code
                 ? {
                     ...item,
-                    price:      Number(body.price ?? body.pricejisu ?? item.price),
-                    change:     Number(body.change ?? body.drate ?? item.change),
-                    changeRate: Number(body.changeRate ?? body.drate ?? item.changeRate),
+                    sign: body.sign ?? item.sign,
+                    price: toNumberOrFallback(body.jisu ?? body.price ?? body.pricejisu, item.price),
+                    change: normalizeSignedValue(body.sign ?? item.sign, body.change, item.change),
+                    changeRate: normalizeSignedValue(body.sign ?? item.sign, body.drate ?? body.uprate, item.changeRate),
                   }
                 : item,
             ),
