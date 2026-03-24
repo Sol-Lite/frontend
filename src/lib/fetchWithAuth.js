@@ -12,6 +12,12 @@ function addRefreshSubscriber(cb) {
   refreshSubscribers.push(cb)
 }
 
+function onRefreshFailed(err) {
+  const pending = [...refreshSubscribers]
+  refreshSubscribers = []
+  pending.forEach((cb) => cb(null, err))
+}
+
 async function refreshToken() {
   const res = await fetch('/api/auth/token/refresh', {
     method: 'POST',
@@ -44,7 +50,11 @@ export async function fetchWithAuth(url, options = {}) {
 
   // 401 처리: 모든 요청(첫 번째 포함)을 subscriber에 먼저 등록
   const retryPromise = new Promise((resolve, reject) => {
-    addRefreshSubscriber(async (newToken) => {
+    addRefreshSubscriber(async (newToken, refreshErr) => {
+      if (!newToken) {
+        reject(refreshErr ?? new Error('refresh failed'))
+        return
+      }
       try {
         const retryHeaders = { ...headers, Authorization: `Bearer ${newToken}` }
         const retryRes = await fetch(url, { ...fetchOptions, headers: retryHeaders, credentials: 'include' })
@@ -69,8 +79,8 @@ export async function fetchWithAuth(url, options = {}) {
         useAuthStore.setState({ accessToken: newToken })
         onRefreshed(newToken)
       })
-      .catch(() => {
-        refreshSubscribers = []
+      .catch((err) => {
+        onRefreshFailed(err)
         useAuthStore.getState().logout()
         useAuthStore.getState().openLoginModal()
       })
