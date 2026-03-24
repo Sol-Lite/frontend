@@ -1,25 +1,25 @@
 import { MessageSquare, Send, Lock } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
 import LiveDot from '@/components/ui/LiveDot'
 import useAuthStore from '@/store/useAuthStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import EditPanel from './EditPanel'
 
 function LoginPrompt() {
-  const navigate = useNavigate()
+  const openLoginModal = useAuthStore((s) => s.openLoginModal)
+
   return (
     <div className="flex flex-col items-center justify-center h-full gap-4 px-6 text-center">
       <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center">
         <Lock className="w-4.5 h-4.5 text-foreground-disabled" />
       </div>
       <div>
-        <p className="text-[13px] font-semibold text-foreground">AI 투자 어시스턴트</p>
+        <p className="text-[13px] font-semibold text-foreground">SoL-Lite AI</p>
         <p className="text-[11px] text-foreground-disabled mt-1 leading-relaxed">
-          로그인 후 SOL AI와 대화하며<br />투자 인사이트를 확인하세요.
+          로그인 후 대화를 통해<br />증권 서비스를 빠르게 이용해보세요.
         </p>
       </div>
       <button
-        onClick={() => navigate('/login')}
+        onClick={() => openLoginModal()}
         className="w-full px-4 py-2 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
       >
         로그인
@@ -32,7 +32,7 @@ function ChatHeader() {
   return (
     <div className="h-chat-header flex items-center gap-2 px-4 border-b border-stroke shrink-0">
       <MessageSquare className="w-3.5 h-3.5 text-primary" />
-      <span className="text-[13px] font-semibold text-foreground">SOL AI</span>
+      <span className="text-[13px] font-semibold text-foreground">SoL-Lite AI</span>
       <LiveDot size="sm" className="ml-0.5" />
     </div>
   )

@@ -274,13 +274,13 @@ export default function SignupPage() {
           )}
 
           {step === 5 && (
-            <AccountStep onFinish={() => navigate('/', { state: { openLogin: true } })} />
+            <AccountStep onFinish={() => navigate('/', { state: { openAuthModal: 'login' } })} />
           )}
 
           {step < 5 && (
             <p className="text-center text-xs text-foreground-disabled mt-5">
               이미 계정이 있으신가요?
-              <button type="button" onClick={() => navigate('/', { state: { openLogin: true } })}
+              <button type="button" onClick={() => navigate('/', { state: { openAuthModal: 'login' } })}
                 className="text-primary font-semibold ml-1">
                 로그인
               </button>

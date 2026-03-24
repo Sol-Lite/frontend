@@ -1,14 +1,16 @@
 import { useEffect, useState } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { Activity, CheckCircle, XCircle, Loader } from 'lucide-react'
+import { XCircle, Loader } from 'lucide-react'
 import { authApi } from '@/api/auth'
+import SolLiteBrand from '@/components/ui/SolLiteBrand'
+import SplashScreenFill from '@/components/ui/SplashScreenFill'
 
 export default function EmailVerifyPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const token = searchParams.get('token')
 
-  const [status, setStatus] = useState('loading') // 'loading' | 'success' | 'error'
+  const [status, setStatus] = useState('loading') // 'loading' | 'animating' | 'success' | 'error'
   const [message, setMessage] = useState('')
 
   useEffect(() => {
@@ -19,7 +21,10 @@ export default function EmailVerifyPage() {
     }
 
     authApi.confirmVerifyEmail({ token })
-      .then(() => setStatus('success'))
+      .then(() => {
+        setStatus('animating')
+        setTimeout(() => setStatus('success'), 1600)
+      })
       .catch((err) => {
         setStatus('error')
         setMessage(err?.message ?? '인증 링크가 만료되었거나 유효하지 않습니다.')
@@ -32,13 +37,10 @@ export default function EmailVerifyPage() {
         className="w-full max-w-[400px] bg-surface rounded-xl shadow-modal p-8 text-center"
         style={{ animation: 'modal-in .2s ease both' }}
       >
-        {/* 로고 */}
-        <div className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center">
-            <Activity className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-          </div>
-          <span className="text-[15px] font-bold tracking-tight text-foreground-secondary">SOL Lite</span>
-        </div>
+        {/* 로딩/에러 상태에서만 상단 로고 표시 */}
+        {(status === 'loading' || status === 'error') && (
+          <SolLiteBrand className="justify-center mb-8" />
+        )}
 
         {status === 'loading' && (
           <>
@@ -48,20 +50,20 @@ export default function EmailVerifyPage() {
           </>
         )}
 
-        {status === 'success' && (
-          <>
-            <CheckCircle className="w-12 h-12 text-live mx-auto mb-5" />
-            <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">이메일 인증 완료</h2>
-            <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-8">
-              이메일 인증이 완료되었습니다.<br />로그인하여 서비스를 이용하세요.
-            </p>
-            <button
-              onClick={() => navigate('/login')}
-              className="w-full py-[13px] bg-primary text-white rounded-xl text-sm font-bold shadow-primary-btn hover:bg-primary-hover transition-colors duration-[150ms]"
-            >
-              로그인하러 가기
-            </button>
-          </>
+        {(status === 'animating' || status === 'success') && (
+          <div className="min-h-[220px] flex flex-col items-center justify-center">
+            <div className="mb-6">
+              <SplashScreenFill inline animated={status === 'animating'} />
+            </div>
+            {status === 'success' && (
+              <>
+                <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">이메일 인증 완료</h2>
+                <p className="text-[13px] text-foreground-disabled leading-[1.8]">
+                  인증이 완료되었습니다.<br />이 탭을 닫고 회원가입 화면으로 돌아가세요.
+                </p>
+              </>
+            )}
+          </div>
         )}
 
         {status === 'error' && (
@@ -70,7 +72,7 @@ export default function EmailVerifyPage() {
             <h2 className="text-xl font-extrabold text-foreground tracking-tight mb-2">인증 실패</h2>
             <p className="text-[13px] text-foreground-disabled leading-[1.8] mb-8">{message}</p>
             <button
-              onClick={() => navigate('/login')}
+              onClick={() => navigate('/', { state: { openAuthModal: 'login' } })}
               className="w-full py-[13px] bg-surface-muted border border-stroke text-foreground-secondary rounded-xl text-sm font-semibold hover:bg-stroke-subtle transition-colors"
             >
               로그인 페이지로

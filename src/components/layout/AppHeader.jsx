@@ -32,7 +32,7 @@ function UserArea() {
     return (
       <div className="flex items-center gap-2">
         <button
-          onClick={openLoginModal}
+          onClick={() => openLoginModal()}
           className="flex items-center px-4 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
         >
           로그인

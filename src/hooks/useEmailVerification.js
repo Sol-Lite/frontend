@@ -7,17 +7,19 @@ export default function useEmailVerification(email, { onError } = {}) {
   const [isSending, setIsSending] = useState(false)
   const [sendDone, setSendDone] = useState(false)
   const [emailVerified, setEmailVerified] = useState(false)
+  const [verifyToken, setVerifyToken] = useState(null)
   const pollingRef = useRef(null)
 
   useEffect(() => {
-    if (!sendDone || emailVerified) return undefined
+    if (!sendDone || emailVerified || !verifyToken) return undefined
 
     pollingRef.current = setInterval(async () => {
       try {
-        const res = await authApi.getEmailVerifyStatus(email)
+        const res = await authApi.getEmailVerifyStatus(verifyToken)
         if (res?.verified) {
           setEmailVerified(true)
           clearInterval(pollingRef.current)
+          pollingRef.current = null
         }
       } catch {
         // Polling errors are ignored to keep retrying.
@@ -25,11 +27,12 @@ export default function useEmailVerification(email, { onError } = {}) {
     }, POLL_INTERVAL)
 
     return () => clearInterval(pollingRef.current)
-  }, [email, sendDone, emailVerified])
+  }, [verifyToken, sendDone, emailVerified])
 
   function resetVerification() {
     setSendDone(false)
     setEmailVerified(false)
+    setVerifyToken(null)
     clearInterval(pollingRef.current)
   }
 
@@ -43,7 +46,8 @@ export default function useEmailVerification(email, { onError } = {}) {
     setIsSending(true)
 
     try {
-      await authApi.sendVerifyEmail({ email })
+      const res = await authApi.sendVerifyEmail({ email })
+      setVerifyToken(res.token)
       setSendDone(true)
       setEmailVerified(false)
       return { ok: true }

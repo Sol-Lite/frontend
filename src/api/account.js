@@ -18,6 +18,7 @@ export const accountApi = {
   getMyAccount: () => request('/me', 'GET'),
   changePin: (currentPin, newPin) => request('/me/pin', 'PATCH', { currentPin, newPin }),
   reset: (accountPin) => request('/reset', 'POST', { accountPin }),
+  resetCashForClose: (accountPin) => request('/me/cash/reset', 'POST', { accountPin }),
   closeAccount: (accountPin) => request('', 'DELETE', { accountPin }),
 }
 

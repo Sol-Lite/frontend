@@ -14,11 +14,18 @@ const PASSWORD_RULES = [
 
 function PasswordRules({ checks }) {
   return (
-    <div className="mt-[7px] bg-surface-subtle rounded-[10px] px-3 py-2.5 grid grid-cols-2 gap-x-3 gap-y-[5px]">
+    <div className="mt-2 grid grid-cols-2 gap-x-3 gap-y-2">
       {PASSWORD_RULES.map(({ key, label }) => (
-        <div key={key} className="flex items-center gap-[5px] text-[11px]">
-          <div className={['w-1 h-1 rounded-full shrink-0', checks[key] ? 'bg-live' : 'bg-stroke-input'].join(' ')} />
-          <span className={checks[key] ? 'text-live' : 'text-foreground-disabled'}>{label}</span>
+        <div key={key} className="flex items-center gap-1.5 text-[11px]">
+          <span
+            className={[
+              'h-1.5 w-1.5 shrink-0 rounded-full',
+              checks[key]
+                ? 'bg-primary'
+                : 'bg-stroke-input',
+            ].join(' ')}
+          />
+          <span className={checks[key] ? 'text-primary font-medium' : 'text-foreground-disabled'}>{label}</span>
         </div>
       ))}
     </div>
@@ -40,6 +47,7 @@ export default function BasicInfoStep({
   onNext,
 }) {
   const passwordChecks = getPasswordChecks(password)
+  const duplicateEmailError = fieldErrors.email?.includes('이미 등록된')
 
   return (
     <>
@@ -64,7 +72,10 @@ export default function BasicInfoStep({
                     field.onChange(e)
                     onEmailInputChange(e)
                   }}
-                  className="flex-1 px-3.5 py-[11px] border-[1.5px] border-stroke-input rounded-[10px] text-sm text-foreground bg-surface outline-none transition-[border-color,box-shadow] duration-[200ms] focus:border-primary focus:shadow-focus-ring placeholder:text-foreground-disabled"
+                  className={[
+                    'flex-1 px-3.5 py-[11px] border-[1.5px] rounded-[10px] text-sm text-foreground bg-surface outline-none transition-[border-color,box-shadow] duration-[200ms] focus:shadow-focus-ring placeholder:text-foreground-disabled',
+                    duplicateEmailError ? 'border-up focus:border-up' : 'border-stroke-input focus:border-primary',
+                  ].join(' ')}
                 />
               )}
             />
@@ -77,17 +88,12 @@ export default function BasicInfoStep({
               {isSending ? '발송 중...' : emailVerified ? '인증 완료' : sendDone ? '재발송' : '인증 발송'}
             </button>
           </div>
-          {fieldErrors.email && <p className="mt-1.5 text-[11px] text-up">{fieldErrors.email}</p>}
+          {fieldErrors.email && !duplicateEmailError && <p className="mt-1.5 text-[11px] text-up">{fieldErrors.email}</p>}
 
           {sendDone && !emailVerified && (
-            <div
-              className={[
-                'mt-2 flex items-start gap-2.5 rounded-[10px] px-3 py-2.5 border transition-colors duration-[200ms]',
-                verifyHighlight ? 'bg-primary-light border-primary' : 'bg-surface-subtle border-stroke-input',
-              ].join(' ')}
-            >
+            <div className="mt-2 flex items-start gap-2.5 rounded-lg px-0.5 py-0.5">
               <Mail className={['w-3.5 h-3.5 mt-px shrink-0', verifyHighlight ? 'text-primary' : 'text-foreground-disabled'].join(' ')} />
-              <div>
+              <div className="leading-[1.6]">
                 <p className={['text-[11px] font-semibold', verifyHighlight ? 'text-primary' : 'text-foreground-secondary'].join(' ')}>
                   인증 메일이 발송되었습니다
                 </p>
@@ -105,13 +111,15 @@ export default function BasicInfoStep({
             </div>
           )}
 
-          {fieldErrors.email?.includes('이미 등록된') && (
-            <div className="mt-2 flex flex-col gap-2 rounded-[10px] px-3 py-2.5 border border-up/30 bg-up/5">
-              <p className="text-[11px] font-semibold text-up">{fieldErrors.email}</p>
-              <p className="text-[11px] text-foreground-secondary">
+          {duplicateEmailError && (
+            <div className="mt-2 flex items-start gap-2 text-[11px] leading-[1.6]">
+              <span className="font-semibold text-up shrink-0">{fieldErrors.email}</span>
+              <span className="text-foreground-secondary">
                 이미 가입된 계정이 있으신가요?{' '}
-                <Link to="/login" className="text-primary font-semibold hover:underline">로그인</Link>
-              </p>
+                <Link to="/" state={{ openAuthModal: 'login' }} className="text-primary font-semibold hover:underline">
+                  로그인
+                </Link>
+              </span>
             </div>
           )}
         </div>
