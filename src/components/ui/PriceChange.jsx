@@ -8,7 +8,7 @@
 export default function PriceChange({ value, variant = 'text', className = '' }) {
   const isUp = value > 0
   const isZero = value === 0
-  const sign = isUp ? '▲' : isZero ? '' : '▼'
+  const sign = isUp ? '+' : isZero ? '' : '-'
   const absValue = Math.abs(value).toFixed(2)
   const label = `${sign}${absValue}%`
 
