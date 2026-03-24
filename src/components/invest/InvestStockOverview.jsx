@@ -26,13 +26,16 @@ export default function InvestStockOverview({
   minuteInterval,
   chartLoading,
   chartErrorMessage,
+  chartHistoryLoading,
+  hasMoreChartHistory,
   onChartPeriodChange,
+  onLoadMoreChartHistory,
   onMinuteIntervalChange,
   isLoading,
   errorMessage,
 }) {
-  const priceTone = getDirectionClass(changeAmount)
-  const changeArrow = changeAmount > 0 ? '▲' : changeAmount < 0 ? '▼' : ''
+  const changeTone = getDirectionClass(changeAmount)
+  const changeSign = changeAmount > 0 ? '+' : ''
 
   return (
     <section className="flex min-w-0 basis-0 flex-1 flex-col overflow-hidden border-r border-stroke bg-surface">
@@ -61,15 +64,15 @@ export default function InvestStockOverview({
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <div className={cn('text-[22px] font-black leading-none tracking-tight', priceTone)}>
+            <div className="text-[22px] font-black leading-none tracking-tight text-foreground">
               {isLoading && currentPrice == null ? '...' : formatNumber(currentPrice)}
             </div>
             <div className="mt-1 flex items-center justify-end gap-1">
-              <span className={cn('text-[11px] font-bold', priceTone)}>
-                {changeArrow}{formatNumber(Math.abs(changeAmount))}
+              <span className={cn('text-[11px] font-bold', changeTone)}>
+                {changeSign}{formatNumber(changeAmount)}
               </span>
               {changeRate != null && !Number.isNaN(changeRate) && (
-                <PriceChange value={changeRate} variant="badge" />
+                <PriceChange value={changeRate} variant="text" className="text-[11px]" />
               )}
             </div>
           </div>
@@ -95,8 +98,11 @@ export default function InvestStockOverview({
           minuteInterval={minuteInterval}
           minuteIntervalOptions={MINUTE_INTERVAL_OPTIONS}
           onPeriodChange={onChartPeriodChange}
+          onLoadMoreHistory={onLoadMoreChartHistory}
           onMinuteIntervalChange={onMinuteIntervalChange}
+          hasMoreHistory={hasMoreChartHistory}
           isLoading={chartLoading ?? isLoading}
+          isLoadingMoreHistory={chartHistoryLoading}
           errorMessage={chartErrorMessage ?? errorMessage}
         />
       </div>

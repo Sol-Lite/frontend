@@ -1,16 +1,20 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { marketApi } from '@/api/market'
 import { DAY_MS, DEFAULT_MINUTE_INTERVAL } from '@/features/invest/constants'
 import { formatApiDate } from '@/features/invest/formatters'
 import {
   buildDailyRows,
+  buildTickRows,
   buildRealtimeRows,
   getChartPeriodConfig,
   getLatestMinuteSession,
 } from '@/features/invest/marketData'
 import { normalizeDailySeries, normalizeMinuteSeries, normalizeOrderBook } from '@/features/invest/domestic/normalize'
 import useStompSubscription from '@/hooks/useStompSubscription'
+
+const DAILY_HISTORY_LIMIT = 200
+const MINUTE_HISTORY_LIMIT = 500
 
 const STALE = {
   price: 1000 * 5,
@@ -21,6 +25,80 @@ const STALE = {
   finance: 1000 * 60 * 60,
 }
 
+function mergeSeriesByTimestamp(...seriesGroups) {
+  const merged = new Map()
+
+  seriesGroups
+    .flat()
+    .forEach((point) => {
+      if (!point || !Number.isFinite(point.timestamp)) return
+      merged.set(point.timestamp, point)
+    })
+
+  return Array.from(merged.values())
+    .sort((left, right) => left.timestamp - right.timestamp)
+}
+
+function applyLiveCandle(minuteSeries, liveCandle) {
+  if (!liveCandle || minuteSeries.length === 0) return minuteSeries
+
+  const last = minuteSeries.at(-1)
+  if (!last) return minuteSeries
+
+  if (liveCandle.timestamp === last.timestamp) {
+    return [
+      ...minuteSeries.slice(0, -1),
+      {
+        ...last,
+        high: Math.max(last.high, liveCandle.high),
+        low: Math.min(last.low, liveCandle.low),
+        close: liveCandle.close,
+        volume: last.volume + liveCandle.volume,
+      },
+    ]
+  }
+
+  if (liveCandle.timestamp > last.timestamp) {
+    return [...minuteSeries, liveCandle]
+  }
+
+  return minuteSeries
+}
+
+function applyLiveDailyPrice(dailySeries, livePrice) {
+  if (!livePrice || dailySeries.length === 0) return dailySeries
+
+  const last = dailySeries.at(-1)
+  if (!last) return dailySeries
+
+  const today = new Date()
+  const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+  if (last.date !== todayKey) {
+    return dailySeries
+  }
+
+  return [
+    ...dailySeries.slice(0, -1),
+    {
+      ...last,
+      high: Math.max(last.high, livePrice.currentPrice),
+      low: Math.min(last.low, livePrice.currentPrice),
+      close: livePrice.currentPrice,
+    },
+  ]
+}
+
+function formatLocalDateTime(timestamp) {
+  const date = new Date(timestamp)
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const hh = String(date.getHours()).padStart(2, '0')
+  const mi = String(date.getMinutes()).padStart(2, '0')
+  const ss = String(date.getSeconds()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`
+}
+
 export default function useDomesticMarketData(stockCode, { enabled }) {
   const [selectedChartPeriod, setSelectedChartPeriod] = useState(
     () => localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
@@ -29,6 +107,13 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
     () => Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL,
   )
   const [liveCandle, setLiveCandle] = useState(null)
+  const [liveTrades, setLiveTrades] = useState([])
+  const [livePrice, setLivePrice] = useState(null)
+  const [chartHistorySeries, setChartHistorySeries] = useState([])
+  const [chartHistoryLoading, setChartHistoryLoading] = useState(false)
+  const [chartHistoryErrorMessage, setChartHistoryErrorMessage] = useState('')
+  const [hasMoreChartHistory, setHasMoreChartHistory] = useState(true)
+  const historyLoadingRef = useRef(false)
 
   const endDate = formatApiDate(new Date())
   const startDate = formatApiDate(new Date(Date.now() - 180 * DAY_MS))
@@ -109,7 +194,17 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
 
   useEffect(() => {
     setLiveCandle(null)
+    setLiveTrades([])
+    setLivePrice(null)
   }, [stockCode, selectedMinuteInterval])
+
+  useEffect(() => {
+    historyLoadingRef.current = false
+    setChartHistorySeries([])
+    setChartHistoryLoading(false)
+    setChartHistoryErrorMessage('')
+    setHasMoreChartHistory(true)
+  }, [stockCode, selectedChartPeriod, selectedMinuteInterval])
 
   useEffect(() => {
     if (!liveTrade) return
@@ -131,37 +226,76 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
       }
       return { ...prev, high: Math.max(prev.high, price), low: Math.min(prev.low, price), close: price, volume: prev.volume + volume }
     })
+
+    setLiveTrades((prev) => [{
+      chetime,
+      price,
+      cvolume: volume,
+      isBuy: liveTrade.cgubun === '+',
+      drate: Number(liveTrade.drate ?? 0),
+      totalVolume: Number(liveTrade.volume ?? 0),
+    }, ...prev].slice(0, 300))
+
+    setLivePrice({
+      currentPrice: price,
+      changeAmount: Number(liveTrade.change ?? 0),
+      changeRate: Number(liveTrade.drate ?? 0),
+    })
   }, [liveTrade, selectedMinuteInterval])
-
-  const minuteSeriesWithLive = useMemo(() => {
-    if (!liveCandle || minuteSeries.length === 0) return minuteSeries
-    const last = minuteSeries.at(-1)
-    if (liveCandle.timestamp === last.timestamp) {
-      return [
-        ...minuteSeries.slice(0, -1),
-        { ...last, high: Math.max(last.high, liveCandle.high), low: Math.min(last.low, liveCandle.low), close: liveCandle.close, volume: last.volume + liveCandle.volume },
-      ]
-    }
-    if (liveCandle.timestamp > last.timestamp) {
-      return [...minuteSeries, liveCandle]
-    }
-    return minuteSeries
-  }, [minuteSeries, liveCandle])
-
-  const marketState = {
-    isLoading: priceQuery.isLoading || dailyChartQuery.isLoading || minuteChartQuery.isLoading || orderBookQuery.isLoading,
-    errorMessage: (priceQuery.error || dailyChartQuery.error || minuteChartQuery.error || orderBookQuery.error)?.message ?? '',
-    priceData: priceQuery.data ?? null,
-    dailySeries,
-    minuteSeries: minuteSeriesWithLive,
-    orderBook: orderBookQuery.data ?? null,
-  }
 
   const customSeries = customChartQuery.data
     ? (selectedChartPeriod === 'MINUTE'
         ? normalizeMinuteSeries(customChartQuery.data?.data)
         : normalizeDailySeries(customChartQuery.data?.data))
     : []
+
+  const minuteSeriesWithLive = useMemo(
+    () => applyLiveCandle(minuteSeries, liveCandle),
+    [minuteSeries, liveCandle],
+  )
+
+  const customMinuteSeriesWithLive = useMemo(
+    () => applyLiveCandle(selectedChartPeriod === 'MINUTE' ? customSeries : [], liveCandle),
+    [customSeries, liveCandle, selectedChartPeriod],
+  )
+
+  const dailySeriesWithLive = useMemo(
+    () => applyLiveDailyPrice(dailySeries, livePrice ?? priceQuery.data ?? null),
+    [dailySeries, livePrice, priceQuery.data],
+  )
+
+  const baseChartSeries = useMemo(() => {
+    if (selectedChartPeriod === 'MINUTE') {
+      return usesBaseMinuteData ? minuteSeriesWithLive : customMinuteSeriesWithLive
+    }
+
+    if (selectedChartPeriod === 'DAILY') {
+      return dailySeriesWithLive
+    }
+
+    return customSeries
+  }, [
+    customMinuteSeriesWithLive,
+    customSeries,
+    dailySeriesWithLive,
+    minuteSeriesWithLive,
+    selectedChartPeriod,
+    usesBaseMinuteData,
+  ])
+
+  const chartSeries = useMemo(
+    () => mergeSeriesByTimestamp(chartHistorySeries, baseChartSeries),
+    [chartHistorySeries, baseChartSeries],
+  )
+
+  const marketState = {
+    isLoading: priceQuery.isLoading || dailyChartQuery.isLoading || minuteChartQuery.isLoading || orderBookQuery.isLoading,
+    errorMessage: (priceQuery.error || dailyChartQuery.error || minuteChartQuery.error || orderBookQuery.error)?.message ?? '',
+    priceData: livePrice ?? priceQuery.data ?? null,
+    dailySeries: dailySeriesWithLive,
+    minuteSeries: minuteSeriesWithLive,
+    orderBook: orderBookQuery.data ?? null,
+  }
 
   const chartState = {
     isLoading: customChartQuery.isLoading,
@@ -179,9 +313,11 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
   const liveOrderBook = useStompSubscription(enabled ? `/topic/asking/${stockCode}` : null)
   const orderBook = normalizeOrderBook(liveOrderBook) ?? normalizeOrderBook(marketState.orderBook)
 
-  const previousClose = dailySeries.at(-2)?.close ?? null
-  const dailyRows = buildDailyRows(dailySeries)
-  const realtimeRows = buildRealtimeRows(getLatestMinuteSession(minuteSeriesWithLive), previousClose)
+  const previousClose = dailySeriesWithLive.at(-2)?.close ?? null
+  const dailyRows = buildDailyRows(dailySeriesWithLive)
+  const realtimeRows = liveTrades.length > 0
+    ? buildTickRows(liveTrades)
+    : buildRealtimeRows(getLatestMinuteSession(minuteSeriesWithLive), previousClose)
 
   useEffect(() => {
     localStorage.setItem('invest.chartPeriod', selectedChartPeriod)
@@ -196,10 +332,78 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
     setSelectedChartPeriod('MINUTE')
   }
 
+  async function loadMoreChartHistory() {
+    if (!enabled || historyLoadingRef.current || !hasMoreChartHistory || chartSeries.length === 0) {
+      return
+    }
+
+    const earliestPoint = chartSeries[0]
+    if (!earliestPoint) return
+
+    historyLoadingRef.current = true
+    setChartHistoryLoading(true)
+    setChartHistoryErrorMessage('')
+
+    try {
+      if (selectedChartPeriod === 'MINUTE') {
+        const response = await marketApi.getMinuteChartHistory(stockCode, {
+          ncnt: selectedMinuteInterval,
+          before: formatLocalDateTime(earliestPoint.timestamp),
+          limit: MINUTE_HISTORY_LIMIT,
+        })
+
+        const fetchedSeries = normalizeMinuteSeries(response?.data)
+        const olderSeries = fetchedSeries.filter((point) => point.timestamp < earliestPoint.timestamp)
+
+        if (olderSeries.length === 0) {
+          setHasMoreChartHistory(false)
+          return
+        }
+
+        setChartHistorySeries((prev) => mergeSeriesByTimestamp(prev, olderSeries))
+
+        if (fetchedSeries.length < MINUTE_HISTORY_LIMIT) {
+          setHasMoreChartHistory(false)
+        }
+        return
+      }
+
+      const response = await marketApi.getChartHistory(stockCode, {
+        period: selectedChartPeriod,
+        before: earliestPoint.date,
+        limit: DAILY_HISTORY_LIMIT,
+      })
+
+      const fetchedSeries = normalizeDailySeries(response?.data)
+      const olderSeries = fetchedSeries.filter((point) => point.timestamp < earliestPoint.timestamp)
+
+      if (olderSeries.length === 0) {
+        setHasMoreChartHistory(false)
+        return
+      }
+
+      setChartHistorySeries((prev) => mergeSeriesByTimestamp(prev, olderSeries))
+
+      if (fetchedSeries.length < DAILY_HISTORY_LIMIT) {
+        setHasMoreChartHistory(false)
+      }
+    } catch (error) {
+      setChartHistoryErrorMessage(error?.message ?? '과거 차트 데이터를 불러오지 못했습니다.')
+    } finally {
+      historyLoadingRef.current = false
+      setChartHistoryLoading(false)
+    }
+  }
+
   return {
     marketState,
     chartState,
     detailState,
+    chartSeries,
+    chartHistoryLoading,
+    chartHistoryErrorMessage,
+    hasMoreChartHistory,
+    loadMoreChartHistory,
     selectedChartPeriod,
     selectedMinuteInterval,
     orderBook,

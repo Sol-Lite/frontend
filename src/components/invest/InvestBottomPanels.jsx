@@ -17,10 +17,10 @@ function SectionTabs({ items, activeKey, onChange }) {
           key={item.key}
           onClick={() => onChange(item.key)}
           className={cn(
-            'px-3 py-2.5 text-xs font-semibold transition-colors',
+            'px-3 py-2.5 text-xs transition-colors',
             activeKey === item.key
-              ? 'border-b-2 border-primary text-primary'
-              : 'text-foreground-disabled hover:text-foreground-secondary',
+              ? 'border-b-2 border-primary text-primary font-bold'
+              : 'font-semibold text-foreground-disabled hover:text-foreground-secondary',
           )}
         >
           {item.label}

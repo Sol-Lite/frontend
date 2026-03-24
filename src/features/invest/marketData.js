@@ -133,6 +133,22 @@ export function buildDailyRows(dailySeries) {
     .reverse()
 }
 
+function formatChetime(chetime) {
+  const s = String(chetime).padStart(6, '0')
+  return `${s.slice(0, 2)}:${s.slice(2, 4)}:${s.slice(4, 6)}`
+}
+
+export function buildTickRows(ticks) {
+  return ticks.map((tick) => ({
+    time: formatChetime(tick.chetime),
+    price: tick.price,
+    volume: tick.cvolume,
+    isBuy: tick.isBuy,
+    changeRate: tick.drate,
+    totalVolume: tick.totalVolume,
+  }))
+}
+
 export function buildRealtimeRows(minuteSeries, previousClose) {
   let accumulatedVolume = 0
 

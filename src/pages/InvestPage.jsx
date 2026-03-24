@@ -21,6 +21,8 @@ export default function InvestPage() {
     minuteInterval,
     chartLoading,
     chartErrorMessage,
+    chartHistoryLoading,
+    hasMoreChartHistory,
     marketLoading,
     marketErrorMessage,
     dailyRows,
@@ -31,6 +33,7 @@ export default function InvestPage() {
     finance,
     detailLoading,
     onChartPeriodChange,
+    onLoadMoreChartHistory,
     onMinuteIntervalChange,
   } = useInvestMarketData(stockCode, locationState)
 
@@ -52,7 +55,10 @@ export default function InvestPage() {
             minuteInterval={minuteInterval}
             chartLoading={chartLoading}
             chartErrorMessage={chartErrorMessage}
+            chartHistoryLoading={chartHistoryLoading}
+            hasMoreChartHistory={hasMoreChartHistory}
             onChartPeriodChange={onChartPeriodChange}
+            onLoadMoreChartHistory={onLoadMoreChartHistory}
             onMinuteIntervalChange={onMinuteIntervalChange}
             isLoading={marketLoading}
             errorMessage={marketErrorMessage}

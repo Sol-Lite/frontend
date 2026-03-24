@@ -1,6 +1,6 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import { AreaSeries, CandlestickSeries, HistogramSeries, createChart } from 'lightweight-charts'
+import { CandlestickSeries, CrosshairMode, HistogramSeries, LineSeries, createChart } from 'lightweight-charts'
 import { ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/cn'
 
@@ -40,10 +40,48 @@ const InvestStockChart = memo(function InvestStockChart({
   minuteIntervalOptions = [],
   onPeriodChange,
   onMinuteIntervalChange,
+  onLoadMoreHistory,
+  hasMoreHistory = false,
   isLoading,
+  isLoadingMoreHistory = false,
   errorMessage,
 }) {
   const containerRef = useRef(null)
+  const chartRef = useRef(null)
+  const candleSeriesRef = useRef(null)
+  const volumeSeriesRef = useRef(null)
+  const areaSeriesRef = useRef(null)
+  const initialFitDoneRef = useRef(false)
+  const seriesDataRef = useRef(series)
+  const visibleLogicalRangeRef = useRef(null)
+  const onLoadMoreHistoryRef = useRef(onLoadMoreHistory)
+  const hasMoreHistoryRef = useRef(hasMoreHistory)
+  const isLoadingMoreHistoryRef = useRef(isLoadingMoreHistory)
+  const lastHistoryAnchorRef = useRef(null)
+  const previousLogicalFromRef = useRef(null)
+
+  useEffect(() => {
+    seriesDataRef.current = series
+  }, [series])
+
+  useEffect(() => {
+    onLoadMoreHistoryRef.current = onLoadMoreHistory
+  }, [onLoadMoreHistory])
+
+  useEffect(() => {
+    hasMoreHistoryRef.current = hasMoreHistory
+  }, [hasMoreHistory])
+
+  useEffect(() => {
+    isLoadingMoreHistoryRef.current = isLoadingMoreHistory
+  }, [isLoadingMoreHistory])
+
+  useEffect(() => {
+    lastHistoryAnchorRef.current = null
+    previousLogicalFromRef.current = null
+    visibleLogicalRangeRef.current = null
+  }, [stockCode, selectedPeriod, minuteInterval])
+
   const [chartType, setChartType] = useState(
     () => localStorage.getItem('invest.chartType') ?? 'candle',
   )
@@ -54,10 +92,10 @@ const InvestStockChart = memo(function InvestStockChart({
 
   const isIntraday = selectedPeriod === 'MINUTE'
 
+// Effect 1: 차트 생성 — chartType / isIntraday 바뀔 때만 재생성
   useEffect(() => {
     const container = containerRef.current
-
-    if (!container || series.length === 0) return
+    if (!container) return
 
     const chart = createChart(container, {
       width: container.clientWidth,
@@ -74,14 +112,9 @@ const InvestStockChart = memo(function InvestStockChart({
       rightPriceScale: {
         borderVisible: false,
         autoScale: true,
-        scaleMargins: {
-          top: 0.14,
-          bottom: 0.22,
-        },
+        scaleMargins: { top: 0.14, bottom: 0.22 },
       },
-      leftPriceScale: {
-        visible: false,
-      },
+      leftPriceScale: { visible: false },
       timeScale: {
         borderVisible: false,
         timeVisible: isIntraday,
@@ -90,32 +123,35 @@ const InvestStockChart = memo(function InvestStockChart({
         barSpacing: isIntraday ? 10 : 8,
       },
       crosshair: {
-        vertLine: {
-          color: COLORS.border,
-          width: 1,
-          labelBackgroundColor: COLORS.textStrong,
-        },
-        horzLine: {
-          color: COLORS.border,
-          width: 1,
-          labelBackgroundColor: COLORS.textStrong,
-        },
+        mode: CrosshairMode.Normal,
+        vertLine: { color: COLORS.primary, width: 1, style: 1, labelBackgroundColor: COLORS.primary },
+        horzLine: { color: COLORS.primary, width: 1, style: 1, labelBackgroundColor: COLORS.primary },
       },
-      handleScroll: {
-        mouseWheel: true,
-        pressedMouseMove: true,
-        horzTouchDrag: true,
-        vertTouchDrag: false,
-      },
-      handleScale: {
-        axisPressedMouseMove: true,
-        mouseWheel: true,
-        pinch: true,
+      handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
+      handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
+      localization: {
+        locale: 'ko-KR',
+        dateFormat: 'yyyy/MM/dd',
+        priceFormatter: (price) => new Intl.NumberFormat('ko-KR').format(Math.round(price)),
       },
     })
 
+    chartRef.current = chart
+    initialFitDoneRef.current = false
+
+    const current = seriesDataRef.current
+    const restoreVisibleRange = () => {
+      const savedRange = visibleLogicalRangeRef.current
+      if (savedRange) {
+        chart.timeScale().setVisibleLogicalRange(savedRange)
+      } else {
+        chart.timeScale().fitContent()
+      }
+      initialFitDoneRef.current = true
+    }
+
     if (chartType === 'candle') {
-      const candleSeries = chart.addSeries(CandlestickSeries, {
+      candleSeriesRef.current = chart.addSeries(CandlestickSeries, {
         upColor: COLORS.up,
         borderUpColor: COLORS.up,
         wickUpColor: COLORS.up,
@@ -126,7 +162,7 @@ const InvestStockChart = memo(function InvestStockChart({
         lastValueVisible: true,
       })
 
-      const volumeSeries = chart.addSeries(HistogramSeries, {
+      volumeSeriesRef.current = chart.addSeries(HistogramSeries, {
         priceScaleId: 'volume',
         priceFormat: { type: 'volume' },
         priceLineVisible: false,
@@ -139,7 +175,105 @@ const InvestStockChart = memo(function InvestStockChart({
         borderVisible: false,
       })
 
-      candleSeries.setData(
+      areaSeriesRef.current = null
+
+      if (current.length > 0) {
+        candleSeriesRef.current.setData(
+          current.map((p) => ({ time: toChartTime(p.timestamp), open: p.open, high: p.high, low: p.low, close: p.close })),
+        )
+        volumeSeriesRef.current.setData(
+          current.map((p) => ({
+            time: toChartTime(p.timestamp),
+            value: p.volume,
+            color: p.close >= p.open ? COLORS.volumeUp : COLORS.volumeDown,
+          })),
+        )
+        restoreVisibleRange()
+      }
+    } else {
+      areaSeriesRef.current = chart.addSeries(LineSeries, {
+        lineColor: COLORS.primary,
+        lineWidth: 2,
+        priceLineVisible: true,
+        lastValueVisible: true,
+      })
+
+      candleSeriesRef.current = null
+      volumeSeriesRef.current = null
+
+      if (current.length > 0) {
+        areaSeriesRef.current.setData(
+          current.map((p) => ({ time: toChartTime(p.timestamp), value: p.close })),
+        )
+        restoreVisibleRange()
+      }
+    }
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      const entry = entries[0]
+      if (!entry) return
+      chart.applyOptions({ width: entry.contentRect.width, height: entry.contentRect.height })
+    })
+
+    resizeObserver.observe(container)
+
+    const handleVisibleLogicalRangeChange = (logicalRange) => {
+      if (logicalRange) {
+        visibleLogicalRangeRef.current = logicalRange
+      }
+
+      if (!logicalRange || !hasMoreHistoryRef.current || isLoadingMoreHistoryRef.current) {
+        return
+      }
+
+      const currentFrom = logicalRange.from
+      if (!Number.isFinite(currentFrom)) return
+
+      const previousFrom = previousLogicalFromRef.current
+      previousLogicalFromRef.current = currentFrom
+      if (previousFrom == null || currentFrom >= previousFrom) {
+        return
+      }
+
+      const activeSeries = candleSeriesRef.current ?? areaSeriesRef.current
+      if (!activeSeries) return
+
+      const earliestPoint = seriesDataRef.current[0]
+      if (!earliestPoint) return
+
+      const barsInfo = activeSeries.barsInLogicalRange(logicalRange)
+      if (!barsInfo || barsInfo.barsBefore >= 20) return
+
+      if (lastHistoryAnchorRef.current === earliestPoint.timestamp) {
+        return
+      }
+
+      lastHistoryAnchorRef.current = earliestPoint.timestamp
+      void onLoadMoreHistoryRef.current?.()
+    }
+
+    chart.timeScale().subscribeVisibleLogicalRangeChange(handleVisibleLogicalRangeChange)
+
+    return () => {
+      visibleLogicalRangeRef.current = chart.timeScale().getVisibleLogicalRange()
+      chart.timeScale().unsubscribeVisibleLogicalRangeChange(handleVisibleLogicalRangeChange)
+      resizeObserver.disconnect()
+      chart.remove()
+      chartRef.current = null
+      candleSeriesRef.current = null
+      volumeSeriesRef.current = null
+      areaSeriesRef.current = null
+    }
+  }, [isIntraday, chartType])
+
+  // Effect 2: 데이터 업데이트 — series 바뀔 때만 (차트 재생성 없음)
+  useEffect(() => {
+    if (series.length === 0) return
+
+    const lastPoint = series[series.length - 1]
+
+    if (candleSeriesRef.current) {
+      candleSeriesRef.current.setData(
         series.map((point) => ({
           time: toChartTime(point.timestamp),
           open: point.open,
@@ -148,25 +282,17 @@ const InvestStockChart = memo(function InvestStockChart({
           close: point.close,
         })),
       )
-
-      volumeSeries.setData(
+      volumeSeriesRef.current?.setData(
         series.map((point) => ({
           time: toChartTime(point.timestamp),
           value: point.volume,
           color: point.close >= point.open ? COLORS.volumeUp : COLORS.volumeDown,
         })),
       )
-    } else {
-      const areaSeries = chart.addSeries(AreaSeries, {
-        lineColor: COLORS.primary,
-        topColor: COLORS.primaryArea,
-        bottomColor: 'rgba(0, 70, 255, 0)',
-        lineWidth: 2,
-        priceLineVisible: true,
-        lastValueVisible: true,
-      })
+    }
 
-      areaSeries.setData(
+    if (areaSeriesRef.current) {
+      areaSeriesRef.current.setData(
         series.map((point) => ({
           time: toChartTime(point.timestamp),
           value: point.close,
@@ -174,49 +300,26 @@ const InvestStockChart = memo(function InvestStockChart({
       )
     }
 
-    chart.timeScale().fitContent()
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      const entry = entries[0]
-      if (!entry) return
-
-      chart.applyOptions({
-        width: entry.contentRect.width,
-        height: entry.contentRect.height,
-      })
-    })
-
-    resizeObserver.observe(container)
-
-    return () => {
-      resizeObserver.disconnect()
-      chart.remove()
+    if (!initialFitDoneRef.current && chartRef.current) {
+      chartRef.current.timeScale().fitContent()
+      initialFitDoneRef.current = true
     }
-  }, [series, isIntraday, chartType])
+  }, [series])
 
-  if (isLoading && series.length === 0) {
-    return (
-      <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-stroke bg-surface text-xs text-foreground-disabled">
+  const overlay =
+    isLoading && series.length === 0 ? (
+      <div className="absolute inset-0 flex items-center justify-center text-xs text-foreground-disabled">
         시세 데이터를 불러오는 중입니다.
       </div>
-    )
-  }
-
-  if (errorMessage && series.length === 0) {
-    return (
-      <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-stroke bg-surface px-4 text-center text-xs text-danger">
+    ) : errorMessage && series.length === 0 ? (
+      <div className="absolute inset-0 flex items-center justify-center px-4 text-center text-xs text-danger">
         {errorMessage}
       </div>
-    )
-  }
-
-  if (series.length === 0) {
-    return (
-      <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-stroke bg-surface text-xs text-foreground-disabled">
+    ) : series.length === 0 ? (
+      <div className="absolute inset-0 flex items-center justify-center text-xs text-foreground-disabled">
         표시할 차트 데이터가 없습니다.
       </div>
-    )
-  }
+    ) : null
 
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-xl border border-stroke bg-surface">
@@ -255,7 +358,7 @@ const InvestStockChart = memo(function InvestStockChart({
                 className={cn(
                   'rounded-md px-2.5 py-0.5 text-[10px] font-semibold transition-all',
                   chartType === type.key
-                    ? 'bg-surface text-foreground shadow-control'
+                    ? 'bg-primary text-white shadow-control'
                     : 'text-foreground-disabled hover:text-foreground-secondary',
                 )}
               >
@@ -315,7 +418,7 @@ const InvestStockChart = memo(function InvestStockChart({
                 className={cn(
                   'rounded-md px-2.5 py-0.5 text-[10px] font-semibold transition-all',
                   selectedPeriod === option.key
-                    ? 'bg-surface text-foreground shadow-control'
+                    ? 'bg-primary text-white shadow-control'
                     : 'text-foreground-disabled hover:text-foreground-secondary',
                 )}
               >
@@ -326,7 +429,15 @@ const InvestStockChart = memo(function InvestStockChart({
         </div>
       </div>
 
-      <div ref={containerRef} className="min-h-0 min-w-0 flex-1 bg-surface" />
+      <div className="relative min-h-0 min-w-0 flex-1">
+        <div ref={containerRef} className="h-full w-full bg-surface" />
+        {isLoadingMoreHistory && series.length > 0 && (
+          <div className="absolute left-3 top-3 rounded-md bg-surface/90 px-2 py-1 text-[10px] font-medium text-foreground-secondary shadow-sm">
+            이전 차트 로딩 중
+          </div>
+        )}
+{overlay}
+      </div>
 
       <div className="flex justify-end px-3 py-1.5">
         <a

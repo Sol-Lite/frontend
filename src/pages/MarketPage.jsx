@@ -3,37 +3,14 @@ import FilterChip from '@/components/ui/FilterChip'
 import PriceChange from '@/components/ui/PriceChange'
 import StockRow from '@/components/market/StockRow'
 import LiveDot from '@/components/ui/LiveDot'
-import useCurrencyRate from '@/hooks/useCurrencyRate'
 import useMarketRanking from '@/features/market/useMarketRanking'
 import useMarketIndices from '@/features/market/useMarketIndices'
 import { MARKET_FILTERS, SORT_FILTERS } from '@/mocks/market'
-
-const CURRENCY_ITEMS = [
-  { code: 'USD', label: 'USD / KRW' },
-]
 
 const VOLUME_COL_LABEL = {
   volume_value: '거래대금 순',
   volume:       '거래량 순',
   market_cap:   '시가총액 순',
-}
-
-function CurrencyItem({ code, label, hasBorder }) {
-  const live = useCurrencyRate(code)
-
-  return (
-    <div className={`flex items-center gap-2.5 px-4 py-2.5 shrink-0 ${hasBorder ? 'border-r border-stroke-subtle' : ''}`}>
-      <div>
-        <div className="text-[10px] font-semibold text-foreground-disabled mb-0.5">{label}</div>
-        <div className="flex items-baseline gap-1.5">
-          <span className="text-[16px] font-extrabold text-foreground">
-            {live ? live.rate.toLocaleString('ko-KR', { maximumFractionDigits: 2 }) : '—'}
-          </span>
-          {live && <PriceChange value={live.change} className="text-[11px]" />}
-        </div>
-      </div>
-    </div>
-  )
 }
 
 function MarketIndexBar() {
@@ -52,17 +29,16 @@ function MarketIndexBar() {
               <div className="text-[10px] font-semibold text-foreground-disabled mb-0.5">{idx.name}</div>
               <div className="flex items-baseline gap-1.5">
                 <span className="text-[16px] font-extrabold text-foreground">
-                  {Number(idx.price).toLocaleString('ko-KR', { maximumFractionDigits: 2 })}
+                  {idx.price != null
+                    ? Number(idx.price).toLocaleString('ko-KR', { maximumFractionDigits: 2 })
+                    : '—'}
                 </span>
-                <PriceChange value={idx.changeRate} className="text-[11px]" />
+                {idx.changeRate != null && <PriceChange value={idx.changeRate} className="text-[11px]" />}
               </div>
             </div>
           </div>
         )
       })}
-      {CURRENCY_ITEMS.map(({ code, label }, i) => (
-        <CurrencyItem key={code} code={code} label={label} hasBorder={i < CURRENCY_ITEMS.length - 1} />
-      ))}
     </div>
   )
 }
@@ -111,7 +87,7 @@ function StockTableHeader({ sortFilter }) {
 }
 
 export default function MarketPage() {
-  const [marketFilter, setMarketFilter] = useState('all')
+  const [marketFilter, setMarketFilter] = useState('kr')
   const [sortFilter, setSortFilter]     = useState('volume_value')
   const [watched, setWatched]           = useState(new Set())
 

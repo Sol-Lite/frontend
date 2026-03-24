@@ -35,29 +35,29 @@ export default function DailyPriceTable({ rows, isLoading, errorMessage }) {
       <table className="w-full border-collapse text-[11px]">
         <thead className="sticky top-0 z-[1] bg-surface-subtle">
           <tr>
-            <th className="border-b border-stroke px-2 py-1.5 text-left text-[10px] font-semibold text-foreground-disabled">일자</th>
-            <th className="border-b border-stroke px-2 py-1.5 text-right text-[10px] font-semibold text-foreground-disabled">종가</th>
-            <th className="border-b border-stroke px-2 py-1.5 text-right text-[10px] font-semibold text-foreground-disabled">등락률</th>
-            <th className="border-b border-stroke px-2 py-1.5 text-right text-[10px] font-semibold text-foreground-disabled">거래량</th>
-            <th className="border-b border-stroke px-2 py-1.5 text-right text-[10px] font-semibold text-foreground-disabled">시가</th>
-            <th className="border-b border-stroke px-2 py-1.5 text-right text-[10px] font-semibold text-foreground-disabled">고가</th>
-            <th className="border-b border-stroke px-2 py-1.5 text-right text-[10px] font-semibold text-foreground-disabled">저가</th>
+            <th className="border-b border-stroke px-2.5 py-1.5 text-left text-[9px] font-semibold text-foreground-disabled">일자</th>
+            <th className="border-b border-stroke px-2.5 py-1.5 text-right text-[9px] font-semibold text-foreground-disabled">종가</th>
+            <th className="border-b border-stroke px-2.5 py-1.5 text-right text-[9px] font-semibold text-foreground-disabled">등락률</th>
+            <th className="border-b border-stroke px-2.5 py-1.5 text-right text-[9px] font-semibold text-foreground-disabled">거래량</th>
+            <th className="border-b border-stroke px-2.5 py-1.5 text-right text-[9px] font-semibold text-foreground-disabled">시가</th>
+            <th className="border-b border-stroke px-2.5 py-1.5 text-right text-[9px] font-semibold text-foreground-disabled">고가</th>
+            <th className="border-b border-stroke px-2.5 py-1.5 text-right text-[9px] font-semibold text-foreground-disabled">저가</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((row) => (
-            <tr key={row.date}>
-              <td className="border-b border-stroke-subtle px-2 py-1.5 font-semibold text-foreground-secondary">{row.date}</td>
-              <td className={cn('border-b border-stroke-subtle px-2 py-1.5 text-right font-extrabold', getDirectionClass(row.changeRate))}>
+            <tr key={row.date} className="even:bg-surface-subtle hover:bg-surface-muted">
+              <td className="whitespace-nowrap px-2.5 py-1.5 font-semibold text-foreground-secondary">{row.date}</td>
+              <td className={cn('whitespace-nowrap px-2.5 py-1.5 text-right font-extrabold', getDirectionClass(row.changeRate))}>
                 {formatNumber(row.close)}
               </td>
-              <td className={cn('border-b border-stroke-subtle px-2 py-1.5 text-right', getDirectionClass(row.changeRate))}>
+              <td className={cn('whitespace-nowrap px-2.5 py-1.5 text-right', getDirectionClass(row.changeRate))}>
                 {formatSignedPercent(row.changeRate)}
               </td>
-              <td className="border-b border-stroke-subtle px-2 py-1.5 text-right">{row.volume}</td>
-              <td className="border-b border-stroke-subtle px-2 py-1.5 text-right">{formatNumber(row.open)}</td>
-              <td className="border-b border-stroke-subtle px-2 py-1.5 text-right text-up">{formatNumber(row.high)}</td>
-              <td className="border-b border-stroke-subtle px-2 py-1.5 text-right text-down">{formatNumber(row.low)}</td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-foreground-secondary">{row.volume}</td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right">{formatNumber(row.open)}</td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-up">{formatNumber(row.high)}</td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-down">{formatNumber(row.low)}</td>
             </tr>
           ))}
         </tbody>

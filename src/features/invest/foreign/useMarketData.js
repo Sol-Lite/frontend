@@ -129,6 +129,11 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled }) {
   return {
     marketState,
     chartState,
+    chartSeries: null,
+    chartHistoryLoading: false,
+    chartHistoryErrorMessage: '',
+    hasMoreChartHistory: false,
+    loadMoreChartHistory: async () => {},
     detailState: { isLoading: false, opinion: null, investor: null, finance: null },
     selectedChartPeriod,
     selectedMinuteInterval,

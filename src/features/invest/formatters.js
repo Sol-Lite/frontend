@@ -35,7 +35,11 @@ export function formatApiDate(date) {
 
 export function formatDisplayDate(dateText) {
   if (!dateText) return '-'
-  return dateText.slice(5).replace('-', '/')
+  const s = String(dateText)
+  if (s.length === 8 && !s.includes('-')) {
+    return `${s.slice(4, 6)}/${s.slice(6, 8)}`
+  }
+  return s.slice(5).replace('-', '/')
 }
 
 export function formatTradeTime(timestamp) {
