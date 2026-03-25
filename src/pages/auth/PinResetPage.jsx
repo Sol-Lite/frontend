@@ -124,6 +124,7 @@ export default function PinResetPage() {
                 <label className="text-[11px] font-semibold text-foreground-secondary block mb-2">새 비밀번호 (4자리)</label>
                 <button
                   type="button"
+                  aria-label="새 비밀번호 입력"
                   onClick={() => { setActivePinField('newPin'); setIsKeyboardOpen(true) }}
                   className="flex w-full justify-center bg-transparent py-1 focus:outline-none"
                 >
@@ -145,6 +146,7 @@ export default function PinResetPage() {
                 <label className="text-[11px] font-semibold text-foreground-secondary block mb-2">비밀번호 확인 (4자리)</label>
                 <button
                   type="button"
+                  aria-label="비밀번호 확인 입력"
                   onClick={() => { setActivePinField('confirmPin'); setIsKeyboardOpen(true) }}
                   className="flex w-full justify-center bg-transparent py-1 focus:outline-none"
                 >
