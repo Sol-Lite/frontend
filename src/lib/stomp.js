@@ -2,27 +2,26 @@ import { Client } from '@stomp/stompjs'
 import useAuthStore from '@/store/useAuthStore'
 
 let client = null
-const pendingSubscriptions = []
+let subscriptionSeq = 0
+const activeSubscriptions = new Map()
+
+function subscribeEntry(stompClient, entry) {
+  if (!stompClient?.connected) return
+  entry.liveSubscription = stompClient.subscribe(entry.topic, entry.callback)
+}
 
 export function getStompClient() {
   if (client) return client
 
-  const token = useAuthStore.getState().accessToken
-
-  if (!token) {
-    console.warn('[STOMP] 토큰 없음 — 연결 생략')
-    return null
-  }
-
   client = new Client({
     brokerURL: `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}/ws`,
-    connectHeaders: { Authorization: `Bearer ${token}` },
+    connectHeaders: {},
     beforeConnect: () => {
       const freshToken = useAuthStore.getState().accessToken
       if (freshToken) {
         client.connectHeaders = { Authorization: `Bearer ${freshToken}` }
       } else {
-        client.deactivate()
+        client.connectHeaders = {}
       }
     },
     reconnectDelay: 3000,
@@ -33,8 +32,9 @@ export function getStompClient() {
     },
     onConnect: () => {
       console.log('[STOMP] 연결 성공')
-      pendingSubscriptions.forEach((fn) => fn())
-      pendingSubscriptions.length = 0
+      activeSubscriptions.forEach((entry) => {
+        subscribeEntry(client, entry)
+      })
     },
     onStompError: (frame) => {
       console.error('[STOMP] 에러:', frame.headers.message)
@@ -42,8 +42,16 @@ export function getStompClient() {
     onWebSocketError: (event) => {
       console.error('[STOMP] WebSocket 에러:', event)
     },
+    onWebSocketClose: () => {
+      activeSubscriptions.forEach((entry) => {
+        entry.liveSubscription = null
+      })
+    },
     onDisconnect: () => {
       console.log('[STOMP] 연결 종료')
+      activeSubscriptions.forEach((entry) => {
+        entry.liveSubscription = null
+      })
     },
   })
 
@@ -53,36 +61,28 @@ export function getStompClient() {
 
 export function subscribeTopic(topic, callback) {
   const stompClient = getStompClient()
+  const id = ++subscriptionSeq
+  const entry = { topic, callback, liveSubscription: null }
+  activeSubscriptions.set(id, entry)
 
-  if (!stompClient) return { unsubscribe: () => {} }
-
-  if (stompClient.connected) {
-    return stompClient.subscribe(topic, callback)
+  if (stompClient?.connected) {
+    subscribeEntry(stompClient, entry)
   }
-
-  let subscription = null
-  let cancelled = false
-
-  const pending = () => {
-    if (!cancelled) {
-      subscription = stompClient.subscribe(topic, callback)
-    }
-  }
-
-  pendingSubscriptions.push(pending)
 
   return {
     unsubscribe: () => {
-      cancelled = true
-      subscription?.unsubscribe()
-      const idx = pendingSubscriptions.indexOf(pending)
-      if (idx !== -1) pendingSubscriptions.splice(idx, 1)
+      const current = activeSubscriptions.get(id)
+      current?.liveSubscription?.unsubscribe()
+      activeSubscriptions.delete(id)
     },
   }
 }
 
 export function deactivateStompClient() {
   if (client) {
+    activeSubscriptions.forEach((entry) => {
+      entry.liveSubscription = null
+    })
     client.deactivate()
     client = null
   }
