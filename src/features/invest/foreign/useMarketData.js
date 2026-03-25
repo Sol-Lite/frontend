@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { foreignMarketApi } from '@/api/market'
 import { DAY_MS, DEFAULT_MINUTE_INTERVAL } from '@/features/invest/constants'
 import { formatApiDate } from '@/features/invest/formatters'
@@ -27,8 +27,13 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled }) {
     () => Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL,
   )
 
-  const endDate = formatApiDate(new Date())
-  const startDate = formatApiDate(new Date(Date.now() - 180 * DAY_MS))
+  const { endDate, startDate } = useMemo(() => {
+    const end = new Date()
+    return {
+      endDate: formatApiDate(end),
+      startDate: formatApiDate(new Date(end.getTime() - 180 * DAY_MS)),
+    }
+  }, [])
 
   const priceQuery = useQuery({
     queryKey: ['foreign', 'price', stockCode, exchcd],
@@ -70,9 +75,13 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled }) {
         return foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: selectedMinuteInterval })
       }
       const config = getChartPeriodConfig(selectedChartPeriod)
-      const end = formatApiDate(new Date())
-      const start = formatApiDate(new Date(Date.now() - config.lookbackDays * DAY_MS))
-      return foreignMarketApi.getChart(stockCode, exchcd, { period: config.foreignApiPeriod, startDate: start, endDate: end })
+      const end = new Date()
+      const start = new Date(end.getTime() - config.lookbackDays * DAY_MS)
+      return foreignMarketApi.getChart(stockCode, exchcd, {
+        period: config.foreignApiPeriod,
+        startDate: formatApiDate(start),
+        endDate: formatApiDate(end),
+      })
     },
     enabled: needsCustomChart,
     staleTime: selectedChartPeriod === 'MINUTE' ? STALE.minuteChart : STALE.dailyChart,
@@ -88,17 +97,23 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled }) {
   const marketState = {
     isLoading: priceQuery.isLoading || dailyChartQuery.isLoading || minuteChartQuery.isLoading || orderBookQuery.isLoading,
     errorMessage: (priceQuery.error || dailyChartQuery.error || minuteChartQuery.error || orderBookQuery.error)?.message ?? '',
+    dailyLoading: dailyChartQuery.isLoading,
+    dailyErrorMessage: dailyChartQuery.error?.message ?? '',
+    minuteLoading: minuteChartQuery.isLoading,
+    minuteErrorMessage: minuteChartQuery.error?.message ?? '',
     priceData,
     dailySeries,
     minuteSeries,
     orderBook: orderBookQuery.data ?? null,
   }
 
-  const customSeries = customChartQuery.data
-    ? (selectedChartPeriod === 'MINUTE'
-        ? normalizeForeignMinuteSeries(customChartQuery.data?.dataPoints)
-        : normalizeForeignDailySeries(customChartQuery.data?.dataPoints))
-    : []
+  const customSeries = useMemo(() => (
+    customChartQuery.data
+      ? (selectedChartPeriod === 'MINUTE'
+          ? normalizeForeignMinuteSeries(customChartQuery.data?.dataPoints)
+          : normalizeForeignDailySeries(customChartQuery.data?.dataPoints))
+      : []
+  ), [customChartQuery.data, selectedChartPeriod])
 
   const chartState = {
     isLoading: customChartQuery.isLoading,
@@ -110,8 +125,14 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled }) {
   const orderBook = normalizeForeignOrderBook(liveOrderBook) ?? normalizeForeignOrderBook(marketState.orderBook)
 
   const previousClose = dailySeries.at(-2)?.close ?? null
-  const dailyRows = buildDailyRows(dailySeries)
-  const realtimeRows = buildRealtimeRows(getLatestMinuteSession(minuteSeries), previousClose)
+  const dailyRows = useMemo(
+    () => buildDailyRows(dailySeries),
+    [dailySeries],
+  )
+  const realtimeRows = useMemo(
+    () => buildRealtimeRows(getLatestMinuteSession(minuteSeries), previousClose),
+    [minuteSeries, previousClose],
+  )
 
   useEffect(() => {
     localStorage.setItem('invest.chartPeriod', selectedChartPeriod)
@@ -140,6 +161,8 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled }) {
     orderBook,
     dailyRows,
     realtimeRows,
+    dailyLoading: dailyChartQuery.isLoading,
+    realtimeLoading: minuteChartQuery.isLoading,
     setSelectedChartPeriod,
     handleMinuteIntervalChange,
   }

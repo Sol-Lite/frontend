@@ -1,4 +1,6 @@
-import { getExchcd } from '@/api/market'
+import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
+import { foreignMarketApi, getExchcd, marketApi } from '@/api/market'
 import { DEFAULT_MINUTE_INTERVAL } from '@/features/invest/constants'
 import {
   getRecentMinuteSessions,
@@ -7,13 +9,42 @@ import {
 import useDomesticMarketData from '@/features/invest/domestic/useMarketData'
 import useForeignMarketData from '@/features/invest/foreign/useMarketData'
 
-export default function useInvestMarketData(stockCode, locationState) {
-  const stockMeta = resolveStockMeta(stockCode, locationState)
-  const { isDomestic } = stockMeta
-  const exchcd = isDomestic ? null : getExchcd(stockMeta.exchangeCode)
+export default function useInvestMarketData(stockCode, locationState, { activeLeftTab = 'daily' } = {}) {
+  const baseStockMeta = resolveStockMeta(stockCode, locationState)
+  const { isDomestic } = baseStockMeta
+  const exchcd = isDomestic ? null : getExchcd(baseStockMeta.exchangeCode)
 
-  const domestic = useDomesticMarketData(stockCode, { enabled: isDomestic })
-  const foreign = useForeignMarketData(stockCode, exchcd, { enabled: !isDomestic })
+  const infoQuery = useQuery({
+    queryKey: isDomestic
+      ? ['domestic', 'info', stockCode]
+      : ['foreign', 'info', stockCode, exchcd],
+    queryFn: () => (isDomestic
+      ? marketApi.getStockInfo(stockCode)
+      : foreignMarketApi.getInfo(stockCode, exchcd)),
+    enabled: isDomestic || Boolean(exchcd),
+    staleTime: 1000 * 60 * 60 * 24,
+  })
+
+  const stockMeta = useMemo(() => {
+    if (isDomestic) {
+      return {
+        ...baseStockMeta,
+        market: infoQuery.data?.marketName ?? baseStockMeta.market,
+        sector: infoQuery.data?.sector ?? baseStockMeta.sector,
+      }
+    }
+
+    return {
+      ...baseStockMeta,
+      name: infoQuery.data?.korname ?? baseStockMeta.name,
+      nameEn: infoQuery.data?.engname ?? baseStockMeta.nameEn,
+      market: infoQuery.data?.exchangeName ?? baseStockMeta.market,
+      sector: infoQuery.data?.induname ?? baseStockMeta.sector,
+    }
+  }, [baseStockMeta, infoQuery.data, isDomestic])
+
+  const domestic = useDomesticMarketData(stockCode, { enabled: isDomestic, activeDetailTab: activeLeftTab })
+  const foreign = useForeignMarketData(stockCode, exchcd, { enabled: !isDomestic, activeDetailTab: activeLeftTab })
 
   const active = isDomestic ? domestic : foreign
   const { marketState, chartState, detailState, selectedChartPeriod, selectedMinuteInterval } = active
@@ -37,20 +68,40 @@ export default function useInvestMarketData(stockCode, locationState) {
     && selectedMinuteInterval === DEFAULT_MINUTE_INTERVAL)
     || selectedChartPeriod === 'DAILY'
 
-  const minuteChartSeries = getRecentMinuteSessions(
+  const minuteChartSeries = useMemo(() => getRecentMinuteSessions(
     selectedMinuteInterval === DEFAULT_MINUTE_INTERVAL
       ? marketState.minuteSeries
       : chartState.series,
-  )
-  const chartSeries = selectedChartPeriod === 'MINUTE'
-    ? minuteChartSeries
-    : selectedChartPeriod === 'DAILY'
-      ? marketState.dailySeries
-      : chartState.series
-  const resolvedChartSeries = active.chartSeries ?? chartSeries
+  ), [
+    chartState.series,
+    marketState.minuteSeries,
+    selectedMinuteInterval,
+  ])
 
-  const chartLoading = usesBaseChartData ? marketState.isLoading : chartState.isLoading
-  const chartErrorMessage = usesBaseChartData ? marketState.errorMessage : chartState.errorMessage
+  const fallbackChartSeries = useMemo(() => (
+    selectedChartPeriod === 'MINUTE'
+      ? minuteChartSeries
+      : selectedChartPeriod === 'DAILY'
+        ? marketState.dailySeries
+        : chartState.series
+  ), [
+    chartState.series,
+    marketState.dailySeries,
+    minuteChartSeries,
+    selectedChartPeriod,
+  ])
+  const resolvedChartSeries = active.chartSeries ?? fallbackChartSeries
+
+  const chartLoading = usesBaseChartData
+    ? selectedChartPeriod === 'DAILY'
+      ? marketState.dailyLoading
+      : marketState.minuteLoading
+    : chartState.isLoading
+  const chartErrorMessage = usesBaseChartData
+    ? selectedChartPeriod === 'DAILY'
+      ? marketState.dailyErrorMessage
+      : marketState.minuteErrorMessage
+    : chartState.errorMessage
 
   return {
     stockMeta,
@@ -75,6 +126,8 @@ export default function useInvestMarketData(stockCode, locationState) {
     investor: detailState.investor,
     finance: detailState.finance,
     detailLoading: detailState.isLoading,
+    dailyLoading: active.dailyLoading ?? marketState.dailyLoading ?? false,
+    realtimeLoading: active.realtimeLoading ?? marketState.minuteLoading ?? false,
     defaultSelectedPrice: currentPrice ?? stockMeta.price,
     availableAmount: stockMeta.availableAmount,
     onChartPeriodChange: active.setSelectedChartPeriod,

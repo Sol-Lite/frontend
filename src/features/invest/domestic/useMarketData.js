@@ -99,7 +99,7 @@ function formatLocalDateTime(timestamp) {
   return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`
 }
 
-export default function useDomesticMarketData(stockCode, { enabled }) {
+export default function useDomesticMarketData(stockCode, { enabled, activeDetailTab = 'daily' }) {
   const [selectedChartPeriod, setSelectedChartPeriod] = useState(
     () => localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
   )
@@ -149,21 +149,21 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
   const opinionQuery = useQuery({
     queryKey: ['domestic', 'opinion', stockCode],
     queryFn: () => marketApi.getOpinion(stockCode),
-    enabled,
+    enabled: enabled && activeDetailTab === 'opinion',
     staleTime: STALE.detail,
   })
 
   const investorQuery = useQuery({
     queryKey: ['domestic', 'investor', stockCode],
     queryFn: () => marketApi.getInvestor(stockCode),
-    enabled,
+    enabled: enabled && activeDetailTab === 'investor',
     staleTime: STALE.detail,
   })
 
   const financeQuery = useQuery({
     queryKey: ['domestic', 'finance', stockCode],
     queryFn: () => marketApi.getFinance(stockCode),
-    enabled,
+    enabled: enabled && activeDetailTab === 'finance',
     staleTime: STALE.finance,
   })
 
@@ -243,11 +243,13 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
     })
   }, [liveTrade, selectedMinuteInterval])
 
-  const customSeries = customChartQuery.data
-    ? (selectedChartPeriod === 'MINUTE'
-        ? normalizeMinuteSeries(customChartQuery.data?.data)
-        : normalizeDailySeries(customChartQuery.data?.data))
-    : []
+  const customSeries = useMemo(() => (
+    customChartQuery.data
+      ? (selectedChartPeriod === 'MINUTE'
+          ? normalizeMinuteSeries(customChartQuery.data?.data)
+          : normalizeDailySeries(customChartQuery.data?.data))
+      : []
+  ), [customChartQuery.data, selectedChartPeriod])
 
   const minuteSeriesWithLive = useMemo(
     () => applyLiveCandle(minuteSeries, liveCandle),
@@ -291,6 +293,10 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
   const marketState = {
     isLoading: priceQuery.isLoading || dailyChartQuery.isLoading || minuteChartQuery.isLoading || orderBookQuery.isLoading,
     errorMessage: (priceQuery.error || dailyChartQuery.error || minuteChartQuery.error || orderBookQuery.error)?.message ?? '',
+    dailyLoading: dailyChartQuery.isLoading,
+    dailyErrorMessage: dailyChartQuery.error?.message ?? '',
+    minuteLoading: minuteChartQuery.isLoading,
+    minuteErrorMessage: minuteChartQuery.error?.message ?? '',
     priceData: livePrice ?? priceQuery.data ?? null,
     dailySeries: dailySeriesWithLive,
     minuteSeries: minuteSeriesWithLive,
@@ -304,7 +310,13 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
   }
 
   const detailState = {
-    isLoading: opinionQuery.isLoading || investorQuery.isLoading || financeQuery.isLoading,
+    isLoading: activeDetailTab === 'opinion'
+      ? opinionQuery.isLoading
+      : activeDetailTab === 'investor'
+        ? investorQuery.isLoading
+        : activeDetailTab === 'finance'
+          ? financeQuery.isLoading
+          : false,
     opinion: opinionQuery.data ?? null,
     investor: investorQuery.data ?? null,
     finance: financeQuery.data ?? null,
@@ -314,10 +326,16 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
   const orderBook = normalizeOrderBook(liveOrderBook) ?? normalizeOrderBook(marketState.orderBook)
 
   const previousClose = dailySeriesWithLive.at(-2)?.close ?? null
-  const dailyRows = buildDailyRows(dailySeriesWithLive)
-  const realtimeRows = liveTrades.length > 0
-    ? buildTickRows(liveTrades)
-    : buildRealtimeRows(getLatestMinuteSession(minuteSeriesWithLive), previousClose)
+  const dailyRows = useMemo(
+    () => buildDailyRows(dailySeriesWithLive),
+    [dailySeriesWithLive],
+  )
+  const realtimeRows = useMemo(
+    () => (liveTrades.length > 0
+      ? buildTickRows(liveTrades)
+      : buildRealtimeRows(getLatestMinuteSession(minuteSeriesWithLive), previousClose)),
+    [liveTrades, minuteSeriesWithLive, previousClose],
+  )
 
   useEffect(() => {
     localStorage.setItem('invest.chartPeriod', selectedChartPeriod)
@@ -409,6 +427,8 @@ export default function useDomesticMarketData(stockCode, { enabled }) {
     orderBook,
     dailyRows,
     realtimeRows,
+    dailyLoading: dailyChartQuery.isLoading,
+    realtimeLoading: minuteChartQuery.isLoading,
     setSelectedChartPeriod,
     handleMinuteIntervalChange,
   }
