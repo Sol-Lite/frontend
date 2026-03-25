@@ -7,6 +7,7 @@ import AssetPage from '@/pages/AssetPage'
 import SignupPage from '@/pages/auth/SignupPage'
 import EmailVerifyPage from '@/pages/auth/EmailVerifyPage'
 import PasswordResetPage from '@/pages/auth/PasswordResetPage'
+import PinResetPage from '@/pages/auth/PinResetPage'
 
 export const router = createBrowserRouter([
   {
@@ -19,6 +20,7 @@ export const router = createBrowserRouter([
       { path: 'invest/:stockCode', element: <InvestPage /> },
       { path: 'asset',      element: <AssetPage /> },
       { path: 'password/reset', element: <PasswordResetPage /> },
+      { path: 'account/pin/reset', element: <PinResetPage /> },
     ],
   },
   { path: '/signup',            element: <SignupPage /> },

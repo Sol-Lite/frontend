@@ -1,13 +1,16 @@
-import { useState } from 'react'
-import { X, Lock, RotateCcw, Trash2, Key, LogOut } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { X, LogOut } from 'lucide-react'
+import SplashScreenFill from '@/components/ui/SplashScreenFill'
 import { useNavigate } from 'react-router-dom'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import useRightPanelStore from '@/store/useRightPanelStore'
 import useAuthStore from '@/store/useAuthStore'
-import { PasswordInput } from '@/components/ui/Input'
+import { Input, PasswordInput } from '@/components/ui/Input'
 import { userApi } from '@/api/user'
 import { accountApi } from '@/api/account'
 import { authApi } from '@/api/auth'
-import { changePasswordSchema, changePinSchema, resetAccountSchema, closeAccountSchema } from '@/lib/validationSchemas'
+import { changePasswordSchema, changePinSchema, resetAccountSchema, closeAccountSchema, updateProfileSchema } from '@/lib/validationSchemas'
+import { formatPhoneNumber } from '@/components/signup/phoneNumber'
 import AccountPinKeypad from '@/components/signup/AccountPinKeypad'
 import DecoyCursorOverlay from '@/components/signup/DecoyCursorOverlay'
 
@@ -50,49 +53,114 @@ function Header() {
 }
 
 function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
+  const tabs = [
+    { id: 'update-profile',          label: '프로필',      danger: false },
+    { id: 'change-account-password', label: '계정 비밀번호', danger: false },
+    { id: 'change-account-pin',      label: '계좌 비밀번호', danger: false },
+    { id: 'reset',                   label: '리셋',        danger: true  },
+    { id: 'close-account',           label: '계좌 해지',   danger: true  },
+  ]
+
   return (
     <div className="flex border-b border-stroke shrink-0 overflow-x-auto">
-      <button
-        onClick={() => onSelectMenuItem('change-account-password')}
-        className={`px-4 py-2 text-[12px] font-medium border-b-2 transition-colors whitespace-nowrap ${
-          selectedMenuItem === 'change-account-password'
-            ? 'text-primary border-b-primary'
-            : 'text-foreground-secondary border-b-transparent hover:text-foreground'
-        }`}
-      >
-        계정 비밀번호
-      </button>
-      <button
-        onClick={() => onSelectMenuItem('change-account-pin')}
-        className={`px-4 py-2 text-[12px] font-medium border-b-2 transition-colors whitespace-nowrap ${
-          selectedMenuItem === 'change-account-pin'
-            ? 'text-primary border-b-primary'
-            : 'text-foreground-secondary border-b-transparent hover:text-foreground'
-        }`}
-      >
-        계좌 비밀번호
-      </button>
-      <button
-        onClick={() => onSelectMenuItem('reset')}
-        className={`px-4 py-2 text-[12px] font-medium border-b-2 transition-colors whitespace-nowrap ${
-          selectedMenuItem === 'reset'
-            ? 'text-up border-b-up'
-            : 'text-foreground-secondary border-b-transparent hover:text-up'
-        }`}
-      >
-        리셋
-      </button>
-      <button
-        onClick={() => onSelectMenuItem('close-account')}
-        className={`px-4 py-2 text-[12px] font-medium border-b-2 transition-colors whitespace-nowrap ${
-          selectedMenuItem === 'close-account'
-            ? 'text-up border-b-up'
-            : 'text-foreground-secondary border-b-transparent hover:text-up'
-        }`}
-      >
-        계좌 해지
-      </button>
+      {tabs.map(({ id, label, danger }) => {
+        const active = selectedMenuItem === id
+        return (
+          <button
+            key={id}
+            onClick={() => onSelectMenuItem(id)}
+            className={`px-3 py-[10px] text-[12px] border-b-2 transition-colors whitespace-nowrap ${
+              active
+                ? danger
+                  ? 'font-bold text-up border-b-up'
+                  : 'font-bold text-primary border-b-primary'
+                : 'font-medium text-foreground-disabled border-b-transparent hover:text-foreground-secondary'
+            }`}
+          >
+            {label}
+          </button>
+        )
+      })}
     </div>
+  )
+}
+
+function UpdateProfileForm({ onSuccess }) {
+  const queryClient = useQueryClient()
+  const { data: profile, isLoading: isProfileLoading } = useQuery({
+    queryKey: ['user', 'profile'],
+    queryFn: () => userApi.getProfile(),
+    staleTime: 1000 * 60 * 5,
+  })
+
+  const [name, setName] = useState('')
+  const [phone, setPhone] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState('')
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name ?? '')
+      setPhone(formatPhoneNumber(profile.phone ?? ''))
+    }
+  }, [profile])
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setError('')
+
+    const validation = updateProfileSchema.safeParse({ name, phone })
+    if (!validation.success) {
+      setError(validation.error.issues[0]?.message ?? '입력 값을 확인해주세요.')
+      return
+    }
+
+    setIsLoading(true)
+    try {
+      await userApi.updateProfile(name, phone)
+      queryClient.invalidateQueries({ queryKey: ['user', 'profile'] })
+      onSuccess('프로필이 수정되었습니다.')
+    } catch (err) {
+      setError(err?.message ?? '프로필 수정에 실패했습니다.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (isProfileLoading) {
+    return <p className="text-[12px] text-foreground-disabled">불러오는 중...</p>
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+      <div>
+        <label className="text-[11px] font-semibold text-foreground-secondary block mb-1.5">이름</label>
+        <Input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          placeholder="이름"
+        />
+      </div>
+
+      <div>
+        <label className="text-[11px] font-semibold text-foreground-secondary block mb-1.5">전화번호</label>
+        <Input
+          value={phone}
+          onChange={(e) => setPhone(formatPhoneNumber(e.target.value))}
+          placeholder="010-0000-0000"
+        />
+      </div>
+
+      {error && <p className="text-[11px] text-up">{error}</p>}
+
+      <button
+        type="submit"
+        disabled={isLoading}
+        className="px-4 py-2 rounded-lg bg-primary text-white text-[12px] font-medium hover:bg-primary-hover transition-colors disabled:opacity-60 mt-2"
+      >
+        저장
+      </button>
+    </form>
   )
 }
 
@@ -114,7 +182,7 @@ function ChangePasswordForm({ onSuccess }) {
     })
 
     if (!validation.success) {
-      const fieldError = validation.error.errors[0]
+      const fieldError = validation.error.issues[0]
       setError(fieldError.message)
       return
     }
@@ -175,7 +243,7 @@ function ChangePasswordForm({ onSuccess }) {
         disabled={isLoading}
         className="px-4 py-2 rounded-lg bg-primary text-white text-[12px] font-medium hover:bg-primary-hover transition-colors disabled:opacity-60 mt-2"
       >
-        {isLoading ? '변경 중...' : '변경'}
+        변경
       </button>
     </form>
   )
@@ -239,6 +307,8 @@ function ChangePinForm({ onSuccess }) {
   const [error, setError] = useState('')
   const [activePinField, setActivePinField] = useState(null)
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const [resetLoading, setResetLoading] = useState(false)
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -251,7 +321,7 @@ function ChangePinForm({ onSuccess }) {
     })
 
     if (!validation.success) {
-      const fieldError = validation.error.errors[0]
+      const fieldError = validation.error.issues[0]
       setError(fieldError.message)
       return
     }
@@ -294,6 +364,18 @@ function ChangePinForm({ onSuccess }) {
   function openKeyboard(fieldName) {
     setActivePinField(fieldName)
     setIsKeyboardOpen(true)
+  }
+
+  async function handleRequestPinReset() {
+    setResetLoading(true)
+    try {
+      await accountApi.requestPinReset()
+      setResetSent(true)
+    } catch (err) {
+      setError(err?.message ?? '이메일 발송에 실패했습니다.')
+    } finally {
+      setResetLoading(false)
+    }
   }
 
   return (
@@ -365,8 +447,23 @@ function ChangePinForm({ onSuccess }) {
         disabled={isLoading}
         className="px-4 py-2 rounded-lg bg-primary text-white text-[12px] font-medium hover:bg-primary-hover transition-colors disabled:opacity-60 mt-2"
       >
-        {isLoading ? '변경 중...' : '변경'}
+        변경
       </button>
+
+      <div className="mt-1 text-center">
+        {resetSent ? (
+          <p className="text-[11px] text-live">재설정 이메일을 전송했습니다. 이메일을 확인해주세요.</p>
+        ) : (
+          <button
+            type="button"
+            disabled={resetLoading}
+            onClick={handleRequestPinReset}
+            className="text-[11px] text-foreground-tertiary hover:text-primary transition-colors disabled:opacity-60"
+          >
+            {resetLoading ? '전송 중...' : '비밀번호를 잊으셨나요?'}
+          </button>
+        )}
+      </div>
     </form>
   )
 }
@@ -386,7 +483,7 @@ function ResetForm({ onSuccess }) {
     })
 
     if (!validation.success) {
-      const fieldError = validation.error.errors[0]
+      const fieldError = validation.error.issues[0]
       setError(fieldError.message)
       return
     }
@@ -442,7 +539,7 @@ function ResetForm({ onSuccess }) {
         disabled={isLoading}
         className="px-4 py-2 rounded-lg bg-up text-white text-[12px] font-medium hover:opacity-90 transition-colors disabled:opacity-60 mt-2"
       >
-        {isLoading ? '진행 중...' : '리셋'}
+        리셋
       </button>
     </form>
   )
@@ -477,7 +574,7 @@ function CloseAccountForm() {
     const validation = resetAccountSchema.safeParse({ accountPin: cashPin })
     if (!validation.success) {
       setCashKeyboardOpen(true)
-      setCashError(validation.error.errors[0].message)
+      setCashError(validation.error.issues[0].message)
       return
     }
     setCashLoading(true)
@@ -503,7 +600,7 @@ function CloseAccountForm() {
     const validation = closeAccountSchema.safeParse({ accountPin: closePin, agreed })
     if (!validation.success) {
       setCloseKeyboardOpen(true)
-      setCloseError(validation.error.errors[0].message)
+      setCloseError(validation.error.issues[0].message)
       return
     }
     setCloseLoading(true)
@@ -567,7 +664,7 @@ function CloseAccountForm() {
               disabled={cashLoading}
               className="px-4 py-2 rounded-lg bg-up text-white text-[12px] font-medium hover:opacity-90 transition-colors disabled:opacity-60"
             >
-              {cashLoading ? '처리 중...' : 'KRW·USD 현금 0원으로 초기화'}
+              KRW·USD 현금 0원으로 초기화
             </button>
           </>
         )}
@@ -614,7 +711,7 @@ function CloseAccountForm() {
               disabled={closeLoading || !agreed}
               className="px-4 py-2 rounded-lg bg-up text-white text-[12px] font-medium hover:opacity-90 transition-colors disabled:opacity-60"
             >
-              {closeLoading ? '처리 중...' : '계좌 해지'}
+              계좌 해지
             </button>
           </>
         )}
@@ -626,6 +723,10 @@ function CloseAccountForm() {
 function ContentArea({ selectedMenuItem, onSuccess }) {
   return (
     <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+      {selectedMenuItem === 'update-profile' && (
+        <UpdateProfileForm onSuccess={onSuccess} />
+      )}
+
       {selectedMenuItem === 'change-account-password' && (
         <ChangePasswordForm onSuccess={onSuccess} />
       )}
@@ -652,27 +753,45 @@ function ContentArea({ selectedMenuItem, onSuccess }) {
 }
 
 export default function AccountSettingsPanel() {
-  const [selectedMenuItem, setSelectedMenuItem] = useState('change-account-password')
+  const [selectedMenuItem, setSelectedMenuItem] = useState('update-profile')
+  const [successStatus, setSuccessStatus] = useState(null) // null | 'animating' | 'success'
   const [successMessage, setSuccessMessage] = useState('')
 
   const handleSuccess = (message) => {
     setSuccessMessage(message)
-    setTimeout(() => setSuccessMessage(''), 3000)
+    setSuccessStatus('animating')
+    setTimeout(() => setSuccessStatus('success'), 1600)
+  }
+
+  const handleReset = () => {
+    setSuccessStatus(null)
+    setSuccessMessage('')
   }
 
   return (
     <div className="flex flex-col h-full">
       <Header />
 
-      {successMessage && (
-        <div className="px-4 py-2 bg-live/10 border-b border-live text-[11px] text-live">
-          {successMessage}
-        </div>
-      )}
-
       <MenuTabs selectedMenuItem={selectedMenuItem} onSelectMenuItem={setSelectedMenuItem} />
 
-      <ContentArea selectedMenuItem={selectedMenuItem} onSuccess={handleSuccess} />
+      {successStatus ? (
+        <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">
+          <SplashScreenFill inline animated={successStatus === 'animating'} />
+          {successStatus === 'success' && (
+            <>
+              <p className="text-[13px] font-semibold text-foreground tracking-tight">{successMessage}</p>
+              <button
+                onClick={handleReset}
+                className="px-5 py-2 rounded-lg bg-primary text-white text-[12px] font-medium hover:bg-primary-hover transition-colors"
+              >
+                확인
+              </button>
+            </>
+          )}
+        </div>
+      ) : (
+        <ContentArea selectedMenuItem={selectedMenuItem} onSuccess={handleSuccess} />
+      )}
     </div>
   )
 }
