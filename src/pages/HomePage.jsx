@@ -173,6 +173,7 @@ export default function HomePage() {
                 gridRow={w.gridRow}
               >
                 <Component
+                  instanceId={w.instanceId}
                   variant={w.variantId}
                   colSpan={w.colSpan}
                   rowSpan={w.rowSpan}

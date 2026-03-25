@@ -6,7 +6,7 @@ import { subscribeTopic } from '@/lib/stomp'
 // 백엔드 code → WebSocket topic 매핑
 const INDEX_TOPICS = {
   '001':      '/topic/index/domestic/001',
-  '301':      '/topic/index/domestic/301',
+  '101':      '/topic/index/domestic/101',
   'SPI@SPX':  '/topic/index/foreign/SPI@SPX',
   'NAS@IXIC': '/topic/index/foreign/NAS@IXIC',
   USD:        '/topic/currency/USD',

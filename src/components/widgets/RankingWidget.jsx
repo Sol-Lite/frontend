@@ -13,7 +13,14 @@ const TAB_TO_SORT = {
 }
 
 export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, rowSpan = 1, onDelete }) {
-  const [activeTab, setActiveTab] = useState('거래대금')
+  const [activeTab, setActiveTab] = useState(
+    () => localStorage.getItem('rankingWidget.activeTab') ?? '거래대금'
+  )
+
+  function handleTabChange(tab) {
+    setActiveTab(tab)
+    localStorage.setItem('rankingWidget.activeTab', tab)
+  }
   const { stocks } = useMarketRanking(TAB_TO_SORT[activeTab], '')
 
   if (variant === 'ranking-lg') {
@@ -26,7 +33,7 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
               <TabChip
                 key={tab}
                 isActive={activeTab === tab}
-                onClick={(e) => { e.stopPropagation(); setActiveTab(tab) }}
+                onClick={(e) => { e.stopPropagation(); handleTabChange(tab) }}
               >
                 {tab}
               </TabChip>
@@ -63,7 +70,7 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
             <TabChip
               key={tab}
               isActive={activeTab === tab}
-              onClick={(e) => { e.stopPropagation(); setActiveTab(tab) }}
+              onClick={(e) => { e.stopPropagation(); handleTabChange(tab) }}
             >
               {tab}
             </TabChip>

@@ -42,8 +42,11 @@ export function useDashboardLoad() {
  * @returns useMutation result (mutate, isPending, isError 등)
  */
 export function useDashboardSave() {
-  const pages = useWidgetStore((s) => s.pages)
   return useMutation({
-    mutationFn: () => dashboardApi.saveMyDashboard(toApiPayload(pages)),
+    // mutationFn 실행 시점에 최신 pages를 읽어 stale closure 방지
+    mutationFn: () => {
+      const pages = useWidgetStore.getState().pages
+      return dashboardApi.saveMyDashboard(toApiPayload(pages))
+    },
   })
 }

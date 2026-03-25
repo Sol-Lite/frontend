@@ -9,13 +9,19 @@ function fmt(n) {
 }
 
 function useBalance(enabled) {
-  const { data: holdings = [] } = useDomesticHoldings({ enabled })
-  const { data: cashData } = useQuery({
+  const { data: holdings = [], isLoading: holdingsLoading } = useDomesticHoldings({ enabled })
+  const { data: cashData, isLoading: cashLoading } = useQuery({
     queryKey: ['balance', 'cash'],
     queryFn:  balanceApi.getCashBalances,
     enabled,
     staleTime: 30_000,
   })
+
+  const isLoading = enabled && (holdingsLoading || cashLoading)
+
+  if (isLoading) {
+    return { total: '-', profit: '-', profitRate: '-', invested: '-', available: '-', isLoading: true }
+  }
 
   const cash      = cashData?.krwBalance ?? cashData?.balance ?? cashData?.depositBalance ?? 0
   const invested  = holdings.reduce((s, h) => s + (h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
@@ -30,6 +36,7 @@ function useBalance(enabled) {
     profitRate: (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%',
     invested:   fmt(invested),
     available:  fmt(cash),
+    isLoading:  false,
   }
 }
 
@@ -50,7 +57,10 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
             <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
               {BALANCE.total}
             </div>
-            <div className="text-[9px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+            {BALANCE.isLoading
+              ? <div className="text-[9px] text-foreground-disabled mt-0.5">-</div>
+              : <div className="text-[9px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+            }
           </div>
           <div className="h-px bg-stroke-subtle shrink-0" />
           <div className="flex gap-2 flex-1 items-start">
@@ -74,7 +84,10 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
               <div className="text-[22px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
                 {BALANCE.total}
               </div>
-              <div className="text-[10px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+              {BALANCE.isLoading
+                ? <div className="text-[10px] text-foreground-disabled mt-0.5">-</div>
+                : <div className="text-[10px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+              }
             </div>
             <div className="flex gap-6 shrink-0">
               <div>
@@ -104,7 +117,10 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
             <div className="text-[22px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
               {BALANCE.total}<span className="text-[12px] font-medium text-foreground-tertiary ml-0.5">원</span>
             </div>
-            <div className="text-[12px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+            {BALANCE.isLoading
+              ? <div className="text-[12px] text-foreground-disabled mt-0.5">-</div>
+              : <div className="text-[12px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+            }
           </div>
           <div className="grid grid-cols-2 gap-2 shrink-0">
             {[
@@ -132,7 +148,10 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
           <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground">
             {BALANCE.total}
           </div>
-          <div className="text-[11px] font-semibold text-up mt-1">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+          {BALANCE.isLoading
+            ? <div className="text-[11px] text-foreground-disabled mt-1">-</div>
+            : <div className="text-[11px] font-semibold text-up mt-1">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+          }
         </div>
       )}
 

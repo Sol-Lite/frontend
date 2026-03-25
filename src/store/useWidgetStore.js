@@ -334,6 +334,14 @@ const useWidgetStore = create((set) => ({
       return _setCurrentWidgets(state, newWidgets)
     }),
 
+  updateWidgetConfig: (instanceId, config) =>
+    set((state) => {
+      const newWidgets = state.widgets.map((w) =>
+        w.instanceId === instanceId ? { ...w, config: { ...w.config, ...config } } : w,
+      )
+      return _setCurrentWidgets(state, newWidgets)
+    }),
+
   // 위젯을 지정 좌표로 이동 (빈 셀 drop)
   moveWidgetTo: (instanceId, gridCol, gridRow) =>
     set((state) => {
