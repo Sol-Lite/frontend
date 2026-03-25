@@ -6,6 +6,7 @@ import LiveDot from '@/components/ui/LiveDot'
 import useMarketRanking from '@/features/market/useMarketRanking'
 import useMarketIndices from '@/features/market/useMarketIndices'
 import { MARKET_FILTERS, SORT_FILTERS } from '@/mocks/market'
+import { useWatchlistSet } from '@/api/watchlist'
 
 const VOLUME_COL_LABEL = {
   volume_value: '거래대금 순',
@@ -95,16 +96,9 @@ function StockTableHeader({ sortFilter }) {
 export default function MarketPage() {
   const [marketFilter, setMarketFilter] = useState('kr')
   const [sortFilter, setSortFilter]     = useState('volume_value')
-  const [watched, setWatched]           = useState(new Set())
+  const { watchedSet, toggle }          = useWatchlistSet()
 
   const { stocks, isLoading, errorMessage } = useMarketRanking(sortFilter, marketFilter)
-
-  const toggleWatch = (id) =>
-    setWatched((prev) => {
-      const next = new Set(prev)
-      next.has(id) ? next.delete(id) : next.add(id)
-      return next
-    })
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-surface">
@@ -130,8 +124,8 @@ export default function MarketPage() {
             key={stock.id}
             stock={stock}
             showVolume={sortFilter in VOLUME_COL_LABEL}
-            isWatched={watched.has(stock.id)}
-            onWatchToggle={toggleWatch}
+            isWatched={watchedSet.has(stock.stockCode)}
+            onWatchToggle={toggle}
           />
         ))}
       </div>
