@@ -1,10 +1,49 @@
+import { useQuery } from '@tanstack/react-query'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 import WidgetCard from './WidgetCard'
-import { BALANCE } from '@/mocks/home'
+import { balanceApi, useDomesticHoldings } from '@/api/balance'
+
+function fmt(n) {
+  return Number(n ?? 0).toLocaleString('ko-KR')
+}
+
+function useBalance(enabled) {
+  const { data: holdings = [], isLoading: holdingsLoading } = useDomesticHoldings({ enabled })
+  const { data: cashData, isLoading: cashLoading } = useQuery({
+    queryKey: ['balance', 'cash'],
+    queryFn:  balanceApi.getCashBalances,
+    enabled,
+    staleTime: 30_000,
+  })
+
+  const isLoading = enabled && (holdingsLoading || cashLoading)
+
+  if (isLoading) {
+    return { total: '-', profit: '-', profitRate: '-', invested: '-', available: '-', isProfit: true, isLoading: true }
+  }
+
+  const cash      = cashData?.krwBalance ?? cashData?.balance ?? cashData?.depositBalance ?? 0
+  const invested  = holdings.reduce((s, h) => s + (h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
+  const stockVal  = holdings.reduce((s, h) => s + (h.currentPrice ?? h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
+  const total     = stockVal + cash
+  const profit    = stockVal - invested
+  const profitRate = invested > 0 ? (profit / invested) * 100 : 0
+
+  return {
+    total:      fmt(total),
+    profit:     (profit >= 0 ? '+' : '-') + fmt(Math.abs(profit)),
+    profitRate: (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%',
+    invested:   fmt(invested),
+    available:  fmt(cash),
+    isProfit:   profit >= 0,
+    isLoading:  false,
+  }
+}
 
 export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
+  const BALANCE = useBalance(isAuthenticated && !isRestoring)
 
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
@@ -19,13 +58,16 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
             <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
               {BALANCE.total}
             </div>
-            <div className="text-[9px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+            {BALANCE.isLoading
+              ? <div className="text-[9px] text-foreground-disabled mt-0.5">-</div>
+              : <div className={`text-[9px] font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+            }
           </div>
           <div className="h-px bg-stroke-subtle shrink-0" />
           <div className="flex gap-2 flex-1 items-start">
             {[
               { label: '투자원금', val: BALANCE.invested, color: 'text-foreground' },
-              { label: '평가손익', val: BALANCE.profit,   color: 'text-up' },
+              { label: '평가손익', val: BALANCE.profit,   color: BALANCE.isProfit ? 'text-up' : 'text-down' },
               { label: '주문가능', val: BALANCE.available, color: 'text-foreground' },
             ].map(({ label, val, color }) => (
               <div key={label} className="flex-1 min-w-0">
@@ -43,7 +85,10 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
               <div className="text-[22px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
                 {BALANCE.total}
               </div>
-              <div className="text-[10px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+              {BALANCE.isLoading
+                ? <div className="text-[10px] text-foreground-disabled mt-0.5">-</div>
+                : <div className={`text-[10px] font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+              }
             </div>
             <div className="flex gap-6 shrink-0">
               <div>
@@ -73,14 +118,17 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
             <div className="text-[22px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
               {BALANCE.total}<span className="text-[12px] font-medium text-foreground-tertiary ml-0.5">원</span>
             </div>
-            <div className="text-[12px] font-semibold text-up mt-0.5">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+            {BALANCE.isLoading
+              ? <div className="text-[12px] text-foreground-disabled mt-0.5">-</div>
+              : <div className={`text-[12px] font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+            }
           </div>
           <div className="grid grid-cols-2 gap-2 shrink-0">
             {[
-              { label: '투자원금', val: BALANCE.invested, color: 'text-foreground' },
-              { label: '평가손익', val: BALANCE.profit,    color: 'text-up' },
-              { label: '당일손익', val: '+342,000',        color: 'text-up' },
-              { label: '수익률',   val: BALANCE.profitRate, color: 'text-up' },
+              { label: '투자원금', val: BALANCE.invested,    color: 'text-foreground' },
+              { label: '평가손익', val: BALANCE.profit,      color: BALANCE.isProfit ? 'text-up' : 'text-down' },
+              { label: '당일손익', val: '+342,000',          color: 'text-up' },
+              { label: '수익률',   val: BALANCE.profitRate,  color: BALANCE.isProfit ? 'text-up' : 'text-down' },
             ].map(({ label, val, color }) => (
               <div key={label} className="bg-background rounded-xl px-3 py-2">
                 <div className="text-[9px] text-foreground-disabled">{label}</div>
@@ -101,7 +149,10 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
           <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground">
             {BALANCE.total}
           </div>
-          <div className="text-[11px] font-semibold text-up mt-1">▲ {BALANCE.profit} ({BALANCE.profitRate})</div>
+          {BALANCE.isLoading
+            ? <div className="text-[11px] text-foreground-disabled mt-1">-</div>
+            : <div className={`text-[11px] font-semibold mt-1 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+          }
         </div>
       )}
 

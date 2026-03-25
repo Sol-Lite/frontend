@@ -99,10 +99,11 @@ function PreviewContent({ type }) {
               <div className="text-[10px] text-up mt-0.5">▲ +1,200 (+1.62%)</div>
             </div>
           </div>
-          <div className="flex-1 min-h-0 flex items-end gap-px pb-1 pt-2">
-            {[35,48,42,55,48,62,55,70,60,78,68,88].map((h, i) => (
-              <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
-            ))}
+          <div className="flex-1 min-h-0">
+            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+              <path d="M0,28 L8,24 L16,26 L24,20 L32,22 L40,16 L48,18 L56,12 L64,14 L72,8 L80,10 L88,5 L100,2 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
+              <polyline points="0,28 8,24 16,26 24,20 32,22 40,16 48,18 56,12 64,14 72,8 80,10 88,5 100,2" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+            </svg>
           </div>
         </div>
       )
@@ -175,56 +176,33 @@ function PreviewContent({ type }) {
       return (
         <div className="flex flex-col h-full">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
-          <div className="flex-1 flex flex-col justify-start items-center text-center min-h-0 pt-1">
+          <div className="flex-1 flex flex-col justify-center items-center text-center min-h-0">
             <div className="text-[8px] text-foreground-disabled">KOSPI</div>
             <div className="text-[15px] font-extrabold text-foreground leading-tight">2,685.42</div>
             <div className="text-[9px] text-up font-medium">▲ +0.46%</div>
-          </div>
-          <div className="h-[18px] w-full shrink-0">
-            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-              <path d="M0,27 L25,21 L50,14 L75,8 L100,3 L100,30 L0,30 Z" fill="rgba(232,57,62,0.1)" />
-              <polyline points="0,27 25,21 50,14 75,8 100,3" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-            </svg>
           </div>
         </div>
       )
 
     /* 주요 지수 — 복합 2×1 */
-    case 'index-wide': {
-      const WIDE_PATHS = [
-        { area: 'M0,27 L25,21 L50,14 L75,8 L100,3 L100,30 L0,30 Z', line: '0,27 25,21 50,14 75,8 100,3' },
-        { area: 'M0,3 L33,12 L66,20 L100,27 L100,30 L0,30 Z',        line: '0,3 33,12 66,20 100,27'      },
-      ]
+    case 'index-wide':
       return (
         <div className="flex flex-col h-full gap-1">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke">
             {[
-              { name: 'KOSPI',  val: '2,685', chg: '+0.46%', up: true,  ...WIDE_PATHS[0] },
-              { name: 'KOSDAQ', val: '842',   chg: '-0.63%', up: false, ...WIDE_PATHS[1] },
-            ].map(({ name, val, chg, up, area, line }) => {
-              const color = up ? 'var(--color-up)' : 'var(--color-down)'
-              const fill  = up ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
-              return (
-                <div key={name} className="flex-1 flex flex-col justify-between items-center px-2 py-0.5">
-                  <div className="text-center">
-                    <span className="text-[9px] font-semibold text-foreground-disabled">{name}</span>
-                    <div className="text-[12px] font-extrabold text-foreground leading-none">{val}</div>
-                    <span className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
-                  </div>
-                  <div className="h-[16px] w-full shrink-0">
-                    <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-                      <path d={area} fill={fill} />
-                      <polyline points={line} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                    </svg>
-                  </div>
-                </div>
-              )
-            })}
+              { name: 'KOSPI',  val: '2,685', chg: '+0.46%', up: true  },
+              { name: 'KOSDAQ', val: '842',   chg: '-0.63%', up: false },
+            ].map(({ name, val, chg, up }) => (
+              <div key={name} className="flex-1 flex flex-col justify-center items-center text-center px-2">
+                <span className="text-[9px] font-semibold text-foreground-disabled">{name}</span>
+                <div className="text-[12px] font-extrabold text-foreground leading-none">{val}</div>
+                <span className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
+              </div>
+            ))}
           </div>
         </div>
       )
-    }
 
     /* 포트폴리오 — 파이차트 1×1 */
     case 'portfolio-sm':
@@ -297,32 +275,22 @@ function PreviewContent({ type }) {
     /* 환율 — 복합 2×1 */
     case 'exchange-wide': {
       const EX_WIDE = [
-        { pair: 'USD / KRW', rate: '1,378.50', chg: '▼ −2.30 (−0.17%)', up: false, flex: '1.2', pr: 'pr-3', pl: '', area: 'M0,3 L25,10 L50,17 L75,22 L100,27 L100,30 L0,30 Z', line: '0,3 25,10 50,17 75,22 100,27', rateSize: 'text-[13px]' },
-        { pair: 'JPY / KRW', rate: '9.18',     chg: '▲ +0.05 (+0.54%)', up: true,  flex: '1',   pr: '',    pl: 'pl-3', area: 'M0,27 L33,20 L66,12 L100,3 L100,30 L0,30 Z',       line: '0,27 33,20 66,12 100,3',    rateSize: 'text-[11px]' },
+        { pair: 'USD / KRW', rate: '1,378.50', chg: '▼ −2.30 (−0.17%)', up: false, flex: '1.2', pr: 'pr-3', pl: '', rateSize: 'text-[13px]' },
+        { pair: 'JPY / KRW', rate: '9.18',     chg: '▲ +0.05 (+0.54%)', up: true,  flex: '1',   pr: '',    pl: 'pl-3', rateSize: 'text-[11px]' },
       ]
       return (
         <div className="flex flex-col h-full gap-1">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">환율</span>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-            {EX_WIDE.map(({ pair, rate, chg, up, flex, pr, pl, area, line, rateSize }) => {
-              const color = up ? 'var(--color-up)' : 'var(--color-down)'
-              const fill  = up ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
-              return (
-                <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>
-                  <div className="text-center">
-                    <div className="text-[8px] text-foreground-disabled">{pair}</div>
-                    <div className={`${rateSize} font-extrabold text-foreground leading-tight`}>{rate}</div>
-                    <span className={`text-[8px] ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
-                  </div>
-                  <div className="h-[14px] w-full shrink-0">
-                    <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-                      <path d={area} fill={fill} />
-                      <polyline points={line} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                    </svg>
-                  </div>
+            {EX_WIDE.map(({ pair, rate, chg, up, flex, pr, pl, rateSize }) => (
+              <div key={pair} className={`flex flex-col justify-center ${pr} ${pl}`} style={{ flex }}>
+                <div className="text-center">
+                  <div className="text-[8px] text-foreground-disabled">{pair}</div>
+                  <div className={`${rateSize} font-extrabold text-foreground leading-tight`}>{rate}</div>
+                  <span className={`text-[8px] ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         </div>
       )
@@ -551,10 +519,11 @@ function PreviewContent({ type }) {
             </div>
             <div className="flex flex-col flex-1 min-w-0 pl-3 border-l border-stroke">
               <div className="text-[8px] text-foreground-disabled shrink-0">수익 추이 (30일)</div>
-              <div className="flex-1 min-h-0 flex items-end gap-px my-1">
-                {[30,38,35,50,55,65,70,80,85,92].map((h, i) => (
-                  <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
-                ))}
+              <div className="flex-1 min-h-0 my-1">
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+                  <path d="M0,27 L12,23 L24,25 L36,18 L50,14 L62,10 L74,7 L86,4 L100,1 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
+                  <polyline points="0,27 12,23 24,25 36,18 50,14 62,10 74,7 86,4 100,1" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                </svg>
               </div>
               <div className="text-[8px] text-foreground-disabled text-right shrink-0">최고 +5.2%</div>
             </div>
@@ -584,10 +553,11 @@ function PreviewContent({ type }) {
               </div>
             ))}
           </div>
-          <div className="flex-1 min-h-0 bg-background rounded-lg flex items-end px-1.5 pb-1 pt-1.5 gap-px">
-            {[30, 45, 38, 60, 52, 65, 55, 70, 62, 78, 68, 85].map((h, i) => (
-              <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
-            ))}
+          <div className="flex-1 min-h-0 bg-background rounded-lg overflow-hidden">
+            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+              <path d="M0,27 L10,22 L20,24 L30,18 L40,20 L50,13 L60,15 L70,8 L80,10 L90,5 L100,2 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
+              <polyline points="0,27 10,22 20,24 30,18 40,20 50,13 60,15 70,8 80,10 90,5 100,2" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+            </svg>
           </div>
         </div>
       )
@@ -611,10 +581,11 @@ function PreviewContent({ type }) {
               <div className="text-[10px] text-up">▲ +1,200 (+1.62%)</div>
             </div>
           </div>
-          <div className="flex-1 min-h-0 bg-background rounded-lg flex items-end px-2 pb-2 pt-2 gap-px">
-            {[38, 52, 44, 58, 48, 62, 50, 68, 56, 72, 60, 78, 65, 82, 70, 88, 75, 90, 78, 85].map((h, i) => (
-              <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
-            ))}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+              <path d="M0,28 L6,25 L12,26 L20,21 L28,23 L36,17 L44,19 L52,13 L60,15 L68,9 L76,11 L84,5 L92,7 L100,3 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
+              <polyline points="0,28 6,25 12,26 20,21 28,23 36,17 44,19 52,13 60,15 68,9 76,11 84,5 92,7 100,3" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+            </svg>
           </div>
           <div className="flex justify-between shrink-0">
             {[
@@ -633,62 +604,41 @@ function PreviewContent({ type }) {
       )
 
     /* 주요 지수 — 3지수 3×1 */
-    case 'index-3x1': {
-      const IDX_3X1 = [
-        { name: 'KOSPI',  val: '2,685.42', chg: '+0.46%', up: true,  area: 'M0,27 L25,21 L50,14 L75,8 L100,3 L100,30 L0,30 Z',  line: '0,27 25,21 50,14 75,8 100,3'  },
-        { name: 'KOSDAQ', val: '868.15',   chg: '-0.21%', up: false, area: 'M0,3 L25,10 L50,17 L75,22 L100,27 L100,30 L0,30 Z',  line: '0,3 25,10 50,17 75,22 100,27' },
-        { name: 'NASDAQ', val: '16,274',   chg: '+0.83%', up: true,  area: 'M0,27 L25,21 L50,14 L75,8 L100,3 L100,30 L0,30 Z',  line: '0,27 25,21 50,14 75,8 100,3'  },
-      ]
+    case 'index-3x1':
       return (
         <div className="flex flex-col h-full gap-1">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-            {IDX_3X1.map(({ name, val, chg, up, area, line }) => {
-              const color = up ? 'var(--color-up)' : 'var(--color-down)'
-              const fill  = up ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
-              return (
-                <div key={name} className="flex-1 flex flex-col items-center px-2">
-                  <div className="flex-1 flex flex-col justify-start items-center text-center pt-1">
-                    <div className="text-[8px] text-foreground-disabled">{name}</div>
-                    <div className="text-[11px] font-extrabold text-foreground leading-tight">{val}</div>
-                    <span className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
-                  </div>
-                  <div className="h-[18px] w-full shrink-0">
-                    <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-                      <path d={area} fill={fill} />
-                      <polyline points={line} fill="none" stroke={color} strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-                    </svg>
-                  </div>
-                </div>
-              )
-            })}
+            {[
+              { name: 'KOSPI',  val: '2,685.42', chg: '+0.46%', up: true  },
+              { name: 'KOSDAQ', val: '868.15',   chg: '-0.21%', up: false },
+              { name: 'NASDAQ', val: '16,274',   chg: '+0.83%', up: true  },
+            ].map(({ name, val, chg, up }) => (
+              <div key={name} className="flex-1 flex flex-col justify-center items-center text-center px-2">
+                <div className="text-[8px] text-foreground-disabled">{name}</div>
+                <div className="text-[11px] font-extrabold text-foreground leading-tight">{val}</div>
+                <span className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
+              </div>
+            ))}
           </div>
         </div>
       )
-    }
 
     /* 주요 지수 — 대형 (구 2×2, 미사용) */
     case 'index-2x2':
       return (
         <div className="flex flex-col h-full gap-2">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col justify-center gap-2.5 flex-1">
             {[
-              { name: 'KOSPI',  val: '2,685.42', chg: '+12.3',  pct: '+0.46%', up: true,  bars: [50,55,48,60,52,58,54,62] },
-              { name: 'KOSDAQ', val: '868.15',   chg: '-1.8',   pct: '-0.21%', up: false, bars: [60,55,58,52,56,50,54,48] },
-              { name: 'NASDAQ', val: '16,274',   chg: '+135.2', pct: '+0.83%', up: true,  bars: [45,52,48,58,54,62,58,68] },
-            ].map(({ name, val, chg, pct, up, bars }) => (
-              <div key={name} className="flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="text-[9px] font-semibold text-foreground-disabled">{name}</div>
-                  <div className="text-[12px] font-extrabold text-foreground leading-none">{val}</div>
-                  <div className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg} ({pct})</div>
-                </div>
-                <div className="flex items-end gap-px h-7 shrink-0">
-                  {bars.map((h, i) => (
-                    <div key={i} className={`w-1 rounded-sm ${up ? 'bg-up/50' : 'bg-down/50'}`} style={{ height: `${h}%` }} />
-                  ))}
-                </div>
+              { name: 'KOSPI',  val: '2,685.42', chg: '+0.46%', up: true  },
+              { name: 'KOSDAQ', val: '868.15',   chg: '-0.21%', up: false },
+              { name: 'NASDAQ', val: '16,274',   chg: '+0.83%', up: true  },
+            ].map(({ name, val, chg, up }) => (
+              <div key={name} className="flex-1 min-w-0">
+                <div className="text-[9px] font-semibold text-foreground-disabled">{name}</div>
+                <div className="text-[12px] font-extrabold text-foreground leading-none">{val}</div>
+                <div className={`text-[9px] font-medium ${up ? 'text-up' : 'text-down'}`}>{chg}</div>
               </div>
             ))}
           </div>
@@ -759,10 +709,11 @@ function PreviewContent({ type }) {
               <span key={t} className={`text-[8px] px-1.5 py-0.5 rounded ${i === 0 ? 'bg-primary-light text-primary font-semibold' : 'text-foreground-disabled'}`}>{t}</span>
             ))}
           </div>
-          <div className="flex-1 min-h-0 bg-background rounded-lg flex items-end px-2 pb-2 gap-px">
-            {[28,35,32,44,48,54,58,65,70,76,82,88,92,96].map((h, i) => (
-              <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
-            ))}
+          <div className="flex-1 min-h-0 overflow-hidden">
+            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+              <path d="M0,27 L10,24 L20,25 L30,19 L40,21 L50,15 L60,17 L70,10 L80,12 L90,6 L100,3 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
+              <polyline points="0,27 10,24 20,25 30,19 40,21 50,15 60,17 70,10 80,12 90,6 100,3" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+            </svg>
           </div>
           <div className="flex justify-between shrink-0">
             {[
@@ -784,33 +735,23 @@ function PreviewContent({ type }) {
     /* 환율 — 3통화 3×1 */
     case 'exchange-3x1': {
       const EX_3X1 = [
-        { pair: 'USD / KRW', rate: '1,378.50', chg: '▼ −2.30', up: false, flex: '1.2', pr: 'pr-3', pl: '',    rateSize: 'text-[13px]', area: 'M0,3 L25,10 L50,17 L75,22 L100,27 L100,30 L0,30 Z', line: '0,3 25,10 50,17 75,22 100,27' },
-        { pair: 'JPY / KRW', rate: '9.18',     chg: '▲ +0.05', up: true,  flex: '1',   pr: 'pr-2', pl: 'pl-2', rateSize: 'text-[11px]', area: 'M0,27 L33,20 L66,12 L100,3 L100,30 L0,30 Z',       line: '0,27 33,20 66,12 100,3'     },
-        { pair: 'EUR / KRW', rate: '1,502.30', chg: '▼ −3.20', up: false, flex: '1',   pr: '',    pl: 'pl-2', rateSize: 'text-[11px]', area: 'M0,3 L33,12 L66,20 L100,27 L100,30 L0,30 Z',        line: '0,3 33,12 66,20 100,27'     },
+        { pair: 'USD / KRW', rate: '1,378.50', chg: '▼ −2.30', up: false, flex: '1.2', pr: 'pr-3', pl: '',    rateSize: 'text-[13px]' },
+        { pair: 'JPY / KRW', rate: '9.18',     chg: '▲ +0.05', up: true,  flex: '1',   pr: 'pr-2', pl: 'pl-2', rateSize: 'text-[11px]' },
+        { pair: 'EUR / KRW', rate: '1,502.30', chg: '▼ −3.20', up: false, flex: '1',   pr: '',    pl: 'pl-2', rateSize: 'text-[11px]' },
       ]
       return (
         <div className="flex flex-col h-full gap-1">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">환율</span>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-            {EX_3X1.map(({ pair, rate, chg, up, flex, pr, pl, rateSize, area, line }) => {
-              const color = up ? 'var(--color-up)' : 'var(--color-down)'
-              const fill  = up ? 'rgba(232,57,62,0.1)' : 'rgba(0,117,232,0.1)'
-              return (
-                <div key={pair} className={`flex flex-col justify-between ${pr} ${pl}`} style={{ flex }}>
-                  <div className="text-center">
-                    <div className="text-[8px] text-foreground-disabled">{pair}</div>
-                    <div className={`${rateSize} font-extrabold text-foreground leading-tight`}>{rate}</div>
-                    <span className={`text-[8px] ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
-                  </div>
-                  <div className="h-[14px] w-full shrink-0">
-                    <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-                      <path d={area} fill={fill} />
-                      <polyline points={line} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                    </svg>
-                  </div>
+            {EX_3X1.map(({ pair, rate, chg, up, flex, pr, pl, rateSize }) => (
+              <div key={pair} className={`flex flex-col justify-center ${pr} ${pl}`} style={{ flex }}>
+                <div className="text-center">
+                  <div className="text-[8px] text-foreground-disabled">{pair}</div>
+                  <div className={`${rateSize} font-extrabold text-foreground leading-tight`}>{rate}</div>
+                  <span className={`text-[8px] ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
                 </div>
-              )
-            })}
+              </div>
+            ))}
           </div>
         </div>
       )
@@ -828,11 +769,7 @@ function PreviewContent({ type }) {
             <div className="text-[20px] font-extrabold text-foreground leading-none">1,378.50</div>
             <div className="text-[10px] text-down">▼ -2.30 (-0.17%)</div>
           </div>
-          <div className="h-10 bg-background rounded-lg flex items-end px-1.5 pb-1 gap-px shrink-0">
-            {[60, 58, 62, 55, 58, 52, 56, 50, 54, 48, 52, 46].map((h, i) => (
-              <div key={i} className="flex-1 bg-down/40 rounded-sm" style={{ height: `${h}%` }} />
-            ))}
-          </div>
+
           <div className="flex flex-col gap-2">
             {[
               { pair: 'JPY / KRW', rate: '9.18',     chg: '+0.11%', up: true  },

@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { GRID_COLS, GRID_ROWS } from '@/lib/gridConstants'
+import { fromApiResponse } from './widgetApi'
 
 /* ── 충돌 판정 ──────────────────────────────────────────────
    모든 좌표는 1-indexed (CSS grid와 동일).
@@ -200,6 +201,37 @@ const useWidgetStore = create((set) => ({
   // top-level widgets: 항상 현재 페이지의 widgets를 미러링 (하위 호환)
   widgets: INITIAL_WIDGETS,
 
+  // ── 서버 로드 상태 ───────────────────────────────────────
+  // false: 아직 서버에서 불러오지 않음 (INITIAL 레이아웃 사용 중)
+  // true:  서버 데이터로 교체 완료
+  isLoaded: false,
+
+  // GET /api/dashboards/me 응답으로 store를 교체.
+  // 빈 배열이면 INITIAL 레이아웃 유지.
+  loadFromServer: (apiData) =>
+    set(() => {
+      const pages = fromApiResponse(Array.isArray(apiData) ? apiData : apiData.pages ?? [])
+      if (pages.length === 0) return { isLoaded: true }
+      const currentPage = pages[0]
+      return {
+        pages,
+        currentPageId: currentPage.id,
+        widgets:       currentPage.widgets,
+        isLoaded:      true,
+      }
+    }),
+
+  // 로그아웃 시 INITIAL 레이아웃으로 초기화.
+  // isLoaded를 false로 되돌려 재로그인 시 서버에서 새로 불러올 수 있게 함.
+  resetLayout: () =>
+    set({
+      pages:         INITIAL_PAGES,
+      currentPageId: 'page-1',
+      widgets:       INITIAL_WIDGETS,
+      isLoaded:      false,
+    }),
+
+
   // ── 페이지 전환 ─────────────────────────────────────────
   switchPage: (pageId) =>
     set((state) => {
@@ -299,6 +331,14 @@ const useWidgetStore = create((set) => ({
   removeWidget: (instanceId) =>
     set((state) => {
       const newWidgets = state.widgets.filter((w) => w.instanceId !== instanceId)
+      return _setCurrentWidgets(state, newWidgets)
+    }),
+
+  updateWidgetConfig: (instanceId, config) =>
+    set((state) => {
+      const newWidgets = state.widgets.map((w) =>
+        w.instanceId === instanceId ? { ...w, config: { ...w.config, ...config } } : w,
+      )
       return _setCurrentWidgets(state, newWidgets)
     }),
 
