@@ -25,11 +25,13 @@ const DEFAULT_VARIANT = {
 /**
  * GET /api/dashboards/me 응답 → useWidgetStore.pages 형태로 변환
  *
- * @param {{ pages: Array }} data - 백엔드 응답 JSON
+ * 백엔드는 List<DashboardPageResponse> 를 배열로 직접 반환.
+ *
+ * @param {Array} data - 백엔드 응답 JSON (페이지 배열)
  * @returns {Array} useWidgetStore의 pages 배열
  */
 export function fromApiResponse(data) {
-  return data.pages.map((page) => ({
+  return data.map((page) => ({
     id:      String(page.dashboardId),
     name:    page.name,
     widgets: page.widgets.map((w) => {

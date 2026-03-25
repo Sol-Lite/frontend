@@ -210,7 +210,7 @@ const useWidgetStore = create((set) => ({
   // 빈 배열이면 INITIAL 레이아웃 유지.
   loadFromServer: (apiData) =>
     set(() => {
-      const pages = fromApiResponse(apiData)
+      const pages = fromApiResponse(Array.isArray(apiData) ? apiData : apiData.pages ?? [])
       if (pages.length === 0) return { isLoaded: true }
       const currentPage = pages[0]
       return {
