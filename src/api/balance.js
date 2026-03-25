@@ -53,3 +53,27 @@ export const useOverseasHoldings = ({ enabled = true } = {}) =>
     enabled,
     staleTime: 1000 * 30,
   })
+
+export const useBalanceSummary = ({ enabled = true } = {}) =>
+  useQuery({
+    queryKey: ['balance', 'summary'],
+    queryFn: balanceApi.getBalanceSummary,
+    enabled,
+    staleTime: 1000 * 30,
+  })
+
+export const useCashBalances = ({ enabled = true } = {}) =>
+  useQuery({
+    queryKey: ['balance', 'cash'],
+    queryFn: balanceApi.getCashBalances,
+    enabled,
+    staleTime: 1000 * 30,
+  })
+
+export const usePortfolioData = ({ enabled = true } = {}) =>
+  useQuery({
+    queryKey: ['portfolio'],
+    queryFn: balanceApi.getPortfolio,
+    enabled,
+    staleTime: 1000 * 30,
+  })
