@@ -39,19 +39,18 @@ export default function InvestBottomPanels({
   investor,
   finance,
   detailLoading,
-  isLoading,
+  dailyLoading,
+  realtimeLoading,
   errorMessage,
   onLeftTabChange,
   onRightTabChange,
-  stockCode,
-  currentPrice,
 }) {
   return (
     <div className="flex h-[210px] shrink-0 overflow-hidden border-t-2 border-stroke bg-surface">
       <section className="flex min-w-0 flex-1 flex-col overflow-hidden border-r border-stroke">
         <SectionTabs items={LEFT_TABS} activeKey={leftTab} onChange={onLeftTabChange} />
-        {leftTab === 'daily' && <DailyPriceTable rows={dailyRows} isLoading={isLoading} errorMessage={errorMessage} />}
-        {leftTab === 'realtime' && <RealtimeTradeTable rows={realtimeRows} isLoading={isLoading} errorMessage={errorMessage} />}
+        {leftTab === 'daily' && <DailyPriceTable rows={dailyRows} isLoading={dailyLoading} errorMessage={errorMessage} />}
+        {leftTab === 'realtime' && <RealtimeTradeTable rows={realtimeRows} isLoading={realtimeLoading} errorMessage={errorMessage} />}
         {leftTab === 'opinion' && <OpinionTable data={opinion} isLoading={detailLoading} />}
         {leftTab === 'investor' && <InvestorTable data={investor} isLoading={detailLoading} />}
         {leftTab === 'finance' && <FinancePanel data={finance} isLoading={detailLoading} />}

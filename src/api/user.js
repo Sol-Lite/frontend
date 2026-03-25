@@ -14,6 +14,7 @@ function request(path, method = 'GET', body = null) {
 
 export const userApi = {
   getProfile: () => request('/me', 'GET'),
+  updateProfile: (name, phone) => request('/me', 'PATCH', { name, phone }),
   changePassword: (currentPassword, newPassword) =>
     request('/me/password', 'PATCH', { currentPassword, newPassword, newPasswordConfirm: newPassword }),
 }

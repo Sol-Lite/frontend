@@ -5,6 +5,7 @@ import InvestOrderPanel from '@/components/invest/InvestOrderPanel'
 import { useBuyableAmount, useDomesticHoldings } from '@/api/balance'
 import { orderApi, ORDER_SIDE, ORDER_KIND } from '@/api/order'
 import usePinAuth from '@/hooks/usePinAuth'
+import useAuthStore from '@/store/useAuthStore'
 
 export default function InvestOrderSection({
   stockCode,
@@ -17,6 +18,7 @@ export default function InvestOrderSection({
 }) {
   const queryClient = useQueryClient()
   const { isPinCached, verifyAndCachePin } = usePinAuth()
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
 
   const [side, setSide] = useState('buy')
   const [orderType, setOrderType] = useState('market')
@@ -40,9 +42,9 @@ export default function InvestOrderSection({
     stockCode,
     marketType,
     orderPrice: orderType === 'limit' ? selectedPrice : undefined,
-    enabled: side === 'buy',
+    enabled: isAuthenticated && side === 'buy',
   })
-  const { data: holdingsData } = useDomesticHoldings({ enabled: side === 'sell' })
+  const { data: holdingsData } = useDomesticHoldings({ enabled: isAuthenticated && side === 'sell' })
 
   const availableAmount = buyableData?.availableAmount ?? 0
   const maxBuyableQuantity = buyableData?.maxBuyableQuantity ?? Math.floor(availableAmount / Math.max(unitPrice, 1))

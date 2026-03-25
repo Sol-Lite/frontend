@@ -10,6 +10,9 @@ export default function InvestPage() {
   const { stockCode: routeStockCode } = useParams()
   const { state: locationState } = useLocation()
   const stockCode = routeStockCode ?? INVEST_STOCK.code
+  const [leftTab, setLeftTab] = useState('daily')
+  const [rightTab, setRightTab] = useState('exec')
+
   const {
     stockMeta,
     currentPrice,
@@ -32,13 +35,12 @@ export default function InvestPage() {
     investor,
     finance,
     detailLoading,
+    dailyLoading,
+    realtimeLoading,
     onChartPeriodChange,
     onLoadMoreChartHistory,
     onMinuteIntervalChange,
-  } = useInvestMarketData(stockCode, locationState)
-
-  const [leftTab, setLeftTab] = useState('daily')
-  const [rightTab, setRightTab] = useState('exec')
+  } = useInvestMarketData(stockCode, locationState, { activeLeftTab: leftTab })
 
   return (
     <div className="h-full overflow-x-auto bg-surface">
@@ -85,12 +87,11 @@ export default function InvestPage() {
           investor={investor}
           finance={finance}
           detailLoading={detailLoading}
-          isLoading={marketLoading}
+          dailyLoading={dailyLoading}
+          realtimeLoading={realtimeLoading}
           errorMessage={marketErrorMessage}
           onLeftTabChange={setLeftTab}
           onRightTabChange={setRightTab}
-          stockCode={stockCode}
-          currentPrice={currentPrice}
         />
       </div>
     </div>

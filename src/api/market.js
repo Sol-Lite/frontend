@@ -56,6 +56,7 @@ export const marketApi = {
   getOpinion: (stockCode) => get(`/stocks/${stockCode}/opinion`),
   getInvestor: (stockCode) => get(`/stocks/${stockCode}/investor`),
   getFinance: (stockCode) => get(`/stocks/${stockCode}/finance`),
+  getStockInfo: (stockCode) => get(`/stocks/${stockCode}/info`),
   searchStocks: (keyword) => get('/stocks/search', { keyword }),
 }
 

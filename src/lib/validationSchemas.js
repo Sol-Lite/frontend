@@ -50,3 +50,21 @@ export const closeAccountSchema = z.object({
     message: '약관에 동의해주세요.',
   }),
 })
+
+// Update profile form schema
+export const updateProfileSchema = z.object({
+  name: z.string().min(1, '이름을 입력해주세요.').max(50, '이름은 50자 이하여야 합니다.'),
+  phone: z.string().regex(/^$|^\d{2,3}-\d{3,4}-\d{4}$/, '올바른 연락처 형식을 입력하세요 (예: 010-1234-5678)'),
+})
+
+// PIN reset confirm schema
+export const pinResetSchema = z.object({
+  newPin: pinSchema,
+  confirmPin: z.string().length(4, 'PIN은 4자리 숫자여야 합니다.'),
+}).refine(
+  (data) => data.newPin === data.confirmPin,
+  {
+    message: '새 PIN이 일치하지 않습니다.',
+    path: ['confirmPin'],
+  }
+)
