@@ -1,10 +1,41 @@
+import { useQuery } from '@tanstack/react-query'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 import WidgetCard from './WidgetCard'
-import { BALANCE } from '@/mocks/home'
+import { balanceApi, useDomesticHoldings } from '@/api/balance'
+
+function fmt(n) {
+  return Number(n ?? 0).toLocaleString('ko-KR')
+}
+
+function useBalance(enabled) {
+  const { data: holdings = [] } = useDomesticHoldings({ enabled })
+  const { data: cashData } = useQuery({
+    queryKey: ['balance', 'cash'],
+    queryFn:  balanceApi.getCashBalances,
+    enabled,
+    staleTime: 30_000,
+  })
+
+  const cash      = cashData?.krwBalance ?? cashData?.balance ?? cashData?.depositBalance ?? 0
+  const invested  = holdings.reduce((s, h) => s + (h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
+  const stockVal  = holdings.reduce((s, h) => s + (h.currentPrice ?? h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
+  const total     = stockVal + cash
+  const profit    = stockVal - invested
+  const profitRate = invested > 0 ? (profit / invested) * 100 : 0
+
+  return {
+    total:      fmt(total),
+    profit:     (profit >= 0 ? '+' : '') + fmt(Math.abs(profit)),
+    profitRate: (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%',
+    invested:   fmt(invested),
+    available:  fmt(cash),
+  }
+}
 
 export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
+  const BALANCE = useBalance(isAuthenticated && !isRestoring)
 
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>

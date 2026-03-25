@@ -1,7 +1,27 @@
 import PriceChange from '@/components/ui/PriceChange'
 import WidgetCard from './WidgetCard'
-import { HOME_INDICES } from '@/mocks/home'
 import { cn } from '@/lib/cn'
+import useMarketIndices from '@/features/market/useMarketIndices'
+
+const INDEX_META = {
+  '001':      { key: 'kospi',  label: 'KOSPI',   order: 0 },
+  '301':      { key: 'kosdaq', label: 'KOSDAQ',  order: 1 },
+  'NAS@IXIC': { key: 'nasdaq', label: 'NASDAQ',  order: 2 },
+  'SPI@SPX':  { key: 'sp500',  label: 'S&P 500', order: 3 },
+}
+
+function useIndices() {
+  const { indices: raw } = useMarketIndices()
+  return raw
+    .map((idx) => ({
+      key:    INDEX_META[idx.code]?.key   ?? idx.code,
+      label:  INDEX_META[idx.code]?.label ?? idx.code,
+      value:  Number(idx.price).toLocaleString('ko-KR'),
+      change: idx.changeRate ?? 0,
+      order:  INDEX_META[idx.code]?.order ?? 99,
+    }))
+    .sort((a, b) => a.order - b.order)
+}
 
 const BARS = [50, 55, 48, 60, 52, 58, 54, 62]
 
@@ -11,8 +31,10 @@ const WIDE_PATHS = [
 ]
 
 export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSpan = 1, onDelete }) {
+  const indices = useIndices()
+
   if (variant === 'index-sm') {
-    const kospi = HOME_INDICES[0]
+    const kospi = indices[0] ?? { key: 'kospi', label: 'KOSPI', value: '-', change: 0 }
     const isUp = kospi.change > 0
     const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
     const fill  = isUp ? 'var(--color-up-fill)' : 'var(--color-down-fill)'
@@ -35,7 +57,7 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
   }
 
   if (variant === 'index-3x1') {
-    const indices = HOME_INDICES.slice(0, 3)
+    const indices3 = indices.slice(0, 3)
     const PATHS = [
       { area: 'M0,27 L25,21 L50,14 L75,8 L100,3 L100,30 L0,30 Z',  line: '0,27 25,21 50,14 75,8 100,3'  },
       { area: 'M0,3 L25,10 L50,17 L75,22 L100,27 L100,30 L0,30 Z',  line: '0,3 25,10 50,17 75,22 100,27' },
@@ -45,7 +67,7 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
         <div className="flex flex-1 min-h-0 divide-x divide-stroke mt-1">
-          {indices.map((idx, i) => {
+          {indices3.map((idx, i) => {
             const isUp = idx.change > 0
             const { area, line } = PATHS[i]
             const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
@@ -78,7 +100,7 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
         </div>
         <div className="flex flex-col flex-1 gap-3">
-          {HOME_INDICES.slice(0, 3).map((idx) => (
+          {indices.slice(0, 3).map((idx) => (
             <div key={idx.key} className="flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <div className="text-[9px] text-foreground-disabled">{idx.label}</div>
@@ -102,12 +124,12 @@ export default function IndexWidget({ variant = 'index-wide', colSpan = 2, rowSp
   }
 
   /* index-wide (default) — 2×1: 2컬럼 SVG 라인 차트 */
-  const indices = HOME_INDICES.slice(0, 2)
+  const indices2 = indices.slice(0, 2)
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
       <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
       <div className="flex flex-1 min-h-0 divide-x divide-stroke mt-1">
-        {indices.map((idx, i) => {
+        {indices2.map((idx, i) => {
           const isUp = idx.change > 0
           const { area, line } = WIDE_PATHS[i]
           const color = isUp ? 'var(--color-up)' : 'var(--color-down)'

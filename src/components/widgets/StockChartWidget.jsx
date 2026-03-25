@@ -1,15 +1,44 @@
 import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import StockAvatar from '@/components/ui/StockAvatar'
 import PriceChange from '@/components/ui/PriceChange'
 import WidgetCard from './WidgetCard'
 import { HOME_STOCKS } from '@/mocks/home'
+import { marketApi } from '@/api/market'
+
+// config.stockId(레거시) → 종목코드 매핑
+const STOCK_CODE_MAP = {
+  samsung: '005930',
+  skhynix: '000660',
+}
 
 const PERIODS = ['1일', '1주', '1달', '3달']
 
 export default function StockChartWidget({ variant = 'stock-sm', colSpan = 1, rowSpan = 1, onDelete, config = {} }) {
   const [activePeriod, setActivePeriod] = useState('1일')
-  const stockId = config.stockId ?? 'samsung'
-  const stock = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
+
+  const stockId   = config.stockId ?? 'samsung'
+  const stockCode = config.stockCode ?? STOCK_CODE_MAP[stockId]
+  const stockMeta = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
+
+  const { data: priceData } = useQuery({
+    queryKey: ['stock', 'price', stockCode],
+    queryFn:  () => marketApi.getCurrentPrice(stockCode),
+    enabled:  !!stockCode,
+    staleTime: 5_000,
+    refetchInterval: 10_000,
+  })
+
+  const stock = {
+    ...stockMeta,
+    price:     priceData?.currentPrice != null
+                 ? Number(priceData.currentPrice).toLocaleString('ko-KR')
+                 : stockMeta.price,
+    change:    priceData?.changeRate    ?? stockMeta.change,
+    changeAmt: priceData?.changeAmount != null
+                 ? Math.abs(Number(priceData.changeAmount)).toLocaleString('ko-KR')
+                 : stockMeta.changeAmt,
+  }
   const isUp = stock.change > 0
 
   if (variant === 'stock-wide') {
