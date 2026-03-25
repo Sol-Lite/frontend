@@ -21,19 +21,26 @@ const STOCK_CODE_MAP = {
 
 const PERIODS = ['1일', '1주', '1달', '3달']
 
+function fmtVolume(v) {
+  if (v == null) return '-'
+  if (v >= 100_000_000) return `${(v / 100_000_000).toFixed(1)}억`
+  if (v >= 10_000) return `${Math.round(v / 10_000).toLocaleString('ko-KR')}만`
+  return v.toLocaleString('ko-KR')
+}
+
 export default function StockChartWidget({ instanceId, variant = 'stock-sm', colSpan = 1, rowSpan = 1, onDelete, config = {} }) {
   const [activePeriod, setActivePeriod] = useState('1일')
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
   const { mutate: saveDashboard } = useDashboardSave()
 
-  const stockId   = config.stockId ?? 'samsung'
-  const stockCode = config.stockCode ?? STOCK_CODE_MAP[stockId]
-  const stockName = config.stockName ?? null
-  const stockMeta = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
+  const stockId      = config.stockId ?? 'samsung'
+  const stockCode    = config.stockCode ?? STOCK_CODE_MAP[stockId]
+  const stockName    = config.stockName ?? null
+  const stockMeta    = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
 
-  function handleStockSave({ stockCode: newCode, stockName: newName }) {
-    updateWidgetConfig(instanceId, { stockCode: newCode, stockName: newName, stockId: undefined })
+  function handleStockSave({ stockCode: newCode, stockName: newName, marketType: newMarket }) {
+    updateWidgetConfig(instanceId, { stockCode: newCode, stockName: newName, marketType: newMarket, stockId: undefined })
     saveDashboard()
     setIsConfigOpen(false)
   }
@@ -65,9 +72,12 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     staleTime: 5 * 60 * 1000,
   })
 
-  const miniChartData = useMemo(() => {
+  const { miniChartData, latestCandle } = useMemo(() => {
     const series = normalizeDailySeries(chartRaw?.data)
-    return series.map((p) => ({ time: Math.floor(p.timestamp / 1000), value: p.close }))
+    return {
+      miniChartData: series.map((p) => ({ time: Math.floor(p.timestamp / 1000), value: p.close })),
+      latestCandle:  series[series.length - 1] ?? null,
+    }
   }, [chartRaw])
 
   const hasPrice = priceData != null
@@ -82,6 +92,13 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     changeAmt: priceData?.changeAmount != null
                  ? Math.abs(Number(priceData.changeAmount)).toLocaleString('ko-KR')
                  : '-',
+    open:       latestCandle ? Number(latestCandle.open).toLocaleString('ko-KR') : '-',
+    high:       latestCandle ? Number(latestCandle.high).toLocaleString('ko-KR') : '-',
+    low:        latestCandle ? Number(latestCandle.low).toLocaleString('ko-KR')  : '-',
+    volume:     priceData?.volume != null
+                  ? fmtVolume(priceData.volume)
+                  : latestCandle ? fmtVolume(latestCandle.volume) : '-',
+    marketType: config.marketType ?? stockMeta.market ?? null,
   }
   const isUp = stock.change > 0
 
@@ -105,7 +122,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
                   <div className="text-[11px] font-bold text-foreground leading-none">{stock.name}</div>
                   {settingsBtn}
                 </div>
-                <div className="text-[9px] text-foreground-disabled mt-0.5">{stock.code} · {stock.market}</div>
+                <div className="text-[9px] text-foreground-disabled mt-0.5">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
               </div>
               <div>
                 <div className={`text-[18px] font-bold leading-tight text-foreground`}>{stock.price}</div>
@@ -131,13 +148,13 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
           <div className="flex items-start justify-between mb-1.5 shrink-0">
             <div className="flex items-center gap-2">
-              <StockAvatar name={stock.label} color={stock.color} size="sm" />
+              <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
               <div>
                 <div className="flex items-center gap-1">
                   <div className="text-[13px] font-bold text-foreground">{stock.name}</div>
                   {settingsBtn}
                 </div>
-                <div className="text-[9px] text-foreground-disabled">{stock.code} · {stock.market}</div>
+                <div className="text-[9px] text-foreground-disabled">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
               </div>
             </div>
             <div className="text-right">
@@ -162,8 +179,8 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               { label: '시가',  val: stock.open },
               { label: '고가',  val: stock.high },
               { label: '저가',  val: stock.low  },
-              { label: '거래량', val: '12.4M'   },
-              { label: '시총',  val: '450조'    },
+              { label: '거래량', val: stock.volume },
+              { label: '시총',  val: '-'        },
             ].map(({ label, val }) => (
               <div key={label} className="text-center">
                 <div className="text-[8px] text-foreground-disabled">{label}</div>
@@ -183,7 +200,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
           <div className="flex items-start justify-between mb-1.5 shrink-0">
             <div className="flex items-center gap-2">
-              <StockAvatar name={stock.label} color={stock.color} size="sm" />
+              <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
               <div>
                 <div className="flex items-center gap-1">
                   <div className="text-[13px] font-bold text-foreground">{stock.name}</div>
