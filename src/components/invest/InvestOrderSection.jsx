@@ -22,6 +22,7 @@ export default function InvestOrderSection({
   const [orderType, setOrderType] = useState('market')
   const [quantity, setQuantity] = useState(1)
   const [selectedPrice, setSelectedPrice] = useState(defaultPrice)
+  const [confirmedUnitPrice, setConfirmedUnitPrice] = useState(null)
 
   const [step, setStep] = useState('input') // 'input' | 'confirm'
   const [showPin, setShowPin] = useState(false)
@@ -30,7 +31,10 @@ export default function InvestOrderSection({
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const marketPrice = currentPrice ?? defaultPrice
-  const unitPrice = orderType === 'limit' ? selectedPrice : marketPrice
+  const liveUnitPrice = orderType === 'limit' ? selectedPrice : marketPrice
+  const unitPrice = step === 'confirm' && confirmedUnitPrice != null
+    ? confirmedUnitPrice
+    : liveUnitPrice
 
   const { data: buyableData } = useBuyableAmount({
     stockCode,
@@ -74,16 +78,19 @@ export default function InvestOrderSection({
   }
 
   function handleSideChange(nextSide) {
+    setConfirmedUnitPrice(null)
     setSide(nextSide)
     setQuantity((prev) => Math.min(prev, getMaxOrderQuantity(nextSide)))
   }
 
   function handleOrderTypeChange(nextOrderType) {
+    setConfirmedUnitPrice(null)
     setOrderType(nextOrderType)
     setQuantity((prev) => Math.min(prev, getMaxOrderQuantity(side, nextOrderType)))
   }
 
   function handleSelectPrice(price) {
+    setConfirmedUnitPrice(null)
     setSelectedPrice(price)
     setOrderType('limit')
     setQuantity((prev) => Math.min(prev, getMaxOrderQuantity(side, 'limit', price)))
@@ -105,6 +112,7 @@ export default function InvestOrderSection({
       setShowPin(false)
       setPin('')
       setPinError('')
+      setConfirmedUnitPrice(null)
       setQuantity(1)
       queryClient.invalidateQueries({ queryKey: ['balance'] })
       queryClient.invalidateQueries({ queryKey: ['orders'] })
@@ -152,6 +160,7 @@ export default function InvestOrderSection({
 
   // 뒤로 (confirm → input)
   function handleBack() {
+    setConfirmedUnitPrice(null)
     setStep('input')
     setShowPin(false)
     setPin('')
@@ -188,7 +197,10 @@ export default function InvestOrderSection({
         onQuantityDelta={handleQuantityDelta}
         onQuantityChange={handleQuantityChange}
         onPresetApply={handleQuantityPreset}
-        onSubmit={() => setStep('confirm')}
+        onSubmit={() => {
+          setConfirmedUnitPrice(liveUnitPrice)
+          setStep('confirm')
+        }}
         onConfirm={handleConfirm}
         onBack={handleBack}
         onPinChange={setPin}
