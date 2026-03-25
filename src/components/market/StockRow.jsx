@@ -12,6 +12,7 @@ export default function StockRow({ stock, showVolume = true, isWatched, onWatchT
   const navigate = useNavigate()
   const isTop = stock.rank === 1
   const grid = showVolume ? GRID_WITH_VOL : GRID_WITHOUT_VOL
+  const secondaryMetric = stock.secondaryMetric ?? { value: '—' }
 
   return (
     <div
@@ -60,16 +61,19 @@ export default function StockRow({ stock, showVolume = true, isWatched, onWatchT
       {/* 거래대금 / 거래량 / 시가총액 */}
       {showVolume && (
         <div className="text-right text-[12px] font-medium text-foreground-secondary">
-          {stock.volume ?? '—'}
+          {stock.metricValue ?? '—'}
         </div>
       )}
 
-      {/* 거래 비율 */}
+      {/* 보조 지표 */}
       <div className="pl-2">
-        {stock.buyRatio != null
-          ? <RatioBar buyRatio={stock.buyRatio} sellRatio={stock.sellRatio} />
-          : <span className="text-[11px] text-foreground-disabled select-none">—</span>
-        }
+        {secondaryMetric.buyRatio != null
+          ? <RatioBar buyRatio={secondaryMetric.buyRatio} sellRatio={secondaryMetric.sellRatio} />
+          : (
+            <div className="text-right text-[12px] font-medium text-foreground-secondary">
+              {secondaryMetric.value ?? '—'}
+            </div>
+          )}
       </div>
     </div>
   )

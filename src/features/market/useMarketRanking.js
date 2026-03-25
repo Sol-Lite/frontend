@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { marketApi } from '@/api/market'
 import { subscribeTopic } from '@/lib/stomp'
 
@@ -30,6 +30,12 @@ function formatVolume(shares) {
   return `${n.toLocaleString('ko-KR')}주`
 }
 
+function formatPercent(value) {
+  const n = Number(value)
+  if (!Number.isFinite(n)) return null
+  return `${n > 0 ? '+' : ''}${n.toFixed(2)}%`
+}
+
 // 프론트 sortFilter key → 백엔드 type 파라미터
 const TYPE_MAP = {
   volume_value: 'trading-value',
@@ -43,34 +49,59 @@ function normalizeItem(item, sortFilter) {
   const buyRatio = item.buyRatio != null ? item.buyRatio : null
   const sellRatio = buyRatio != null ? 100 - buyRatio : null
 
-  let volume = null
-  if (sortFilter === 'volume') {
-    volume = formatVolume(item.volume)
-  } else if (sortFilter === 'volume_value') {
-    volume = formatMoney(item.tradingValue)
-  } else if (sortFilter === 'market_cap') {
-    // marketCap은 억원 단위로 내려옴
-    volume = item.marketCap != null ? formatMoney(item.marketCap * 100_000_000) : null
-  }
+  const metricValue = sortFilter === 'volume'
+    ? formatVolume(item.volume)
+    : sortFilter === 'volume_value'
+      ? formatMoney(item.tradingValue)
+      : sortFilter === 'market_cap'
+        ? item.marketCap != null ? formatMoney(item.marketCap * 100_000_000) : null
+        : null
+
+  const secondaryMetric = sortFilter === 'volume_value'
+    ? {
+        label: '전일 거래대금',
+        value: item.prevTradingValue != null ? formatMoney(item.prevTradingValue) : '—',
+      }
+    : sortFilter === 'volume'
+      ? {
+          label: '전일 거래량',
+          value: item.prevVolume != null ? formatVolume(item.prevVolume) : '—',
+        }
+      : sortFilter === 'market_cap'
+        ? {
+            label: '시장점유율',
+            value: item.marketShareRate != null ? formatPercent(item.marketShareRate) : '—',
+          }
+        : {
+            label: '거래 비율',
+            value: buyRatio != null ? null : '—',
+            buyRatio,
+            sellRatio,
+          }
 
   return {
     id: item.stockCode,
     rank: item.rank,
     name: item.name,
+    stockNameEn: item.stockNameEn ?? null,
     label: item.name.slice(0, 2),
     color: pickColor(item.stockCode),
     price: `${Number(item.price).toLocaleString('ko-KR')}원`,
     change: item.changeRate,
-    volume,
+    metricValue,
+    secondaryMetric,
     consecutiveDays: item.consecutiveDays ?? null,
     buyRatio,
     sellRatio,
     stockCode: item.stockCode,
+    market: item.market ?? item.marketType ?? null,
+    exchangeCode: item.exchangeCode ?? null,
   }
 }
 
 export default function useMarketRanking(sortFilter, marketFilter) {
   const [livePrices, setLivePrices] = useState({})
+  const subscriptionsRef = useRef(new Map())
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['market', 'ranking', sortFilter, marketFilter],
@@ -79,17 +110,19 @@ export default function useMarketRanking(sortFilter, marketFilter) {
     staleTime: 0,
   })
 
-  const stockCodes = useMemo(
-    () => (data ?? []).map((item) => item.stockCode).filter(Boolean).join(','),
-    [data],
-  )
-
   useEffect(() => {
-    if (!stockCodes) return
+    const nextCodes = new Set((data ?? []).map((item) => item.stockCode).filter(Boolean))
+    const subscriptions = subscriptionsRef.current
 
-    const codes = stockCodes.split(',')
-    const subscriptions = codes.map((code) =>
-      subscribeTopic(`/topic/stock/trade/${code}`, (msg) => {
+    subscriptions.forEach((subscription, code) => {
+      if (nextCodes.has(code)) return
+      subscription.unsubscribe()
+      subscriptions.delete(code)
+    })
+
+    nextCodes.forEach((code) => {
+      if (subscriptions.has(code)) return
+      const subscription = subscribeTopic(`/topic/stock/trade/${code}`, (msg) => {
         const body = JSON.parse(msg.body)
         setLivePrices((prev) => ({
           ...prev,
@@ -98,11 +131,18 @@ export default function useMarketRanking(sortFilter, marketFilter) {
             change: Number(body.drate),
           },
         }))
-      }),
-    )
+      })
+      subscriptions.set(code, subscription)
+    })
+  }, [data])
 
-    return () => subscriptions.forEach((s) => s.unsubscribe())
-  }, [stockCodes])
+  useEffect(() => {
+    const subscriptions = subscriptionsRef.current
+    return () => {
+      subscriptions.forEach((subscription) => subscription.unsubscribe())
+      subscriptions.clear()
+    }
+  }, [])
 
   const stocks = useMemo(
     () =>

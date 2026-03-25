@@ -13,13 +13,20 @@ const VOLUME_COL_LABEL = {
   market_cap:   '시가총액 순',
 }
 
+const SECONDARY_COL_LABEL = {
+  volume_value: '전일 거래대금',
+  volume: '전일 거래량',
+  rising: '거래 비율',
+  falling: '거래 비율',
+  market_cap: '시장점유율',
+}
+
 function MarketIndexBar() {
   const { indices } = useMarketIndices()
 
   return (
     <div className="flex items-center border-b border-stroke shrink-0 overflow-x-auto bg-surface">
       {indices.map((idx) => {
-        const isUp = idx.changeRate > 0
         return (
           <div
             key={idx.code}
@@ -70,7 +77,6 @@ const GRID_WITHOUT_VOL = 'grid-cols-[32px_36px_1fr_110px_80px_120px]'
 
 function StockTableHeader({ sortFilter }) {
   const showVolume = sortFilter in VOLUME_COL_LABEL
-  const isRankByChange = sortFilter === 'rising' || sortFilter === 'falling'
   const grid = showVolume ? GRID_WITH_VOL : GRID_WITHOUT_VOL
 
   return (
@@ -79,9 +85,9 @@ function StockTableHeader({ sortFilter }) {
       <div>순위</div>
       <div>종목명</div>
       <div className="text-right">현재가</div>
-      <div className="text-right">{isRankByChange ? '등락률 순' : '등락률'}</div>
+      <div className="text-right">등락률</div>
       {showVolume && <div className="text-right">{VOLUME_COL_LABEL[sortFilter]}</div>}
-      <div className="text-right">거래 비율</div>
+      <div className="text-right">{SECONDARY_COL_LABEL[sortFilter]}</div>
     </div>
   )
 }
