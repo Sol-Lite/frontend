@@ -47,7 +47,6 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     </button>
   )
 
-
   const { data: priceData } = useQuery({
     queryKey: ['stock', 'price', stockCode],
     queryFn:  () => marketApi.getCurrentPrice(stockCode),
