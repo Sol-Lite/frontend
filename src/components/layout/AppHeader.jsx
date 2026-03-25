@@ -6,6 +6,7 @@ import { useMyAccount } from '@/api/account'
 import useRightPanelStore from '@/store/useRightPanelStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore from '@/store/useWidgetStore'
+import { useDashboardSave } from '@/hooks/useDashboardSync'
 
 function Logo() {
   return (
@@ -69,6 +70,7 @@ function UserArea() {
 function EditModeActions() {
   const { exitEditMode, saveLayout } = useEditModeStore()
   const { restoreSnapshot, clearSnapshot } = useWidgetStore()
+  const { mutate: saveDashboard } = useDashboardSave()
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-light border border-primary-border">
@@ -82,7 +84,7 @@ function EditModeActions() {
         취소
       </button>
       <button
-        onClick={() => { clearSnapshot(); saveLayout() }}
+        onClick={() => { clearSnapshot(); saveLayout(); saveDashboard() }}
         className="px-3 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
       >
         완료 · 저장

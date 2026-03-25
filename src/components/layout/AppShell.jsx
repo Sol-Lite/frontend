@@ -15,6 +15,7 @@ import useWidgetStore, { canPlaceAt, findPushAsidePlanAt } from '@/store/useWidg
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
 import useAuthStore from '@/store/useAuthStore'
+import { useDashboardLoad } from '@/hooks/useDashboardSync'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_GAP, GRID_COLS, GRID_ROWS, gridElementRef } from '@/lib/gridConstants'
 
@@ -22,6 +23,7 @@ export default function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const openLoginModal = useAuthStore((s) => s.openLoginModal)
+  useDashboardLoad()
 
   useEffect(() => {
     if (location.state?.openAuthModal) {
