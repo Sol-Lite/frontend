@@ -1,4 +1,4 @@
-import { Star } from 'lucide-react'
+import { Heart } from 'lucide-react'
 import InvestStockChart from '@/components/market/InvestStockChart'
 import { useWatchlistSet } from '@/api/watchlist'
 import InvestStockSearch from '@/components/invest/InvestStockSearch'
@@ -89,7 +89,7 @@ export default function InvestStockOverview({
                 : 'border-stroke-input bg-surface text-foreground-secondary hover:border-primary hover:bg-primary-light hover:text-primary'
             }`}
           >
-            <Star className="h-3 w-3" fill={isWatched ? 'currentColor' : 'none'} strokeWidth={2} />
+            <Heart className="h-3 w-3" fill={isWatched ? 'currentColor' : 'none'} strokeWidth={2} />
           </button>
         </div>
       </div>

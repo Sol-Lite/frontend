@@ -24,7 +24,7 @@ export default function StockRow({ stock, showVolume = true, isWatched, onWatchT
         aria-label={isWatched ? '관심종목 해제' : '관심종목 추가'}
         onClick={(e) => { e.stopPropagation(); onWatchToggle?.(stock.id) }}
         className={`w-6 h-6 rounded-lg flex items-center justify-center transition-colors duration-[120ms] ${
-          isWatched ? 'text-up' : 'text-stroke-input hover:text-up'
+          isWatched ? 'text-primary' : 'text-stroke-input hover:text-primary'
         }`}
       >
         <Heart className="w-3.5 h-3.5" fill={isWatched ? 'currentColor' : 'none'} />
