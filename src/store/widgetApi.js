@@ -35,7 +35,10 @@ export function fromApiResponse(data) {
     id:      String(page.dashboardId),
     name:    page.name,
     widgets: page.widgets.map((w) => {
-      const parsed = w.configJson ? JSON.parse(w.configJson) : {}
+      let parsed = {}
+      if (w.configJson) {
+        try { parsed = JSON.parse(w.configJson) } catch { /* 잘못된 JSON은 빈 config로 처리 */ }
+      }
       const { variantId, ...restConfig } = parsed
       return {
         instanceId:   crypto.randomUUID(),

@@ -70,24 +70,36 @@ function UserArea() {
 function EditModeActions() {
   const { exitEditMode, saveLayout } = useEditModeStore()
   const { restoreSnapshot, clearSnapshot } = useWidgetStore()
-  const { mutate: saveDashboard } = useDashboardSave()
+  const { mutate: saveDashboard, isPending, isError } = useDashboardSave()
+
+  function handleSave() {
+    clearSnapshot()
+    // 저장 성공 시 editMode 종료, 실패 시 UI에 오류 표시
+    saveDashboard(undefined, { onSuccess: saveLayout })
+  }
+
   return (
     <div className="flex items-center gap-2">
       <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary-light border border-primary-border">
         <LayoutGrid className="w-3.5 h-3.5 text-primary" strokeWidth={2} />
         <span className="text-[12px] font-semibold text-primary">위젯 편집</span>
       </div>
+      {isError && (
+        <span className="text-[11px] text-down">저장 실패. 다시 시도해주세요.</span>
+      )}
       <button
         onClick={() => { restoreSnapshot(); exitEditMode() }}
-        className="px-3 py-1.5 rounded-xl border border-stroke-input text-[12px] text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms]"
+        disabled={isPending}
+        className="px-3 py-1.5 rounded-xl border border-stroke-input text-[12px] text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms] disabled:opacity-50"
       >
         취소
       </button>
       <button
-        onClick={() => { clearSnapshot(); saveLayout(); saveDashboard() }}
-        className="px-3 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
+        onClick={handleSave}
+        disabled={isPending}
+        className="px-3 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn disabled:opacity-50"
       >
-        완료 · 저장
+        {isPending ? '저장 중…' : '완료 · 저장'}
       </button>
     </div>
   )

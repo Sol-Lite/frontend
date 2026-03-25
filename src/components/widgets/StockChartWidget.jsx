@@ -55,8 +55,8 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     refetchInterval: 10_000,
   })
 
-  const endDate   = formatApiDate(new Date())
-  const startDate = formatApiDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000))
+  const endDate   = useMemo(() => formatApiDate(new Date()), [])
+  const startDate = useMemo(() => formatApiDate(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)), [])
 
   const { data: chartRaw } = useQuery({
     queryKey: ['stock', 'chart', 'DAILY', stockCode, startDate, endDate],
