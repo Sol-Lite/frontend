@@ -1,5 +1,5 @@
 import PriceChange from '@/components/ui/PriceChange'
-import { formatNumber } from '@/features/invest/formatters'
+import { formatNumber, formatVisiblePrice } from '@/features/invest/formatters'
 import { cn } from '@/lib/cn'
 
 export default function InvestOrderBookPanel({
@@ -8,6 +8,9 @@ export default function InvestOrderBookPanel({
   changeRate,
   orderBook,
   onSelectPrice,
+  marketType,
+  displayCurrency,
+  usdRate,
 }) {
   if (!orderBook) {
     return (
@@ -45,13 +48,13 @@ export default function InvestOrderBookPanel({
             )}
           >
             <div className="absolute inset-y-0 right-0 bg-down/10" style={{ width: `${row.depth}%` }} />
-            <span className="relative text-xs font-bold text-down">{formatNumber(row.price)}</span>
+            <span className="relative text-xs font-bold text-down">{formatVisiblePrice(row.price, { marketType, displayCurrency, usdRate })}</span>
             <span className="relative text-[10px] text-foreground-tertiary">{formatNumber(row.quantity)}</span>
           </button>
         ))}
 
         <div className="flex items-center justify-between border-y-2 border-up-border bg-up-bg px-2 py-1.5">
-          <span className="text-[15px] font-black text-up">{formatNumber(currentPrice)}</span>
+          <span className="text-[15px] font-black text-up">{formatVisiblePrice(currentPrice, { marketType, displayCurrency, usdRate })}</span>
           {changeRate != null && !Number.isNaN(changeRate) && (
             <PriceChange value={changeRate} variant="badge" />
           )}
@@ -67,7 +70,7 @@ export default function InvestOrderBookPanel({
             )}
           >
             <div className="absolute inset-y-0 right-0 bg-up/10" style={{ width: `${row.depth}%` }} />
-            <span className="relative text-xs font-bold text-up">{formatNumber(row.price)}</span>
+            <span className="relative text-xs font-bold text-up">{formatVisiblePrice(row.price, { marketType, displayCurrency, usdRate })}</span>
             <span className="relative text-[10px] text-foreground-tertiary">{formatNumber(row.quantity)}</span>
           </button>
         ))}

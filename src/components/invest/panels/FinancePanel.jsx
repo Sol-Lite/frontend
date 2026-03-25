@@ -1,4 +1,4 @@
-import { formatNumber } from '@/features/invest/formatters'
+import { formatCurrency, formatNumber } from '@/features/invest/formatters'
 
 function formatEok(value) {
   const n = Number(String(value ?? '').replace(/,/g, '').trim())
@@ -11,7 +11,7 @@ function formatEok(value) {
   return `${formatNumber(n)}억`
 }
 
-export default function FinancePanel({ data, isLoading }) {
+export default function FinancePanel({ data, isLoading, marketType, displayCurrency, usdRate }) {
   if (isLoading) {
     return <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">재무정보를 불러오는 중입니다.</div>
   }
@@ -24,8 +24,8 @@ export default function FinancePanel({ data, isLoading }) {
     { label: '시가총액', value: formatEok(data.marketCap) },
     { label: 'PER', value: data.per ? `${data.per}배` : '-' },
     { label: 'PBR', value: data.pbr ? `${data.pbr}배` : '-' },
-    { label: 'EPS', value: data.eps ? `${formatNumber(Number(data.eps))}원` : '-' },
-    { label: 'BPS', value: data.bps ? `${formatNumber(Number(data.bps))}원` : '-' },
+    { label: 'EPS', value: data.eps ? formatCurrency(Number(data.eps), { marketType, displayCurrency, usdRate }) : '-' },
+    { label: 'BPS', value: data.bps ? formatCurrency(Number(data.bps), { marketType, displayCurrency, usdRate }) : '-' },
     { label: 'ROE', value: data.roe ? `${data.roe}%` : '-' },
     { label: '자본금', value: formatEok(data.capital) },
     { label: '외국인 보유', value: data.foreignRatio ? `${data.foreignRatio}%` : '-' },

@@ -1,7 +1,7 @@
 import { cn } from '@/lib/cn'
-import { formatNumber, formatSignedPercent } from '@/features/invest/formatters'
+import { formatNumber, formatSignedPercent, formatVisiblePrice } from '@/features/invest/formatters'
 
-export default function RealtimeTradeTable({ rows, isLoading, errorMessage }) {
+export default function RealtimeTradeTable({ rows, isLoading, errorMessage, marketType, displayCurrency, usdRate }) {
   if (isLoading && rows.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">
@@ -44,7 +44,7 @@ export default function RealtimeTradeTable({ rows, isLoading, errorMessage }) {
           {rows.map((row, i) => isTick ? (
             <tr key={`${row.time}-${i}`} className="even:bg-surface-subtle hover:bg-surface-muted">
               <td className={cn('whitespace-nowrap px-2.5 py-1.5 text-right font-extrabold', row.isBuy ? 'text-up' : 'text-down')}>
-                {formatNumber(row.price)}
+                {formatVisiblePrice(row.price, { marketType, displayCurrency, usdRate })}
               </td>
               <td className={cn('whitespace-nowrap px-2.5 py-1.5 text-right font-semibold', row.isBuy ? 'text-up' : 'text-down')}>
                 {formatNumber(row.volume)}
@@ -62,7 +62,7 @@ export default function RealtimeTradeTable({ rows, isLoading, errorMessage }) {
           ) : (
             <tr key={`${row.time}-${i}`} className="even:bg-surface-subtle hover:bg-surface-muted">
               <td className={cn('whitespace-nowrap px-2.5 py-1.5 text-right font-extrabold', row.diff > 0 ? 'text-up' : row.diff < 0 ? 'text-down' : '')}>
-                {formatNumber(row.price)}
+                {formatVisiblePrice(row.price, { marketType, displayCurrency, usdRate })}
               </td>
               <td className="whitespace-nowrap px-2.5 py-1.5 text-right">
                 {row.volume}

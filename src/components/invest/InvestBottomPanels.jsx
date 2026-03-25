@@ -31,6 +31,7 @@ function SectionTabs({ items, activeKey, onChange }) {
 }
 
 export default function InvestBottomPanels({
+  stockCode,
   leftTab,
   rightTab,
   dailyRows,
@@ -44,23 +45,26 @@ export default function InvestBottomPanels({
   errorMessage,
   onLeftTabChange,
   onRightTabChange,
+  marketType,
+  displayCurrency,
+  usdRate,
 }) {
   return (
     <div className="flex h-[210px] shrink-0 overflow-hidden border-t-2 border-stroke bg-surface">
       <section className="flex min-w-0 flex-1 flex-col overflow-hidden border-r border-stroke">
         <SectionTabs items={LEFT_TABS} activeKey={leftTab} onChange={onLeftTabChange} />
-        {leftTab === 'daily' && <DailyPriceTable rows={dailyRows} isLoading={dailyLoading} errorMessage={errorMessage} />}
-        {leftTab === 'realtime' && <RealtimeTradeTable rows={realtimeRows} isLoading={realtimeLoading} errorMessage={errorMessage} />}
-        {leftTab === 'opinion' && <OpinionTable data={opinion} isLoading={detailLoading} />}
-        {leftTab === 'investor' && <InvestorTable data={investor} isLoading={detailLoading} />}
-        {leftTab === 'finance' && <FinancePanel data={finance} isLoading={detailLoading} />}
+        {leftTab === 'daily' && <DailyPriceTable rows={dailyRows} isLoading={dailyLoading} errorMessage={errorMessage} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}
+        {leftTab === 'realtime' && <RealtimeTradeTable rows={realtimeRows} isLoading={realtimeLoading} errorMessage={errorMessage} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}
+        {leftTab === 'opinion' && <OpinionTable data={opinion} isLoading={detailLoading} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}
+        {leftTab === 'investor' && <InvestorTable data={investor} isLoading={detailLoading} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}
+        {leftTab === 'finance' && <FinancePanel data={finance} isLoading={detailLoading} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}
       </section>
 
       <section className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <SectionTabs items={RIGHT_TABS} activeKey={rightTab} onChange={onRightTabChange} />
-        {rightTab === 'exec' && <ExecutionHistoryPanel />}
-        {rightTab === 'pending' && <PendingOrdersPanel />}
-        {rightTab === 'holding' && <HoldingPanel />}
+        {rightTab === 'exec' && <ExecutionHistoryPanel stockCode={stockCode} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}
+        {rightTab === 'pending' && <PendingOrdersPanel stockCode={stockCode} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}
+        {rightTab === 'holding' && <HoldingPanel displayCurrency={displayCurrency} usdRate={usdRate} />}
       </section>
     </div>
   )

@@ -10,7 +10,7 @@ import usePinAuth from '@/hooks/usePinAuth'
 import useAuthStore from '@/store/useAuthStore'
 
 
-export default function PendingOrdersPanel() {
+export default function PendingOrdersPanel({ stockCode, marketType, displayCurrency, usdRate }) {
   const queryClient = useQueryClient()
   const { isPinCached, verifyAndCachePin } = usePinAuth()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -125,16 +125,21 @@ export default function PendingOrdersPanel() {
         {rows.map((row) => {
           const isBuy = row.orderSide === 'BUY'
           const isCancelling = cancellingId === (row.orderId ?? row.id)
+          const rowMarketType = row.marketType ?? (row.stockCode === stockCode ? marketType : null)
           return (
             <div key={row.orderId ?? row.id} className="flex items-center gap-2 border-b border-stroke-subtle px-2.5 py-1.5">
               <div className="grid flex-1 grid-cols-[24px_minmax(0,1fr)_40px_60px_80px] gap-2 items-center">
-                <StockAvatar name={row.stockName ?? row.stockCode} stockCode={row.stockCode} marketType={row.marketType} size="sm" />
+                <StockAvatar name={row.stockName ?? row.stockCode} stockCode={row.stockCode} marketType={rowMarketType} size="sm" />
                 <span className="truncate text-[10px] font-semibold text-foreground">{row.stockName ?? row.stockCode}</span>
                 <span className={cn('rounded-[4px] px-1 py-0.5 text-center text-[8px] font-bold', isBuy ? 'bg-up-bg text-up' : 'bg-down-bg text-down')}>
                   {isBuy ? '매수' : '매도'}
                 </span>
                 <span className="text-[10px] text-right">{formatNumber(row.orderQuantity ?? row.quantity)}주</span>
-                <span className="text-[10px] font-semibold text-right">{row.orderKind === 'MARKET' ? '시장가' : formatCurrency(row.orderPrice)}</span>
+                <span className="text-[10px] font-semibold text-right">
+                  {row.orderKind === 'MARKET'
+                    ? '시장가'
+                    : formatCurrency(row.orderPrice, { marketType: rowMarketType, displayCurrency, usdRate })}
+                </span>
               </div>
               <button
                 disabled={isCancelling}

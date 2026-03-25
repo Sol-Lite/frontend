@@ -1,7 +1,12 @@
 import { cn } from '@/lib/cn'
-import { formatNumber, formatSignedNumber, formatDisplayDate, getDirectionClass } from '@/features/invest/formatters'
+import {
+  formatDisplayDate,
+  formatSignedNumber,
+  formatVisiblePrice,
+  getDirectionClass,
+} from '@/features/invest/formatters'
 
-export default function InvestorTable({ data, isLoading }) {
+export default function InvestorTable({ data, isLoading, marketType, displayCurrency, usdRate }) {
   if (isLoading) {
     return <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">투자자 정보를 불러오는 중입니다.</div>
   }
@@ -28,7 +33,9 @@ export default function InvestorTable({ data, isLoading }) {
           {rows.map((row, i) => (
             <tr key={`${row.date}-${i}`} className="even:bg-surface-subtle hover:bg-surface-muted">
               <td className="whitespace-nowrap px-2.5 py-1.5 text-foreground-secondary">{formatDisplayDate(row.date)}</td>
-              <td className="whitespace-nowrap px-2.5 py-1.5 text-right font-bold">{formatNumber(row.close)}</td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right font-bold">
+                {formatVisiblePrice(row.close, { marketType, displayCurrency, usdRate })}
+              </td>
               <td className={cn('whitespace-nowrap px-2.5 py-1.5 text-right font-semibold', getDirectionClass(row.foreignNetBuy))}>
                 {formatSignedNumber(row.foreignNetBuy)}
               </td>

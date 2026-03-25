@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import StockAvatar from '@/components/ui/StockAvatar'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import { cn } from '@/lib/cn'
-import { formatCurrency, formatNumber } from '@/features/invest/formatters'
+import { formatCurrency, formatNumber, formatVisiblePrice } from '@/features/invest/formatters'
 import { orderApi } from '@/api/order'
 import useAuthStore from '@/store/useAuthStore'
 
@@ -13,7 +13,7 @@ function formatTime(dateStr) {
   return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`
 }
 
-export default function ExecutionHistoryPanel() {
+export default function ExecutionHistoryPanel({ stockCode, marketType, displayCurrency, usdRate }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isRestoring = useAuthStore((s) => s.isRestoring)
   const { data, isLoading } = useQuery({
@@ -67,6 +67,7 @@ export default function ExecutionHistoryPanel() {
         const filledPrice = row.filledPrice ?? row.orderPrice ?? 0
         const filledQty = row.filledQuantity ?? row.orderQuantity ?? 0
         const total = filledPrice * filledQty
+        const rowMarketType = row.marketType ?? (row.stockCode === stockCode ? marketType : null)
 
         return (
           <div
@@ -75,17 +76,19 @@ export default function ExecutionHistoryPanel() {
           >
             <span className="text-[10px] text-foreground-disabled">{formatTime(row.filledAt ?? row.executedAt ?? row.requestedAt ?? row.createdAt)}</span>
             <div className="flex min-w-0 items-center gap-1.5">
-              <StockAvatar name={row.stockName ?? row.stockCode} stockCode={row.stockCode} marketType={row.marketType} size="sm" />
+              <StockAvatar name={row.stockName ?? row.stockCode} stockCode={row.stockCode} marketType={rowMarketType} size="sm" />
               <span className="truncate text-[10px] font-semibold text-foreground">{row.stockName ?? row.stockCode}</span>
             </div>
             <span className={cn('rounded-[4px] px-1 py-0.5 text-center text-[8px] font-bold', isBuy ? 'bg-up-bg text-up' : 'bg-down-bg text-down')}>
               {isBuy ? '매수' : '매도'}
             </span>
             <span className={cn('text-[10px] font-bold text-right', isBuy ? 'text-up' : 'text-down')}>
-              {formatNumber(filledPrice)}
+              {formatVisiblePrice(filledPrice, { marketType: rowMarketType, displayCurrency, usdRate })}
             </span>
             <span className="text-[10px] text-right">{formatNumber(filledQty)}</span>
-            <span className="text-[10px] font-semibold text-right">{formatCurrency(total)}</span>
+            <span className="text-[10px] font-semibold text-right">
+              {formatCurrency(total, { marketType: rowMarketType, displayCurrency, usdRate })}
+            </span>
           </div>
         )
       })}
