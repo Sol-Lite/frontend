@@ -23,6 +23,7 @@ function useBalance(enabled) {
     return { total: '-', profit: '-', profitRate: '-', invested: '-', available: '-', isProfit: true, isLoading: true }
   }
 
+
   const cash      = cashData?.krwBalance ?? cashData?.balance ?? cashData?.depositBalance ?? 0
   const invested  = holdings.reduce((s, h) => s + (h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
   const stockVal  = holdings.reduce((s, h) => s + (h.currentPrice ?? h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
