@@ -43,6 +43,7 @@ export default function InvestStockOverview({
 }) {
   const marketType = stockMeta.marketType ?? stockMeta.market
   const isForeignMarket = isForeignMarketType(marketType)
+
   const { watchedSet, toggle } = useWatchlistSet()
   const isWatched = watchedSet.has(stockMeta.code)
   const changeTone = getDirectionClass(changeAmount)

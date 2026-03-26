@@ -216,3 +216,8 @@ select:-webkit-autofill:focus {
     );
   }
 }
+
+/* lightweight-charts TradingView attribution 숨김 */
+.tv-lightweight-charts a[href*="tradingview"] {
+  display: none !important;
+}

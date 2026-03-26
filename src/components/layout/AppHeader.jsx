@@ -1,5 +1,5 @@
 import { Activity, LayoutGrid } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import NavTabs from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
 import { useMyAccount } from '@/api/account'
@@ -121,13 +121,15 @@ function WidgetEditButton() {
 
 export default function AppHeader() {
   const { isEditMode } = useEditModeStore()
+  const { pathname } = useLocation()
+  const isHome = pathname === '/'
 
   return (
     <header className="h-header flex items-center px-4 gap-3 bg-surface border-b border-stroke shrink-0 z-50">
       <Logo />
       <NavTabs />
       <div className="flex-1" />
-      {isEditMode ? <EditModeActions /> : <WidgetEditButton />}
+      {isHome && (isEditMode ? <EditModeActions /> : <WidgetEditButton />)}
       <UserArea />
     </header>
   )

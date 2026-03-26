@@ -721,7 +721,6 @@ function PreviewContent({ type }) {
               { label: '고가',  val: '75,800' },
               { label: '저가',  val: '73,900' },
               { label: '거래량', val: '12.4M'  },
-              { label: '시총',  val: '450조'  },
             ].map(({ label, val }) => (
               <div key={label} className="text-center">
                 <div className="text-[7px] text-foreground-disabled">{label}</div>
