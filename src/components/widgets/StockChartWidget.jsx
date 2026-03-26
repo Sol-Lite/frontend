@@ -123,7 +123,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
       ? normalizeMinuteSeries(minuteRaw?.data ?? minuteRaw)
       : normalizeDailySeries(chartRaw?.data)
     return {
-      miniChartData: series.map((p) => ({ time: Math.floor(p.timestamp / 1000), value: p.close })),
+      miniChartData: series.map((p, i) => ({ time: i, value: p.close })),
       latestCandle:  series[series.length - 1] ?? null,
     }
   }, [isMinute, minuteRaw, chartRaw])
