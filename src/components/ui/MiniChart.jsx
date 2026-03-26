@@ -6,8 +6,7 @@ function getChartColors() {
   const up        = style.getPropertyValue('--color-up').trim()                  || '#E8393E'
   const down      = style.getPropertyValue('--color-down').trim()                || '#0075E8'
   const textMuted = style.getPropertyValue('--color-foreground-disabled').trim() || '#9CA3AF'
-  const gridColor = style.getPropertyValue('--color-stroke').trim()              || '#EAECF0'
-  return { up, down, textMuted, gridColor }
+  return { up, down, textMuted }
 }
 
 /**
@@ -27,7 +26,7 @@ export default function MiniChart({ data, candleData, chartType = 'line', isMinu
     const el = ref.current
     if (!el) return
 
-    const { up, down, textMuted, gridColor } = getChartColors()
+    const { up, down, textMuted } = getChartColors()
     const lineColor = isUp ? up : down
 
     const chart = createChart(el, {
@@ -41,7 +40,7 @@ export default function MiniChart({ data, candleData, chartType = 'line', isMinu
       },
       grid: {
         vertLines: { visible: false },
-        horzLines: { color: gridColor, style: 2 },
+        horzLines: { visible: false },
       },
       leftPriceScale:  { visible: false },
       rightPriceScale: { visible: false },
