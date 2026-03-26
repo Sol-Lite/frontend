@@ -336,18 +336,15 @@ function PreviewContent({ type }) {
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
           <div className="flex flex-col gap-1.5">
             {[
-              { name: '삼성전자',   chg: '+1.62%', up: true,  pts: '0,20 8,16 16,18 24,12 32,14 40,8 48,10 56,5 64,7 72,3 80,5 88,2 100,0' },
-              { name: '현대차',     chg: '-0.43%', up: false, pts: '0,5 8,8 16,6 24,12 32,10 40,16 48,14 56,20 64,18 72,22 80,20 88,24 100,26' },
-              { name: 'LG에너지',   chg: '+0.91%', up: true,  pts: '0,22 16,18 32,20 48,13 64,15 80,8 100,4' },
-              { name: 'SK하이닉스', chg: '-0.82%', up: false, pts: '0,6 16,10 32,8 48,14 64,12 80,18 100,22' },
-              { name: 'NAVER',      chg: '-0.51%', up: false, pts: '0,8 16,12 32,10 48,15 64,13 80,19 100,21' },
-            ].map(({ name, chg, up, pts }) => (
-              <div key={name} className="flex items-center gap-1">
-                <span className="text-[10px] font-medium text-foreground truncate flex-1">{name}</span>
-                <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="w-10 h-4 shrink-0">
-                  <polyline points={pts} fill="none" stroke={up ? 'var(--color-up)' : 'var(--color-down)'} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                </svg>
-                <span className={`text-[9px] font-semibold shrink-0 ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
+              { name: '삼성전자',   chg: '+1.62%', up: true  },
+              { name: '현대차',     chg: '-0.43%', up: false },
+              { name: 'LG에너지',   chg: '+0.91%', up: true  },
+              { name: 'SK하이닉스', chg: '-0.82%', up: false },
+              { name: 'NAVER',      chg: '-0.51%', up: false },
+            ].map(({ name, chg, up }) => (
+              <div key={name} className="flex items-center justify-between">
+                <span className="text-[10px] font-medium text-foreground">{name}</span>
+                <span className={`text-[9px] font-semibold ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
               </div>
             ))}
           </div>
@@ -361,17 +358,14 @@ function PreviewContent({ type }) {
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
           <div className="flex flex-col gap-1.5">
             {[
-              { name: '삼성전자',       price: '75,400',  chg: '+1.62%', up: true,  pts: '0,20 8,16 16,18 24,12 32,14 40,8 48,10 56,5 64,7 72,3 80,5 88,2 100,0' },
-              { name: '현대차',         price: '221,500', chg: '-0.43%', up: false, pts: '0,5 8,8 16,6 24,12 32,10 40,16 48,14 56,20 64,18 72,22 80,20 88,24 100,26' },
-              { name: 'LG에너지솔루션', price: '412,000', chg: '+0.91%', up: true,  pts: '0,22 16,18 32,20 48,13 64,15 80,8 100,4' },
-              { name: 'POSCO홀딩스',    price: '378,500', chg: '+0.53%', up: true,  pts: '0,24 16,20 32,22 48,16 64,12 80,8 100,3' },
-              { name: 'SK하이닉스',     price: '182,000', chg: '-0.82%', up: false, pts: '0,6 16,10 32,8 48,14 64,12 80,18 100,22' },
-            ].map(({ name, price, chg, up, pts }) => (
-              <div key={name} className="flex items-center gap-2">
-                <span className="text-[10px] font-medium text-foreground truncate flex-1">{name}</span>
-                <svg viewBox="0 0 100 28" preserveAspectRatio="none" className="w-12 h-4 shrink-0">
-                  <polyline points={pts} fill="none" stroke={up ? 'var(--color-up)' : 'var(--color-down)'} strokeWidth="2" vectorEffect="non-scaling-stroke" />
-                </svg>
+              { name: '삼성전자',       price: '75,400',  chg: '+1.62%', up: true  },
+              { name: '현대차',         price: '221,500', chg: '-0.43%', up: false },
+              { name: 'LG에너지솔루션', price: '412,000', chg: '+0.91%', up: true  },
+              { name: 'POSCO홀딩스',    price: '378,500', chg: '+0.53%', up: true  },
+              { name: 'SK하이닉스',     price: '182,000', chg: '-0.82%', up: false },
+            ].map(({ name, price, chg, up }) => (
+              <div key={name} className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-medium text-foreground truncate">{name}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span className="text-[10px] font-semibold text-foreground">{price}</span>
                   <span className={cn('text-[9px] font-medium', up ? 'text-up' : 'text-down')}>{chg}</span>

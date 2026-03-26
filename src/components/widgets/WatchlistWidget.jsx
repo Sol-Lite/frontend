@@ -1,13 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { X } from 'lucide-react'
-import { cn } from '@/lib/cn'
 import PriceChange from '@/components/ui/PriceChange'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 import WidgetCard from './WidgetCard'
 import StockSelectModal from './StockSelectModal'
-import WatchlistSparkline from './WatchlistSparkline'
 import { useWatchlist, watchlistApi } from '@/api/watchlist'
 
 function fmtPrice(n) {
@@ -31,17 +29,11 @@ function useWatchlistMutations() {
   return { add, remove }
 }
 
-const CHART_TYPES = [
-  { key: 'line',   label: '라인' },
-  { key: 'candle', label: '캔들' },
-]
-
 export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
   const { data: items = [], isError } = useWatchlist({ enabled: isAuthenticated && !isRestoring })
   const { add, remove } = useWatchlistMutations()
   const [isAddOpen, setIsAddOpen] = useState(false)
-  const [chartType, setChartType] = useState('line')
 
   const list = items.slice(0, 5)
 
@@ -61,26 +53,6 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
     />
   )
 
-  const chartToggle = (
-    <div className="flex items-center rounded-md bg-surface-muted p-0.5">
-      {CHART_TYPES.map((t) => (
-        <button
-          key={t.key}
-          onClick={(e) => { e.stopPropagation(); setChartType(t.key) }}
-          aria-label={`${t.label} 차트`}
-          className={cn(
-            'rounded px-1.5 py-0.5 text-[9px] font-semibold transition-all',
-            chartType === t.key
-              ? 'bg-primary text-white'
-              : 'text-foreground-disabled hover:text-foreground-secondary',
-          )}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
-  )
-
   const addBtn = (
     <button
       onClick={(e) => { e.stopPropagation(); setIsAddOpen(true) }}
@@ -96,23 +68,14 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
           <div className="flex items-center justify-between mb-2 shrink-0">
             <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
-            <div className="flex items-center gap-1.5">
-              {chartToggle}
-              {addBtn}
-            </div>
+            {addBtn}
           </div>
           <div className="flex-1 flex flex-col gap-1.5 min-h-0">
             {isError
               ? <span className="text-[10px] text-foreground-disabled">불러오기에 실패했습니다</span>
               : list.length > 0 ? list.map(({ stockCode, stockName, currentPrice, changeRate }) => (
-              <div key={stockCode} className="flex items-center gap-2 group">
-                <span className="text-[10px] font-medium text-foreground truncate flex-1">{stockName}</span>
-                <WatchlistSparkline
-                  stockCode={stockCode}
-                  chartType={chartType}
-                  isUp={changeRate >= 0}
-                  className="w-14 h-5 shrink-0"
-                />
+              <div key={stockCode} className="flex items-center justify-between gap-2 group">
+                <span className="text-[10px] font-medium text-foreground truncate">{stockName}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span className="text-[10px] font-semibold text-foreground">{fmtPrice(currentPrice)}</span>
                   <PriceChange value={changeRate} className="text-[9px] font-medium" />
@@ -141,23 +104,14 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between mb-2 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
-          <div className="flex items-center gap-1.5">
-            {chartToggle}
-            {addBtn}
-          </div>
+          {addBtn}
         </div>
         <div className="flex-1 flex flex-col gap-1.5 min-h-0">
           {isError
             ? <span className="text-[10px] text-foreground-disabled">불러오기에 실패했습니다</span>
             : list.length > 0 ? list.map(({ stockCode, stockName, changeRate }) => (
-            <div key={stockCode} className="flex items-center gap-1.5 group">
-              <span className="text-[10px] font-medium text-foreground truncate flex-1">{stockName}</span>
-              <WatchlistSparkline
-                stockCode={stockCode}
-                chartType={chartType}
-                isUp={changeRate >= 0}
-                className="w-12 h-5 shrink-0"
-              />
+            <div key={stockCode} className="flex items-center justify-between group">
+              <span className="text-[10px] font-medium text-foreground truncate">{stockName}</span>
               <div className="flex items-center gap-1 shrink-0">
                 <PriceChange value={changeRate} className="text-[9px] font-semibold" />
                 <button
