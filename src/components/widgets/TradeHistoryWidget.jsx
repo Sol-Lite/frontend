@@ -14,7 +14,7 @@ function fmtPrice(n) {
 
 function fmtDate(dateStr) {
   if (!dateStr) return ''
-  const d = new Date(dateStr)
+  const d = new Date(dateStr.length === 10 ? dateStr + 'T00:00:00' : dateStr)
   return `${d.getMonth() + 1}.${d.getDate()}`
 }
 
@@ -27,7 +27,8 @@ function buildTradeMap(orders) {
   orders.forEach((o) => {
     const raw = o.executedAt ?? o.requestedAt
     if (!raw) return
-    const k = dateKey(new Date(raw))
+    const d = new Date(raw.length === 10 ? raw + 'T00:00:00' : raw)
+    const k = dateKey(d)
     if (!map[k]) map[k] = []
     map[k].push({ s: o.stockName, buy: o.orderSide === 'BUY' })
   })
@@ -53,27 +54,27 @@ function buildWeekCells(date) {
 }
 
 function useFilledOrders(enabled) {
-  const { data = [] } = useQuery({
+  const { data = [], isLoading } = useQuery({
     queryKey: ['orders', 'FILLED'],
     queryFn: () => orderApi.getOrders('FILLED'),
     enabled,
     staleTime: 30_000,
   })
-  return data
+  return { data, isLoading }
 }
 
 export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
-  const orders = useFilledOrders(isAuthenticated && !isRestoring)
+  const { data: orders, isLoading } = useFilledOrders(isAuthenticated && !isRestoring)
 
-  const now = useMemo(() => new Date(), [])
+  const now = new Date()
   const year = now.getFullYear()
   const month = now.getMonth()
   const monthLabel = `${year}년 ${month + 1}월`
 
   const tradeMap   = useMemo(() => buildTradeMap(orders), [orders])
   const monthCells = useMemo(() => buildMonthCells(year, month), [year, month])
-  const weekCells  = useMemo(() => buildWeekCells(now), [now])
+  const weekCells  = useMemo(() => buildWeekCells(now), [year, month, now.getDate()])
 
   const recentTrades = useMemo(() =>
     orders.slice(0, 10).map((o) => ({
@@ -104,7 +105,7 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
             </div>
             <div className="grid grid-cols-7 gap-0.5 flex-1 min-h-0">
               {monthCells.map((d, i) => {
-                const k = d ? `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null
+                const k = d ? dateKey(new Date(year, month, d)) : null
                 const trades = k ? (tradeMap[k] ?? null) : null
                 return (
                   <div key={i} className="flex flex-col items-start rounded p-0.5">
@@ -126,7 +127,9 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
           <div className="flex flex-col min-h-0 border-l border-stroke pl-4 shrink-0 w-[40%]">
             <span className="text-[9px] font-semibold text-foreground-disabled mb-1 shrink-0">거래 내역</span>
             <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1.5">
-              {recentTrades.length > 0 ? recentTrades.map(({ name, type, qty, price, date }) => (
+              {isLoading
+                ? <div className="text-[9px] text-foreground-disabled">불러오는 중...</div>
+                : recentTrades.length > 0 ? recentTrades.map(({ name, type, qty, price, date }) => (
                 <div key={`${name}-${date}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 min-w-0">
                     <span className={cn(
@@ -231,7 +234,9 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
       </div>
       <div className="flex-1 flex flex-col gap-1.5 min-h-0 overflow-y-auto">
-        {recentTrades.length > 0 ? recentTrades.map(({ name, type, qty, date }) => (
+        {isLoading
+          ? <div className="text-[9px] text-foreground-disabled">불러오는 중...</div>
+          : recentTrades.length > 0 ? recentTrades.map(({ name, type, qty, date }) => (
           <div key={`${name}-${date}`} className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className={cn(

@@ -31,7 +31,7 @@ function useWatchlistMutations() {
 
 export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
-  const { data: items = [] } = useWatchlist({ enabled: isAuthenticated && !isRestoring })
+  const { data: items = [], isError } = useWatchlist({ enabled: isAuthenticated && !isRestoring })
   const { add, remove } = useWatchlistMutations()
   const [isAddOpen, setIsAddOpen] = useState(false)
 
@@ -71,7 +71,9 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
             {addBtn}
           </div>
           <div className="flex-1 flex flex-col gap-1.5 min-h-0">
-            {list.length > 0 ? list.map(({ stockCode, stockName, currentPrice, changeRate }) => (
+            {isError
+              ? <span className="text-[10px] text-foreground-disabled">불러오기에 실패했습니다</span>
+              : list.length > 0 ? list.map(({ stockCode, stockName, currentPrice, changeRate }) => (
               <div key={stockCode} className="flex items-center justify-between gap-2 group">
                 <span className="text-[10px] font-medium text-foreground truncate">{stockName}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
@@ -105,7 +107,9 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
           {addBtn}
         </div>
         <div className="flex-1 flex flex-col gap-1.5 min-h-0">
-          {list.length > 0 ? list.map(({ stockCode, stockName, changeRate }) => (
+          {isError
+            ? <span className="text-[10px] text-foreground-disabled">불러오기에 실패했습니다</span>
+            : list.length > 0 ? list.map(({ stockCode, stockName, changeRate }) => (
             <div key={stockCode} className="flex items-center justify-between group">
               <span className="text-[10px] font-medium text-foreground truncate">{stockName}</span>
               <div className="flex items-center gap-1 shrink-0">
