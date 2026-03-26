@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Settings2 } from 'lucide-react'
+import { cn } from '@/lib/cn'
 import StockAvatar from '@/components/ui/StockAvatar'
 import PriceChange from '@/components/ui/PriceChange'
 import MiniChart from '@/components/ui/MiniChart'
@@ -12,6 +13,11 @@ import useWidgetStore from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import { normalizeDailySeries, normalizeMinuteSeries } from '@/features/invest/domestic/normalize'
 import { formatApiDate } from '@/features/invest/formatters'
+
+const CHART_TYPES = [
+  { key: 'line',   label: '라인' },
+  { key: 'candle', label: '캔들' },
+]
 
 // config.stockId(레거시) → 종목코드 매핑
 const STOCK_CODE_MAP = {
@@ -25,7 +31,7 @@ const PERIOD_CONFIG = {
   '1일': { type: 'minute', ncnt: 5              },
   '1주': { type: 'daily',  period: 'DAILY',   days: 7   },
   '1달': { type: 'daily',  period: 'DAILY',   days: 30  },
-  '3달': { type: 'daily',  period: 'WEEKLY',  days: 90  },
+  '3달': { type: 'weekly', period: 'WEEKLY',  days: 90  },
 }
 
 function fmtVolume(v) {
@@ -39,6 +45,7 @@ function fmtVolume(v) {
 export default function StockChartWidget({ instanceId, variant = 'stock-sm', colSpan = 1, rowSpan = 1, onDelete, config = {} }) {
   const [activePeriod, setActivePeriod] = useState('1일')
   const [isConfigOpen, setIsConfigOpen] = useState(false)
+  const [chartType, setChartType] = useState('line')
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
   const { mutate: saveDashboard } = useDashboardSave()
 
@@ -60,6 +67,26 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     >
       <Settings2 className="w-3 h-3" />
     </button>
+  )
+
+  const chartTypeToggle = (
+    <div className="flex items-center rounded-md bg-surface-muted p-0.5">
+      {CHART_TYPES.map((t) => (
+        <button
+          key={t.key}
+          onClick={(e) => { e.stopPropagation(); setChartType(t.key) }}
+          aria-label={`${t.label} 차트`}
+          className={cn(
+            'rounded px-1.5 py-0.5 text-[9px] font-semibold transition-all',
+            chartType === t.key
+              ? 'bg-primary text-white'
+              : 'text-foreground-disabled hover:text-foreground-secondary',
+          )}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
   )
 
   const { data: priceData } = useQuery({
@@ -118,12 +145,23 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     staleTime: 5 * 60 * 1000,
   })
 
-  const { miniChartData, latestCandle } = useMemo(() => {
-    const series = isMinute
+  const { miniChartData, candleData, latestCandle } = useMemo(() => {
+    let series = isMinute
       ? normalizeMinuteSeries(minuteRaw?.data ?? minuteRaw)
       : normalizeDailySeries(chartRaw?.data)
+
+    // 1일(분봉)은 오늘 세션만 표시 — API가 여러 날 반환할 수 있음
+    if (isMinute) {
+      const today = new Date()
+      const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      const todaySeries = series.filter((p) => p.sessionDate === todayKey)
+      if (todaySeries.length > 0) series = todaySeries
+    }
+
+    const toTime = (p) => Math.floor(p.timestamp / 1000)
     return {
-      miniChartData: series.map((p, i) => ({ time: i, value: p.close })),
+      miniChartData: series.map((p) => ({ time: toTime(p), value: p.close })),
+      candleData:    series.map((p) => ({ time: toTime(p), open: p.open, high: p.high, low: p.low, close: p.close })),
       latestCandle:  series[series.length - 1] ?? null,
     }
   }, [isMinute, minuteRaw, chartRaw])
@@ -181,8 +219,9 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
                   : <div className="text-[10px] text-foreground-disabled">-</div>
                 }
               </div>
+              {chartTypeToggle}
             </div>
-            <MiniChart data={miniChartData} isUp={isUp} className="flex-1 min-h-0" />
+            <MiniChart data={miniChartData} candleData={candleData} chartType={chartType} isMinute={isMinute} isUp={isUp} className="flex-1 min-h-0" />
           </div>
         </WidgetCard>
         {selectModal}
@@ -210,18 +249,21 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               <PriceChange value={stock.change} className="text-[10px]" />
             </div>
           </div>
-          <div className="flex gap-1.5 shrink-0 mb-1.5">
-            {PERIODS.map((p) => (
-              <button
-                key={p}
-                onClick={(e) => { e.stopPropagation(); setActivePeriod(p) }}
-                className={`text-[9px] px-1.5 py-0.5 rounded font-medium transition-colors duration-[150ms] ${activePeriod === p ? 'bg-primary-light text-primary' : 'text-foreground-disabled hover:text-foreground'}`}
-              >
-                {p}
-              </button>
-            ))}
+          <div className="flex items-center justify-between shrink-0 mb-1.5">
+            <div className="flex gap-1.5">
+              {PERIODS.map((p) => (
+                <button
+                  key={p}
+                  onClick={(e) => { e.stopPropagation(); setActivePeriod(p) }}
+                  className={`text-[9px] px-1.5 py-0.5 rounded font-medium transition-colors duration-[150ms] ${activePeriod === p ? 'bg-primary-light text-primary' : 'text-foreground-disabled hover:text-foreground'}`}
+                >
+                  {p}
+                </button>
+              ))}
+            </div>
+            {chartTypeToggle}
           </div>
-          <MiniChart data={miniChartData} isUp={isUp} className="flex-1 min-h-0 rounded-xl" />
+          <MiniChart data={miniChartData} candleData={candleData} chartType={chartType} isMinute={isMinute} isUp={isUp} className="flex-1 min-h-0 rounded-xl" />
           <div className="flex justify-between shrink-0 mt-1.5">
             {[
               { label: '시가',  val: stock.open },
@@ -261,7 +303,10 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               <PriceChange value={stock.change} className="text-[10px]" />
             </div>
           </div>
-          <MiniChart data={miniChartData} isUp={isUp} className="flex-1 min-h-0 rounded-xl my-1.5" />
+          <div className="flex justify-end shrink-0 mt-0.5 mb-1">
+            {chartTypeToggle}
+          </div>
+          <MiniChart data={miniChartData} candleData={candleData} chartType={chartType} isMinute={isMinute} isUp={isUp} className="flex-1 min-h-0 rounded-xl mb-1.5" />
           <div className="flex justify-between shrink-0">
             {[
               { label: '시가', val: stock.open },

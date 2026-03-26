@@ -101,7 +101,6 @@ function PreviewContent({ type }) {
           </div>
           <div className="flex-1 min-h-0">
             <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-              <path d="M0,28 L8,24 L16,26 L24,20 L32,22 L40,16 L48,18 L56,12 L64,14 L72,8 L80,10 L88,5 L100,2 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
               <polyline points="0,28 8,24 16,26 24,20 32,22 40,16 48,18 56,12 64,14 72,8 80,10 88,5 100,2" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             </svg>
           </div>
@@ -521,7 +520,6 @@ function PreviewContent({ type }) {
               <div className="text-[8px] text-foreground-disabled shrink-0">수익 추이 (30일)</div>
               <div className="flex-1 min-h-0 my-1">
                 <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-                  <path d="M0,27 L12,23 L24,25 L36,18 L50,14 L62,10 L74,7 L86,4 L100,1 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
                   <polyline points="0,27 12,23 24,25 36,18 50,14 62,10 74,7 86,4 100,1" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
                 </svg>
               </div>
@@ -555,7 +553,6 @@ function PreviewContent({ type }) {
           </div>
           <div className="flex-1 min-h-0 bg-background rounded-lg overflow-hidden">
             <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-              <path d="M0,27 L10,22 L20,24 L30,18 L40,20 L50,13 L60,15 L70,8 L80,10 L90,5 L100,2 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
               <polyline points="0,27 10,22 20,24 30,18 40,20 50,13 60,15 70,8 80,10 90,5 100,2" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             </svg>
           </div>
@@ -583,7 +580,6 @@ function PreviewContent({ type }) {
           </div>
           <div className="flex-1 min-h-0 overflow-hidden">
             <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-              <path d="M0,28 L6,25 L12,26 L20,21 L28,23 L36,17 L44,19 L52,13 L60,15 L68,9 L76,11 L84,5 L92,7 L100,3 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
               <polyline points="0,28 6,25 12,26 20,21 28,23 36,17 44,19 52,13 60,15 68,9 76,11 84,5 92,7 100,3" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             </svg>
           </div>
@@ -711,7 +707,6 @@ function PreviewContent({ type }) {
           </div>
           <div className="flex-1 min-h-0 overflow-hidden">
             <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-              <path d="M0,27 L10,24 L20,25 L30,19 L40,21 L50,15 L60,17 L70,10 L80,12 L90,6 L100,3 L100,30 L0,30 Z" fill="rgba(232,57,62,0.15)" />
               <polyline points="0,27 10,24 20,25 30,19 40,21 50,15 60,17 70,10 80,12 90,6 100,3" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             </svg>
           </div>
