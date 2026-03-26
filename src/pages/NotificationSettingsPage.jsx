@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Check } from 'lucide-react'
 import { notificationApi } from '@/api/notification'
@@ -41,7 +41,12 @@ export default function NotificationSettingsPage() {
   const [loadError, setLoadError] = useState(false)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const savedTimerRef = useRef(null)
   const [saveError, setSaveError] = useState('')
+
+  useEffect(() => {
+    return () => clearTimeout(savedTimerRef.current)
+  }, [])
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -100,7 +105,8 @@ export default function NotificationSettingsPage() {
         defaultThresholdPercent: percent,
       })
       setSaved(true)
-      setTimeout(() => setSaved(false), 2000)
+      clearTimeout(savedTimerRef.current)
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000)
     } catch (err) {
       console.warn('[Notification] 설정 저장 실패:', err?.message)
       setSaveError('설정 저장에 실패했습니다.')

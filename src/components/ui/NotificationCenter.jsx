@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Bell, Settings2, CheckCheck, Loader } from 'lucide-react'
+import { Bell, Settings2, CheckCheck, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useAuthStore from '@/store/useAuthStore'
 import useNotificationStore from '@/store/useNotificationStore'
@@ -37,7 +37,7 @@ function NotificationItem({ notification, onClose }) {
     >
       <div className="flex items-start gap-2.5">
         <span
-          className={`mt-[7px] w-1.5 h-1.5 rounded-full shrink-0 ${!notification.read ? 'bg-primary' : 'bg-transparent'}`}
+          className={`mt-2 w-1.5 h-1.5 rounded-full shrink-0 ${!notification.read ? 'bg-primary' : 'bg-transparent'}`}
         />
         <div className="min-w-0">
           <p className="text-[13px] font-semibold text-foreground leading-snug truncate">
@@ -133,7 +133,7 @@ export default function NotificationCenter() {
 
       {/* 드롭다운 — z-[60]: 헤더(z-50) 위, 모달 아래 */}
       {isOpen && (
-        <div className="absolute right-0 top-full mt-2 w-80 bg-surface rounded-xl border border-stroke shadow-lg z-[60] overflow-hidden">
+        <div className="absolute right-0 top-full mt-2 w-80 bg-surface rounded-xl border border-stroke shadow-dropdown z-[60] overflow-hidden">
           {/* 헤더 */}
           <div className="flex items-center justify-between px-4 py-3 border-b border-stroke">
             <span className="text-[14px] font-bold text-foreground">알림센터</span>
@@ -161,7 +161,7 @@ export default function NotificationCenter() {
           <div className="max-h-80 overflow-y-auto">
             {isLoading ? (
               <div className="py-10 flex justify-center">
-                <Loader className="w-4 h-4 text-foreground-disabled animate-spin" strokeWidth={2} />
+                <Loader2 className="w-4 h-4 text-foreground-disabled animate-spin" strokeWidth={2} />
               </div>
             ) : notifications.length === 0 ? (
               <div className="py-10 text-center text-[13px] text-foreground-disabled">

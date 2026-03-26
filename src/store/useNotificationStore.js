@@ -43,20 +43,18 @@ const useNotificationStore = create((set, get) => ({
     }))
   },
 
-  markAsRead: async (notificationId) => {
+  markAsRead: (notificationId) => {
     const target = get().notifications.find((n) => n.notificationId === notificationId)
     const wasUnread = target && !target.read
-    try {
-      await notificationApi.markAsRead(notificationId)
-      set((state) => ({
-        notifications: state.notifications.map((n) =>
-          n.notificationId === notificationId ? { ...n, read: true } : n,
-        ),
-        unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
-      }))
-    } catch (err) {
+    set((state) => ({
+      notifications: state.notifications.map((n) =>
+        n.notificationId === notificationId ? { ...n, read: true } : n,
+      ),
+      unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+    }))
+    notificationApi.markAsRead(notificationId).catch((err) => {
       console.warn('[Notification] 읽음 처리 실패:', err?.message)
-    }
+    })
   },
 
   markAllAsRead: async () => {
