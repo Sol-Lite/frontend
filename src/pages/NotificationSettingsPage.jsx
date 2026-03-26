@@ -113,7 +113,7 @@ export default function NotificationSettingsPage() {
     return (
       <div className="max-w-lg mx-auto px-4 py-8">
         <div className="flex items-center gap-3 mb-8">
-          <button onClick={() => navigate(-1)} className="p-1.5 rounded-lg hover:bg-surface-muted transition-colors">
+          <button onClick={() => navigate(-1)} aria-label="뒤로" className="p-1.5 rounded-lg hover:bg-surface-muted transition-colors">
             <ArrowLeft className="w-5 h-5 text-foreground-secondary" strokeWidth={2} />
           </button>
           <h1 className="text-[18px] font-bold text-foreground">알림 설정</h1>
@@ -137,6 +137,7 @@ export default function NotificationSettingsPage() {
       <div className="flex items-center gap-3 mb-8">
         <button
           onClick={() => navigate(-1)}
+          aria-label="뒤로"
           className="p-1.5 rounded-lg hover:bg-surface-muted transition-colors"
         >
           <ArrowLeft className="w-5 h-5 text-foreground-secondary" strokeWidth={2} />
