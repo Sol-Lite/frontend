@@ -1,5 +1,6 @@
-import { Star } from 'lucide-react'
+import { Heart } from 'lucide-react'
 import InvestStockChart from '@/components/market/InvestStockChart'
+import { useWatchlistSet } from '@/api/watchlist'
 import InvestStockSearch from '@/components/invest/InvestStockSearch'
 import LiveDot from '@/components/ui/LiveDot'
 import PriceChange from '@/components/ui/PriceChange'
@@ -42,6 +43,8 @@ export default function InvestStockOverview({
 }) {
   const marketType = stockMeta.marketType ?? stockMeta.market
   const isForeignMarket = isForeignMarketType(marketType)
+  const { watchedSet, toggle } = useWatchlistSet()
+  const isWatched = watchedSet.has(stockMeta.code)
   const changeTone = getDirectionClass(changeAmount)
 
   return (
@@ -109,10 +112,15 @@ export default function InvestStockOverview({
           </div>
           <button
             type="button"
-            aria-label="관심 종목"
-            className="shrink-0 rounded-full border-[1.5px] border-stroke-input bg-surface px-2 py-1 text-[10px] font-semibold text-foreground-secondary transition-colors hover:border-primary hover:bg-primary-light hover:text-primary"
+            aria-label={isWatched ? '관심종목 해제' : '관심종목 추가'}
+            onClick={() => toggle(stockMeta.code)}
+            className={`shrink-0 rounded-full border-[1.5px] px-2 py-1 text-[10px] font-semibold transition-colors ${
+              isWatched
+                ? 'border-primary bg-primary-light text-primary'
+                : 'border-stroke-input bg-surface text-foreground-secondary hover:border-primary hover:bg-primary-light hover:text-primary'
+            }`}
           >
-            <Star className="h-3 w-3" strokeWidth={2} />
+            <Heart className="h-3 w-3" fill={isWatched ? 'currentColor' : 'none'} strokeWidth={2} />
           </button>
         </div>
       </div>
