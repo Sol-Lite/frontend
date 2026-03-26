@@ -146,9 +146,18 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   })
 
   const { miniChartData, candleData, latestCandle } = useMemo(() => {
-    const series = isMinute
+    let series = isMinute
       ? normalizeMinuteSeries(minuteRaw?.data ?? minuteRaw)
       : normalizeDailySeries(chartRaw?.data)
+
+    // 1일(분봉)은 오늘 세션만 표시 — API가 여러 날 반환할 수 있음
+    if (isMinute) {
+      const today = new Date()
+      const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
+      const todaySeries = series.filter((p) => p.sessionDate === todayKey)
+      if (todaySeries.length > 0) series = todaySeries
+    }
+
     const toTime = (p) => Math.floor(p.timestamp / 1000)
     return {
       miniChartData: series.map((p) => ({ time: toTime(p), value: p.close })),
