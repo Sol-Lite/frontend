@@ -149,9 +149,10 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     const series = isMinute
       ? normalizeMinuteSeries(minuteRaw?.data ?? minuteRaw)
       : normalizeDailySeries(chartRaw?.data)
+    const toTime = (p) => Math.floor(p.timestamp / 1000)
     return {
-      miniChartData: series.map((p, i) => ({ time: i, value: p.close })),
-      candleData:    series.map((p, i) => ({ time: i, open: p.open, high: p.high, low: p.low, close: p.close })),
+      miniChartData: series.map((p) => ({ time: toTime(p), value: p.close })),
+      candleData:    series.map((p) => ({ time: toTime(p), open: p.open, high: p.high, low: p.low, close: p.close })),
       latestCandle:  series[series.length - 1] ?? null,
     }
   }, [isMinute, minuteRaw, chartRaw])
@@ -211,7 +212,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               </div>
               {chartTypeToggle}
             </div>
-            <MiniChart data={miniChartData} candleData={candleData} chartType={chartType} isUp={isUp} className="flex-1 min-h-0" />
+            <MiniChart data={miniChartData} candleData={candleData} chartType={chartType} isMinute={isMinute} isUp={isUp} className="flex-1 min-h-0" />
           </div>
         </WidgetCard>
         {selectModal}
@@ -253,7 +254,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
             </div>
             {chartTypeToggle}
           </div>
-          <MiniChart data={miniChartData} candleData={candleData} chartType={chartType} isUp={isUp} className="flex-1 min-h-0 rounded-xl" />
+          <MiniChart data={miniChartData} candleData={candleData} chartType={chartType} isMinute={isMinute} isUp={isUp} className="flex-1 min-h-0 rounded-xl" />
           <div className="flex justify-between shrink-0 mt-1.5">
             {[
               { label: '시가',  val: stock.open },
@@ -296,7 +297,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
           <div className="flex justify-end shrink-0 mt-0.5 mb-1">
             {chartTypeToggle}
           </div>
-          <MiniChart data={miniChartData} candleData={candleData} chartType={chartType} isUp={isUp} className="flex-1 min-h-0 rounded-xl mb-1.5" />
+          <MiniChart data={miniChartData} candleData={candleData} chartType={chartType} isMinute={isMinute} isUp={isUp} className="flex-1 min-h-0 rounded-xl mb-1.5" />
           <div className="flex justify-between shrink-0">
             {[
               { label: '시가', val: stock.open },

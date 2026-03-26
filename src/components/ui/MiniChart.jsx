@@ -3,9 +3,11 @@ import { CandlestickSeries, LineSeries, createChart } from 'lightweight-charts'
 
 function getChartColors() {
   const style = getComputedStyle(document.documentElement)
-  const up   = style.getPropertyValue('--color-up').trim()   || '#E8393E'
-  const down = style.getPropertyValue('--color-down').trim() || '#0075E8'
-  return { up, down }
+  const up        = style.getPropertyValue('--color-up').trim()                  || '#E8393E'
+  const down      = style.getPropertyValue('--color-down').trim()                || '#0075E8'
+  const textMuted = style.getPropertyValue('--color-foreground-disabled').trim() || '#9CA3AF'
+  const gridColor = style.getPropertyValue('--color-stroke').trim()              || '#EAECF0'
+  return { up, down, textMuted, gridColor }
 }
 
 /**
@@ -13,10 +15,11 @@ function getChartColors() {
  * @param {{ time: number, value: number }[]}                    data        - 라인용 (unix seconds)
  * @param {{ time: number, open, high, low, close: number }[]}  candleData  - 캔들용 (unix seconds)
  * @param {'line'|'candle'} chartType
+ * @param {boolean} isMinute  - true면 X축에 시간(HH:MM), false면 날짜(M/D)
  * @param {boolean} isUp
  * @param {string}  className
  */
-export default function MiniChart({ data, candleData, chartType = 'line', isUp, className = '' }) {
+export default function MiniChart({ data, candleData, chartType = 'line', isMinute = false, isUp, className = '' }) {
   const ref       = useRef(null)
   const seriesRef = useRef(null)
 
@@ -24,23 +27,46 @@ export default function MiniChart({ data, candleData, chartType = 'line', isUp, 
     const el = ref.current
     if (!el) return
 
-    const { up, down } = getChartColors()
+    const { up, down, textMuted, gridColor } = getChartColors()
     const lineColor = isUp ? up : down
 
     const chart = createChart(el, {
       width:  el.clientWidth,
       height: el.clientHeight,
       layout: {
-        background: { color: 'transparent' },
-        textColor:  'transparent',
+        background:  { color: 'transparent' },
+        textColor:   textMuted,
+        fontFamily:  'Pretendard, -apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, sans-serif',
+        fontSize:    9,
       },
       grid: {
         vertLines: { visible: false },
-        horzLines: { visible: false },
+        horzLines: { color: gridColor, style: 2 },
       },
       leftPriceScale:  { visible: false },
       rightPriceScale: { visible: false },
-      timeScale:       { visible: false },
+      timeScale: {
+        visible:        true,
+        timeVisible:    isMinute,
+        secondsVisible: false,
+        borderVisible:  false,
+        ticksVisible:   false,
+        fixLeftEdge:    true,
+        fixRightEdge:   true,
+        tickMarkFormatter: (time, tickMarkType) => {
+          const d = new Date(time * 1000)
+          if (isMinute) {
+            const hh = String(d.getHours()).padStart(2, '0')
+            const mm = String(d.getMinutes()).padStart(2, '0')
+            return `${hh}:${mm}`
+          }
+          if (tickMarkType <= 1) {
+            // Year or Month tick
+            return `${d.getMonth() + 1}월`
+          }
+          return `${d.getMonth() + 1}/${d.getDate()}`
+        },
+      },
       crosshair: {
         vertLine: { visible: false, labelVisible: false },
         horzLine: { visible: false, labelVisible: false },
@@ -94,7 +120,7 @@ export default function MiniChart({ data, candleData, chartType = 'line', isUp, 
       chart.remove()
       seriesRef.current = null
     }
-  }, [data, candleData, chartType]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, candleData, chartType, isMinute]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // 라인 모드: isUp 변경 시 색상만 업데이트
   useEffect(() => {
