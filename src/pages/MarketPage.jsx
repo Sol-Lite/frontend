@@ -52,16 +52,21 @@ function MarketIndexBar() {
 
 function FilterBar({ marketFilter, setMarketFilter, sortFilter, setSortFilter }) {
   return (
-    <div className="flex items-center gap-2 px-4 py-2 border-b border-stroke shrink-0 bg-surface">
-      <div className="flex gap-1 shrink-0">
-        {MARKET_FILTERS.map(({ key, label }) => (
-          <FilterChip key={key} isActive={marketFilter === key} onClick={() => setMarketFilter(key)}>
-            {label}
-          </FilterChip>
-        ))}
-      </div>
-      <div className="w-px h-4 bg-stroke-input shrink-0" />
-      <div className="flex gap-1 shrink-0">
+    <div className="flex items-center gap-3 px-4 py-1.5 border-b border-stroke shrink-0 bg-surface">
+      {MARKET_FILTERS.map(({ key, label }) => (
+        <button
+          key={key}
+          onClick={() => setMarketFilter(key)}
+          className={`text-[12px] font-semibold pb-1 border-b-2 transition-colors ${
+            marketFilter === key
+              ? 'text-foreground border-primary'
+              : 'text-foreground-disabled border-transparent hover:text-foreground'
+          }`}
+        >
+          {label}
+        </button>
+      ))}
+      <div className="ml-auto flex items-center gap-1.5">
         {SORT_FILTERS.map(({ key, label }) => (
           <FilterChip key={key} isActive={sortFilter === key} onClick={() => setSortFilter(key)}>
             {label}
@@ -72,15 +77,15 @@ function FilterBar({ marketFilter, setMarketFilter, sortFilter, setSortFilter })
   )
 }
 
-const GRID_WITH_VOL    = 'grid-cols-[32px_36px_1fr_110px_80px_88px_120px]'
-const GRID_WITHOUT_VOL = 'grid-cols-[32px_36px_1fr_110px_80px_120px]'
+const GRID_WITH_VOL    = 'grid-cols-[32px_40px_2fr_1.5fr_1fr_1fr_1.5fr]'
+const GRID_WITHOUT_VOL = 'grid-cols-[32px_40px_2fr_1.5fr_1fr_1.5fr]'
 
 function StockTableHeader({ sortFilter }) {
   const showVolume = sortFilter in VOLUME_COL_LABEL
   const grid = showVolume ? GRID_WITH_VOL : GRID_WITHOUT_VOL
 
   return (
-    <div className={`grid ${grid} items-center px-4 py-2 bg-surface-subtle border-b border-stroke text-[10px] font-semibold text-foreground-disabled`}>
+    <div className={`grid ${grid} items-center px-4 py-2.5 border-b border-stroke-subtle text-[10px] font-semibold text-foreground-disabled`}>
       <div />
       <div>순위</div>
       <div>종목명</div>

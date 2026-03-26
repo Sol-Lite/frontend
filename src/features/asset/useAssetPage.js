@@ -83,13 +83,21 @@ export function useAssetPage(enabled) {
       + overseasRows.reduce((s, h) => s + h.evalKrw - h.pnl, 0)
 
     const totalAssets = krwDeposit + usdBal * usdRate + totalStockKrw
-    const profit = totalStockKrw - totalInvestedKrw
-    const profitRate = totalInvestedKrw > 0 ? (profit / totalInvestedKrw) * 100 : 0
-    const isProfit = profit >= 0
 
-    // Simulation
+    // 헤더: 백엔드 계좌 손익 (초기금 1억 대비)
+    const accountProfit = Number(summary?.accountProfitLoss ?? (totalStockKrw - totalInvestedKrw))
+    const accountProfitRate = Number(summary?.accountProfitLossRate ?? 0)
+    const isAccountProfit = accountProfit >= 0
+
+    // 포트폴리오 차트: 보유 주식 매입금 대비 손익률
+    const stockProfitRate = Number(summary?.totalStockUnrealizedProfitLossRate ?? 0)
+    const isStockProfit = stockProfitRate >= 0
+
+    // Simulation (AccountCard - 초기금 대비 수익률, 백엔드 값 우선)
     const startDate = accountInfo?.createdAt ? new Date(accountInfo.createdAt) : null
-    const simReturn = totalAssets > 0 ? ((totalAssets - SEED_MONEY) / SEED_MONEY) * 100 : 0
+    const simReturn = accountProfitRate !== 0
+      ? accountProfitRate
+      : totalAssets > 0 ? ((totalAssets - SEED_MONEY) / SEED_MONEY) * 100 : 0
     const isSimProfit = simReturn >= 0
 
     // Portfolio chart items — stocks first, cash last
@@ -121,9 +129,11 @@ export function useAssetPage(enabled) {
       isLoading,
       // Summary
       totalAssets,
-      profit,
-      profitRate,
-      isProfit,
+      accountProfit,
+      accountProfitRate,
+      isAccountProfit,
+      stockProfitRate,
+      isStockProfit,
       krwDeposit,
       krwAvailable,
       usdBal,

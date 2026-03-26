@@ -28,7 +28,7 @@ function fmtRate(r) {
 
 // ── Hero 섹션 ─────────────────────────────────────────────────────
 function HeroSection({ data, user, onExchange }) {
-  const { isLoading, totalAssets, profit, profitRate, isProfit, krwDeposit, krwAvailable, usdBal } = data
+  const { isLoading, totalAssets, accountProfit, accountProfitRate, isAccountProfit, krwDeposit, krwAvailable, usdBal } = data
   const blank = isLoading ? '-' : null
 
   return (
@@ -45,11 +45,11 @@ function HeroSection({ data, user, onExchange }) {
             <span className="text-[13px] text-foreground-disabled">원</span>
           </div>
           <div className="flex items-center gap-1.5 mt-1.5">
-            <span className={`text-[13px] font-bold ${isProfit ? 'text-up' : 'text-down'}`}>
-              {blank ?? ((isProfit ? '+' : '') + fmt(Math.abs(profit ?? 0)) + '원')}
+            <span className={`text-[13px] font-bold ${isAccountProfit ? 'text-up' : 'text-down'}`}>
+              {blank ?? ((isAccountProfit ? '+' : '') + fmt(accountProfit ?? 0) + '원')}
             </span>
-            <span className={`text-[11px] font-semibold ${isProfit ? 'text-up' : 'text-down'}`}>
-              {blank ?? fmtRate(profitRate)}
+            <span className={`text-[11px] font-semibold ${isAccountProfit ? 'text-up' : 'text-down'}`}>
+              {blank ?? fmtRate(accountProfitRate)}
             </span>
           </div>
         </div>
@@ -173,7 +173,7 @@ function AssetBreakdownCard({ data }) {
 
 // ── 자산 흐름 카드 ────────────────────────────────────────────────
 function AssetFlowCard({ data }) {
-  const { tradeCount, profit, isProfit, isLoading } = data
+  const { tradeCount, accountProfit, isAccountProfit, isLoading } = data
 
   // 거래 횟수 기반 간단한 bar sparkline (시각적 표현)
   const bars = [28, 35, 30, 45, 40, 55, 50, 62, 58, 70, 65, 78, 72, 85, 80, 92, 88, 96, 90, 100]
@@ -190,7 +190,7 @@ function AssetFlowCard({ data }) {
         {bars.map((h, i) => (
           <div
             key={i}
-            className={`flex-1 rounded-sm ${isProfit ? 'bg-up/40' : 'bg-down/40'}`}
+            className={`flex-1 rounded-sm ${isAccountProfit ? 'bg-up/40' : 'bg-down/40'}`}
             style={{ height: `${h}%` }}
           />
         ))}
@@ -200,8 +200,8 @@ function AssetFlowCard({ data }) {
 
       <div className="flex items-center justify-between">
         <span className="text-[10px] text-foreground-disabled">총 평가손익</span>
-        <span className={`text-[14px] font-black ${isProfit ? 'text-up' : 'text-down'}`}>
-          {isLoading ? '-' : ((isProfit ? '+' : '') + fmt(Math.abs(profit ?? 0)) + '원')}
+        <span className={`text-[14px] font-black ${isAccountProfit ? 'text-up' : 'text-down'}`}>
+          {isLoading ? '-' : ((isAccountProfit ? '+' : '') + fmt(accountProfit ?? 0) + '원')}
         </span>
       </div>
     </div>
@@ -250,7 +250,7 @@ function useLogoColors(items) {
 
 // ── 포트폴리오 파이차트 패널 (하단 좌) ───────────────────────────
 function PortfolioPanel({ data }) {
-  const { portfolioItems, profitRate, isProfit, isLoading } = data
+  const { portfolioItems, stockProfitRate, isStockProfit, isLoading } = data
 
   const getColor = useLogoColors(portfolioItems)
   const hasItems = portfolioItems.length > 0
@@ -309,8 +309,8 @@ function PortfolioPanel({ data }) {
       <div className="flex items-center justify-between mb-2 shrink-0">
         <div className="text-[11px] font-bold text-foreground">포트폴리오</div>
         {!isLoading && (
-          <span className={`text-[11px] font-bold ${isProfit ? 'text-up' : 'text-down'}`}>
-            수익률 {fmtRate(profitRate)}
+          <span className={`text-[11px] font-bold ${isStockProfit ? 'text-up' : 'text-down'}`}>
+            수익률 {fmtRate(stockProfitRate)}
           </span>
         )}
       </div>
@@ -325,8 +325,8 @@ function PortfolioPanel({ data }) {
               opts={{ renderer: 'svg' }}
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className={`text-[15px] font-black ${isProfit ? 'text-up' : 'text-down'}`}>
-                {isLoading ? '-' : fmtRate(profitRate)}
+              <span className={`text-[15px] font-black ${isStockProfit ? 'text-up' : 'text-down'}`}>
+                {isLoading ? '-' : fmtRate(stockProfitRate)}
               </span>
               <span className="text-[9px] text-foreground-disabled mt-0.5">수익률</span>
             </div>
