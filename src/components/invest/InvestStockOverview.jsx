@@ -10,8 +10,11 @@ import {
   MINUTE_INTERVAL_OPTIONS,
 } from '@/features/invest/constants'
 import {
-  formatNumber,
+  DISPLAY_CURRENCY,
+  formatSignedVisiblePrice,
+  formatVisiblePrice,
   getDirectionClass,
+  isForeignMarketType,
 } from '@/features/invest/formatters'
 import { getChartPeriodLabel } from '@/features/invest/marketData'
 import { cn } from '@/lib/cn'
@@ -34,11 +37,16 @@ export default function InvestStockOverview({
   onMinuteIntervalChange,
   isLoading,
   errorMessage,
+  displayCurrency,
+  usdRate,
+  onDisplayCurrencyChange,
 }) {
+  const marketType = stockMeta.marketType ?? stockMeta.market
+  const isForeignMarket = isForeignMarketType(marketType)
+
   const { watchedSet, toggle } = useWatchlistSet()
   const isWatched = watchedSet.has(stockMeta.code)
   const changeTone = getDirectionClass(changeAmount)
-  const changeSign = changeAmount > 0 ? '+' : ''
 
   return (
     <section className="flex min-w-0 basis-0 flex-1 flex-col overflow-hidden border-r border-stroke bg-surface">
@@ -48,6 +56,25 @@ export default function InvestStockOverview({
             <InvestStockSearch stockMeta={stockMeta} />
           </div>
           <div className="flex shrink-0 items-center gap-1">
+            {isForeignMarket && (
+              <div className="mr-1 flex items-center rounded-lg bg-surface-muted p-0.5">
+                {[DISPLAY_CURRENCY.USD, DISPLAY_CURRENCY.KRW].map((currency) => (
+                  <button
+                    key={currency}
+                    type="button"
+                    onClick={() => onDisplayCurrencyChange?.(currency)}
+                    className={cn(
+                      'rounded-md px-2 py-0.5 text-[10px] font-semibold transition-all',
+                      displayCurrency === currency
+                        ? 'bg-primary text-white shadow-control'
+                        : 'text-foreground-disabled hover:text-foreground-secondary',
+                    )}
+                  >
+                    {currency}
+                  </button>
+                ))}
+              </div>
+            )}
             <LiveDot size="sm" />
             <span className="text-[9px] text-live">실시간</span>
           </div>
@@ -59,7 +86,12 @@ export default function InvestStockOverview({
 
       <div className="border-b border-stroke px-[14px] py-2.5 shrink-0">
         <div className="flex items-center gap-2">
-          <StockAvatar name={stockMeta.name} stockCode={stockMeta.code} marketType={stockMeta.market} size="lg" />
+          <StockAvatar
+            name={stockMeta.name}
+            stockCode={stockMeta.code}
+            marketType={stockMeta.marketType ?? stockMeta.market}
+            size="lg"
+          />
           <div className="min-w-0 flex-1">
             <div className="text-sm font-extrabold leading-tight text-foreground">{stockMeta.name}</div>
             <div className="mt-0.5 text-[9px] text-foreground-disabled">
@@ -68,14 +100,14 @@ export default function InvestStockOverview({
           </div>
           <div className="shrink-0 text-right">
             <div className="text-[22px] font-black leading-none tracking-tight text-foreground">
-              {isLoading && currentPrice == null ? '...' : formatNumber(currentPrice)}
+              {isLoading && currentPrice == null ? '...' : formatVisiblePrice(currentPrice, { marketType, displayCurrency, usdRate })}
             </div>
             <div className="mt-1 flex items-center justify-end gap-1">
               <span className={cn('text-[11px] font-bold', changeTone)}>
-                {changeSign}{formatNumber(changeAmount)}
+                {formatSignedVisiblePrice(changeAmount, { marketType, displayCurrency, usdRate })}
               </span>
               {changeRate != null && !Number.isNaN(changeRate) && (
-                <PriceChange value={changeRate} variant="text" className="text-[11px]" />
+                <PriceChange value={changeRate} variant="text" paren className="text-[11px]" />
               )}
             </div>
           </div>
@@ -112,6 +144,9 @@ export default function InvestStockOverview({
           isLoading={chartLoading ?? isLoading}
           isLoadingMoreHistory={chartHistoryLoading}
           errorMessage={chartErrorMessage ?? errorMessage}
+          marketType={marketType}
+          displayCurrency={displayCurrency}
+          usdRate={usdRate}
         />
       </div>
     </section>

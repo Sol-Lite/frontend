@@ -1,15 +1,16 @@
 import { cn } from '@/lib/cn'
 import { formatCurrency, formatNumber } from '@/features/invest/formatters'
-import { useDomesticHoldings } from '@/api/balance'
+import { useDomesticHoldings, useOverseasHoldings } from '@/api/balance'
 import StockAvatar from '@/components/ui/StockAvatar'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 
 
-export default function HoldingPanel() {
+export default function HoldingPanel({ displayCurrency, usdRate }) {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isRestoring = useAuthStore((s) => s.isRestoring)
-  const { data, isLoading } = useDomesticHoldings({ enabled: isAuthenticated && !isRestoring })
+  const { data: domestic = [], isLoading: domesticLoading } = useDomesticHoldings({ enabled: isAuthenticated && !isRestoring })
+  const { data: overseas = [], isLoading: overseasLoading } = useOverseasHoldings({ enabled: isAuthenticated && !isRestoring })
 
   if (!isRestoring && !isAuthenticated) {
     return (
@@ -22,11 +23,11 @@ export default function HoldingPanel() {
     )
   }
 
-  if (isLoading) {
+  if (domesticLoading || overseasLoading) {
     return <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">불러오는 중...</div>
   }
 
-  const holdings = data ?? []
+  const holdings = [...domestic, ...overseas]
 
   if (!holdings.length) {
     return <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">보유 종목이 없습니다.</div>
@@ -58,13 +59,17 @@ export default function HoldingPanel() {
             <StockAvatar name={h.stockName ?? h.stockCode} stockCode={h.stockCode} marketType={h.marketType} size="sm" />
             <div className="min-w-0">
               <div className="truncate text-[10px] font-semibold text-foreground">{h.stockName ?? h.stockCode}</div>
-              <div className="text-[9px] text-foreground-disabled">{formatCurrency(evalPrice)}</div>
+              <div className="text-[9px] text-foreground-disabled">
+                {formatCurrency(evalPrice, { marketType: h.marketType, displayCurrency, usdRate })}
+              </div>
             </div>
             <span className="text-[10px] text-right text-foreground">{formatNumber(quantity)}주</span>
-            <span className="text-[10px] text-right text-foreground">{formatCurrency(avgPrice)}</span>
+            <span className="text-[10px] text-right text-foreground">
+              {formatCurrency(avgPrice, { marketType: h.marketType, displayCurrency, usdRate })}
+            </span>
             <div className="text-right">
               <div className={cn('text-[10px] font-bold', isProfit ? 'text-up' : 'text-down')}>
-                {isProfit ? '+' : ''}{formatCurrency(profitLoss)}
+                {isProfit ? '+' : ''}{formatCurrency(profitLoss, { marketType: h.marketType, displayCurrency, usdRate })}
               </div>
               <div className={cn('text-[9px]', isProfit ? 'text-up' : 'text-down')}>
                 {isProfit ? '+' : ''}{profitRate.toFixed(2)}%

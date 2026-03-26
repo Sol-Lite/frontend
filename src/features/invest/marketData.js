@@ -118,7 +118,9 @@ export function buildDailyRows(dailySeries) {
   return dailySeries
     .map((row, index, source) => {
       const previousClose = index > 0 ? source[index - 1].close : null
-      const changeRate = previousClose ? ((row.close - previousClose) / previousClose) * 100 : 0
+      const changeRate = row.liveChangeRate != null
+        ? row.liveChangeRate
+        : (previousClose ? ((row.close - previousClose) / previousClose) * 100 : 0)
 
       return {
         date: formatDisplayDate(row.date),

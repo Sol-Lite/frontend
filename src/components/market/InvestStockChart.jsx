@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from 'react'
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import { CandlestickSeries, CrosshairMode, HistogramSeries, LineSeries, createChart } from 'lightweight-charts'
 import { ChevronDown } from 'lucide-react'
+import { formatVisiblePrice } from '@/features/invest/formatters'
 import { cn } from '@/lib/cn'
 
 const COLORS = {
@@ -23,18 +24,11 @@ function toChartTime(timestamp) {
   return Math.floor(timestamp / 1000)
 }
 
-function formatNumber(value) {
-  if (value == null || Number.isNaN(value)) return '-'
-  return new Intl.NumberFormat('ko-KR').format(Math.round(value))
-}
-
 const InvestStockChart = memo(function InvestStockChart({
   stockCode,
-  stockName,
   overview,
   series = [],
   selectedPeriod,
-  periodLabel,
   periodOptions = [],
   minuteInterval,
   minuteIntervalOptions = [],
@@ -45,6 +39,9 @@ const InvestStockChart = memo(function InvestStockChart({
   isLoading,
   isLoadingMoreHistory = false,
   errorMessage,
+  marketType,
+  displayCurrency,
+  usdRate,
 }) {
   const containerRef = useRef(null)
   const chartRef = useRef(null)
@@ -132,7 +129,16 @@ const InvestStockChart = memo(function InvestStockChart({
       localization: {
         locale: 'ko-KR',
         dateFormat: 'yyyy/MM/dd',
-        priceFormatter: (price) => new Intl.NumberFormat('ko-KR').format(Math.round(price)),
+        priceFormatter: (price) => formatVisiblePrice(price, { marketType, displayCurrency, usdRate }),
+        timeFormatter: (t) => {
+          const d = new Date((t + 9 * 3600) * 1000) // UTC → KST
+          const yyyy = d.getUTCFullYear()
+          const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+          const dd = String(d.getUTCDate()).padStart(2, '0')
+          const hh = String(d.getUTCHours()).padStart(2, '0')
+          const mi = String(d.getUTCMinutes()).padStart(2, '0')
+          return isIntraday ? `${yyyy}/${mm}/${dd} ${hh}:${mi}` : `${yyyy}/${mm}/${dd}`
+        },
       },
     })
 
@@ -264,13 +270,11 @@ const InvestStockChart = memo(function InvestStockChart({
       volumeSeriesRef.current = null
       areaSeriesRef.current = null
     }
-  }, [isIntraday, chartType])
+  }, [chartType, displayCurrency, isIntraday, marketType, usdRate])
 
   // Effect 2: 데이터 업데이트 — series 바뀔 때만 (차트 재생성 없음)
   useEffect(() => {
     if (series.length === 0) return
-
-    const lastPoint = series[series.length - 1]
 
     if (candleSeriesRef.current) {
       candleSeriesRef.current.setData(
@@ -328,22 +332,22 @@ const InvestStockChart = memo(function InvestStockChart({
           <div className="flex items-center gap-2.5 text-[10px]">
             <span>
               <span className="mr-1 text-foreground-disabled">시가</span>
-              <span className="font-semibold text-foreground">{formatNumber(overview.open)}</span>
+              <span className="font-semibold text-foreground">{formatVisiblePrice(overview.open, { marketType, displayCurrency, usdRate })}</span>
             </span>
             <span className="select-none text-stroke-subtle">·</span>
             <span>
               <span className="mr-1 text-foreground-disabled">고가</span>
-              <span className="font-semibold text-up">{formatNumber(overview.high)}</span>
+              <span className="font-semibold text-up">{formatVisiblePrice(overview.high, { marketType, displayCurrency, usdRate })}</span>
             </span>
             <span className="select-none text-stroke-subtle">·</span>
             <span>
               <span className="mr-1 text-foreground-disabled">저가</span>
-              <span className="font-semibold text-down">{formatNumber(overview.low)}</span>
+              <span className="font-semibold text-down">{formatVisiblePrice(overview.low, { marketType, displayCurrency, usdRate })}</span>
             </span>
             <span className="select-none text-stroke-subtle">·</span>
             <span>
               <span className="mr-1 text-foreground-disabled">전일</span>
-              <span className="font-semibold text-foreground">{formatNumber(overview.previousClose)}</span>
+              <span className="font-semibold text-foreground">{formatVisiblePrice(overview.previousClose, { marketType, displayCurrency, usdRate })}</span>
             </span>
           </div>
         )}

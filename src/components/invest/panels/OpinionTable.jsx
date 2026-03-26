@@ -1,5 +1,5 @@
 import { cn } from '@/lib/cn'
-import { formatNumber, formatDisplayDate } from '@/features/invest/formatters'
+import { formatDisplayDate, formatVisiblePrice } from '@/features/invest/formatters'
 
 function getOpinionClass(opinion) {
   if (!opinion) return ''
@@ -9,7 +9,7 @@ function getOpinionClass(opinion) {
   return 'text-foreground-disabled'
 }
 
-export default function OpinionTable({ data, isLoading }) {
+export default function OpinionTable({ data, isLoading, marketType, displayCurrency, usdRate }) {
   const opinions = data?.opinions ?? []
 
   if (isLoading) {
@@ -38,8 +38,12 @@ export default function OpinionTable({ data, isLoading }) {
               <td className="whitespace-nowrap px-2.5 py-1.5 text-foreground-secondary">{formatDisplayDate(row.date)}</td>
               <td className="whitespace-nowrap px-2.5 py-1.5 font-semibold">{row.brokerName}</td>
               <td className={cn('whitespace-nowrap px-2.5 py-1.5', getOpinionClass(row.opinion))}>{row.opinion}</td>
-              <td className="whitespace-nowrap px-2.5 py-1.5 text-right font-bold">{formatNumber(row.targetPrice)}</td>
-              <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-foreground-disabled">{formatNumber(row.previousTargetPrice)}</td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right font-bold">
+                {formatVisiblePrice(row.targetPrice, { marketType, displayCurrency, usdRate })}
+              </td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-foreground-disabled">
+                {formatVisiblePrice(row.previousTargetPrice, { marketType, displayCurrency, usdRate })}
+              </td>
             </tr>
           ))}
         </tbody>

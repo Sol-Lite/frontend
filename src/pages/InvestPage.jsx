@@ -3,8 +3,14 @@ import { useLocation, useParams } from 'react-router-dom'
 import InvestBottomPanels from '@/components/invest/InvestBottomPanels'
 import InvestOrderSection from '@/components/invest/InvestOrderSection'
 import InvestStockOverview from '@/components/invest/InvestStockOverview'
+import {
+  DISPLAY_CURRENCY,
+  FALLBACK_USD_RATE,
+  isForeignMarketType,
+} from '@/features/invest/formatters'
 import useInvestMarketData from '@/features/invest/useInvestMarketData'
 import { INVEST_STOCK } from '@/mocks/invest'
+import useCurrencyStore from '@/store/useCurrencyStore'
 
 export default function InvestPage() {
   const { stockCode: routeStockCode } = useParams()
@@ -41,6 +47,21 @@ export default function InvestPage() {
     onLoadMoreChartHistory,
     onMinuteIntervalChange,
   } = useInvestMarketData(stockCode, locationState, { activeLeftTab: leftTab })
+  const marketType = stockMeta.marketType ?? stockMeta.market
+  const isForeignMarket = isForeignMarketType(marketType)
+  const usdRate = useCurrencyStore((s) => s.rates.USD?.rate ?? FALLBACK_USD_RATE)
+  const defaultDisplayCurrency = isForeignMarket ? DISPLAY_CURRENCY.USD : DISPLAY_CURRENCY.KRW
+  const [displayCurrencyOverrides, setDisplayCurrencyOverrides] = useState({})
+  const displayCurrency = isForeignMarket
+    ? (displayCurrencyOverrides[stockCode] ?? defaultDisplayCurrency)
+    : DISPLAY_CURRENCY.KRW
+
+  function handleDisplayCurrencyChange(nextCurrency) {
+    setDisplayCurrencyOverrides((prev) => ({
+      ...prev,
+      [stockCode]: nextCurrency,
+    }))
+  }
 
   return (
     <div className="h-full overflow-x-auto bg-surface">
@@ -64,21 +85,27 @@ export default function InvestPage() {
             onMinuteIntervalChange={onMinuteIntervalChange}
             isLoading={marketLoading}
             errorMessage={marketErrorMessage}
+            displayCurrency={displayCurrency}
+            usdRate={usdRate}
+            onDisplayCurrencyChange={handleDisplayCurrencyChange}
           />
 
           <InvestOrderSection
             key={stockCode}
             stockCode={stockCode}
-            marketType={stockMeta.market}
+            marketType={marketType}
             stockName={stockMeta.name}
             currentPrice={currentPrice}
             changeRate={changeRate}
             defaultPrice={currentPrice ?? stockMeta.price}
             orderBook={orderBook}
+            displayCurrency={displayCurrency}
+            usdRate={usdRate}
           />
         </div>
 
         <InvestBottomPanels
+          stockCode={stockCode}
           leftTab={leftTab}
           rightTab={rightTab}
           dailyRows={dailyRows}
@@ -92,6 +119,9 @@ export default function InvestPage() {
           errorMessage={marketErrorMessage}
           onLeftTabChange={setLeftTab}
           onRightTabChange={setRightTab}
+          marketType={marketType}
+          displayCurrency={displayCurrency}
+          usdRate={usdRate}
         />
       </div>
     </div>

@@ -1,11 +1,11 @@
 import { cn } from '@/lib/cn'
 import {
-  formatNumber,
+  formatVisiblePrice,
   formatSignedPercent,
   getDirectionClass,
 } from '@/features/invest/formatters'
 
-export default function DailyPriceTable({ rows, isLoading, errorMessage }) {
+export default function DailyPriceTable({ rows, isLoading, errorMessage, marketType, displayCurrency, usdRate }) {
   if (isLoading && rows.length === 0) {
     return (
       <div className="flex flex-1 items-center justify-center text-xs text-foreground-disabled">
@@ -49,15 +49,15 @@ export default function DailyPriceTable({ rows, isLoading, errorMessage }) {
             <tr key={row.date} className="even:bg-surface-subtle hover:bg-surface-muted">
               <td className="whitespace-nowrap px-2.5 py-1.5 font-semibold text-foreground-secondary">{row.date}</td>
               <td className={cn('whitespace-nowrap px-2.5 py-1.5 text-right font-extrabold', getDirectionClass(row.changeRate))}>
-                {formatNumber(row.close)}
+                {formatVisiblePrice(row.close, { marketType, displayCurrency, usdRate })}
               </td>
               <td className={cn('whitespace-nowrap px-2.5 py-1.5 text-right', getDirectionClass(row.changeRate))}>
                 {formatSignedPercent(row.changeRate)}
               </td>
               <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-foreground-secondary">{row.volume}</td>
-              <td className="whitespace-nowrap px-2.5 py-1.5 text-right">{formatNumber(row.open)}</td>
-              <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-up">{formatNumber(row.high)}</td>
-              <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-down">{formatNumber(row.low)}</td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right">{formatVisiblePrice(row.open, { marketType, displayCurrency, usdRate })}</td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-up">{formatVisiblePrice(row.high, { marketType, displayCurrency, usdRate })}</td>
+              <td className="whitespace-nowrap px-2.5 py-1.5 text-right text-down">{formatVisiblePrice(row.low, { marketType, displayCurrency, usdRate })}</td>
             </tr>
           ))}
         </tbody>

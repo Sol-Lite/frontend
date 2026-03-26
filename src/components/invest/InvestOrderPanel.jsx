@@ -1,6 +1,13 @@
 import { Minus, Plus } from 'lucide-react'
 import { QUICK_RATIOS } from '@/features/invest/constants'
-import { formatCurrency, formatNumber } from '@/features/invest/formatters'
+import {
+  convertDisplayValueToMarketValue,
+  formatCurrency,
+  formatDisplayPrice,
+  formatNumber,
+  getDisplayPriceUnitLabel,
+  toDisplayPriceInputValue,
+} from '@/features/invest/formatters'
 import { ORDER_TYPE_OPTIONS } from '@/mocks/invest'
 import { cn } from '@/lib/cn'
 import AccountPinKeypad from '@/components/signup/AccountPinKeypad'
@@ -12,6 +19,9 @@ const TYPE_BTN_OFF  = 'border-stroke-input bg-surface text-foreground-tertiary'
 const ORDER_KIND_LABEL = { market: '시장가', limit: '지정가', current: '현재가' }
 
 export default function InvestOrderPanel({
+  marketType,
+  displayCurrency,
+  usdRate,
   step = 'input',
   showPin = false,
   pin = '',
@@ -41,6 +51,9 @@ export default function InvestOrderPanel({
   const isBuy = side === 'buy'
   const totalAmount = quantity * unitPrice
   const isConfirm = step === 'confirm'
+  const priceUnitLabel = getDisplayPriceUnitLabel({ marketType, displayCurrency })
+  const displaySelectedPrice = toDisplayPriceInputValue(selectedPrice, { marketType, displayCurrency, usdRate })
+  const priceInputStep = priceUnitLabel === '달러' ? '0.01' : '1'
 
   const tone = isBuy
     ? {
@@ -61,8 +74,9 @@ export default function InvestOrderPanel({
       }
 
   const availabilityLabel = isBuy ? '가능' : '보유'
-  const availabilityValue = isBuy ? `${formatNumber(availableAmount)}원` : `${formatNumber(holdingQuantity ?? 0)}주`
-  const priceLabel = orderType === 'limit' ? '지정가' : '현재가'
+  const availabilityValue = isBuy
+    ? formatCurrency(availableAmount, { marketType, displayCurrency, usdRate })
+    : `${formatNumber(holdingQuantity ?? 0)}주`
 
   return (
     <section className="flex w-[250px] shrink-0 flex-col overflow-hidden bg-surface">
@@ -186,18 +200,22 @@ export default function InvestOrderPanel({
               {orderType === 'limit' ? (
                 <input
                   type="number"
-                  value={selectedPrice || ''}
+                  step={priceInputStep}
+                  value={displaySelectedPrice}
                   onChange={(e) => {
                     const v = Number(e.target.value)
-                    if (!isNaN(v) && v >= 0) onSelectPrice?.(v)
+                    const marketValue = convertDisplayValueToMarketValue(v, { marketType, displayCurrency, usdRate })
+                    if (!isNaN(v) && v >= 0 && marketValue != null) onSelectPrice?.(marketValue)
                   }}
                   className="w-full bg-transparent text-[17px] font-black text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   placeholder="0"
                 />
               ) : (
-                <span className="text-[17px] font-black text-foreground">{formatNumber(unitPrice)}</span>
+                <span className="text-[17px] font-black text-foreground">
+                  {formatDisplayPrice(unitPrice, { marketType, displayCurrency, usdRate })}
+                </span>
               )}
-              <span className="ml-1 shrink-0 text-[10px] font-medium text-foreground-disabled">원</span>
+              <span className="ml-1 shrink-0 text-[10px] font-medium text-foreground-disabled">{priceUnitLabel}</span>
             </div>
           </div>
 
@@ -215,7 +233,7 @@ export default function InvestOrderPanel({
               {[
                 { label: '종목', value: stockName },
                 { label: '수량', value: `${formatNumber(quantity)}주` },
-                { label: '단가', value: formatCurrency(unitPrice) },
+                { label: '단가', value: formatCurrency(unitPrice, { marketType, displayCurrency, usdRate }) },
               ].map(({ label, value }) => (
                 <div key={label} className="flex items-center justify-between text-[10px]">
                   <span className="text-foreground-disabled">{label}</span>
@@ -228,7 +246,7 @@ export default function InvestOrderPanel({
                   {isBuy ? '예상 합계' : '예상 매도금액'}
                 </span>
                 <span className={cn('text-[17px] font-black', tone.helper)}>
-                  {formatCurrency(totalAmount)}
+                  {formatCurrency(totalAmount, { marketType, displayCurrency, usdRate })}
                 </span>
               </div>
             </div>
@@ -250,7 +268,10 @@ export default function InvestOrderPanel({
             {[
               { label: '주문 유형', value: ORDER_KIND_LABEL[orderType] },
               { label: '주문 수량', value: `${formatNumber(quantity)}주` },
-              { label: orderType === 'market' ? '현재가 (예상)' : '주문 단가', value: formatCurrency(unitPrice) },
+              {
+                label: orderType === 'market' ? '현재가 (예상)' : '주문 단가',
+                value: formatCurrency(unitPrice, { marketType, displayCurrency, usdRate }),
+              },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-center justify-between text-[12px]">
                 <span className="text-foreground-disabled">{label}</span>
@@ -263,7 +284,7 @@ export default function InvestOrderPanel({
                 {isBuy ? '예상 총 매수금액' : '예상 총 매도금액'}
               </span>
               <span className={cn('text-[20px] font-black', tone.title)}>
-                {formatCurrency(totalAmount)}
+                {formatCurrency(totalAmount, { marketType, displayCurrency, usdRate })}
               </span>
             </div>
           </div>

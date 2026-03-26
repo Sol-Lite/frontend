@@ -2,8 +2,9 @@ import { useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import InvestOrderBookPanel from '@/components/invest/InvestOrderBookPanel'
 import InvestOrderPanel from '@/components/invest/InvestOrderPanel'
-import { useBuyableAmount, useDomesticHoldings } from '@/api/balance'
+import { useBuyableAmount, useDomesticHoldings, useOverseasHoldings } from '@/api/balance'
 import { orderApi, ORDER_SIDE, ORDER_KIND } from '@/api/order'
+import { isForeignMarketType } from '@/features/invest/formatters'
 import usePinAuth from '@/hooks/usePinAuth'
 import useAuthStore from '@/store/useAuthStore'
 
@@ -15,6 +16,8 @@ export default function InvestOrderSection({
   changeRate,
   defaultPrice,
   orderBook,
+  displayCurrency,
+  usdRate,
 }) {
   const queryClient = useQueryClient()
   const { isPinCached, verifyAndCachePin } = usePinAuth()
@@ -37,6 +40,7 @@ export default function InvestOrderSection({
   const unitPrice = step === 'confirm' && confirmedUnitPrice != null
     ? confirmedUnitPrice
     : liveUnitPrice
+  const isForeignMarket = isForeignMarketType(marketType)
 
   const { data: buyableData } = useBuyableAmount({
     stockCode,
@@ -44,7 +48,13 @@ export default function InvestOrderSection({
     orderPrice: orderType === 'limit' ? selectedPrice : undefined,
     enabled: isAuthenticated && side === 'buy',
   })
-  const { data: holdingsData } = useDomesticHoldings({ enabled: isAuthenticated && side === 'sell' })
+  const { data: domesticHoldingsData } = useDomesticHoldings({
+    enabled: isAuthenticated && side === 'sell' && !isForeignMarket,
+  })
+  const { data: overseasHoldingsData } = useOverseasHoldings({
+    enabled: isAuthenticated && side === 'sell' && isForeignMarket,
+  })
+  const holdingsData = isForeignMarket ? overseasHoldingsData : domesticHoldingsData
 
   const availableAmount = buyableData?.availableAmount ?? 0
   const maxBuyableQuantity = buyableData?.maxBuyableQuantity ?? Math.floor(availableAmount / Math.max(unitPrice, 1))
@@ -177,9 +187,15 @@ export default function InvestOrderSection({
         changeRate={changeRate}
         orderBook={orderBook}
         onSelectPrice={handleSelectPrice}
+        marketType={marketType}
+        displayCurrency={displayCurrency}
+        usdRate={usdRate}
       />
 
       <InvestOrderPanel
+        marketType={marketType}
+        displayCurrency={displayCurrency}
+        usdRate={usdRate}
         step={step}
         showPin={showPin}
         pin={pin}

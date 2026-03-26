@@ -29,6 +29,7 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
     if (isDomestic) {
       return {
         ...baseStockMeta,
+        marketType: baseStockMeta.market,
         market: infoQuery.data?.marketName ?? baseStockMeta.market,
         sector: infoQuery.data?.sector ?? baseStockMeta.sector,
       }
@@ -36,6 +37,7 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
 
     return {
       ...baseStockMeta,
+      marketType: baseStockMeta.market,
       name: infoQuery.data?.korname ?? baseStockMeta.name,
       nameEn: infoQuery.data?.engname ?? baseStockMeta.nameEn,
       market: infoQuery.data?.exchangeName ?? baseStockMeta.market,

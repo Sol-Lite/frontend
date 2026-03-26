@@ -73,18 +73,36 @@ function applyLiveDailyPrice(dailySeries, livePrice) {
 
   const today = new Date()
   const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-  if (last.date !== todayKey) {
-    return dailySeries
+  const todayTs = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 0, 0, 0).getTime()
+
+  const price = livePrice.currentPrice
+  const open  = livePrice.todayOpen  ?? price
+  const high  = livePrice.todayHigh  ?? price
+  const low   = livePrice.todayLow   ?? price
+  const vol   = livePrice.todayVolume ?? 0
+
+  const liveChangeRate = livePrice.changeRate ?? null
+
+  // 오늘 행이 이미 있으면 실시간 업데이트
+  if (last.date === todayKey) {
+    return [
+      ...dailySeries.slice(0, -1),
+      {
+        ...last,
+        open,
+        high: Math.max(last.high, high),
+        low:  Math.min(last.low,  low),
+        close: price,
+        volume: vol > 0 ? vol : last.volume,
+        liveChangeRate,
+      },
+    ]
   }
 
+  // 오늘 행이 없으면 (REST가 어제까지만 줬을 때) 새로 추가
   return [
-    ...dailySeries.slice(0, -1),
-    {
-      ...last,
-      high: Math.max(last.high, livePrice.currentPrice),
-      low: Math.min(last.low, livePrice.currentPrice),
-      close: livePrice.currentPrice,
-    },
+    ...dailySeries,
+    { date: todayKey, timestamp: todayTs, open, high, low, close: price, volume: vol, liveChangeRate },
   ]
 }
 
@@ -236,11 +254,23 @@ export default function useDomesticMarketData(stockCode, { enabled, activeDetail
       totalVolume: Number(liveTrade.volume ?? 0),
     }, ...prev].slice(0, 300))
 
-    setLivePrice({
+    const changeRate = Number(liveTrade.drate ?? 0)
+    // LS US3: change는 절댓값, sign(1/2=상승 3=보합 4/5=하락) 또는 drate 부호로 방향 결정
+    const sign = liveTrade.sign
+    const changeDir = sign
+      ? (['4', '5'].includes(String(sign)) ? -1 : ['1', '2'].includes(String(sign)) ? 1 : 0)
+      : Math.sign(changeRate)
+    const changeAmount = changeDir * Math.abs(Number(liveTrade.change ?? 0))
+
+    setLivePrice((prev) => ({
       currentPrice: price,
-      changeAmount: Number(liveTrade.change ?? 0),
-      changeRate: Number(liveTrade.drate ?? 0),
-    })
+      changeAmount,
+      changeRate,
+      todayOpen: prev?.todayOpen ?? price,
+      todayHigh: Math.max(prev?.todayHigh ?? price, price),
+      todayLow: Math.min(prev?.todayLow ?? price, price),
+      todayVolume: Number(liveTrade.volume ?? 0),
+    }))
   }, [liveTrade, selectedMinuteInterval])
 
   const customSeries = useMemo(() => (
