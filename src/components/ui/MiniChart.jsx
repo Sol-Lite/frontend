@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { CandlestickSeries, LineSeries, createChart } from 'lightweight-charts'
+import { LineSeries, createChart } from 'lightweight-charts'
 
 function getChartColors() {
   const style = getComputedStyle(document.documentElement)
@@ -10,15 +10,13 @@ function getChartColors() {
 }
 
 /**
- * 위젯용 미니 차트 (lightweight-charts)
- * @param {{ time: number, value: number }[]}                    data        - 라인용 (unix seconds)
- * @param {{ time: number, open, high, low, close: number }[]}  candleData  - 캔들용 (unix seconds)
- * @param {'line'|'candle'} chartType
+ * 위젯용 미니 라인 차트 (lightweight-charts)
+ * @param {{ time: number, value: number }[]} data      - 라인용 (unix seconds)
  * @param {boolean} isMinute  - true면 X축에 시간(HH:MM), false면 날짜(M/D)
  * @param {boolean} isUp
  * @param {string}  className
  */
-export default function MiniChart({ data, candleData, chartType = 'line', isMinute = false, isUp, className = '' }) {
+export default function MiniChart({ data, isMinute = false, isUp, className = '' }) {
   const ref       = useRef(null)
   const seriesRef = useRef(null)
 
@@ -59,10 +57,7 @@ export default function MiniChart({ data, candleData, chartType = 'line', isMinu
             const mm = String(d.getMinutes()).padStart(2, '0')
             return `${hh}:${mm}`
           }
-          if (tickMarkType <= 1) {
-            // Year or Month tick
-            return `${d.getMonth() + 1}월`
-          }
+          if (tickMarkType <= 1) return `${d.getMonth() + 1}월`
           return `${d.getMonth() + 1}/${d.getDate()}`
         },
       },
@@ -74,35 +69,18 @@ export default function MiniChart({ data, candleData, chartType = 'line', isMinu
       handleScale:  false,
     })
 
-    if (chartType === 'candle') {
-      const series = chart.addSeries(CandlestickSeries, {
-        upColor:         up,
-        borderUpColor:   up,
-        wickUpColor:     up,
-        downColor:       down,
-        borderDownColor: down,
-        wickDownColor:   down,
-        priceLineVisible:  false,
-        lastValueVisible:  false,
-      })
-      seriesRef.current = series
-      if (candleData?.length) {
-        series.setData(candleData)
-        chart.timeScale().fitContent()
-      }
-    } else {
-      const series = chart.addSeries(LineSeries, {
-        lineColor,
-        lineWidth:              1.5,
-        priceLineVisible:       false,
-        lastValueVisible:       false,
-        crosshairMarkerVisible: false,
-      })
-      seriesRef.current = series
-      if (data?.length) {
-        series.setData(data)
-        chart.timeScale().fitContent()
-      }
+    const series = chart.addSeries(LineSeries, {
+      lineColor,
+      lineWidth:              1.5,
+      priceLineVisible:       false,
+      lastValueVisible:       false,
+      crosshairMarkerVisible: false,
+    })
+    seriesRef.current = series
+
+    if (data?.length) {
+      series.setData(data)
+      chart.timeScale().fitContent()
     }
 
     const ro = new ResizeObserver(([entry]) => {
@@ -119,14 +97,14 @@ export default function MiniChart({ data, candleData, chartType = 'line', isMinu
       chart.remove()
       seriesRef.current = null
     }
-  }, [data, candleData, chartType, isMinute]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [data, isMinute]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // 라인 모드: isUp 변경 시 색상만 업데이트
+  // isUp 변경 시 차트 재생성 없이 색상만 업데이트
   useEffect(() => {
-    if (!seriesRef.current || chartType === 'candle') return
+    if (!seriesRef.current) return
     const { up, down } = getChartColors()
     seriesRef.current.applyOptions({ lineColor: isUp ? up : down })
-  }, [isUp, chartType])
+  }, [isUp])
 
   return <div ref={ref} className={`overflow-hidden ${className}`} />
 }
