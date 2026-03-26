@@ -2,7 +2,7 @@ import { useEffect } from 'react'
 import useStompSubscription from '@/hooks/useStompSubscription'
 import useCurrencyStore from '@/store/useCurrencyStore'
 
-const TRACKED = ['USD']
+const TRACKED = ['USD', 'JPY', 'EUR']
 
 function CurrencySubscriber({ code }) {
   const msg = useStompSubscription(`/topic/currency/${code}`)

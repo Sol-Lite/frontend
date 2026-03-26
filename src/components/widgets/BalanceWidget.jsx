@@ -23,7 +23,10 @@ function useBalance(enabled) {
     return { total: '-', profit: '-', profitRate: '-', invested: '-', available: '-', isProfit: true, isLoading: true }
   }
 
-  const cash      = cashData?.krwBalance ?? cashData?.balance ?? cashData?.depositBalance ?? 0
+  const krwEntry  = Array.isArray(cashData)
+    ? (cashData.find((c) => c.currencyCode === 'KRW') ?? cashData[0])
+    : cashData
+  const cash      = krwEntry?.totalAmount ?? krwEntry?.availableAmount ?? 0
   const invested  = holdings.reduce((s, h) => s + (h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
   const stockVal  = holdings.reduce((s, h) => s + (h.currentPrice ?? h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
   const total     = stockVal + cash
@@ -35,7 +38,7 @@ function useBalance(enabled) {
     profit:     (profit >= 0 ? '+' : '-') + fmt(Math.abs(profit)),
     profitRate: (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%',
     invested:   fmt(invested),
-    available:  fmt(cash),
+    available:  fmt(krwEntry?.availableAmount ?? cash),
     isProfit:   profit >= 0,
     isLoading:  false,
   }
