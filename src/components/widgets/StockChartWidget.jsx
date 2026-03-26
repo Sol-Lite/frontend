@@ -31,7 +31,7 @@ const PERIOD_CONFIG = {
   '1일': { type: 'minute', ncnt: 5              },
   '1주': { type: 'daily',  period: 'DAILY',   days: 7   },
   '1달': { type: 'daily',  period: 'DAILY',   days: 30  },
-  '3달': { type: 'daily',  period: 'WEEKLY',  days: 90  },
+  '3달': { type: 'weekly', period: 'WEEKLY',  days: 90  },
 }
 
 function fmtVolume(v) {
