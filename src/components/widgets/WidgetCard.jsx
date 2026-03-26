@@ -16,7 +16,7 @@ export default function WidgetCard({ children, className = '', onDelete }) {
           'h-full',
           isEditMode
             ? 'animate-wiggle'
-            : 'cursor-pointer transition-[transform] duration-[200ms] hover:-translate-y-px',
+            : 'cursor-pointer',
         )}
         style={isEditMode ? { animationDelay: `${wiggleDelay}ms` } : undefined}
       >
