@@ -139,7 +139,7 @@ export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
       {/* 금액 입력 */}
       <div className="mb-1">
         <div className="text-[10px] font-semibold text-foreground-disabled mb-1.5">환전 금액</div>
-        <div className="flex items-center gap-2 border-[1.5px] border-stroke-input rounded-[10px] px-3 py-2.5 focus-within:border-primary focus-within:shadow-[0_0_0_3px_rgba(0,70,255,.08)] transition-all">
+        <div className="flex items-center gap-2 border-[1.5px] border-stroke-input rounded-[10px] px-3 py-2.5 focus-within:border-primary focus-within:shadow-focus-ring transition-all">
           <input
             type="text"
             inputMode="numeric"
@@ -217,7 +217,7 @@ function Overlay({ onClose, children }) {
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
       {/* 모달 */}
-      <div className="relative z-10 w-[380px] bg-surface rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,.22)] p-6">
+      <div className="relative z-10 w-[380px] bg-surface rounded-2xl shadow-modal p-6">
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow">

@@ -190,8 +190,8 @@ function AssetFlowCard({ data }) {
         {bars.map((h, i) => (
           <div
             key={i}
-            className={`flex-1 rounded-sm ${isAccountProfit ? 'bg-up/40' : 'bg-down/40'}`}
-            style={{ height: `${h}%` }}
+            className={`flex-1 rounded-sm h-[var(--bar-h)] ${isAccountProfit ? 'bg-up/40' : 'bg-down/40'}`}
+            style={{ '--bar-h': `${h}%` }}
           />
         ))}
       </div>
@@ -316,12 +316,12 @@ function PortfolioPanel({ data }) {
       </div>
 
       {/* 도넛 차트 */}
-      <div className="relative shrink-0" style={{ height: 260 }}>
+      <div className="relative shrink-0 h-[260px]">
         {hasItems ? (
           <>
             <ReactECharts
               option={chartOption}
-              style={{ width: '100%', height: '100%' }}
+              className="w-full h-full"
               opts={{ renderer: 'svg' }}
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
@@ -348,12 +348,12 @@ function PortfolioPanel({ data }) {
           return (
             <div key={item.label} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-[3px] shrink-0" style={{ background: color }} />
+                <div className="w-2.5 h-2.5 rounded-[3px] shrink-0 bg-[var(--dot-color)]" style={{ '--dot-color': color }} />
                 <span className="text-[12px] text-foreground-secondary">{item.label}</span>
               </div>
               <div className="flex items-center gap-2">
                 <div className="w-[60px] h-1 rounded-full bg-surface-muted overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${item.weight}%`, background: color }} />
+                  <div className="h-full rounded-full w-[var(--bar-w)] bg-[var(--bar-color)]" style={{ '--bar-w': `${item.weight}%`, '--bar-color': color }} />
                 </div>
                 <span className="text-[11px] font-bold text-foreground w-8 text-right">{item.weight}%</span>
               </div>
@@ -370,10 +370,7 @@ function HoldingRow({ h }) {
   const { stockName, stockCode, marketType, qty, cur, avg, evalKrw, pnl, pnlRate, isUp, isKrw } = h
 
   return (
-    <div
-      className="grid items-center px-4 py-2.5 border-b border-stroke-subtle cursor-pointer hover:bg-surface-subtle transition-colors"
-      style={{ gridTemplateColumns: '1fr 80px 88px 108px' }}
-    >
+    <div className="grid grid-cols-[1fr_80px_88px_108px] items-center px-4 py-2.5 border-b border-stroke-subtle cursor-pointer hover:bg-surface-subtle transition-colors">
       <div className="flex items-center gap-2.5">
         <StockAvatar name={stockName} stockCode={stockCode} marketType={marketType} size="md" />
         <div className="min-w-0">
@@ -453,10 +450,7 @@ function HoldingsPanel({ data }) {
       </div>
 
       {/* 컬럼 헤더 */}
-      <div
-        className="shrink-0 grid items-center px-4 py-1.5 bg-surface-subtle border-b border-stroke text-[9px] font-semibold text-foreground-disabled"
-        style={{ gridTemplateColumns: '1fr 80px 88px 108px' }}
-      >
+      <div className="shrink-0 grid grid-cols-[1fr_80px_88px_108px] items-center px-4 py-1.5 bg-surface-subtle border-b border-stroke text-[9px] font-semibold text-foreground-disabled">
         <span>종목</span>
         <span className="text-right">수량 / 평균가</span>
         <span className="text-right">현재가</span>
@@ -480,10 +474,7 @@ function HoldingsPanel({ data }) {
 
       {/* 합계 */}
       {!isLoading && rows.length > 0 && (
-        <div
-          className="shrink-0 grid items-center px-4 py-2.5 bg-primary-light border-t-2 border-primary-dim"
-          style={{ gridTemplateColumns: '1fr 80px 88px 108px' }}
-        >
+        <div className="shrink-0 grid grid-cols-[1fr_80px_88px_108px] items-center px-4 py-2.5 bg-primary-light border-t-2 border-primary-dim">
           <div className="text-[12px] font-extrabold text-primary">합계</div>
           <div />
           <div className="text-right text-[12px] font-bold text-foreground">{fmt(totalEval)}원</div>
