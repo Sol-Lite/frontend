@@ -68,6 +68,12 @@ export async function fetchWithAuth(url, options = {}) {
     })
   })
 
+  // 로그아웃 상태면 refresh 시도 안 함
+  if (!useAuthStore.getState().isAuthenticated) {
+    onRefreshFailed(new Error('not authenticated'))
+    return retryPromise
+  }
+
   // 첫 번째 요청만 refresh 수행
   if (!isRefreshing) {
     isRefreshing = true

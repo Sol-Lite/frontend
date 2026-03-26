@@ -109,7 +109,7 @@ export function formatSignedDisplayPrice(value, options = {}) {
   const numeric = toFiniteNumber(value)
   if (numeric == null) return '-'
   const sign = numeric > 0 ? '+' : numeric < 0 ? '-' : ''
-  return `${sign}${formatDisplayPrice(Math.abs(numeric), options)}`
+  return `${sign}${formatDisplayPrice(Math.abs(numeric), options)}원`
 }
 
 export function formatSignedCurrency(value, options = {}) {

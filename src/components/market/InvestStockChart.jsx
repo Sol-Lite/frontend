@@ -130,6 +130,15 @@ const InvestStockChart = memo(function InvestStockChart({
         locale: 'ko-KR',
         dateFormat: 'yyyy/MM/dd',
         priceFormatter: (price) => formatVisiblePrice(price, { marketType, displayCurrency, usdRate }),
+        timeFormatter: (t) => {
+          const d = new Date((t + 9 * 3600) * 1000) // UTC → KST
+          const yyyy = d.getUTCFullYear()
+          const mm = String(d.getUTCMonth() + 1).padStart(2, '0')
+          const dd = String(d.getUTCDate()).padStart(2, '0')
+          const hh = String(d.getUTCHours()).padStart(2, '0')
+          const mi = String(d.getUTCMinutes()).padStart(2, '0')
+          return isIntraday ? `${yyyy}/${mm}/${dd} ${hh}:${mi}` : `${yyyy}/${mm}/${dd}`
+        },
       },
     })
 

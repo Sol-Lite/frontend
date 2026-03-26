@@ -5,12 +5,12 @@
  * @param {'text'|'badge'} variant - 표시 방식
  * @param {string}  className
  */
-export default function PriceChange({ value, variant = 'text', className = '' }) {
+export default function PriceChange({ value, variant = 'text', paren = false, className = '' }) {
   const isUp = value > 0
   const isZero = value === 0
   const sign = isUp ? '+' : isZero ? '' : '-'
   const absValue = Math.abs(value).toFixed(2)
-  const label = `${sign}${absValue}%`
+  const label = paren ? `(${sign}${absValue}%)` : `${sign}${absValue}%`
 
   const colorClass = isZero
     ? 'text-foreground-disabled'

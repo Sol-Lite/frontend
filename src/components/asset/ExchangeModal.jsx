@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { exchangeApi } from '@/api/exchange'
 
 function fmt(n) {
-  return Number(n ?? 0).toLocaleString('ko-KR')
+  return Math.round(Number(n ?? 0)).toLocaleString('ko-KR')
 }
 
 function parseAmount(str) {

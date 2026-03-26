@@ -25,12 +25,12 @@ function MarketIndexBar() {
   const { indices } = useMarketIndices()
 
   return (
-    <div className="flex items-center border-b border-stroke shrink-0 overflow-x-auto bg-surface">
+    <div className="flex items-center border-b border-stroke shrink-0 bg-surface">
       {indices.map((idx) => {
         return (
           <div
             key={idx.code}
-            className="flex items-center gap-2.5 px-4 py-2.5 shrink-0 border-r border-stroke-subtle"
+            className="flex-1 flex items-center gap-2.5 px-4 py-2.5 border-r border-stroke-subtle last:border-r-0"
           >
             <div>
               <div className="text-[10px] font-semibold text-foreground-disabled mb-0.5">{idx.name}</div>

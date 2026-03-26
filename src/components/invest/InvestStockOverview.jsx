@@ -103,7 +103,7 @@ export default function InvestStockOverview({
                 {formatSignedVisiblePrice(changeAmount, { marketType, displayCurrency, usdRate })}
               </span>
               {changeRate != null && !Number.isNaN(changeRate) && (
-                <PriceChange value={changeRate} variant="text" className="text-[11px]" />
+                <PriceChange value={changeRate} variant="text" paren className="text-[11px]" />
               )}
             </div>
           </div>

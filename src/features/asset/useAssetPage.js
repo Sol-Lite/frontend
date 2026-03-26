@@ -94,15 +94,22 @@ export function useAssetPage(enabled) {
 
     // Portfolio chart items — stocks first, cash last
     const rawItems = portfolio?.items ?? []
-    const stockItems = rawItems.filter((i) => i.type === 'STOCK')
-    const cashItem = rawItems.find((i) => i.type === 'CASH')
-    const orderedItems = [...stockItems, ...(cashItem ? [cashItem] : [])]
+    const orderedItems = rawItems.filter((i) => i.type === 'STOCK')
 
-    const portfolioItems = orderedItems.map((item) => ({
-      label: item.label,
-      weight: Math.round(Number(item.weight ?? 0)),
-      type: item.type,
-    }))
+    // label로 holdings에서 stockCode/marketType 매핑
+    const allHoldings = [...domesticRows, ...overseasRows]
+    const holdingByName = Object.fromEntries(allHoldings.map((h) => [h.stockName, h]))
+
+    const portfolioItems = orderedItems.map((item) => {
+      const holding = holdingByName[item.label]
+      return {
+        label: item.label,
+        weight: Math.round(Number(item.weight ?? 0)),
+        type: item.type,
+        stockCode: holding?.stockCode ?? null,
+        marketType: holding?.marketType ?? null,
+      }
+    })
 
     // Normalize weights
     const weightSum = portfolioItems.reduce((s, i) => s + i.weight, 0)

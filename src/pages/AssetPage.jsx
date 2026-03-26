@@ -1,5 +1,8 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ArrowLeftRight } from 'lucide-react'
+import ReactECharts from 'echarts-for-react'
+import { getStockLogoUrl } from '@/lib/stockLogo'
+import { extractDominantColor } from '@/lib/extractLogoColor'
 import LiveDot from '@/components/ui/LiveDot'
 import StockAvatar from '@/components/ui/StockAvatar'
 import FilterChip from '@/components/ui/FilterChip'
@@ -8,11 +11,10 @@ import useAuthStore from '@/store/useAuthStore'
 import { useMyAccount } from '@/api/account'
 import { useAssetPage } from '@/features/asset/useAssetPage'
 
-const CHART_COLORS = ['#0046FF', '#00A878', '#FF9500', '#EF4444', '#8B5CF6']
 
 // ── 유틸 ──────────────────────────────────────────────────────────
 function fmt(n) {
-  return Number(n ?? 0).toLocaleString('ko-KR')
+  return Math.round(Number(n ?? 0)).toLocaleString('ko-KR')
 }
 function fmtDate(d) {
   if (!d) return '-'
@@ -206,22 +208,105 @@ function AssetFlowCard({ data }) {
   )
 }
 
+// ── 로고 대표색 추출 훅 ───────────────────────────────────────────
+const CASH_COLOR = '#9CA3AF'
+const FALLBACK_COLORS = ['#0046FF', '#00C2A8', '#7B61FF', '#FF8C00', '#0035CC']
+
+function useLogoColors(items) {
+  const [colors, setColors] = useState({})
+
+  useEffect(() => {
+    if (!items?.length) return
+    items.forEach(async (item, i) => {
+      const key = item.stockCode ?? `cash_${i}`
+      if (item.type === 'CASH') {
+        setColors((prev) => ({ ...prev, [key]: CASH_COLOR }))
+        return
+      }
+      if (!item.stockCode) {
+        setColors((prev) => ({ ...prev, [key]: FALLBACK_COLORS[i % FALLBACK_COLORS.length] }))
+        return
+      }
+      const url =
+        getStockLogoUrl(item.marketType, item.stockCode) ??
+        getStockLogoUrl('KOSPI', item.stockCode) ??
+        getStockLogoUrl('KOSDAQ', item.stockCode)
+      if (!url) {
+        setColors((prev) => ({ ...prev, [key]: FALLBACK_COLORS[i % FALLBACK_COLORS.length] }))
+        return
+      }
+      const color = await extractDominantColor(url, FALLBACK_COLORS[i % FALLBACK_COLORS.length])
+      setColors((prev) => ({ ...prev, [key]: color }))
+    })
+  // items 배열 내용 변화 감지를 위해 JSON 직렬화
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(items?.map((i) => i.stockCode))])
+
+  return (item, idx) => {
+    const key = item.stockCode ?? `cash_${idx}`
+    return colors[key] ?? FALLBACK_COLORS[idx % FALLBACK_COLORS.length]
+  }
+}
+
 // ── 포트폴리오 파이차트 패널 (하단 좌) ───────────────────────────
 function PortfolioPanel({ data }) {
   const { portfolioItems, profitRate, isProfit, isLoading } = data
 
-  const stops = portfolioItems.reduce((acc, item, i) => {
-    const start = portfolioItems.slice(0, i).reduce((s, x) => s + x.weight, 0)
-    const color = CHART_COLORS[i % CHART_COLORS.length]
-    acc.push(`${color} ${start}% ${start + item.weight}%`)
-    return acc
-  }, []).join(', ')
+  const getColor = useLogoColors(portfolioItems)
+  const hasItems = portfolioItems.length > 0
 
-  const hasItems = portfolioItems.length > 0 && stops
+  const sortedItems = [...portfolioItems].sort((a, b) => b.weight - a.weight)
+
+  const chartOption = {
+    backgroundColor: 'transparent',
+    tooltip: {
+      trigger: 'item',
+      formatter: (p) =>
+        `<div style="display:flex;flex-direction:column;gap:2px;min-width:100px">` +
+          `<div style="display:flex;align-items:center;gap:6px">` +
+            `<span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:${p.color}"></span>` +
+            `<span style="font-size:12px;font-weight:700;color:#191F28">${p.name}</span>` +
+          `</div>` +
+          `<div style="display:flex;align-items:center;justify-content:space-between;gap:16px;margin-top:2px">` +
+            `<span style="font-size:10px;color:#9CA3AF">비중</span>` +
+            `<span style="font-size:13px;font-weight:800;color:#0046FF">${p.value}%</span>` +
+          `</div>` +
+        `</div>`,
+      backgroundColor: '#FFFFFF',
+      borderColor: '#EAECF0',
+      borderWidth: 1,
+      borderRadius: 10,
+      padding: [10, 12],
+      extraCssText: 'box-shadow:0 4px 16px rgba(0,0,0,0.10);',
+    },
+    series: [
+      {
+        type: 'pie',
+        radius: ['52%', '78%'],
+        center: ['50%', '50%'],
+        avoidLabelOverlap: false,
+        label: { show: false },
+        labelLine: { show: false },
+        itemStyle: {
+          borderWidth: 0,
+        },
+        emphasis: {
+          scale: true,
+          scaleSize: 6,
+          itemStyle: { shadowBlur: 12, shadowColor: 'rgba(0,0,0,0.25)' },
+        },
+        data: sortedItems.map((item, i) => ({
+          name: item.label,
+          value: item.weight,
+          itemStyle: { color: getColor(item, i) },
+        })),
+      },
+    ],
+  }
 
   return (
     <div className="flex-1 min-w-0 bg-surface rounded-2xl border border-stroke p-5 flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between mb-4 shrink-0">
+      <div className="flex items-center justify-between mb-2 shrink-0">
         <div className="text-[11px] font-bold text-foreground">포트폴리오</div>
         {!isLoading && (
           <span className={`text-[11px] font-bold ${isProfit ? 'text-up' : 'text-down'}`}>
@@ -230,42 +315,36 @@ function PortfolioPanel({ data }) {
         )}
       </div>
 
-      {/* 도넛 차트 — 크게 */}
-      <div className="flex justify-center mb-5 shrink-0">
-        <div className="relative">
-          {hasItems ? (
-            <>
-              <div
-                className="w-[160px] h-[160px] rounded-full"
-                style={{ background: `conic-gradient(${stops})` }}
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div
-                  className="w-[104px] h-[104px] rounded-full bg-surface flex flex-col items-center justify-center"
-                  style={{ boxShadow: 'inset 0 2px 8px rgba(0,0,0,.07)' }}
-                >
-                  <span className={`text-[16px] font-black ${isProfit ? 'text-up' : 'text-down'}`}>
-                    {isLoading ? '-' : fmtRate(profitRate)}
-                  </span>
-                  <span className="text-[9px] text-foreground-disabled mt-0.5">수익률</span>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="w-[160px] h-[160px] rounded-full bg-surface-muted flex items-center justify-center">
-              <span className="text-[11px] text-foreground-disabled">데이터 없음</span>
+      {/* 도넛 차트 */}
+      <div className="relative shrink-0" style={{ height: 260 }}>
+        {hasItems ? (
+          <>
+            <ReactECharts
+              option={chartOption}
+              style={{ width: '100%', height: '100%' }}
+              opts={{ renderer: 'svg' }}
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className={`text-[15px] font-black ${isProfit ? 'text-up' : 'text-down'}`}>
+                {isLoading ? '-' : fmtRate(profitRate)}
+              </span>
+              <span className="text-[9px] text-foreground-disabled mt-0.5">수익률</span>
             </div>
-          )}
-        </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-center h-full">
+            <span className="text-[11px] text-foreground-disabled">데이터 없음</span>
+          </div>
+        )}
       </div>
 
       {/* 레전드 */}
-      <div className="flex flex-col gap-2.5 overflow-y-auto flex-1">
+      <div className="flex flex-col gap-2 overflow-y-auto flex-1 mt-2">
         {portfolioItems.length === 0 && !isLoading && (
           <p className="text-[11px] text-foreground-disabled text-center">보유 종목 없음</p>
         )}
-        {portfolioItems.map((item, i) => {
-          const color = CHART_COLORS[i % CHART_COLORS.length]
+        {sortedItems.map((item, i) => {
+          const color = getColor(item, i)
           return (
             <div key={item.label} className="flex items-center justify-between">
               <div className="flex items-center gap-2">
