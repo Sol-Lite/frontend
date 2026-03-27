@@ -3,8 +3,6 @@ import { X } from 'lucide-react'
 
 const ALL_CURRENCIES = [
   { code: 'USD', label: 'USD / KRW', flag: '🇺🇸' },
-  { code: 'JPY', label: 'JPY / KRW', flag: '🇯🇵' },
-  { code: 'EUR', label: 'EUR / KRW', flag: '🇪🇺' },
 ]
 
 const VARIANT_MAX = {
@@ -30,6 +28,7 @@ export default function ExchangeConfigModal({ variant, currentCurrencies, onSave
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={onClose}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <div
         className="bg-surface rounded-2xl shadow-xl w-[280px] p-5"
