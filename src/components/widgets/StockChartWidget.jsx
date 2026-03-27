@@ -14,6 +14,7 @@ import useStompSubscription from '@/hooks/useStompSubscription'
 import { normalizeDailySeries, normalizeMinuteSeries } from '@/features/invest/domestic/normalize'
 import { normalizeForeignDailySeries, normalizeForeignMinuteSeries } from '@/features/invest/foreign/normalize'
 import { formatApiDate } from '@/features/invest/formatters'
+import { getLatestMinuteSession } from '@/features/invest/marketData'
 
 // config.stockId(레거시) → 종목코드 매핑
 const STOCK_CODE_MAP = {
@@ -249,12 +250,10 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
 
     // 기간별 데이터 필터
     if (periodCfg.filterToday && !isOverseas) {
-      // 국내 1일: 분봉 API가 다일치 데이터를 반환하므로 KST 오늘 세션만 추출
-      // 해외 1일: chart-nmin은 한 세션치만 반환하므로 필터 불필요
-      const today = new Date()
-      const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
-      const todaySeries = series.filter((p) => p.sessionDate === todayKey)
-      if (todaySeries.length > 0) series = todaySeries
+      // 국내 1일: 분봉 API가 다일치 데이터를 반환하므로 가장 최근 거래 세션만 추출
+      // (당일 데이터가 없는 경우에도 직전 거래일을 올바르게 표시)
+      const latestSession = getLatestMinuteSession(series)
+      if (latestSession.length > 0) series = latestSession
     } else if (periodCfg.tradingDays) {
       // 분봉(국내 1주·1달): sessionDate 기반, 일봉(해외 1주·1달): date 기반
       // days: 7/30 범위로 넉넉히 받은 뒤 최근 N거래일로 정확히 자름
