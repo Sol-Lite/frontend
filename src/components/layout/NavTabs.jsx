@@ -1,8 +1,6 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/cn'
-
-const LAST_INVEST_PATH_KEY = 'invest.lastPath'
-const LAST_INVEST_STATE_KEY = 'invest.lastState'
+import { LAST_INVEST_PATH_KEY, LAST_INVEST_STATE_KEY } from '@/features/invest/navigation'
 
 const TABS = [
   { label: '홈',  path: '/' },
@@ -27,9 +25,14 @@ export default function NavTabs() {
     const lastInvestPath = sessionStorage.getItem(LAST_INVEST_PATH_KEY) || '/invest'
     const savedState = sessionStorage.getItem(LAST_INVEST_STATE_KEY)
 
-    navigate(lastInvestPath, {
-      state: savedState ? JSON.parse(savedState) : undefined,
-    })
+    let parsedState
+    try {
+      parsedState = savedState ? JSON.parse(savedState) : undefined
+    } catch {
+      parsedState = undefined
+    }
+
+    navigate(lastInvestPath, { state: parsedState })
   }
 
   return (

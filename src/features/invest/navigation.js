@@ -1,3 +1,6 @@
+export const LAST_INVEST_PATH_KEY = 'invest.lastPath'
+export const LAST_INVEST_STATE_KEY = 'invest.lastState'
+
 const EXCHANGE_CODE_BY_MARKET_TYPE = {
   NASDAQ: 'NAS',
   NYSE: 'NYS',

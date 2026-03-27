@@ -8,12 +8,11 @@ import {
   FALLBACK_USD_RATE,
   isForeignMarketType,
 } from '@/features/invest/formatters'
+import { LAST_INVEST_PATH_KEY, LAST_INVEST_STATE_KEY } from '@/features/invest/navigation'
 import useInvestMarketData from '@/features/invest/useInvestMarketData'
 import { INVEST_STOCK } from '@/mocks/invest'
 import useCurrencyStore from '@/store/useCurrencyStore'
 
-const LAST_INVEST_PATH_KEY = 'invest.lastPath'
-const LAST_INVEST_STATE_KEY = 'invest.lastState'
 const LEFT_TAB_KEY = 'invest.leftTab'
 const RIGHT_TAB_KEY = 'invest.rightTab'
 
