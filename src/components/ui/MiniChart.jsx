@@ -52,10 +52,10 @@ function getChartColors() {
  * 위젯용 캔들 차트 (lightweight-charts)
  * @param {{ time: number, open, high, low, close: number }[]} candleData - 캔들 데이터 (unix seconds)
  * @param {{ time: number, open, high, low, close: number }}   liveCandle - STOMP 실시간 업데이트 포인트
- * @param {boolean} isIntraday - true(1일): X축 HH:MM, 79슬롯 고정, 우측 오픈 / false: M/D, fitContent
+ * @param {boolean} isIntraday - true(1일): X축 HH:MM, 79슬롯(09:00~15:30) 고정, 우측 오픈 / false: M/D, fitContent
  * @param {string}  className
  */
-export default function MiniChart({ candleData, liveCandle, isIntraday = false, tickOffset = 9 * 3600, forcefit = false, className = '' }) {
+export default function MiniChart({ candleData, liveCandle, isIntraday = false, tickOffset = 9 * 3600, isForceFit = false, className = '' }) {
   const ref      = useRef(null)
   const chartRef = useRef(null)
   const seriesRef = useRef(null)
@@ -136,7 +136,7 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
     if (candleData?.length) {
       series.setData(candleData)
     }
-    if (isIntraday && !forcefit) {
+    if (isIntraday && !isForceFit) {
       // 국내 1일: 09:00~15:30 세션 슬롯(79개)에 맞춰 고정
       chart.timeScale().setVisibleLogicalRange(getIntradayFixedLogicalRange(candleData, tickOffset))
     } else if (candleData?.length) {

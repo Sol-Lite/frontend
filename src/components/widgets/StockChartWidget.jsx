@@ -57,6 +57,14 @@ function fmtVolume(v) {
   return v.toLocaleString('ko-KR')
 }
 
+function isWithinRegularSession(timestampMs) {
+  const d = new Date(timestampMs)
+  const minutes = d.getHours() * 60 + d.getMinutes()
+  const open = 9 * 60
+  const close = 15 * 60 + 30
+  return minutes >= open && minutes <= close
+}
+
 export default function StockChartWidget({ instanceId, variant = 'stock-sm', colSpan = 1, rowSpan = 1, onDelete, config = {} }) {
   const [activePeriod, setActivePeriod] = useState(
     () => localStorage.getItem(`widget.period.${instanceId}`) ?? '1일'
@@ -257,7 +265,12 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
       // 국내 1일: 분봉 API가 다일치 데이터를 반환하므로 가장 최근 거래 세션만 추출
       // (당일 데이터가 없는 경우에도 직전 거래일을 올바르게 표시)
       const latestSession = getLatestMinuteSession(series)
-      if (latestSession.length > 0) series = latestSession
+      if (latestSession.length > 0) {
+        // 초기 렌더에서는 정규장(09:00~15:30)만 노출.
+        // 장후 봉은 STOMP liveCandle 업데이트가 들어올 때 우측으로 밀리며 추가되게 유지한다.
+        const regularSession = latestSession.filter((p) => isWithinRegularSession(p.timestamp))
+        series = regularSession.length > 0 ? regularSession : latestSession
+      }
       // 오늘 세션 여부: 9:01→현재 애니메이션 vs 과거 세션 fitContent 분기에 사용
       isCurrentSession = series.some((p) => p.sessionDate === todayKey)
     } else if (periodCfg.tradingDays) {
@@ -277,6 +290,8 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
       isCurrentSession,
     }
   }, [isMinute, isOverseas, minuteRaw, chartRaw, periodCfg.filterToday, periodCfg.tradingDays, todayKey])
+
+  const isForceFit = isIntraday && (isOverseas || !isCurrentSession)
 
   // ── 가격 표시용 (STOMP > REST 우선) ───────────────────────────
   const priceSource = livePrice ?? priceData
@@ -342,7 +357,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
                 }
               </div>
             </div>
-            <MiniChart candleData={candleData} liveCandle={isIntraday ? liveCandle : null} isIntraday={isIntraday} forcefit={isIntraday && (isOverseas || !isCurrentSession)} className="flex-1 min-h-0" />
+            <MiniChart candleData={candleData} liveCandle={isIntraday ? liveCandle : null} isIntraday={isIntraday} isForceFit={isForceFit} className="flex-1 min-h-0" />
           </div>
         </WidgetCard>
         {selectModal}
@@ -373,7 +388,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
           <div className="flex items-center shrink-0 mb-1.5">
             {periodTabs}
           </div>
-          <MiniChart candleData={candleData} liveCandle={isIntraday ? liveCandle : null} isIntraday={isIntraday} forcefit={isIntraday && (isOverseas || !isCurrentSession)} className="flex-1 min-h-0 rounded-xl mb-1.5" />
+          <MiniChart candleData={candleData} liveCandle={isIntraday ? liveCandle : null} isIntraday={isIntraday} isForceFit={isForceFit} className="flex-1 min-h-0 rounded-xl mb-1.5" />
           <div className="flex justify-between shrink-0 mt-1.5">
             {[
               { label: '시가',  val: stock.open },
@@ -416,7 +431,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
           <div className="flex shrink-0 mb-1">
             {periodTabs}
           </div>
-          <MiniChart candleData={candleData} liveCandle={isIntraday ? liveCandle : null} isIntraday={isIntraday} forcefit={isIntraday && (isOverseas || !isCurrentSession)} className="flex-1 min-h-0 rounded-xl mb-1.5" />
+          <MiniChart candleData={candleData} liveCandle={isIntraday ? liveCandle : null} isIntraday={isIntraday} isForceFit={isForceFit} className="flex-1 min-h-0 rounded-xl mb-1.5" />
           <div className="flex justify-between shrink-0">
             {[
               { label: '시가', val: stock.open },
