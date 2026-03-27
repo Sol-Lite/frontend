@@ -7,12 +7,12 @@
  */
 export default function RatioBar({ buyRatio, sellRatio, className = '' }) {
   return (
-    <div className={className}>
-      <div className="h-1 rounded-full overflow-hidden flex bg-stroke">
+    <div className={`relative h-8 ${className}`}>
+      <div className="absolute inset-x-0 top-1/2 flex h-1 -translate-y-1/2 overflow-hidden rounded-full bg-stroke">
         <div className="bg-up h-full" style={{ width: `${buyRatio}%` }} />
         <div className="bg-down h-full" style={{ width: `${sellRatio}%` }} />
       </div>
-      <div className="flex justify-between mt-0.5">
+      <div className="absolute inset-x-0 bottom-0 flex justify-between">
         <span className="text-[9px] font-semibold text-up">{buyRatio}</span>
         <span className="text-[9px] font-semibold text-down">{sellRatio}</span>
       </div>

@@ -12,6 +12,9 @@ export default function InvestOrderBookPanel({
   displayCurrency,
   usdRate,
 }) {
+  const isUp = changeRate > 0
+  const isDown = changeRate < 0
+
   if (!orderBook) {
     return (
       <section className="flex w-[170px] shrink-0 flex-col overflow-hidden border-r border-stroke bg-surface">
@@ -53,8 +56,24 @@ export default function InvestOrderBookPanel({
           </button>
         ))}
 
-        <div className="flex items-center justify-between border-y-2 border-up-border bg-up-bg px-2 py-1.5">
-          <span className="text-[15px] font-black text-up">{formatVisiblePrice(currentPrice, { marketType, displayCurrency, usdRate })}</span>
+        <div
+          className={cn(
+            'flex items-center justify-between border-y-2 px-2 py-1.5',
+            isUp && 'border-up-border bg-up-bg',
+            isDown && 'border-down-border bg-down-bg',
+            !isUp && !isDown && 'border-stroke bg-surface-muted',
+          )}
+        >
+          <span
+            className={cn(
+              'text-[15px] font-black',
+              isUp && 'text-up',
+              isDown && 'text-down',
+              !isUp && !isDown && 'text-foreground',
+            )}
+          >
+            {formatVisiblePrice(currentPrice, { marketType, displayCurrency, usdRate })}
+          </span>
           {changeRate != null && !Number.isNaN(changeRate) && (
             <PriceChange value={changeRate} variant="badge" />
           )}

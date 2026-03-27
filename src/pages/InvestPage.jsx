@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useLocation, useParams } from 'react-router-dom'
 import InvestBottomPanels from '@/components/invest/InvestBottomPanels'
 import InvestOrderSection from '@/components/invest/InvestOrderSection'
@@ -8,16 +8,21 @@ import {
   FALLBACK_USD_RATE,
   isForeignMarketType,
 } from '@/features/invest/formatters'
+import { LAST_INVEST_PATH_KEY, LAST_INVEST_STATE_KEY } from '@/features/invest/navigation'
 import useInvestMarketData from '@/features/invest/useInvestMarketData'
 import { INVEST_STOCK } from '@/mocks/invest'
 import useCurrencyStore from '@/store/useCurrencyStore'
 
+const LEFT_TAB_KEY = 'invest.leftTab'
+const RIGHT_TAB_KEY = 'invest.rightTab'
+
 export default function InvestPage() {
   const { stockCode: routeStockCode } = useParams()
-  const { state: locationState } = useLocation()
+  const location = useLocation()
+  const locationState = location.state
   const stockCode = routeStockCode ?? INVEST_STOCK.code
-  const [leftTab, setLeftTab] = useState('daily')
-  const [rightTab, setRightTab] = useState('exec')
+  const [leftTab, setLeftTab] = useState(() => localStorage.getItem(LEFT_TAB_KEY) ?? 'daily')
+  const [rightTab, setRightTab] = useState(() => localStorage.getItem(RIGHT_TAB_KEY) ?? 'exec')
 
   const {
     stockMeta,
@@ -62,6 +67,26 @@ export default function InvestPage() {
       [stockCode]: nextCurrency,
     }))
   }
+
+  useEffect(() => {
+    localStorage.setItem(LEFT_TAB_KEY, leftTab)
+  }, [leftTab])
+
+  useEffect(() => {
+    localStorage.setItem(RIGHT_TAB_KEY, rightTab)
+  }, [rightTab])
+
+  useEffect(() => {
+    sessionStorage.setItem(LAST_INVEST_PATH_KEY, location.pathname)
+
+    const nextState = {
+      stockName: stockMeta.name,
+      stockNameEn: stockMeta.nameEn ?? null,
+      marketType,
+      exchangeCode: stockMeta.exchangeCode ?? null,
+    }
+    sessionStorage.setItem(LAST_INVEST_STATE_KEY, JSON.stringify(nextState))
+  }, [location.pathname, marketType, stockMeta.exchangeCode, stockMeta.name, stockMeta.nameEn])
 
   return (
     <div className="h-full overflow-x-auto bg-surface">

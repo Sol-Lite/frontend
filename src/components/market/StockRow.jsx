@@ -4,20 +4,35 @@ import StockAvatar from '@/components/ui/StockAvatar'
 import PriceChange from '@/components/ui/PriceChange'
 import RatioBar from '@/components/ui/RatioBar'
 
-const GRID_WITH_VOL    = 'grid-cols-[32px_36px_1fr_110px_80px_88px_120px]'
-const GRID_WITHOUT_VOL = 'grid-cols-[32px_36px_1fr_110px_80px_120px]'
+export const MARKET_GRID_BY_SORT_FILTER = {
+  volume_value: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_90px_96px]',
+  volume: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_80px_90px]',
+  market_cap: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_90px_82px]',
+  rising: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_108px]',
+  falling: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_108px]',
+}
+
+export function hasPrimaryMetricColumn(sortFilter) {
+  return ['volume_value', 'volume', 'market_cap'].includes(sortFilter)
+}
+
+export function getMarketRowGrid(sortFilter) {
+  return MARKET_GRID_BY_SORT_FILTER[sortFilter] ?? MARKET_GRID_BY_SORT_FILTER.volume_value
+}
 
 
-export default function StockRow({ stock, showVolume = true, isWatched, onWatchToggle }) {
+export default function StockRow({ stock, sortFilter = 'volume_value', isWatched, onWatchToggle }) {
   const navigate = useNavigate()
   const isTop = stock.rank === 1
-  const grid = showVolume ? GRID_WITH_VOL : GRID_WITHOUT_VOL
+  const grid = getMarketRowGrid(sortFilter)
+  const showVolume = hasPrimaryMetricColumn(sortFilter)
   const secondaryMetric = stock.secondaryMetric ?? { value: '—' }
+  const marketType = stock.market ?? stock.marketType ?? null
 
   return (
     <div
       className={`grid ${grid} items-center px-4 py-2.5 border-b border-stroke-subtle hover:bg-surface-subtle transition-colors duration-[100ms] cursor-pointer last:border-b-0`}
-      onClick={() => navigate(`/invest/${stock.stockCode}`, { state: { stockName: stock.name, marketType: 'KOSPI' } })}
+      onClick={() => navigate(`/invest/${stock.stockCode}`, { state: { stockName: stock.name, marketType } })}
     >
       {/* 관심종목 */}
       <button
@@ -37,7 +52,7 @@ export default function StockRow({ stock, showVolume = true, isWatched, onWatchT
 
       {/* 종목명 */}
       <div className="flex items-center gap-2 min-w-0">
-        <StockAvatar name={stock.name} stockCode={stock.stockCode} marketType={stock.market ?? stock.marketType} color={stock.color} size="md" />
+        <StockAvatar name={stock.name} stockCode={stock.stockCode} marketType={marketType} color={stock.color} size="md" />
         <span className="text-[13px] font-semibold text-foreground truncate">{stock.name}</span>
         {stock.consecutiveDays > 0 && (
           <span className={`shrink-0 px-1.5 py-0.5 rounded-md text-[9px] font-bold ${
@@ -66,11 +81,11 @@ export default function StockRow({ stock, showVolume = true, isWatched, onWatchT
       )}
 
       {/* 보조 지표 */}
-      <div className="pl-2">
+      <div className="flex h-full items-center pl-2">
         {secondaryMetric.buyRatio != null
-          ? <RatioBar buyRatio={secondaryMetric.buyRatio} sellRatio={secondaryMetric.sellRatio} />
+          ? <RatioBar className="w-full" buyRatio={secondaryMetric.buyRatio} sellRatio={secondaryMetric.sellRatio} />
           : (
-            <div className="text-right text-[12px] font-medium text-foreground-secondary">
+            <div className="w-full text-right text-[12px] font-medium text-foreground-secondary">
               {secondaryMetric.value ?? '—'}
             </div>
           )}

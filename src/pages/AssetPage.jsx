@@ -3,7 +3,6 @@ import { ArrowLeftRight } from 'lucide-react'
 import ReactECharts from 'echarts-for-react'
 import { getStockLogoUrl } from '@/lib/stockLogo'
 import { extractDominantColor } from '@/lib/extractLogoColor'
-import LiveDot from '@/components/ui/LiveDot'
 import StockAvatar from '@/components/ui/StockAvatar'
 import FilterChip from '@/components/ui/FilterChip'
 import ExchangeModal from '@/components/asset/ExchangeModal'
@@ -25,6 +24,33 @@ function fmtRate(r) {
   if (r == null) return '-'
   return (r >= 0 ? '+' : '') + Number(r).toFixed(2) + '%'
 }
+function fmtSigned(n, suffix = '') {
+  const value = Number(n ?? 0)
+  return `${value >= 0 ? '+' : '-'}${fmt(Math.abs(value))}${suffix}`
+}
+function fmtCompactCurrency(n) {
+  const value = Number(n ?? 0)
+  if (Math.abs(value) >= 100000000) return `${(value / 100000000).toFixed(1)}억`
+  if (Math.abs(value) >= 10000) return `${(value / 10000).toFixed(0)}만`
+  return fmt(value)
+}
+function fmtUsd(n) {
+  return Number(n ?? 0).toLocaleString('en-US', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })
+}
+
+const ASSET_FLOW_RANGES = [
+  { key: '1W', label: '1주' },
+  { key: '1M', label: '1월' },
+  { key: 'ALL', label: '전체' },
+]
+
+const ASSET_FLOW_MODES = [
+  { key: 'assets', label: '총자산' },
+  { key: 'return', label: '누적수익률' },
+]
 
 // ── Hero 섹션 ─────────────────────────────────────────────────────
 function HeroSection({ data, user, onExchange }) {
@@ -32,7 +58,7 @@ function HeroSection({ data, user, onExchange }) {
   const blank = isLoading ? '-' : null
 
   return (
-    <div className="shrink-0 bg-surface border-b border-stroke px-6 py-4">
+    <div className="shrink-0 bg-surface border-b border-stroke px-6 py-2.5">
       <div className="flex items-center justify-between">
         <div>
           <div className="text-[11px] text-foreground-disabled mb-1">
@@ -70,7 +96,7 @@ function HeroSection({ data, user, onExchange }) {
             </div>
             <div className="text-right">
               <div className="text-[9px] font-semibold text-foreground-disabled mb-0.5">USD 잔고</div>
-              <div className="text-[13px] font-bold text-foreground">{blank ?? ('$' + fmt(usdBal))}</div>
+              <div className="text-[13px] font-bold text-foreground">{blank ?? ('$' + fmtUsd(usdBal))}</div>
             </div>
           </div>
           <div className="flex items-center gap-1.5">
@@ -96,15 +122,16 @@ function AccountCard({ data }) {
   const accountName = accountInfo?.accountName ?? '종합계좌'
 
   return (
-    <div className="bg-surface rounded-2xl border border-stroke p-4 flex flex-col gap-3">
-      <div className="text-[11px] font-bold text-foreground">계좌</div>
+    <section className="flex h-full min-w-0 flex-col border-r border-stroke-subtle">
+      <div className="px-5 py-2.5">
+        <div className="text-[13px] font-bold text-foreground">계좌</div>
+      </div>
       <div className="h-px bg-stroke-subtle" />
-      <div>
+      <div className="flex flex-1 flex-col gap-2 px-5 py-2.5">
         <div className="text-[13px] font-bold text-foreground">{accountName}</div>
         <div className="text-[11px] text-foreground-disabled mt-0.5">{accountNumber}</div>
       </div>
-      <div className="h-px bg-stroke-subtle" />
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 px-5 pb-2.5">
         <div className="flex items-center justify-between">
           <span className="text-[10px] text-foreground-disabled">현재 수익률</span>
           <span className={`text-[15px] font-black ${isSimProfit ? 'text-up' : 'text-down'}`}>
@@ -120,7 +147,7 @@ function AccountCard({ data }) {
           <span className="text-[11px] font-semibold text-foreground">1억원</span>
         </div>
       </div>
-    </div>
+    </section>
   )
 }
 
@@ -148,12 +175,16 @@ function AssetBreakdownCard({ data }) {
       rate: overseasRate,
     },
     { label: 'KRW 현금', value: blank ?? fmt(krwDeposit) + '원', pnl: null },
-    { label: 'USD 현금', value: blank ?? ('$' + fmt(usdBal)), pnl: null },
+    { label: 'USD 현금', value: blank ?? ('$' + fmtUsd(usdBal)), pnl: null },
   ]
 
   return (
-    <div className="bg-surface rounded-2xl border border-stroke p-4 flex flex-col gap-2.5">
-      <div className="text-[11px] font-bold text-foreground mb-0.5">자산 구성</div>
+    <section className="flex h-full min-w-0 flex-col border-r border-stroke-subtle">
+      <div className="px-5 py-2.5">
+        <div className="text-[13px] font-bold text-foreground">자산 구성</div>
+      </div>
+      <div className="h-px bg-stroke-subtle" />
+      <div className="flex flex-1 flex-col gap-1.5 px-5 py-2.5">
       {rows.map((row) => (
         <div key={row.label} className="flex items-center justify-between py-1.5 border-b border-stroke-subtle last:border-0">
           <span className="text-[11px] text-foreground-secondary">{row.label}</span>
@@ -167,44 +198,134 @@ function AssetBreakdownCard({ data }) {
           </div>
         </div>
       ))}
-    </div>
+      </div>
+    </section>
   )
 }
 
 // ── 자산 흐름 카드 ────────────────────────────────────────────────
-function AssetFlowCard({ data }) {
-  const { tradeCount, accountProfit, isAccountProfit, isLoading } = data
+function AssetFlowCard({ data, assetFlowRange, onChangeAssetFlowRange }) {
+  const { isAccountProfit, isLoading, assetFlowPoints, latestDailyReturnRate, latestCumulativeReturnRate } = data
+  const hasFlow = assetFlowPoints.length > 0
+  const [mode, setMode] = useState('assets')
 
-  // 거래 횟수 기반 간단한 bar sparkline (시각적 표현)
-  const bars = [28, 35, 30, 45, 40, 55, 50, 62, 58, 70, 65, 78, 72, 85, 80, 92, 88, 96, 90, 100]
+  const isAssetMode = mode === 'assets'
+  const seriesData = isAssetMode
+    ? assetFlowPoints.map((point) => point.totalAssets)
+    : assetFlowPoints.map((point) => point.cumulativeReturnRate)
+  const headlineValue = isAssetMode ? latestDailyReturnRate : latestCumulativeReturnRate
+  const headlineLabel = isAssetMode ? '전일 대비 수익률' : '누적 수익률'
+  const chartColor = isAssetMode
+    ? (isAccountProfit ? '#16A34A' : '#E11D48')
+    : (headlineValue >= 0 ? '#16A34A' : '#E11D48')
+
+  const chartOption = {
+    backgroundColor: 'transparent',
+    grid: { left: 50, right: 10, top: 8, bottom: 16, containLabel: false },
+    tooltip: {
+      trigger: 'axis',
+      appendToBody: true,
+      confine: false,
+      backgroundColor: '#FFFFFF',
+      borderColor: '#EAECF0',
+      borderWidth: 1,
+      borderRadius: 10,
+      padding: [10, 12],
+      textStyle: { color: '#191F28' },
+      extraCssText: 'box-shadow:0 8px 24px rgba(15,23,42,0.12); z-index: 9999;',
+      formatter: (params) => {
+        const point = params?.[0]
+        if (!point) return ''
+        const raw = assetFlowPoints[point.dataIndex]
+        return [
+          `<div style="font-size:12px;font-weight:700">${raw.date}</div>`,
+          `<div style="margin-top:4px;font-size:12px">총자산 <b>${fmt(raw.totalAssets)}원</b></div>`,
+          `<div style="font-size:12px">누적수익률 <b>${fmtRate(raw.cumulativeReturnRate)}</b></div>`,
+          `<div style="font-size:12px">전일대비 <b>${fmtRate(raw.dailyReturnRate)}</b></div>`,
+        ].join('')
+      },
+    },
+    xAxis: {
+      type: 'category',
+      boundaryGap: false,
+      data: assetFlowPoints.map((point) => point.date.slice(5).replace('-', '.')),
+      axisLine: { show: false },
+      axisTick: { show: false },
+      axisLabel: { color: '#9CA3AF', fontSize: 10, margin: 12 },
+    },
+    yAxis: {
+      type: 'value',
+      splitNumber: 3,
+      axisLine: { show: false },
+      axisTick: { show: false },
+      splitLine: { lineStyle: { color: '#F2F4F7' } },
+      axisLabel: {
+        color: '#9CA3AF',
+        fontSize: 10,
+        margin: 10,
+        formatter: (value) => isAssetMode ? `${fmtCompactCurrency(value)}원` : fmtRate(value),
+      },
+    },
+    series: [
+      {
+        type: 'line',
+        smooth: true,
+        showSymbol: assetFlowPoints.length === 1,
+        symbolSize: 7,
+        data: seriesData,
+        lineStyle: { width: 3, color: chartColor },
+        itemStyle: { color: chartColor },
+        areaStyle: {
+          color: chartColor === '#16A34A'
+            ? 'rgba(22,163,74,0.14)'
+            : 'rgba(225,29,72,0.14)',
+        },
+      },
+    ],
+  }
 
   return (
-    <div className="bg-surface rounded-2xl border border-stroke p-4 flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <div className="text-[11px] font-bold text-foreground">자산 흐름</div>
-        <span className="text-[9px] text-foreground-disabled">누적 {tradeCount}회 거래</span>
+    <section className="flex h-full min-w-0 flex-col overflow-hidden">
+      <div className="flex items-center justify-between px-5 py-2.5">
+        <div className="text-[13px] font-bold text-foreground">자산 흐름</div>
       </div>
-
-      {/* 스파크라인 바 차트 */}
-      <div className="flex-1 flex items-end gap-px min-h-0 h-[60px]">
-        {bars.map((h, i) => (
-          <div
-            key={i}
-            className={`flex-1 rounded-sm h-[var(--bar-h)] ${isAccountProfit ? 'bg-up/40' : 'bg-down/40'}`}
-            style={{ '--bar-h': `${h}%` }}
-          />
-        ))}
-      </div>
-
       <div className="h-px bg-stroke-subtle" />
 
-      <div className="flex items-center justify-between">
-        <span className="text-[10px] text-foreground-disabled">총 평가손익</span>
-        <span className={`text-[14px] font-black ${isAccountProfit ? 'text-up' : 'text-down'}`}>
-          {isLoading ? '-' : ((isAccountProfit ? '+' : '') + fmt(accountProfit ?? 0) + '원')}
-        </span>
+      <div className="flex items-center justify-between gap-2 px-5 pt-2.5">
+        <div className="flex items-center gap-1.5">
+          {ASSET_FLOW_MODES.map(({ key, label }) => (
+            <FilterChip key={key} isActive={mode === key} onClick={() => setMode(key)}>
+              {label}
+            </FilterChip>
+          ))}
+        </div>
+        <div className="flex items-center gap-1.5">
+          {ASSET_FLOW_RANGES.map(({ key, label }) => (
+            <FilterChip key={key} isActive={assetFlowRange === key} onClick={() => onChangeAssetFlowRange(key)}>
+              {label}
+            </FilterChip>
+          ))}
+        </div>
       </div>
-    </div>
+
+      <div className="shrink-0 px-5 pt-2">
+        <div className="text-[9px] text-foreground-disabled">{headlineLabel}</div>
+        <div className={`text-[18px] font-black ${headlineValue >= 0 ? 'text-up' : 'text-down'}`}>
+          {isLoading ? '-' : fmtRate(headlineValue)}
+        </div>
+      </div>
+
+      <div className="h-[88px] overflow-hidden rounded-xl px-5">
+        {hasFlow ? (
+          <ReactECharts option={chartOption} className="w-full h-full" opts={{ renderer: 'svg' }} />
+        ) : (
+          <div className="flex items-center justify-center h-full text-[11px] text-foreground-disabled">
+            데이터 없음
+          </div>
+        )}
+      </div>
+
+    </section>
   )
 }
 
@@ -250,12 +371,17 @@ function useLogoColors(items) {
 
 // ── 포트폴리오 파이차트 패널 (하단 좌) ───────────────────────────
 function PortfolioPanel({ data }) {
-  const { portfolioItems, stockProfitRate, isStockProfit, isLoading } = data
+  const { portfolioItems } = data
 
   const getColor = useLogoColors(portfolioItems)
   const hasItems = portfolioItems.length > 0
 
   const sortedItems = [...portfolioItems].sort((a, b) => b.weight - a.weight)
+  const primaryItems = sortedItems.slice(0, 5)
+  const restWeight = sortedItems.slice(5).reduce((sum, item) => sum + item.weight, 0)
+  const summaryItems = restWeight > 0
+    ? [...primaryItems, { label: '기타', weight: restWeight, stockCode: null, marketType: null, type: 'STOCK' }]
+    : primaryItems
 
   const chartOption = {
     backgroundColor: 'transparent',
@@ -305,61 +431,42 @@ function PortfolioPanel({ data }) {
   }
 
   return (
-    <div className="flex-1 min-w-0 bg-surface rounded-2xl border border-stroke p-5 flex flex-col overflow-hidden">
-      <div className="flex items-center justify-between mb-2 shrink-0">
-        <div className="text-[11px] font-bold text-foreground">포트폴리오</div>
-        {!isLoading && (
-          <span className={`text-[11px] font-bold ${isStockProfit ? 'text-up' : 'text-down'}`}>
-            수익률 {fmtRate(stockProfitRate)}
-          </span>
-        )}
+    <div className="flex min-h-0 w-[490px] shrink-0 flex-col overflow-hidden border-r border-stroke bg-surface">
+      <div className="flex min-h-[44px] items-center border-b border-stroke px-4 py-2.5 shrink-0">
+        <div className="text-[13px] font-bold text-foreground">포트폴리오</div>
       </div>
 
-      {/* 도넛 차트 */}
-      <div className="relative shrink-0 h-[260px]">
+      <div className="flex min-h-0 flex-1 items-center gap-4 px-5 py-4">
         {hasItems ? (
           <>
-            <ReactECharts
-              option={chartOption}
-              className="w-full h-full"
-              opts={{ renderer: 'svg' }}
-            />
-            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className={`text-[15px] font-black ${isStockProfit ? 'text-up' : 'text-down'}`}>
-                {isLoading ? '-' : fmtRate(stockProfitRate)}
-              </span>
-              <span className="text-[9px] text-foreground-disabled mt-0.5">수익률</span>
+            <div className="relative h-[260px] w-[260px] shrink-0">
+              <ReactECharts
+                option={chartOption}
+                className="w-full h-full"
+                opts={{ renderer: 'svg' }}
+              />
+            </div>
+
+            <div className="flex min-w-0 flex-1 flex-col gap-3">
+              {summaryItems.map((item, i) => {
+                const color = getColor(item, i)
+                return (
+                  <div key={item.label} className="flex items-center justify-between gap-3 border-b border-stroke-subtle pb-2 last:border-0 last:pb-0">
+                    <div className="flex min-w-0 items-center gap-2">
+                      <div className="h-2.5 w-2.5 shrink-0 rounded-[3px] bg-[var(--dot-color)]" style={{ '--dot-color': color }} />
+                      <span className="truncate text-[12px] font-semibold text-foreground-secondary">{item.label}</span>
+                    </div>
+                    <span className="shrink-0 text-[18px] font-black text-foreground">{item.weight}%</span>
+                  </div>
+                )
+              })}
             </div>
           </>
         ) : (
-          <div className="flex items-center justify-center h-full">
+          <div className="flex h-full w-full items-center justify-center">
             <span className="text-[11px] text-foreground-disabled">데이터 없음</span>
           </div>
         )}
-      </div>
-
-      {/* 레전드 */}
-      <div className="flex flex-col gap-2 overflow-y-auto flex-1 mt-2">
-        {portfolioItems.length === 0 && !isLoading && (
-          <p className="text-[11px] text-foreground-disabled text-center">보유 종목 없음</p>
-        )}
-        {sortedItems.map((item, i) => {
-          const color = getColor(item, i)
-          return (
-            <div key={item.label} className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-2.5 h-2.5 rounded-[3px] shrink-0 bg-[var(--dot-color)]" style={{ '--dot-color': color }} />
-                <span className="text-[12px] text-foreground-secondary">{item.label}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-[60px] h-1 rounded-full bg-surface-muted overflow-hidden">
-                  <div className="h-full rounded-full w-[var(--bar-w)] bg-[var(--bar-color)]" style={{ '--bar-w': `${item.weight}%`, '--bar-color': color }} />
-                </div>
-                <span className="text-[11px] font-bold text-foreground w-8 text-right">{item.weight}%</span>
-              </div>
-            </div>
-          )
-        })}
       </div>
     </div>
   )
@@ -367,15 +474,15 @@ function PortfolioPanel({ data }) {
 
 // ── 보유 종목 행 ──────────────────────────────────────────────────
 function HoldingRow({ h }) {
-  const { stockName, stockCode, marketType, qty, cur, avg, evalKrw, pnl, pnlRate, isUp, isKrw } = h
+  const { stockName, stockCode, marketType, qty, cur, avg, investedLocal, pnl, pnlRate, isUp, isKrw, hasCurrentPrice } = h
 
   return (
-    <div className="grid grid-cols-[1fr_80px_88px_108px] items-center px-4 py-2.5 border-b border-stroke-subtle cursor-pointer hover:bg-surface-subtle transition-colors">
+    <div className="grid grid-cols-[1fr_62px_82px_78px_92px] items-center px-4 py-2.5 border-b border-stroke-subtle cursor-pointer hover:bg-surface-subtle transition-colors">
       <div className="flex items-center gap-2.5">
         <StockAvatar name={stockName} stockCode={stockCode} marketType={marketType} size="md" />
         <div className="min-w-0">
           <div className="text-[12px] font-bold text-foreground truncate">{stockName}</div>
-          <div className="text-[9px] text-foreground-disabled">{marketType}{!isKrw && ' 🇺🇸'}</div>
+          <div className="text-[9px] text-foreground-disabled">{marketType}</div>
         </div>
       </div>
 
@@ -386,16 +493,22 @@ function HoldingRow({ h }) {
         </div>
       </div>
 
-      <div className={`text-right text-[13px] font-extrabold ${isUp ? 'text-up' : 'text-down'}`}>
-        {isKrw ? fmt(cur) : `$${Number(cur).toFixed(2)}`}
+      <div className="text-right text-[11px] font-bold text-foreground-secondary">
+        {isKrw ? `${fmtCompactCurrency(investedLocal)}원` : `$${fmtUsd(investedLocal)}`}
+      </div>
+
+      <div className={hasCurrentPrice ? `text-right text-[12px] font-extrabold ${isUp ? 'text-up' : 'text-down'}` : 'text-right text-[12px] font-bold text-foreground-disabled'}>
+        {hasCurrentPrice
+          ? (isKrw ? fmt(cur) : `$${Number(cur).toFixed(2)}`)
+          : '-'}
       </div>
 
       <div className="text-right">
-        <div className={`text-[12px] font-extrabold ${isUp ? 'text-up' : 'text-down'}`}>
-          {(isUp ? '+' : '') + fmt(Math.abs(pnl))}
+        <div className={pnl != null ? `text-[12px] font-extrabold ${isUp ? 'text-up' : 'text-down'}` : 'text-[12px] font-bold text-foreground-disabled'}>
+          {pnl != null ? fmtSigned(pnl) : '-'}
         </div>
-        <div className={`text-[9px] font-bold ${isUp ? 'text-up' : 'text-down'}`}>
-          {fmtRate(pnlRate)}
+        <div className={pnlRate != null ? `text-[9px] font-bold ${isUp ? 'text-up' : 'text-down'}` : 'text-[9px] font-semibold text-foreground-disabled'}>
+          {pnlRate != null ? fmtRate(pnlRate) : '-'}
         </div>
       </div>
     </div>
@@ -408,18 +521,15 @@ function HoldingsPanel({ data }) {
   const { domesticRows, overseasRows, isLoading } = data
 
   const allRows = [...domesticRows, ...overseasRows]
-    .sort((a, b) => b.evalKrw - a.evalKrw)
+    .sort((a, b) => (b.evalKrw ?? 0) - (a.evalKrw ?? 0))
 
   const rows = filter === 'domestic' ? domesticRows
     : filter === 'overseas' ? overseasRows
     : allRows
 
-  const totalEval = rows.reduce((s, h) => s + h.evalKrw, 0)
-  const totalPnl = rows.reduce((s, h) => s + h.pnl, 0)
+  const totalEval = rows.reduce((s, h) => s + (h.evalKrw ?? 0), 0)
+  const totalPnl = rows.reduce((s, h) => s + (h.pnl ?? 0), 0)
   const totalIsUp = totalPnl >= 0
-
-  const now = new Date()
-  const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`
 
   const filters = [
     { key: 'all',      label: `전체 ${allRows.length}` },
@@ -428,31 +538,30 @@ function HoldingsPanel({ data }) {
   ]
 
   return (
-    <div className="flex-1 min-w-0 bg-surface rounded-2xl border border-stroke flex flex-col overflow-hidden">
+    <div className="flex-1 min-w-0 bg-surface flex flex-col overflow-hidden">
 
       {/* 헤더: 필터 + 시간 */}
-      <div className="shrink-0 flex items-center justify-between px-4 py-2.5 border-b border-stroke">
-        <div className="flex items-center gap-1.5">
+      <div className="shrink-0 flex min-h-[44px] items-center justify-between px-4 py-2.5 border-b border-stroke">
+        <div className="text-[13px] font-bold text-foreground">보유종목</div>
+        <div className="flex items-center gap-0.5">
           {filters.map(({ key, label }) => (
             <FilterChip
               key={key}
               isActive={filter === key}
               onClick={() => setFilter(key)}
+              className="px-1.5 py-0.5 text-[9px]"
             >
               {label}
             </FilterChip>
           ))}
         </div>
-        <div className="flex items-center gap-1">
-          <LiveDot size="sm" />
-          <span className="text-[9px] text-foreground-disabled">{timeStr} 기준</span>
-        </div>
       </div>
 
       {/* 컬럼 헤더 */}
-      <div className="shrink-0 grid grid-cols-[1fr_80px_88px_108px] items-center px-4 py-1.5 bg-surface-subtle border-b border-stroke text-[9px] font-semibold text-foreground-disabled">
+      <div className="shrink-0 grid grid-cols-[1fr_62px_82px_78px_92px] items-center px-4 py-1.5 bg-surface-subtle border-b border-stroke text-[9px] font-semibold text-foreground-disabled">
         <span>종목</span>
         <span className="text-right">수량 / 평균가</span>
+        <span className="text-right">매수금액</span>
         <span className="text-right">현재가</span>
         <span className="text-right">평가손익</span>
       </div>
@@ -474,12 +583,24 @@ function HoldingsPanel({ data }) {
 
       {/* 합계 */}
       {!isLoading && rows.length > 0 && (
-        <div className="shrink-0 grid grid-cols-[1fr_80px_88px_108px] items-center px-4 py-2.5 bg-primary-light border-t-2 border-primary-dim">
-          <div className="text-[12px] font-extrabold text-primary">합계</div>
-          <div />
-          <div className="text-right text-[12px] font-bold text-foreground">{fmt(totalEval)}원</div>
-          <div className={`text-right text-[12px] font-extrabold ${totalIsUp ? 'text-up' : 'text-down'}`}>
-            {(totalIsUp ? '+' : '') + fmt(Math.abs(totalPnl))}원
+        <div className="shrink-0 flex items-center justify-between gap-6 border-t border-stroke bg-surface-subtle px-4 py-2.5">
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] font-bold text-foreground">합계</span>
+            <span className="text-[9px] text-foreground-disabled">{rows.length}종목</span>
+          </div>
+
+          <div className="flex items-center gap-5">
+            <div className="text-right">
+              <div className="text-[9px] text-foreground-disabled">평가금액</div>
+              <div className="text-[12px] font-bold text-foreground">{fmt(totalEval)}원</div>
+            </div>
+
+            <div className="text-right">
+              <div className="text-[9px] text-foreground-disabled">평가손익</div>
+              <div className={`text-[12px] font-extrabold ${totalIsUp ? 'text-up' : 'text-down'}`}>
+                {fmtSigned(totalPnl, '원')}
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -506,13 +627,14 @@ function AuthGuard() {
 // ── 메인 페이지 ───────────────────────────────────────────────────
 export default function AssetPage() {
   const { isAuthenticated, isRestoring, user } = useAuthStore()
-  const data = useAssetPage(isAuthenticated && !isRestoring)
+  const [assetFlowRange, setAssetFlowRange] = useState('1M')
+  const data = useAssetPage(isAuthenticated && !isRestoring, assetFlowRange)
   const [showExchange, setShowExchange] = useState(false)
 
   if (!isRestoring && !isAuthenticated) return <AuthGuard />
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-background">
+    <div className="flex flex-col h-full overflow-hidden bg-surface">
 
       {/* 환전 모달 */}
       {showExchange && (
@@ -526,15 +648,19 @@ export default function AssetPage() {
       {/* Hero */}
       <HeroSection data={data} user={user} onExchange={() => setShowExchange(true)} />
 
-      {/* 상단 카드 3열 */}
-      <div className="shrink-0 grid grid-cols-3 gap-3 px-4 pt-3">
+      {/* 상단 요약 스트립 */}
+      <div className="shrink-0 grid grid-cols-[0.88fr_0.98fr_1.14fr] border-b border-stroke bg-surface">
         <AccountCard data={data} />
         <AssetBreakdownCard data={data} />
-        <AssetFlowCard data={data} />
+        <AssetFlowCard
+          data={data}
+          assetFlowRange={assetFlowRange}
+          onChangeAssetFlowRange={setAssetFlowRange}
+        />
       </div>
 
-      {/* 하단 2열: 파이차트 + 보유종목 */}
-      <div className="flex flex-1 min-h-0 gap-3 px-4 py-3">
+      {/* 하단 2열 보드 */}
+      <div className="flex flex-1 min-h-0 bg-surface">
         <PortfolioPanel data={data} />
         <HoldingsPanel data={data} />
       </div>

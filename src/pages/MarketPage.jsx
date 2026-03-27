@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import FilterChip from '@/components/ui/FilterChip'
 import PriceChange from '@/components/ui/PriceChange'
-import StockRow from '@/components/market/StockRow'
+import StockRow, {
+  getMarketRowGrid,
+  hasPrimaryMetricColumn,
+} from '@/components/market/StockRow'
 import LiveDot from '@/components/ui/LiveDot'
 import useMarketRanking from '@/features/market/useMarketRanking'
 import useMarketIndices from '@/features/market/useMarketIndices'
@@ -78,12 +81,9 @@ function FilterBar({ marketFilter, setMarketFilter, sortFilter, setSortFilter })
   )
 }
 
-const GRID_WITH_VOL    = 'grid-cols-[32px_40px_2fr_1.5fr_1fr_1fr_1.5fr]'
-const GRID_WITHOUT_VOL = 'grid-cols-[32px_40px_2fr_1.5fr_1fr_1.5fr]'
-
 function StockTableHeader({ sortFilter }) {
-  const showVolume = sortFilter in VOLUME_COL_LABEL
-  const grid = showVolume ? GRID_WITH_VOL : GRID_WITHOUT_VOL
+  const showVolume = hasPrimaryMetricColumn(sortFilter)
+  const grid = getMarketRowGrid(sortFilter)
 
   return (
     <div className={`grid ${grid} items-center px-4 py-2.5 border-b border-stroke-subtle text-[10px] font-semibold text-foreground-disabled`}>
@@ -128,7 +128,7 @@ export default function MarketPage() {
           <StockRow
             key={stock.id}
             stock={stock}
-            showVolume={sortFilter in VOLUME_COL_LABEL}
+            sortFilter={sortFilter}
             isWatched={watchedSet.has(stock.stockCode)}
             onWatchToggle={toggle}
           />

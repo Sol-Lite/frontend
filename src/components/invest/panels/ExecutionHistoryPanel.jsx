@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import StockAvatar from '@/components/ui/StockAvatar'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import { cn } from '@/lib/cn'
 import { formatCurrency, formatNumber, formatVisiblePrice } from '@/features/invest/formatters'
+import { buildInvestNavigationState } from '@/features/invest/navigation'
 import { orderApi } from '@/api/order'
 import useAuthStore from '@/store/useAuthStore'
 
@@ -14,6 +16,7 @@ function formatTime(dateStr) {
 }
 
 export default function ExecutionHistoryPanel({ stockCode, marketType, displayCurrency, usdRate }) {
+  const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const isRestoring = useAuthStore((s) => s.isRestoring)
   const { data, isLoading } = useQuery({
@@ -75,10 +78,14 @@ export default function ExecutionHistoryPanel({ stockCode, marketType, displayCu
             className="grid grid-cols-[58px_minmax(0,1fr)_40px_72px_48px_90px] items-center gap-2 border-b border-stroke-subtle px-2.5 py-1.5"
           >
             <span className="text-[10px] text-foreground-disabled">{formatTime(row.filledAt ?? row.executedAt ?? row.requestedAt ?? row.createdAt)}</span>
-            <div className="flex min-w-0 items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => navigate(`/invest/${row.stockCode}`, { state: buildInvestNavigationState({ ...row, marketType: rowMarketType }) })}
+              className="flex min-w-0 items-center gap-1.5 text-left transition-opacity hover:opacity-80"
+            >
               <StockAvatar name={row.stockName ?? row.stockCode} stockCode={row.stockCode} marketType={rowMarketType} size="sm" />
               <span className="truncate text-[10px] font-semibold text-foreground">{row.stockName ?? row.stockCode}</span>
-            </div>
+            </button>
             <span className={cn('rounded-[4px] px-1 py-0.5 text-center text-[8px] font-bold', isBuy ? 'bg-up-bg text-up' : 'bg-down-bg text-down')}>
               {isBuy ? '매수' : '매도'}
             </span>
