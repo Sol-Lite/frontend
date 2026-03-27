@@ -207,11 +207,13 @@ const useWidgetStore = create((set) => ({
   isLoaded: false,
 
   // GET /api/dashboards/me 응답으로 store를 교체.
-  // 빈 배열이면 INITIAL 레이아웃 유지.
+  // 빈 배열이거나 모든 페이지에 위젯이 없으면 INITIAL 레이아웃 유지.
+  // (신규 가입 시 서버가 빈 페이지를 생성하는 경우 기본 레이아웃을 보여주기 위함)
   loadFromServer: (apiData) =>
     set(() => {
       const pages = fromApiResponse(Array.isArray(apiData) ? apiData : apiData.pages ?? [])
-      if (pages.length === 0) return { isLoaded: true }
+      const totalWidgets = pages.reduce((sum, p) => sum + p.widgets.length, 0)
+      if (pages.length === 0 || totalWidgets === 0) return { isLoaded: true }
       const currentPage = pages[0]
       return {
         pages,
