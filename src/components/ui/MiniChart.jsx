@@ -66,7 +66,6 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
         visible:       true,
         borderVisible: false,
         minimumWidth:  48,
-        entireTextOnly: true,
         scaleMargins:  priceScaleMargins,
       },
       localization: {
