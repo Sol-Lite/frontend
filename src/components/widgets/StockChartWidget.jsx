@@ -7,11 +7,12 @@ import MiniChart from '@/components/ui/MiniChart'
 import WidgetCard from './WidgetCard'
 import StockSelectModal from './StockSelectModal'
 import { HOME_STOCKS } from '@/mocks/home'
-import { marketApi } from '@/api/market'
+import { marketApi, foreignMarketApi, getExchcd } from '@/api/market'
 import useWidgetStore from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import useStompSubscription from '@/hooks/useStompSubscription'
 import { normalizeDailySeries, normalizeMinuteSeries } from '@/features/invest/domestic/normalize'
+import { normalizeForeignDailySeries, normalizeForeignMinuteSeries } from '@/features/invest/foreign/normalize'
 import { formatApiDate } from '@/features/invest/formatters'
 
 // config.stockId(레거시) → 종목코드 매핑
@@ -22,11 +23,13 @@ const STOCK_CODE_MAP = {
 
 const PERIODS = ['1일', '1주', '1달', '3달']
 
+const OVERSEAS_MARKET_TYPES = ['NAS', 'NYS', 'AMS']
+
 const PERIOD_CONFIG = {
-  '1일': { type: 'minute', ncnt: 5              },
-  '1주': { type: 'daily',  period: 'DAILY',   days: 7   },
-  '1달': { type: 'daily',  period: 'DAILY',   days: 30  },
-  '3달': { type: 'weekly', period: 'WEEKLY',  days: 90  },
+  '1일': { type: 'minute', ncnt: 5 },
+  '1주': { type: 'daily',  period: 'DAILY',  foreignPeriod: 'DAY', days: 7  },
+  '1달': { type: 'daily',  period: 'DAILY',  foreignPeriod: 'DAY', days: 30 },
+  '3달': { type: 'weekly', period: 'WEEKLY', foreignPeriod: 'DAY', days: 90 },
 }
 
 // 5분봉 버킷 타임스탬프 계산
@@ -56,10 +59,13 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
   const { mutate: saveDashboard } = useDashboardSave()
 
-  const stockId   = config.stockId ?? 'samsung'
-  const stockCode = config.stockCode ?? STOCK_CODE_MAP[stockId]
-  const stockName = config.stockName ?? null
-  const stockMeta = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
+  const stockId    = config.stockId ?? 'samsung'
+  const stockCode  = config.stockCode ?? STOCK_CODE_MAP[stockId]
+  const stockName  = config.stockName ?? null
+  const stockMeta  = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
+  const marketType = config.marketType ?? stockMeta.market ?? null
+  const isOverseas = OVERSEAS_MARKET_TYPES.includes(marketType)
+  const exchcd     = isOverseas ? getExchcd(marketType) : null
 
   // 종목 변경 시 실시간 상태 초기화
   useEffect(() => {
@@ -102,12 +108,19 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   )
 
   // ── REST 초기 데이터 ────────────────────────────────────────────
-  const { data: priceData } = useQuery({
-    queryKey: ['stock', 'price', stockCode],
-    queryFn:  () => marketApi.getCurrentPrice(stockCode),
+  const { data: priceRaw } = useQuery({
+    queryKey: isOverseas ? ['foreign', 'price', stockCode, exchcd] : ['stock', 'price', stockCode],
+    queryFn:  isOverseas
+      ? () => foreignMarketApi.getCurrentPrice(stockCode, exchcd)
+      : () => marketApi.getCurrentPrice(stockCode),
     enabled:  !!stockCode,
     staleTime: 30_000,
   })
+
+  // 해외 가격 응답 필드 통일 ({ price, rate, diff } → { currentPrice, changeRate, changeAmount })
+  const priceData = isOverseas && priceRaw
+    ? { currentPrice: priceRaw.price, changeRate: priceRaw.rate, changeAmount: priceRaw.diff }
+    : priceRaw
 
   const queryClient = useQueryClient()
 
@@ -116,21 +129,37 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     const end = formatApiDate(new Date())
     Object.values(PERIOD_CONFIG).forEach((cfg) => {
       if (cfg.type === 'minute') {
-        queryClient.prefetchQuery({
-          queryKey: ['stock', 'minute-chart', stockCode, cfg.ncnt],
-          queryFn:  () => marketApi.getMinuteChart(stockCode, { ncnt: cfg.ncnt }),
-          staleTime: 60_000,
-        })
+        if (isOverseas) {
+          queryClient.prefetchQuery({
+            queryKey: ['foreign', 'minuteChart', stockCode, exchcd, 5],
+            queryFn:  () => foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: 5 }),
+            staleTime: 60_000,
+          })
+        } else {
+          queryClient.prefetchQuery({
+            queryKey: ['stock', 'minute-chart', stockCode, cfg.ncnt],
+            queryFn:  () => marketApi.getMinuteChart(stockCode, { ncnt: cfg.ncnt }),
+            staleTime: 60_000,
+          })
+        }
       } else {
         const start = formatApiDate(new Date(Date.now() - cfg.days * 24 * 60 * 60 * 1000))
-        queryClient.prefetchQuery({
-          queryKey: ['stock', 'chart', cfg.period, stockCode, start, end],
-          queryFn:  () => marketApi.getChart(stockCode, { period: cfg.period, startDate: start, endDate: end }),
-          staleTime: 5 * 60 * 1000,
-        })
+        if (isOverseas) {
+          queryClient.prefetchQuery({
+            queryKey: ['foreign', 'chart', cfg.foreignPeriod, stockCode, exchcd, start, end],
+            queryFn:  () => foreignMarketApi.getChart(stockCode, exchcd, { period: cfg.foreignPeriod, startDate: start, endDate: end }),
+            staleTime: 5 * 60 * 1000,
+          })
+        } else {
+          queryClient.prefetchQuery({
+            queryKey: ['stock', 'chart', cfg.period, stockCode, start, end],
+            queryFn:  () => marketApi.getChart(stockCode, { period: cfg.period, startDate: start, endDate: end }),
+            staleTime: 5 * 60 * 1000,
+          })
+        }
       }
     })
-  }, [stockCode, queryClient])
+  }, [stockCode, exchcd, isOverseas, queryClient])
 
   const periodCfg = PERIOD_CONFIG[activePeriod]
   const isMinute  = periodCfg.type === 'minute'
@@ -142,21 +171,29 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   )
 
   const { data: minuteRaw } = useQuery({
-    queryKey: ['stock', 'minute-chart', stockCode, periodCfg.ncnt],
-    queryFn:  () => marketApi.getMinuteChart(stockCode, { ncnt: periodCfg.ncnt }),
+    queryKey: isOverseas
+      ? ['foreign', 'minuteChart', stockCode, exchcd, 5]
+      : ['stock', 'minute-chart', stockCode, periodCfg.ncnt],
+    queryFn: isOverseas
+      ? () => foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: 5 })
+      : () => marketApi.getMinuteChart(stockCode, { ncnt: periodCfg.ncnt }),
     enabled:  !!stockCode && isMinute,
     staleTime: 60_000,
   })
 
   const { data: chartRaw } = useQuery({
-    queryKey: ['stock', 'chart', periodCfg.period, stockCode, startDate, endDate],
-    queryFn:  () => marketApi.getChart(stockCode, { period: periodCfg.period, startDate, endDate }),
+    queryKey: isOverseas
+      ? ['foreign', 'chart', periodCfg.foreignPeriod, stockCode, exchcd, startDate, endDate]
+      : ['stock', 'chart', periodCfg.period, stockCode, startDate, endDate],
+    queryFn: isOverseas
+      ? () => foreignMarketApi.getChart(stockCode, exchcd, { period: periodCfg.foreignPeriod, startDate, endDate })
+      : () => marketApi.getChart(stockCode, { period: periodCfg.period, startDate, endDate }),
     enabled:  !!stockCode && !isMinute,
     staleTime: 5 * 60 * 1000,
   })
 
-  // ── STOMP 실시간 체결 구독 ──────────────────────────────────────
-  const liveTrade = useStompSubscription(stockCode ? `/topic/stock/trade/${stockCode}` : null)
+  // ── STOMP 실시간 체결 구독 (국내 전용) ─────────────────────────
+  const liveTrade = useStompSubscription(!isOverseas && stockCode ? `/topic/stock/trade/${stockCode}` : null)
 
   useEffect(() => {
     if (!liveTrade) return
@@ -185,9 +222,16 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
 
   // ── 차트 데이터 ────────────────────────────────────────────────
   const { candleData, latestCandle } = useMemo(() => {
-    let series = isMinute
-      ? normalizeMinuteSeries(minuteRaw?.data ?? minuteRaw)
-      : normalizeDailySeries(chartRaw?.data)
+    let series
+    if (isMinute) {
+      series = isOverseas
+        ? normalizeForeignMinuteSeries(minuteRaw?.dataPoints)
+        : normalizeMinuteSeries(minuteRaw?.data ?? minuteRaw)
+    } else {
+      series = isOverseas
+        ? normalizeForeignDailySeries(chartRaw?.dataPoints)
+        : normalizeDailySeries(chartRaw?.data)
+    }
 
     // 분봉: 오늘 세션만 표시
     if (isMinute) {
@@ -202,7 +246,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
       candleData:   series.map((p) => ({ time: toTime(p), open: p.open, high: p.high, low: p.low, close: p.close })),
       latestCandle: series[series.length - 1] ?? null,
     }
-  }, [isMinute, minuteRaw, chartRaw])
+  }, [isMinute, isOverseas, minuteRaw, chartRaw])
 
   // ── 가격 표시용 (STOMP > REST 우선) ───────────────────────────
   const priceSource = livePrice ?? priceData
@@ -224,7 +268,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     volume:     priceSource?.volume != null
                   ? fmtVolume(priceSource.volume)
                   : latestCandle ? fmtVolume(latestCandle.volume) : '-',
-    marketType: config.marketType ?? stockMeta.market ?? null,
+    marketType,
   }
   const isUp = stock.change > 0
 
