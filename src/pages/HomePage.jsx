@@ -5,6 +5,7 @@ import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
 import useWidgetStore from '@/store/useWidgetStore'
+import useAuthStore from '@/store/useAuthStore'
 import { cn } from '@/lib/cn'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
 import PageEditModal from '@/components/layout/PageEditModal'
@@ -29,8 +30,15 @@ function PhantomSlot({ colSpan, rowSpan, gridCol, gridRow }) {
 export default function HomePage() {
   const { isEditMode } = useEditModeStore()
   const { setCellSize, setPreviewCellSize } = useGridStore()
-  const { widgets, removeWidget, phantomWidget, isDraggingNewWidget, pages, currentPageId, switchPage } = useWidgetStore()
+  const { widgets, isLoaded, removeWidget, phantomWidget, isDraggingNewWidget, pages, currentPageId, switchPage } = useWidgetStore()
+  const { isAuthenticated, isRestoring } = useAuthStore()
   const [isPageEditOpen, setIsPageEditOpen] = useState(false)
+
+  // 로드 완료 전에는 위젯 미표시 (새로고침 flash 방지)
+  // - 인증 확인 중(isRestoring): 대기
+  // - 비로그인: 빈 대시보드 표시
+  // - 로그인 + 서버 데이터 미도착: 대기
+  const safeWidgets = (!isRestoring && (isLoaded || !isAuthenticated)) ? widgets : []
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
 
@@ -71,10 +79,10 @@ export default function HomePage() {
   // push-aside 미리보기: B를 push-aside 목적지로 임시 이동해 렌더링
   // → phantom(A의 목적지)과 B가 같은 셀에 겹치는 현상 방지
   const displayWidgets = (() => {
-    if (!phantomWidget) return widgets
-    let base = widgets
+    if (!phantomWidget) return safeWidgets
+    let base = safeWidgets
     if (phantomWidget.pushAsideId) {
-      base = widgets.map((w) =>
+      base = base.map((w) =>
         w.instanceId === phantomWidget.pushAsideId
           ? { ...w, gridCol: phantomWidget.pushAsideCol, gridRow: phantomWidget.pushAsideRow }
           : w,
