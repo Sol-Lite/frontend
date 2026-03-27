@@ -69,7 +69,7 @@ export default function StockSelectModal({ currentCode, currentName, onSave, onC
           {results.map((stock) => (
             <button
               key={stock.stockCode}
-              onClick={() => onSave({ stockCode: stock.stockCode, stockName: stock.stockName, marketType: stock.marketType })}
+              onClick={() => onSave({ stockCode: stock.stockCode, stockName: stock.stockName, marketType: stock.marketType, exchangeCode: stock.exchangeCode })}
               className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-surface-subtle transition-colors text-left"
             >
               <span className="text-[12px] font-semibold text-foreground">{stock.stockName}</span>

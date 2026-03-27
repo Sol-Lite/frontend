@@ -7,7 +7,7 @@ import MiniChart from '@/components/ui/MiniChart'
 import WidgetCard from './WidgetCard'
 import StockSelectModal from './StockSelectModal'
 import { HOME_STOCKS } from '@/mocks/home'
-import { marketApi, foreignMarketApi, getExchcd } from '@/api/market'
+import { marketApi, foreignMarketApi } from '@/api/market'
 import useWidgetStore from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import useStompSubscription from '@/hooks/useStompSubscription'
@@ -23,7 +23,12 @@ const STOCK_CODE_MAP = {
 
 const PERIODS = ['1일', '1주', '1달', '3달']
 
-const OVERSEAS_MARKET_TYPES = ['NAS', 'NYS', 'AMS']
+// 백엔드 InstrumentSearchResponse.marketType 값 (NASDAQ, NYSE, AMEX)
+const OVERSEAS_MARKET_TYPES = ['NASDAQ', 'NYSE', 'AMEX']
+// 백엔드 InstrumentSearchResponse.exchangeCode → LS증권 exchcd 매핑
+const EXCHCD_BY_EXCHANGE_CODE = { NAS: '82', NYS: '81', AMS: '81' }
+// marketType 직접 → exchcd 매핑 (exchangeCode 미저장 위젯 대비 폴백)
+const EXCHCD_BY_MARKET_TYPE   = { NASDAQ: '82', NYSE: '81', AMEX: '81' }
 
 const PERIOD_CONFIG = {
   '1일': { type: 'minute', ncnt: 5 },
@@ -65,7 +70,10 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   const stockMeta  = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
   const marketType = config.marketType ?? stockMeta.market ?? null
   const isOverseas = OVERSEAS_MARKET_TYPES.includes(marketType)
-  const exchcd     = isOverseas ? getExchcd(marketType) : null
+  // exchangeCode(NAS/NYS/AMS)가 저장돼 있으면 우선, 없으면 marketType(NASDAQ/NYSE/AMEX)으로 파생
+  const exchcd = isOverseas
+    ? (EXCHCD_BY_EXCHANGE_CODE[config.exchangeCode] ?? EXCHCD_BY_MARKET_TYPE[marketType] ?? '82')
+    : null
 
   // 종목 변경 시 실시간 상태 초기화
   useEffect(() => {
@@ -73,8 +81,8 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     setLiveCandle(null)
   }, [stockCode])
 
-  function handleStockSave({ stockCode: newCode, stockName: newName, marketType: newMarket }) {
-    updateWidgetConfig(instanceId, { stockCode: newCode, stockName: newName, marketType: newMarket, stockId: undefined })
+  function handleStockSave({ stockCode: newCode, stockName: newName, marketType: newMarket, exchangeCode: newExchangeCode }) {
+    updateWidgetConfig(instanceId, { stockCode: newCode, stockName: newName, marketType: newMarket, exchangeCode: newExchangeCode, stockId: undefined })
     saveDashboard()
     setIsConfigOpen(false)
   }
