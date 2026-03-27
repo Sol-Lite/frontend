@@ -207,11 +207,17 @@ const useWidgetStore = create((set) => ({
   isLoaded: false,
 
   // GET /api/dashboards/me 응답으로 store를 교체.
-  // 빈 배열이면 INITIAL 레이아웃 유지.
+  // - 서버에 데이터 없음(빈 배열): 빈 위젯으로 로드 완료 → 로그인 유저는 빈 화면 표시
+  // - 서버에 데이터 있음: 서버 데이터로 교체
+  // 미로그인 프리셋(INITIAL_WIDGETS)은 resetLayout에서만 사용
   loadFromServer: (apiData) =>
     set(() => {
       const pages = fromApiResponse(Array.isArray(apiData) ? apiData : apiData.pages ?? [])
-      if (pages.length === 0) return { isLoaded: true }
+      if (pages.length === 0) {
+        // 서버에 대시보드 없음 → 빈 상태로 로드 완료
+        const emptyPage = { id: 'page-1', name: '대시보드 1', widgets: [] }
+        return { pages: [emptyPage], currentPageId: 'page-1', widgets: [], isLoaded: true }
+      }
       const currentPage = pages[0]
       return {
         pages,
