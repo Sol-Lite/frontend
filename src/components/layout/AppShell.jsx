@@ -11,6 +11,7 @@ import {
 import AppHeader from './AppHeader'
 import RightPanel from './RightPanel'
 import CurrencySync from './CurrencySync'
+import WidgetDetailModal from '@/components/widgets/WidgetDetailModal'
 import useWidgetStore, { canPlaceAt, findPushAsidePlanAt } from '@/store/useWidgetStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
@@ -252,8 +253,9 @@ export default function AppShell() {
         <CurrencySync />
         <AppHeader />
         <div className="flex flex-1 overflow-hidden">
-          <main className="flex-1 overflow-hidden bg-background">
+          <main className="relative flex-1 overflow-hidden bg-background">
             <Outlet />
+            <WidgetDetailModal />
           </main>
           <RightPanel />
         </div>

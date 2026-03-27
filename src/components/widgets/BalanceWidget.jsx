@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import WidgetCard from './WidgetCard'
 import { balanceApi, useDomesticHoldings } from '@/api/balance'
 
@@ -47,9 +48,10 @@ function useBalance(enabled) {
 export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
   const BALANCE = useBalance(isAuthenticated && !isRestoring)
+  const open = useWidgetDetailStore((s) => s.open)
 
   return (
-    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={() => open({ widgetTypeId: 'balance', config: {} })}>
       <div className="mb-2 shrink-0">
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">계좌 잔고</span>
       </div>
