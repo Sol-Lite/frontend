@@ -16,15 +16,6 @@ export default function StockHoldingCard({ stockCode, displayCurrency, usdRate }
 
   const holding = [...domestic, ...overseas].find((h) => h.stockCode === stockCode)
 
-  const avgPrice  = holding.avgPrice ?? holding.avgBuyPrice ?? 0
-  const quantity  = holding.holdingQuantity ?? holding.availableQuantity ?? 0
-  const evalPrice = holding.currentPrice ?? null
-  const profitLoss = evalPrice != null ? (evalPrice - avgPrice) * quantity : null
-  const profitRate = evalPrice != null && avgPrice > 0
-    ? ((evalPrice - avgPrice) / avgPrice) * 100
-    : null
-  const isProfit = profitLoss != null ? profitLoss >= 0 : false
-
   if (!holding) {
     return (
       <div className="shrink-0 border-t border-stroke px-[14px] py-3 bg-surface">
@@ -36,6 +27,15 @@ export default function StockHoldingCard({ stockCode, displayCurrency, usdRate }
       </div>
     )
   }
+
+  const avgPrice   = holding.avgPrice ?? holding.avgBuyPrice ?? 0
+  const quantity   = holding.holdingQuantity ?? holding.availableQuantity ?? 0
+  const evalPrice  = holding.currentPrice ?? null
+  const profitLoss = evalPrice != null ? (evalPrice - avgPrice) * quantity : null
+  const profitRate = evalPrice != null && avgPrice > 0
+    ? ((evalPrice - avgPrice) / avgPrice) * 100
+    : null
+  const isProfit   = profitLoss != null ? profitLoss >= 0 : false
 
   return (
     <div className="shrink-0 border-t border-stroke px-[14px] py-3 bg-surface">
