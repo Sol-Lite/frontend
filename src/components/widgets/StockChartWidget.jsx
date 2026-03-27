@@ -187,6 +187,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
       : () => marketApi.getMinuteChart(stockCode, { ncnt: periodCfg.ncnt }),
     enabled:  !!stockCode && isMinute,
     staleTime: 60_000,
+    refetchInterval: isOverseas && isMinute ? 60_000 : false,
   })
 
   const { data: chartRaw } = useQuery({

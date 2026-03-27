@@ -82,7 +82,7 @@ export default function HomePage() {
     if (!phantomWidget) return safeWidgets
     let base = safeWidgets
     if (phantomWidget.pushAsideId) {
-      base = widgets.map((w) =>
+      base = base.map((w) =>
         w.instanceId === phantomWidget.pushAsideId
           ? { ...w, gridCol: phantomWidget.pushAsideCol, gridRow: phantomWidget.pushAsideRow }
           : w,
