@@ -153,6 +153,12 @@ export function canFitInGrid(widgets, colSpan, rowSpan) {
   return false
 }
 
+/* 편집 모드 저장되지 않은 변경사항 여부 확인 */
+export function hasUnsavedChanges(state) {
+  if (!state._snapshot) return false
+  return JSON.stringify(state._snapshot.pages) !== JSON.stringify(state.pages)
+}
+
 /* 첫 번째 빈 셀 탐색 (addWidget 자동 배치용) */
 function _findFirstFreeCell(widgets, colSpan, rowSpan) {
   for (let r = 1; r <= GRID_ROWS - rowSpan + 1; r++) {
