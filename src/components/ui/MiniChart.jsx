@@ -35,7 +35,8 @@ function getChartColors() {
  * @param {string}  className
  */
 export default function MiniChart({ candleData, liveCandle, isIntraday = false, tickOffset = 9 * 3600, forcefit = false, className = '' }) {
-  const ref       = useRef(null)
+  const ref      = useRef(null)
+  const chartRef = useRef(null)
   const seriesRef = useRef(null)
 
   // 차트 생성 — candleData / isIntraday 변경 시 재생성
@@ -109,6 +110,7 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
       priceLineWidth:   1,
       lastValueVisible: true,
     })
+    chartRef.current  = chart
     seriesRef.current = series
 
     if (candleData?.length) {
@@ -137,15 +139,20 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
     return () => {
       ro.disconnect()
       chart.remove()
+      chartRef.current  = null
       seriesRef.current = null
     }
   }, [candleData, isIntraday, tickOffset, forcefit])
 
   // STOMP 실시간 캔들 업데이트 — 차트 재생성 없이 마지막 봉만 갱신
+  // isIntraday: 새 버킷이 78슬롯 밖으로 나갈 수 있으므로 최신 캔들이 보이도록 scrollToRealTime
   useEffect(() => {
     if (!seriesRef.current || !liveCandle) return
     seriesRef.current.update(liveCandle)
-  }, [liveCandle])
+    if (isIntraday && chartRef.current) {
+      chartRef.current.timeScale().scrollToRealTime()
+    }
+  }, [liveCandle, isIntraday])
 
   return <div ref={ref} className={className} />
 }
