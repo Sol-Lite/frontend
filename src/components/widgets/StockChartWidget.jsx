@@ -47,7 +47,9 @@ function fmtVolume(v) {
 }
 
 export default function StockChartWidget({ instanceId, variant = 'stock-sm', colSpan = 1, rowSpan = 1, onDelete, config = {} }) {
-  const [activePeriod, setActivePeriod] = useState('1일')
+  const [activePeriod, setActivePeriod] = useState(
+    () => localStorage.getItem(`widget.period.${instanceId}`) ?? '1일'
+  )
   const [isConfigOpen, setIsConfigOpen] = useState(false)
   const [livePrice, setLivePrice]   = useState(null)
   const [liveCandle, setLiveCandle] = useState(null)
@@ -80,12 +82,17 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     </button>
   )
 
+  function handlePeriodChange(p) {
+    setActivePeriod(p)
+    localStorage.setItem(`widget.period.${instanceId}`, p)
+  }
+
   const periodTabs = (
     <div className="flex gap-1">
       {PERIODS.map((p) => (
         <button
           key={p}
-          onClick={(e) => { e.stopPropagation(); setActivePeriod(p) }}
+          onClick={(e) => { e.stopPropagation(); handlePeriodChange(p) }}
           className={`text-[9px] px-1.5 py-0.5 rounded font-medium transition-colors duration-[150ms] ${activePeriod === p ? 'bg-primary-light text-primary' : 'text-foreground-disabled hover:text-foreground'}`}
         >
           {p}
@@ -237,18 +244,20 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
           <div className="flex h-full gap-2.5 min-h-0">
-            <div className="flex flex-col gap-1.5 shrink-0 justify-between">
-              <div className="flex items-center gap-1.5">
-                <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
-                <div>
-                  <div className="flex items-center gap-1">
-                    <div className="text-[11px] font-bold text-foreground leading-none">{stock.name}</div>
-                    {settingsBtn}
+            <div className="flex flex-col shrink-0 justify-between">
+              <div>
+                <div className="flex items-center gap-1.5 mb-1">
+                  <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
+                  <div>
+                    <div className="flex items-center gap-1">
+                      <div className="text-[11px] font-bold text-foreground leading-none">{stock.name}</div>
+                      {settingsBtn}
+                    </div>
+                    <div className="text-[9px] text-foreground-disabled mt-0.5">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
                   </div>
-                  <div className="text-[9px] text-foreground-disabled mt-0.5">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
                 </div>
+                {periodTabs}
               </div>
-              {periodTabs}
               <div>
                 <div className="text-[18px] font-bold leading-tight text-foreground">{stock.price}</div>
                 {hasPrice

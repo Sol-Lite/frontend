@@ -91,12 +91,15 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
 
     if (candleData?.length) {
       series.setData(candleData)
-      if (isMinute) {
-        // 09:01(첫 캔들)을 좌측에 고정, 오른쪽으로 채워지도록
-        chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: candleData.length - 0.5 })
-      } else {
-        chart.timeScale().fitContent()
-      }
+    }
+    if (isMinute) {
+      // 장 시작~마감(09:00~15:30)을 고정 범위로 지정 → 캔들 폭이 일정하게 유지
+      const today = new Date()
+      const from = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0, 0).getTime() / 1000
+      const to   = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 30, 0).getTime() / 1000
+      chart.timeScale().setVisibleRange({ from, to })
+    } else if (candleData?.length) {
+      chart.timeScale().fitContent()
     }
 
     const ro = new ResizeObserver(([entry]) => {
