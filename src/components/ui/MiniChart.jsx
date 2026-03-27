@@ -91,15 +91,13 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
 
     if (candleData?.length) {
       series.setData(candleData)
-      if (isMinute) {
-        // 장 시작~마감(09:00~15:30)을 고정 범위로 지정 → 캔들 폭이 일정하게 유지
-        const today = new Date()
-        const from = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 9, 0, 0).getTime() / 1000
-        const to   = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 15, 30, 0).getTime() / 1000
-        chart.timeScale().setVisibleRange({ from, to })
-      } else {
-        chart.timeScale().fitContent()
-      }
+    }
+    if (isMinute) {
+      // 09:00~15:25 사이 5분봉 최대 78개 슬롯을 고정 → 캔들 폭이 일정하게 유지
+      // setVisibleRange는 데이터 밖 시간을 빈 공간으로 처리하지 못해 setVisibleLogicalRange 사용
+      chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: 77.5 })
+    } else if (candleData?.length) {
+      chart.timeScale().fitContent()
     }
 
     const ro = new ResizeObserver(([entry]) => {
