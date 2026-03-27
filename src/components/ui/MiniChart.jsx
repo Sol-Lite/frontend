@@ -115,9 +115,14 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
     if (candleData?.length) {
       series.setData(candleData)
     }
+    let scrollTimer
     if (isIntraday && !forcefit) {
       // 국내 1일: 09:00~15:25 사이 5분봉 최대 78개 슬롯을 고정 → 캔들 폭이 일정하게 유지
       chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: 77.5 })
+      // STOMP 수신 여부와 무관하게 항상 최신 캔들로 스크롤 (9:01 → 현재 스르륵 효과)
+      scrollTimer = setTimeout(() => {
+        if (chartRef.current === chart) chart.timeScale().scrollToRealTime()
+      }, 300)
     } else if (candleData?.length) {
       chart.timeScale().fitContent()
     }
@@ -136,6 +141,7 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
     ro.observe(el)
 
     return () => {
+      clearTimeout(scrollTimer)
       ro.disconnect()
       chart.remove()
       chartRef.current  = null
