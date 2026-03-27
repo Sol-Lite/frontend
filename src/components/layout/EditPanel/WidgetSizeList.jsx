@@ -28,7 +28,7 @@ function calcAspectRatio(colSpan, rowSpan, cw, ch) {
 }
 
 /* ── 위젯별 미리보기 콘텐츠 ─────────────────────────────── */
-function PreviewContent({ type }) {
+export function PreviewContent({ type }) {
   switch (type) {
 
     /* 계좌 잔고 — 소형 1×1 */
