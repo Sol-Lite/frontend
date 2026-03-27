@@ -1,4 +1,4 @@
-import { extractDateKey, computeDepth } from '@/features/invest/marketData'
+import { toLocalTimestamp, extractDateKey, computeDepth } from '@/features/invest/marketData'
 
 function toNumber(value, fallback = 0) {
   const parsed = Number(value)
@@ -62,10 +62,9 @@ export function normalizeForeignDailySeries(dataPoints) {
 }
 
 export function normalizeForeignMinuteSeries(dataPoints) {
-  const now = Date.now()
-  const normalized = (dataPoints ?? [])
+  return (dataPoints ?? [])
     .map((item) => ({
-      timestamp: toExchangeLocalTimestamp(item.dateTime),
+      timestamp: toLocalTimestamp(item.dateTime),
       sessionDate: extractDateKey(item.dateTime),
       open: Number(item.open),
       high: Number(item.high),
@@ -75,9 +74,6 @@ export function normalizeForeignMinuteSeries(dataPoints) {
     }))
     .filter((item) => Number.isFinite(item.timestamp) && item.sessionDate)
     .sort((left, right) => left.timestamp - right.timestamp)
-
-  const visibleItems = normalized.filter((item) => item.timestamp <= now)
-  return visibleItems.length > 0 ? visibleItems : normalized
 }
 
 export function normalizeForeignOrderBook(raw) {
