@@ -33,6 +33,7 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={onClose}
+      onPointerDown={(e) => e.stopPropagation()}
     >
       <div
         className="bg-surface rounded-2xl shadow-xl w-[280px] p-5"
