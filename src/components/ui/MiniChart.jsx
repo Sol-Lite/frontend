@@ -162,7 +162,7 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
       chartRef.current  = null
       seriesRef.current = null
     }
-  }, [candleData, isIntraday, tickOffset, forcefit])
+  }, [candleData, isIntraday, tickOffset, isForceFit])
 
   // STOMP 실시간 캔들 업데이트 — 차트 재생성 없이 마지막 봉만 갱신
   // isIntraday: 새 버킷이 79슬롯 밖으로 나가면 최신 캔들이 보이도록 scrollToRealTime
