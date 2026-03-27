@@ -7,6 +7,7 @@ import useRightPanelStore from '@/store/useRightPanelStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
+import NotificationCenter from '@/components/ui/NotificationCenter'
 
 function Logo() {
   return (
@@ -130,6 +131,7 @@ export default function AppHeader() {
       <NavTabs />
       <div className="flex-1" />
       {isHome && (isEditMode ? <EditModeActions /> : <WidgetEditButton />)}
+      <NotificationCenter />
       <UserArea />
     </header>
   )

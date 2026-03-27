@@ -4,6 +4,7 @@ import HomePage from '@/pages/HomePage'
 import MarketPage from '@/pages/MarketPage'
 import InvestPage from '@/pages/InvestPage'
 import AssetPage from '@/pages/AssetPage'
+import NotificationSettingsPage from '@/pages/NotificationSettingsPage'
 import SignupPage from '@/pages/auth/SignupPage'
 import EmailVerifyPage from '@/pages/auth/EmailVerifyPage'
 import PasswordResetPage from '@/pages/auth/PasswordResetPage'
@@ -21,6 +22,7 @@ export const router = createBrowserRouter([
       { path: 'asset',      element: <AssetPage /> },
       { path: 'password/reset', element: <PasswordResetPage /> },
       { path: 'account/pin/reset', element: <PinResetPage /> },
+      { path: 'notifications/settings', element: <NotificationSettingsPage /> },
     ],
   },
   { path: '/signup',            element: <SignupPage /> },
