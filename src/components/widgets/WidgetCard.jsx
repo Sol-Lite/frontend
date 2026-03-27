@@ -6,20 +6,20 @@ export default function WidgetCard({ children, className = '', onDelete }) {
   const { isEditMode, wiggleDelay, wiggleSyncKey } = useEditModeStore()
 
   return (
-    /* 바깥 div는 안정적 — EditHandle의 absolute 기준점 역할 */
-    <div className={cn('relative h-full', className)}>
-      {isEditMode && <EditHandle onDelete={onDelete} />}
-      {/* animation wrapper: wiggleSyncKey 변경 시 remount → 모든 위젯 animation 동시 재시작 */}
+    <div className={cn('h-full', className)}>
+      {/* animation wrapper: wiggleSyncKey 변경 시 remount → 모든 위젯 animation 동시 재시작
+          relative는 EditHandle의 absolute 기준점 역할 */}
       <div
         key={isEditMode ? wiggleSyncKey : undefined}
         className={cn(
-          'h-full',
+          'relative h-full',
           isEditMode
             ? 'animate-wiggle'
             : 'cursor-pointer',
         )}
         style={isEditMode ? { animationDelay: `${wiggleDelay}ms` } : undefined}
       >
+        {isEditMode && <EditHandle onDelete={onDelete} />}
         <div
           className={cn(
             'h-full bg-surface border rounded-2xl p-[14px_16px]',
