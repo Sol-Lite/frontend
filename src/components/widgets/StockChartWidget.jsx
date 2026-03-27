@@ -298,7 +298,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
           <div className="flex h-full gap-2.5 min-h-0">
             <div className="flex flex-col shrink-0 justify-between">
               <div>
-                <div className="flex items-center gap-1.5 mb-1">
+                <div className="flex items-center gap-1.5 mb-1.5">
                   <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
                   <div>
                     <div className="flex items-center gap-1">
