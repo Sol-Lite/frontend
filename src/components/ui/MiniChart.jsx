@@ -1,6 +1,27 @@
 import { useEffect, useRef } from 'react'
 import { CandlestickSeries, createChart } from 'lightweight-charts'
 
+function getIntradayFixedLogicalRange(candleData, tickOffset) {
+  // 5분봉 세션 슬롯: 09:00 ~ 15:30 (총 79개)
+  const TOTAL_SLOTS = 79
+  const SESSION_OPEN_MINUTES = 9 * 60
+  const SLOT_MINUTES = 5
+
+  if (!candleData?.length) return { from: -0.5, to: TOTAL_SLOTS - 0.5 }
+
+  const first = candleData[0]
+  const d = new Date((first.time + tickOffset) * 1000)
+  const minutes = d.getUTCHours() * 60 + d.getUTCMinutes()
+  const rawSlotIndex = Math.floor((minutes - SESSION_OPEN_MINUTES) / SLOT_MINUTES)
+  const firstSlotIndex = Math.max(0, Math.min(TOTAL_SLOTS - 1, rawSlotIndex))
+
+  // 첫 캔들이 09:00이 아니어도 X축이 항상 09:00~15:30 구간을 표현하도록 보정
+  return {
+    from: -0.5 - firstSlotIndex,
+    to: TOTAL_SLOTS - 0.5 - firstSlotIndex,
+  }
+}
+
 function getPriceScaleMargins(height) {
   const h = Math.max(1, height || 0)
 
@@ -31,7 +52,7 @@ function getChartColors() {
  * 위젯용 캔들 차트 (lightweight-charts)
  * @param {{ time: number, open, high, low, close: number }[]} candleData - 캔들 데이터 (unix seconds)
  * @param {{ time: number, open, high, low, close: number }}   liveCandle - STOMP 실시간 업데이트 포인트
- * @param {boolean} isIntraday - true(1일): X축 HH:MM, 78슬롯 고정, 우측 오픈 / false: M/D, fitContent
+ * @param {boolean} isIntraday - true(1일): X축 HH:MM, 79슬롯 고정, 우측 오픈 / false: M/D, fitContent
  * @param {string}  className
  */
 export default function MiniChart({ candleData, liveCandle, isIntraday = false, tickOffset = 9 * 3600, forcefit = false, className = '' }) {
@@ -115,14 +136,9 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
     if (candleData?.length) {
       series.setData(candleData)
     }
-    let scrollTimer
     if (isIntraday && !forcefit) {
-      // 국내 1일: 09:00~15:25 사이 5분봉 최대 78개 슬롯을 고정 → 캔들 폭이 일정하게 유지
-      chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: 77.5 })
-      // STOMP 수신 여부와 무관하게 항상 최신 캔들로 스크롤 (9:01 → 현재 스르륵 효과)
-      scrollTimer = setTimeout(() => {
-        if (chartRef.current === chart) chart.timeScale().scrollToRealTime()
-      }, 300)
+      // 국내 1일: 09:00~15:30 세션 슬롯(79개)에 맞춰 고정
+      chart.timeScale().setVisibleLogicalRange(getIntradayFixedLogicalRange(candleData, tickOffset))
     } else if (candleData?.length) {
       chart.timeScale().fitContent()
     }
@@ -141,7 +157,6 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
     ro.observe(el)
 
     return () => {
-      clearTimeout(scrollTimer)
       ro.disconnect()
       chart.remove()
       chartRef.current  = null
@@ -150,7 +165,7 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
   }, [candleData, isIntraday, tickOffset, forcefit])
 
   // STOMP 실시간 캔들 업데이트 — 차트 재생성 없이 마지막 봉만 갱신
-  // isIntraday: 새 버킷이 78슬롯 밖으로 나갈 수 있으므로 최신 캔들이 보이도록 scrollToRealTime
+  // isIntraday: 새 버킷이 79슬롯 밖으로 나가면 최신 캔들이 보이도록 scrollToRealTime
   useEffect(() => {
     if (!seriesRef.current || !liveCandle) return
     seriesRef.current.update(liveCandle)
