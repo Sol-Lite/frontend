@@ -1,6 +1,24 @@
 import { useEffect, useRef } from 'react'
 import { CandlestickSeries, createChart } from 'lightweight-charts'
 
+function getPriceScaleMargins(height) {
+  const h = Math.max(1, height || 0)
+
+  // 작은 위젯에서도 우측 가격 라벨이 상/하단에 걸리지 않도록 px 기반으로 여백 환산
+  let top = Math.max(0.22, Math.min(0.46, 22 / h))
+  let bottom = Math.max(0.12, Math.min(0.28, 14 / h))
+
+  // 플롯 영역이 지나치게 줄어들지 않게 합계 상한 적용
+  const maxTotal = 0.74
+  if (top + bottom > maxTotal) {
+    const ratio = maxTotal / (top + bottom)
+    top *= ratio
+    bottom *= ratio
+  }
+
+  return { top, bottom }
+}
+
 function getChartColors() {
   const style = getComputedStyle(document.documentElement)
   const up        = style.getPropertyValue('--color-up').trim()                  || '#E8393E'
@@ -27,6 +45,8 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
 
     const { up, down, textMuted } = getChartColors()
 
+    const priceScaleMargins = getPriceScaleMargins(el.clientHeight)
+
     const chart = createChart(el, {
       width:  el.clientWidth,
       height: el.clientHeight,
@@ -45,7 +65,8 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
         visible:       true,
         borderVisible: false,
         minimumWidth:  48,
-        scaleMargins:  { top: 0.15, bottom: 0.08 },
+        entireTextOnly: true,
+        scaleMargins:  priceScaleMargins,
       },
       localization: {
         priceFormatter: (price) => Math.round(price).toLocaleString('ko-KR'),
@@ -103,9 +124,13 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
 
     const ro = new ResizeObserver(([entry]) => {
       if (!entry) return
+      const margins = getPriceScaleMargins(entry.contentRect.height)
       chart.applyOptions({
         width:  entry.contentRect.width,
         height: entry.contentRect.height,
+        rightPriceScale: {
+          scaleMargins: margins,
+        },
       })
     })
     ro.observe(el)
@@ -123,5 +148,5 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
     seriesRef.current.update(liveCandle)
   }, [liveCandle])
 
-  return <div ref={ref} className={`overflow-hidden ${className}`} />
+  return <div ref={ref} className={className} />
 }
