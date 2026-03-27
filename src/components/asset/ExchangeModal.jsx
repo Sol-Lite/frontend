@@ -1,14 +1,52 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { X, ArrowLeftRight, Loader2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { exchangeApi } from '@/api/exchange'
+import SplashScreenFill from '@/components/ui/SplashScreenFill'
+
+const EXCHANGE_RESULT_DELAY_MS = 1400
 
 function fmt(n) {
   return Math.round(Number(n ?? 0)).toLocaleString('ko-KR')
 }
 
+function fmtUsd(n, minimumFractionDigits = 0, maximumFractionDigits = 4) {
+  return Number(n ?? 0).toLocaleString('en-US', {
+    minimumFractionDigits,
+    maximumFractionDigits,
+  })
+}
+
+function fmtRate(n) {
+  return Number(n ?? 0).toLocaleString('ko-KR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
+
 function parseAmount(str) {
   return Number(str.replace(/,/g, '')) || 0
+}
+
+function normalizeInputRaw(value, direction) {
+  const sanitized = String(value ?? '').replace(/[^0-9.]/g, '')
+
+  if (direction === 'KRW_TO_USD') {
+    return sanitized.replace(/\./g, '')
+  }
+
+  const [integerPart = '', ...decimalParts] = sanitized.split('.')
+  return decimalParts.length > 0
+    ? `${integerPart}.${decimalParts.join('')}`
+    : integerPart
+}
+
+function getMaxInputRaw(balance, direction) {
+  if (direction === 'KRW_TO_USD') {
+    return String(Math.floor(Number(balance ?? 0)))
+  }
+
+  return normalizeInputRaw(String(balance ?? 0), direction)
 }
 
 export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
@@ -19,26 +57,23 @@ export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
   const [preview, setPreview] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState(null)
+  const [resultLoading, setResultLoading] = useState(false)
   const [done, setDone] = useState(null)         // 완료된 ExchangeResponse
 
   const debounceRef = useRef(null)
+  const resultTimerRef = useRef(null)
 
   const fromCurrency = dir === 'KRW_TO_USD' ? 'KRW' : 'USD'
   const toCurrency   = dir === 'KRW_TO_USD' ? 'USD' : 'KRW'
   const maxBalance   = dir === 'KRW_TO_USD' ? krwBalance : usdBalance
   const unit         = dir === 'KRW_TO_USD' ? '원' : '$'
 
-  // 방향 전환 시 입력·프리뷰 초기화
-  function toggleDir() {
-    setDir((d) => d === 'KRW_TO_USD' ? 'USD_TO_KRW' : 'KRW_TO_USD')
-    setInputRaw('')
-    setPreview(null)
-    setPreviewError(null)
-  }
+  useEffect(() => () => {
+    clearTimeout(debounceRef.current)
+    clearTimeout(resultTimerRef.current)
+  }, [])
 
-  // 금액 입력 → 디바운스 후 프리뷰
-  function handleInput(e) {
-    const raw = e.target.value.replace(/[^0-9.]/g, '')
+  function requestPreview(raw, nextFromCurrency = fromCurrency, nextToCurrency = toCurrency) {
     setInputRaw(raw)
     setPreview(null)
     setPreviewError(null)
@@ -50,7 +85,7 @@ export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
     debounceRef.current = setTimeout(async () => {
       setPreviewLoading(true)
       try {
-        const data = await exchangeApi.getAvailable(fromCurrency, toCurrency, amount)
+        const data = await exchangeApi.getAvailable(nextFromCurrency, nextToCurrency, amount)
         setPreview(data)
       } catch {
         setPreviewError('환율 정보를 가져오지 못했습니다.')
@@ -60,9 +95,14 @@ export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
     }, 400)
   }
 
+  // 금액 입력 → 디바운스 후 프리뷰
+  function handleInput(e) {
+    requestPreview(normalizeInputRaw(e.target.value, dir))
+  }
+
   // 전액 입력
   function handleMax() {
-    setInputRaw(String(maxBalance))
+    requestPreview(getMaxInputRaw(maxBalance, dir))
   }
 
   // 환전 실행
@@ -73,12 +113,34 @@ export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
       // 잔고 관련 쿼리 갱신
       queryClient.invalidateQueries({ queryKey: ['balance'] })
       queryClient.invalidateQueries({ queryKey: ['portfolio'] })
-      setDone(data)
+      setResultLoading(true)
+      clearTimeout(resultTimerRef.current)
+      resultTimerRef.current = setTimeout(() => {
+        setResultLoading(false)
+        setDone(data)
+      }, EXCHANGE_RESULT_DELAY_MS)
     },
   })
 
   const amount = parseAmount(inputRaw)
-  const canSubmit = amount > 0 && amount <= maxBalance && preview && !isPending
+  const canSubmit = amount > 0 && amount <= maxBalance && preview && !isPending && !resultLoading
+
+  if (resultLoading) {
+    return (
+      <Overlay onClose={onClose}>
+        <div className="px-6 py-8 text-center min-h-[260px] flex flex-col items-center justify-center">
+          <div className="mb-6">
+            <SplashScreenFill inline animated />
+          </div>
+          <h2 className="text-lg font-extrabold text-foreground tracking-tight mb-1">환전 처리 중</h2>
+          <p className="text-[13px] text-foreground-disabled leading-[1.8]">
+            환전 결과를 정리하고 있어요.<br />
+            잠시만 기다려주세요.
+          </p>
+        </div>
+      </Overlay>
+    )
+  }
 
   // ── 완료 화면 ─────────────────────────────────────────────────
   if (done) {
@@ -86,21 +148,18 @@ export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
     return (
       <Overlay onClose={onClose}>
         <div className="flex flex-col items-center gap-4 py-2">
-          <div className="w-12 h-12 rounded-full bg-live/10 flex items-center justify-center">
-            <ArrowLeftRight className="w-5 h-5 text-live" strokeWidth={2.5} />
-          </div>
           <div className="text-center">
             <div className="text-[15px] font-bold text-foreground">환전 완료</div>
             <div className="text-[12px] text-foreground-disabled mt-1">
               {isKrwToUsd
-                ? `${fmt(done.requestAmount)}원 → $${fmt(done.receiveAmount)}`
-                : `$${fmt(done.requestAmount)} → ${fmt(done.receiveAmount)}원`}
+                ? `${fmt(done.requestAmount)}원 → $${fmtUsd(done.receiveAmount)}`
+                : `$${fmtUsd(done.requestAmount)} → ${fmt(done.receiveAmount)}원`}
             </div>
           </div>
           <div className="w-full flex flex-col gap-2 bg-surface-subtle rounded-xl p-3 text-[11px]">
-            <Row label="적용 환율" value={`${fmt(done.appliedRate)}원/USD`} />
-            <Row label="수수료" value={isKrwToUsd ? `${fmt(done.feeAmount)}원` : `$${fmt(done.feeAmount)}`} />
-            <Row label="수령 금액" value={isKrwToUsd ? `$${fmt(done.receiveAmount)}` : `${fmt(done.receiveAmount)}원`} bold />
+            <Row label="적용 환율" value={`${fmtRate(done.appliedRate)}원/USD`} />
+            <Row label="수수료 (1.75%)" value={isKrwToUsd ? `${fmtRate(done.feeAmount)}원` : `$${fmtUsd(done.feeAmount, 0, 4)}`} />
+            <Row label="수령 금액" value={isKrwToUsd ? `$${fmtUsd(done.receiveAmount)}` : `${fmt(done.receiveAmount)}원`} bold />
           </div>
           <button
             onClick={onClose}
@@ -124,7 +183,12 @@ export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
         ].map(({ key, label }) => (
           <button
             key={key}
-            onClick={() => { setDir(key); setInputRaw(''); setPreview(null) }}
+            onClick={() => {
+              setDir(key)
+              setInputRaw('')
+              setPreview(null)
+              setPreviewError(null)
+            }}
             className={`flex-1 py-2 rounded-xl text-[12px] font-semibold border transition-colors ${
               dir === key
                 ? 'border-primary bg-primary-light text-primary'
@@ -155,7 +219,7 @@ export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
       {/* 보유 잔고 + 전액 버튼 */}
       <div className="flex items-center justify-between mb-4">
         <span className="text-[10px] text-foreground-disabled">
-          보유 {fromCurrency}: {dir === 'KRW_TO_USD' ? `${fmt(maxBalance)}원` : `$${fmt(maxBalance)}`}
+          보유 {fromCurrency}: {dir === 'KRW_TO_USD' ? `${fmt(maxBalance)}원` : `$${fmtUsd(maxBalance)}`}
         </span>
         <button
           onClick={handleMax}
@@ -177,11 +241,17 @@ export default function ExchangeModal({ onClose, krwBalance, usdBalance }) {
       )}
       {preview && !previewLoading && (
         <div className="flex flex-col gap-2 bg-surface-subtle rounded-xl p-3 mb-4 text-[11px]">
-          <Row label="적용 환율" value={`${fmt(preview.exchangeRate)}원/USD`} />
+          <Row label="적용 환율" value={`${fmtRate(preview.exchangeRate)}원/USD`} />
+          <Row
+            label="수수료 (1.75%)"
+            value={dir === 'KRW_TO_USD'
+              ? `${fmtRate(preview.feeAmount)}원`
+              : `$${fmtUsd(preview.feeAmount)}`}
+          />
           <Row
             label="예상 수령액"
             value={dir === 'KRW_TO_USD'
-              ? `$${Number(preview.estimatedReceiveAmount).toFixed(2)}`
+              ? `$${fmtUsd(preview.estimatedReceiveAmount)}`
               : `${fmt(preview.estimatedReceiveAmount)}원`}
             bold
           />

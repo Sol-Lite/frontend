@@ -25,6 +25,9 @@ export const balanceApi = {
   // 총 평가자산 요약
   getBalanceSummary: () => get('/api/balance/summary'),
 
+  // 자산 흐름 시계열
+  getAssetFlow: (range = '1M') => get('/api/balance/flow', { range }),
+
   // 포트폴리오 비중
   getPortfolio: () => get('/api/portfolio'),
 }

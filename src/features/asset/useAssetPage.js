@@ -8,20 +8,32 @@ import useCurrencyStore from '@/store/useCurrencyStore'
 const SEED_MONEY = 100_000_000
 const FALLBACK_USD_RATE = 1350
 
-function buildHoldingRow(h, usdRate) {
+function buildHoldingRow(h) {
   const qty = h.holdingQuantity ?? 0
-  const cur = Number(h.currentPrice ?? h.avgBuyPrice ?? 0)
+  const hasCurrentPrice = h.currentPrice != null
+  const cur = hasCurrentPrice ? Number(h.currentPrice) : null
   const avg = Number(h.avgBuyPrice ?? 0)
   const isKrw = h.currencyCode === 'KRW'
-  const rate = Number(h.avgBuyExchangeRate ?? usdRate)
-  const evalKrw = isKrw ? cur * qty : cur * qty * usdRate
-  const investedKrw = isKrw ? avg * qty : avg * qty * rate
-  const pnl = evalKrw - investedKrw
-  const pnlRate = investedKrw > 0 ? (pnl / investedKrw) * 100 : 0
-  return { ...h, qty, cur, avg, evalKrw, pnl, pnlRate, isUp: pnl >= 0, isKrw }
+  const evalKrw = h.evalAmount != null ? Number(h.evalAmount) : null
+  const investedLocal = Number(h.buyAmountLocal ?? (avg * qty))
+  const pnl = h.unrealizedProfitLoss != null ? Number(h.unrealizedProfitLoss) : null
+  const pnlRate = h.unrealizedProfitLossRate != null ? Number(h.unrealizedProfitLossRate) : null
+  return {
+    ...h,
+    qty,
+    cur,
+    avg,
+    investedLocal,
+    evalKrw,
+    pnl,
+    pnlRate,
+    hasCurrentPrice,
+    isUp: pnl != null ? pnl >= 0 : false,
+    isKrw,
+  }
 }
 
-export function useAssetPage(enabled) {
+export function useAssetPage(enabled, assetFlowRange = '1M') {
   const usdRate = useCurrencyStore((s) => s.rates['USD']?.rate ?? FALLBACK_USD_RATE)
 
   const { data: summary, isLoading: sl } = useQuery({
@@ -41,6 +53,13 @@ export function useAssetPage(enabled) {
     staleTime: 30_000,
   })
 
+  const { data: assetFlow, isLoading: fl } = useQuery({
+    queryKey: ['balance', 'flow', assetFlowRange],
+    queryFn: () => balanceApi.getAssetFlow(assetFlowRange),
+    enabled,
+    staleTime: 30_000,
+  })
+
   const { data: accountInfo } = useMyAccount()
 
   const { data: filledOrders = [] } = useQuery({
@@ -51,7 +70,7 @@ export function useAssetPage(enabled) {
   })
 
   return useMemo(() => {
-    const isLoading = enabled && (sl || dl || ol || pl)
+    const isLoading = enabled && (sl || dl || ol || pl || fl)
 
     // Cash
     const cashList = summary?.cashBalances ?? []
@@ -63,26 +82,27 @@ export function useAssetPage(enabled) {
 
     // Holdings rows
     const domesticRows = domestic
-      .map((h) => buildHoldingRow(h, usdRate))
+      .map((h) => buildHoldingRow(h))
       .filter((h) => h.qty > 0)
-      .sort((a, b) => b.evalKrw - a.evalKrw)
+      .sort((a, b) => (b.evalKrw ?? 0) - (a.evalKrw ?? 0))
 
     const overseasRows = overseas
-      .map((h) => buildHoldingRow(h, usdRate))
+      .map((h) => buildHoldingRow(h))
       .filter((h) => h.qty > 0)
-      .sort((a, b) => b.evalKrw - a.evalKrw)
+      .sort((a, b) => (b.evalKrw ?? 0) - (a.evalKrw ?? 0))
 
     // Totals
-    const domesticEval = domesticRows.reduce((s, h) => s + h.evalKrw, 0)
-    const domesticPnl = domesticRows.reduce((s, h) => s + h.pnl, 0)
-    const overseasEval = overseasRows.reduce((s, h) => s + h.evalKrw, 0)
-    const overseasPnl = overseasRows.reduce((s, h) => s + h.pnl, 0)
+    const domesticEval = domesticRows.reduce((s, h) => s + (h.evalKrw ?? 0), 0)
+    const domesticPnl = domesticRows.reduce((s, h) => s + (h.pnl ?? 0), 0)
+    const overseasEval = overseasRows.reduce((s, h) => s + (h.evalKrw ?? 0), 0)
+    const overseasPnl = overseasRows.reduce((s, h) => s + (h.pnl ?? 0), 0)
 
     const totalStockKrw = domesticEval + overseasEval
-    const totalInvestedKrw = domesticRows.reduce((s, h) => s + h.evalKrw - h.pnl, 0)
-      + overseasRows.reduce((s, h) => s + h.evalKrw - h.pnl, 0)
+    const totalInvestedKrw = domesticRows.reduce((s, h) => s + ((h.evalKrw ?? 0) - (h.pnl ?? 0)), 0)
+      + overseasRows.reduce((s, h) => s + ((h.evalKrw ?? 0) - (h.pnl ?? 0)), 0)
 
-    const totalAssets = krwDeposit + usdBal * usdRate + totalStockKrw
+    const computedTotalAssets = krwDeposit + usdBal * usdRate + totalStockKrw
+    const totalAssets = Number(summary?.totalAssets ?? computedTotalAssets)
 
     // 헤더: 백엔드 계좌 손익 (초기금 1억 대비)
     const accountProfit = Number(summary?.accountProfitLoss ?? (totalStockKrw - totalInvestedKrw))
@@ -100,6 +120,16 @@ export function useAssetPage(enabled) {
       : totalAssets > 0 ? ((totalAssets - SEED_MONEY) / SEED_MONEY) * 100 : 0
     const isSimProfit = simReturn >= 0
 
+    const assetFlowPoints = (assetFlow?.points ?? []).map((point) => ({
+      date: point.date,
+      totalAssets: Number(point.totalAssets ?? 0),
+      dailyReturnRate: Number(point.dailyReturnRate ?? 0),
+      cumulativeReturnRate: Number(point.cumulativeReturnRate ?? 0),
+    }))
+    const latestFlowPoint = assetFlowPoints[assetFlowPoints.length - 1] ?? null
+    const latestDailyReturnRate = latestFlowPoint?.dailyReturnRate ?? 0
+    const latestCumulativeReturnRate = latestFlowPoint?.cumulativeReturnRate ?? 0
+
     // Portfolio chart items — stocks first, cash last
     const rawItems = portfolio?.items ?? []
     const orderedItems = rawItems.filter((i) => i.type === 'STOCK')
@@ -112,17 +142,23 @@ export function useAssetPage(enabled) {
       const holding = holdingByName[item.label]
       return {
         label: item.label,
-        weight: Math.round(Number(item.weight ?? 0)),
+        weight: Number(item.weight ?? 0),
         type: item.type,
         stockCode: holding?.stockCode ?? null,
         marketType: holding?.marketType ?? null,
       }
     })
 
-    // Normalize weights
-    const weightSum = portfolioItems.reduce((s, i) => s + i.weight, 0)
-    if (weightSum > 0 && weightSum !== 100 && portfolioItems.length > 0) {
-      portfolioItems[portfolioItems.length - 1].weight += 100 - weightSum
+    // Cash를 제외한 주식 비중만으로 다시 100% 정규화
+    const stockWeightSum = portfolioItems.reduce((s, i) => s + i.weight, 0)
+    if (stockWeightSum > 0 && portfolioItems.length > 0) {
+      const normalized = portfolioItems.map((item) => ({
+        ...item,
+        weight: Math.round((item.weight / stockWeightSum) * 100),
+      }))
+      const normalizedSum = normalized.reduce((s, i) => s + i.weight, 0)
+      normalized[normalized.length - 1].weight += 100 - normalizedSum
+      portfolioItems.splice(0, portfolioItems.length, ...normalized)
     }
 
     return {
@@ -151,8 +187,10 @@ export function useAssetPage(enabled) {
       startDate,
       simReturn,
       isSimProfit,
+      assetFlowPoints,
+      latestDailyReturnRate,
+      latestCumulativeReturnRate,
       tradeCount: filledOrders.length,
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [summary, domestic, overseas, portfolio, accountInfo, filledOrders, usdRate, sl, dl, ol, pl, enabled])
+  }, [summary, domestic, overseas, portfolio, assetFlow, accountInfo, filledOrders, usdRate, sl, dl, ol, pl, fl, enabled])
 }
