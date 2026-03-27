@@ -21,10 +21,12 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
 
   function toggle(code) {
     setSelected((prev) => {
-      if (prev.includes(code)) {
-        return prev.filter((c) => c !== code)
+      if (prev.includes(code)) return prev.filter((c) => c !== code)
+      if (prev.length >= max) {
+        // max=1: 기존 항목 해제 후 새 항목 선택 (라디오 버튼 방식)
+        if (max === 1) return [code]
+        return prev
       }
-      if (prev.length >= max) return prev
       return [...prev, code]
     })
   }
@@ -33,7 +35,6 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={onClose}
-      onPointerDown={(e) => e.stopPropagation()}
     >
       <div
         className="bg-surface rounded-2xl shadow-xl w-[280px] p-5"
@@ -53,7 +54,8 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
         <div className="flex flex-col gap-2 mb-5">
           {ALL_INDICES.map(({ code, label }) => {
             const isChecked = selected.includes(code)
-            const isDisabled = !isChecked && selected.length >= max
+            // max=1: 꽉 찼어도 클릭으로 교체 가능하므로 disabled 처리 안 함
+            const isDisabled = !isChecked && selected.length >= max && max > 1
             return (
               <label
                 key={code}
@@ -61,7 +63,7 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
                   isChecked
                     ? 'bg-primary-light border border-primary-border'
                     : isDisabled
-                      ? 'opacity-40 cursor-not-allowed'
+                      ? 'bg-background border border-transparent opacity-40 cursor-not-allowed'
                       : 'bg-background hover:bg-surface-subtle border border-transparent'
                 }`}
               >
