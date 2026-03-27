@@ -9,21 +9,14 @@ function getChartColors() {
   return { up, down, textMuted }
 }
 
-// 미국 EDT 여부 판별 (3~11월 근사, US DST: 3월 둘째 일요일 ~ 11월 첫째 일요일)
-function isUSEDT(unixSeconds) {
-  const month = new Date(unixSeconds * 1000).getUTCMonth() + 1
-  return month >= 3 && month <= 11
-}
-
 /**
  * 위젯용 캔들 차트 (lightweight-charts)
  * @param {{ time: number, open, high, low, close: number }[]} candleData - 캔들 데이터 (unix seconds)
  * @param {{ time: number, open, high, low, close: number }}   liveCandle - STOMP 실시간 업데이트 포인트
- * @param {boolean} isMinute   - true면 X축 HH:MM / 좌측 고정, false면 M/D
- * @param {boolean} isOverseas - 해외주식 여부 (분봉 X축 ET→KST 변환 적용)
+ * @param {boolean} isMinute  - true면 X축 HH:MM / 좌측 고정, false면 M/D
  * @param {string}  className
  */
-export default function MiniChart({ candleData, liveCandle, isMinute = false, isOverseas = false, className = '' }) {
+export default function MiniChart({ candleData, liveCandle, isMinute = false, className = '' }) {
   const ref       = useRef(null)
   const seriesRef = useRef(null)
 
@@ -66,18 +59,12 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, is
         fixLeftEdge:    true,
         fixRightEdge:   !isMinute, // 분봉: 우측 열린 상태로 캔들이 오른쪽으로 추가됨
         tickMarkFormatter: (time, tickMarkType) => {
-          if (isMinute && isOverseas) {
-            // 해외 분봉: LS loctime은 미국 ET (현지시간)이 KST로 오해석된 상태
-            // JS가 "09:30:00"을 KST로 파싱 → 00:30 UTC
-            // 실제 KST: ET+14h(EST) 또는 ET+13h(EDT) → +22h/+23h로 보정
-            const addH = isUSEDT(time) ? 22 : 23
-            const d = new Date((time + addH * 3600) * 1000)
-            return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`
-          }
-          // 국내 분봉 / 일봉: UTC+9h → KST
+          // UTC + 9h → KST (시세탭 InvestStockChart와 동일한 방식)
           const d = new Date((time + 9 * 3600) * 1000)
           if (isMinute) {
-            return `${String(d.getUTCHours()).padStart(2, '0')}:${String(d.getUTCMinutes()).padStart(2, '0')}`
+            const hh = String(d.getUTCHours()).padStart(2, '0')
+            const mm = String(d.getUTCMinutes()).padStart(2, '0')
+            return `${hh}:${mm}`
           }
           if (tickMarkType <= 1) return `${d.getUTCMonth() + 1}월`
           return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`
@@ -128,7 +115,7 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, is
       chart.remove()
       seriesRef.current = null
     }
-  }, [candleData, isMinute, isOverseas])
+  }, [candleData, isMinute])
 
   // STOMP 실시간 캔들 업데이트 — 차트 재생성 없이 마지막 봉만 갱신
   useEffect(() => {

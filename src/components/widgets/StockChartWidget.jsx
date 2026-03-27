@@ -320,7 +320,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
                 }
               </div>
             </div>
-            <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} isOverseas={isOverseas} className="flex-1 min-h-0" />
+            <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} className="flex-1 min-h-0" />
           </div>
         </WidgetCard>
         {selectModal}
@@ -351,7 +351,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
           <div className="flex items-center shrink-0 mb-1.5">
             {periodTabs}
           </div>
-          <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} isOverseas={isOverseas} className="flex-1 min-h-0 rounded-xl" />
+          <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} className="flex-1 min-h-0 rounded-xl" />
           <div className="flex justify-between shrink-0 mt-1.5">
             {[
               { label: '시가',  val: stock.open },
@@ -394,7 +394,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
           <div className="flex shrink-0 mb-1">
             {periodTabs}
           </div>
-          <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} isOverseas={isOverseas} className="flex-1 min-h-0 rounded-xl mb-1.5" />
+          <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} className="flex-1 min-h-0 rounded-xl mb-1.5" />
           <div className="flex justify-between shrink-0">
             {[
               { label: '시가', val: stock.open },
