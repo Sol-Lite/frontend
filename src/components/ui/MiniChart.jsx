@@ -59,14 +59,15 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
         fixLeftEdge:    true,
         fixRightEdge:   !isMinute, // 분봉: 우측 열린 상태로 캔들이 오른쪽으로 추가됨
         tickMarkFormatter: (time, tickMarkType) => {
-          const d = new Date(time * 1000)
+          // UTC + 9h → KST (시세탭 InvestStockChart와 동일한 방식)
+          const d = new Date((time + 9 * 3600) * 1000)
           if (isMinute) {
-            const hh = String(d.getHours()).padStart(2, '0')
-            const mm = String(d.getMinutes()).padStart(2, '0')
+            const hh = String(d.getUTCHours()).padStart(2, '0')
+            const mm = String(d.getUTCMinutes()).padStart(2, '0')
             return `${hh}:${mm}`
           }
-          if (tickMarkType <= 1) return `${d.getMonth() + 1}월`
-          return `${d.getMonth() + 1}/${d.getDate()}`
+          if (tickMarkType <= 1) return `${d.getUTCMonth() + 1}월`
+          return `${d.getUTCMonth() + 1}/${d.getUTCDate()}`
         },
       },
       crosshair: {
