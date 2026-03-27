@@ -31,14 +31,14 @@ function getChartColors() {
  * 위젯용 캔들 차트 (lightweight-charts)
  * @param {{ time: number, open, high, low, close: number }[]} candleData - 캔들 데이터 (unix seconds)
  * @param {{ time: number, open, high, low, close: number }}   liveCandle - STOMP 실시간 업데이트 포인트
- * @param {boolean} isMinute  - true면 X축 HH:MM / 좌측 고정, false면 M/D
+ * @param {boolean} isIntraday - true(1일): X축 HH:MM, 78슬롯 고정, 우측 오픈 / false: M/D, fitContent
  * @param {string}  className
  */
-export default function MiniChart({ candleData, liveCandle, isMinute = false, className = '' }) {
+export default function MiniChart({ candleData, liveCandle, isIntraday = false, tickOffset = 9 * 3600, forcefit = false, className = '' }) {
   const ref       = useRef(null)
   const seriesRef = useRef(null)
 
-  // 차트 생성 — candleData / isMinute 변경 시 재생성
+  // 차트 생성 — candleData / isIntraday 변경 시 재생성
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -73,16 +73,15 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
       },
       timeScale: {
         visible:        true,
-        timeVisible:    isMinute,
+        timeVisible:    isIntraday,
         secondsVisible: false,
         borderVisible:  false,
         ticksVisible:   false,
         fixLeftEdge:    true,
-        fixRightEdge:   !isMinute, // 분봉: 우측 열린 상태로 캔들이 오른쪽으로 추가됨
+        fixRightEdge:   !isIntraday, // 1일 분봉: 우측 열린 상태로 캔들이 오른쪽으로 추가됨
         tickMarkFormatter: (time, tickMarkType) => {
-          // UTC + 9h → KST (시세탭 InvestStockChart와 동일한 방식)
-          const d = new Date((time + 9 * 3600) * 1000)
-          if (isMinute) {
+          const d = new Date((time + tickOffset) * 1000)
+          if (isIntraday) {
             const hh = String(d.getUTCHours()).padStart(2, '0')
             const mm = String(d.getUTCMinutes()).padStart(2, '0')
             return `${hh}:${mm}`
@@ -106,17 +105,17 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
       downColor:       down,
       borderDownColor: down,
       wickDownColor:   down,
-      priceLineVisible: false,
-      lastValueVisible: false,
+      priceLineVisible: true,
+      priceLineWidth:   1,
+      lastValueVisible: true,
     })
     seriesRef.current = series
 
     if (candleData?.length) {
       series.setData(candleData)
     }
-    if (isMinute) {
-      // 09:00~15:25 사이 5분봉 최대 78개 슬롯을 고정 → 캔들 폭이 일정하게 유지
-      // setVisibleRange는 데이터 밖 시간을 빈 공간으로 처리하지 못해 setVisibleLogicalRange 사용
+    if (isIntraday && !forcefit) {
+      // 국내 1일: 09:00~15:25 사이 5분봉 최대 78개 슬롯을 고정 → 캔들 폭이 일정하게 유지
       chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: 77.5 })
     } else if (candleData?.length) {
       chart.timeScale().fitContent()
@@ -140,7 +139,7 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
       chart.remove()
       seriesRef.current = null
     }
-  }, [candleData, isMinute])
+  }, [candleData, isIntraday, tickOffset, forcefit])
 
   // STOMP 실시간 캔들 업데이트 — 차트 재생성 없이 마지막 봉만 갱신
   useEffect(() => {
