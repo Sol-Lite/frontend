@@ -31,10 +31,12 @@ const EXCHCD_BY_EXCHANGE_CODE = { NAS: '82', NYS: '81', AMS: '81' }
 const EXCHCD_BY_MARKET_TYPE   = { NASDAQ: '82', NYSE: '81', AMEX: '81' }
 
 const PERIOD_CONFIG = {
-  '1일': { type: 'minute', ncnt: 5 },
-  '1주': { type: 'daily',  period: 'DAILY',  foreignPeriod: 'DAY', days: 7  },
-  '1달': { type: 'daily',  period: 'DAILY',  foreignPeriod: 'DAY', days: 30 },
-  '3달': { type: 'weekly', period: 'WEEKLY', foreignPeriod: 'DAY', days: 90 },
+  '1일': { type: 'minute', ncnt: 5,  nmin: 5,  filterToday: true,  tradingDays: null },
+  '1주': { type: 'minute', ncnt: 30, nmin: 30, filterToday: false, tradingDays: 5,
+           overseasType: 'daily', foreignPeriod: 'DAY', days: 7  },
+  '1달': { type: 'minute', ncnt: 60, nmin: 60, filterToday: false, tradingDays: 20,
+           overseasType: 'daily', foreignPeriod: 'DAY', days: 30 },
+  '3달': { type: 'daily',  period: 'DAILY',  foreignPeriod: 'DAY', days: 90 },
 }
 
 // 5분봉 버킷 타임스탬프 계산
@@ -136,11 +138,12 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     if (!stockCode) return
     const end = formatApiDate(new Date())
     Object.values(PERIOD_CONFIG).forEach((cfg) => {
-      if (cfg.type === 'minute') {
+      const effectiveCfgType = isOverseas ? (cfg.overseasType ?? cfg.type) : cfg.type
+      if (effectiveCfgType === 'minute') {
         if (isOverseas) {
           queryClient.prefetchQuery({
-            queryKey: ['foreign', 'minuteChart', stockCode, exchcd, 5],
-            queryFn:  () => foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: 5 }),
+            queryKey: ['foreign', 'minuteChart', stockCode, exchcd, cfg.nmin],
+            queryFn:  () => foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: cfg.nmin }),
             staleTime: 60_000,
           })
         } else {
@@ -169,8 +172,10 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     })
   }, [stockCode, exchcd, isOverseas, queryClient])
 
-  const periodCfg = PERIOD_CONFIG[activePeriod]
-  const isMinute  = periodCfg.type === 'minute'
+  const periodCfg    = PERIOD_CONFIG[activePeriod]
+  const effectiveType = isOverseas ? (periodCfg.overseasType ?? periodCfg.type) : periodCfg.type
+  const isMinute     = effectiveType === 'minute'
+  const isIntraday   = activePeriod === '1일'
 
   const endDate   = useMemo(() => formatApiDate(new Date()), [])
   const startDate = useMemo(
@@ -180,10 +185,10 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
 
   const { data: minuteRaw } = useQuery({
     queryKey: isOverseas
-      ? ['foreign', 'minuteChart', stockCode, exchcd, 5]
+      ? ['foreign', 'minuteChart', stockCode, exchcd, periodCfg.nmin]
       : ['stock', 'minute-chart', stockCode, periodCfg.ncnt],
     queryFn: isOverseas
-      ? () => foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: 5 })
+      ? () => foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: periodCfg.nmin })
       : () => marketApi.getMinuteChart(stockCode, { ncnt: periodCfg.ncnt }),
     enabled:  !!stockCode && isMinute,
     staleTime: 60_000,
@@ -214,8 +219,8 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     if (chetime.length < 4) return
     const time = toMinuteBucketTime(chetime)
 
-    // 캔들 누적 (분봉 기간일 때만 차트 업데이트)
-    if (isMinute) {
+    // 캔들 누적 (1일 intraday에서만 5분봉 버킷으로 차트 업데이트)
+    if (isIntraday) {
       setLiveCandle((prev) => {
         if (!prev || prev.time !== time) {
           return { time, open: price, high: price, low: price, close: price }
@@ -227,7 +232,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     const changeRate   = Number(liveTrade.drate ?? 0)
     const changeAmount = Number(liveTrade.change ?? 0) * (changeRate >= 0 ? 1 : -1)
     setLivePrice({ currentPrice: price, changeRate, changeAmount })
-  }, [liveTrade, isMinute])
+  }, [liveTrade, isIntraday])
 
   // ── 차트 데이터 ────────────────────────────────────────────────
   const { candleData, latestCandle } = useMemo(() => {
@@ -242,12 +247,22 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
         : normalizeDailySeries(chartRaw?.data)
     }
 
-    // 분봉: 오늘 세션만 표시
-    if (isMinute) {
+    // 기간별 데이터 필터
+    if (periodCfg.filterToday && !isOverseas) {
+      // 국내 1일: 분봉 API가 다일치 데이터를 반환하므로 KST 오늘 세션만 추출
+      // 해외 1일: chart-nmin은 한 세션치만 반환하므로 필터 불필요
       const today = new Date()
       const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
       const todaySeries = series.filter((p) => p.sessionDate === todayKey)
       if (todaySeries.length > 0) series = todaySeries
+    } else if (periodCfg.tradingDays) {
+      // 분봉(국내 1주·1달): sessionDate 기반, 일봉(해외 1주·1달): date 기반
+      // days: 7/30 범위로 넉넉히 받은 뒤 최근 N거래일로 정확히 자름
+      const dateKey = (p) => p.sessionDate ?? p.date
+      const dates = [...new Set(series.map(dateKey))].sort()
+      const cutoffDate = dates[Math.max(0, dates.length - periodCfg.tradingDays)]
+      const filtered = series.filter((p) => dateKey(p) >= cutoffDate)
+      if (filtered.length > 0) series = filtered
     }
 
     const toTime = (p) => Math.floor(p.timestamp / 1000)
@@ -255,7 +270,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
       candleData:   series.map((p) => ({ time: toTime(p), open: p.open, high: p.high, low: p.low, close: p.close })),
       latestCandle: series[series.length - 1] ?? null,
     }
-  }, [isMinute, isOverseas, minuteRaw, chartRaw])
+  }, [isMinute, isOverseas, minuteRaw, chartRaw, periodCfg.filterToday, periodCfg.tradingDays])
 
   // ── 가격 표시용 (STOMP > REST 우선) ───────────────────────────
   const priceSource = livePrice ?? priceData
@@ -321,7 +336,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
                 }
               </div>
             </div>
-            <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} className="flex-1 min-h-0" />
+            <MiniChart candleData={candleData} liveCandle={isIntraday ? liveCandle : null} isIntraday={isIntraday} tickOffset={isOverseas ? 0 : 9 * 3600} forcefit={isOverseas && isIntraday} className="flex-1 min-h-0" />
           </div>
         </WidgetCard>
         {selectModal}
@@ -352,7 +367,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
           <div className="flex items-center shrink-0 mb-1.5">
             {periodTabs}
           </div>
-          <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} className="flex-1 min-h-0 rounded-xl" />
+          <MiniChart candleData={candleData} liveCandle={isIntraday ? liveCandle : null} isIntraday={isIntraday} tickOffset={isOverseas ? 0 : 9 * 3600} forcefit={isOverseas && isIntraday} className="flex-1 min-h-0 rounded-xl mb-1.5" />
           <div className="flex justify-between shrink-0 mt-1.5">
             {[
               { label: '시가',  val: stock.open },
@@ -395,7 +410,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
           <div className="flex shrink-0 mb-1">
             {periodTabs}
           </div>
-          <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} className="flex-1 min-h-0 rounded-xl mb-1.5" />
+          <MiniChart candleData={candleData} liveCandle={isIntraday ? liveCandle : null} isIntraday={isIntraday} tickOffset={isOverseas ? 0 : 9 * 3600} forcefit={isOverseas && isIntraday} className="flex-1 min-h-0 rounded-xl mb-1.5" />
           <div className="flex justify-between shrink-0">
             {[
               { label: '시가', val: stock.open },
