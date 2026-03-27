@@ -23,16 +23,22 @@ export function useDashboardLoad() {
     if (!isAuthenticated) resetLayout()
   }, [isAuthenticated, resetLayout])
 
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: ['dashboard', 'me'],
     queryFn: dashboardApi.getMyDashboard,
     enabled: isAuthenticated && !isLoaded,
     staleTime: Infinity,
+    retry: false,
   })
 
   useEffect(() => {
     if (data) loadFromServer(data)
   }, [data, loadFromServer])
+
+  // 서버에 대시보드 없음(404 등) → 빈 배열로 처리 → INITIAL 레이아웃 유지
+  useEffect(() => {
+    if (isError) loadFromServer([])
+  }, [isError, loadFromServer])
 }
 
 /**

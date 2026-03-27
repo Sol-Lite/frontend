@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { Pencil } from 'lucide-react'
+import { Pencil, LayoutGrid, Plus } from 'lucide-react'
 import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
@@ -28,9 +28,9 @@ function PhantomSlot({ colSpan, rowSpan, gridCol, gridRow }) {
 }
 
 export default function HomePage() {
-  const { isEditMode } = useEditModeStore()
+  const { isEditMode, enterEditMode } = useEditModeStore()
   const { setCellSize, setPreviewCellSize } = useGridStore()
-  const { widgets, isLoaded, removeWidget, phantomWidget, isDraggingNewWidget, pages, currentPageId, switchPage } = useWidgetStore()
+  const { widgets, isLoaded, removeWidget, phantomWidget, isDraggingNewWidget, pages, currentPageId, switchPage, snapshotWidgets } = useWidgetStore()
   const { isAuthenticated, isRestoring } = useAuthStore()
   const [isPageEditOpen, setIsPageEditOpen] = useState(false)
 
@@ -145,6 +145,23 @@ export default function HomePage() {
         'flex-1 min-h-0',
         isEditMode ? 'overflow-visible' : 'overflow-auto',
       )}>
+        {/* 로그인 상태이고 위젯이 없을 때 빈 상태 안내 */}
+        {isAuthenticated && isLoaded && safeWidgets.length === 0 && !isEditMode ? (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-4">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <LayoutGrid className="w-10 h-10 text-foreground-disabled" strokeWidth={1.5} />
+              <p className="text-sm font-semibold text-foreground">대시보드가 비어있어요</p>
+              <p className="text-xs text-foreground-disabled">원하는 위젯을 추가해 나만의 대시보드를 만들어보세요.</p>
+            </div>
+            <button
+              onClick={() => { snapshotWidgets(); enterEditMode() }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
+            >
+              <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
+              위젯 추가하기
+            </button>
+          </div>
+        ) : (
         <div
           ref={setGridRef}
           className={cn(
@@ -192,6 +209,7 @@ export default function HomePage() {
             )
           })}
         </div>
+        )}
       </div>
     </div>
 
