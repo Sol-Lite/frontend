@@ -28,7 +28,8 @@ export function useDashboardLoad() {
     queryFn: dashboardApi.getMyDashboard,
     enabled: isAuthenticated && !isLoaded,
     staleTime: Infinity,
-    retry: false,
+    // 404(데이터 없음)는 즉시 폴백, 일시적 오류(네트워크·5xx)는 3회 재시도
+    retry: (failureCount, error) => error?.response?.status !== 404 && failureCount < 3,
   })
 
   useEffect(() => {
