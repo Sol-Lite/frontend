@@ -10,6 +10,7 @@ import { HOME_STOCKS } from '@/mocks/home'
 import { marketApi } from '@/api/market'
 import useWidgetStore from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
+import useStompSubscription from '@/hooks/useStompSubscription'
 import { normalizeDailySeries, normalizeMinuteSeries } from '@/features/invest/domestic/normalize'
 import { formatApiDate } from '@/features/invest/formatters'
 
@@ -28,6 +29,16 @@ const PERIOD_CONFIG = {
   '3달': { type: 'weekly', period: 'WEEKLY',  days: 90  },
 }
 
+// 5분봉 버킷 타임스탬프 계산
+function toMinuteBucketTime(chetime) {
+  const hh = parseInt(chetime.slice(0, 2), 10)
+  const mm = parseInt(chetime.slice(2, 4), 10)
+  const bucketMm = Math.floor(mm / 5) * 5
+  const now = new Date()
+  const ts = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hh, bucketMm, 0).getTime()
+  return Math.floor(ts / 1000) // unix seconds (lightweight-charts 기준)
+}
+
 function fmtVolume(v) {
   if (v == null) return '-'
   if (v >= 100_000_000) return `${(v / 100_000_000).toFixed(1)}억`
@@ -35,17 +46,24 @@ function fmtVolume(v) {
   return v.toLocaleString('ko-KR')
 }
 
-
 export default function StockChartWidget({ instanceId, variant = 'stock-sm', colSpan = 1, rowSpan = 1, onDelete, config = {} }) {
   const [activePeriod, setActivePeriod] = useState('1일')
   const [isConfigOpen, setIsConfigOpen] = useState(false)
+  const [livePrice, setLivePrice]   = useState(null)
+  const [liveCandle, setLiveCandle] = useState(null)
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
   const { mutate: saveDashboard } = useDashboardSave()
 
-  const stockId      = config.stockId ?? 'samsung'
-  const stockCode    = config.stockCode ?? STOCK_CODE_MAP[stockId]
-  const stockName    = config.stockName ?? null
-  const stockMeta    = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
+  const stockId   = config.stockId ?? 'samsung'
+  const stockCode = config.stockCode ?? STOCK_CODE_MAP[stockId]
+  const stockName = config.stockName ?? null
+  const stockMeta = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
+
+  // 종목 변경 시 실시간 상태 초기화
+  useEffect(() => {
+    setLivePrice(null)
+    setLiveCandle(null)
+  }, [stockCode])
 
   function handleStockSave({ stockCode: newCode, stockName: newName, marketType: newMarket }) {
     updateWidgetConfig(instanceId, { stockCode: newCode, stockName: newName, marketType: newMarket, stockId: undefined })
@@ -62,17 +80,30 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     </button>
   )
 
+  const periodTabs = (
+    <div className="flex gap-1">
+      {PERIODS.map((p) => (
+        <button
+          key={p}
+          onClick={(e) => { e.stopPropagation(); setActivePeriod(p) }}
+          className={`text-[9px] px-1.5 py-0.5 rounded font-medium transition-colors duration-[150ms] ${activePeriod === p ? 'bg-primary-light text-primary' : 'text-foreground-disabled hover:text-foreground'}`}
+        >
+          {p}
+        </button>
+      ))}
+    </div>
+  )
+
+  // ── REST 초기 데이터 ────────────────────────────────────────────
   const { data: priceData } = useQuery({
     queryKey: ['stock', 'price', stockCode],
     queryFn:  () => marketApi.getCurrentPrice(stockCode),
     enabled:  !!stockCode,
-    staleTime: 5_000,
-    refetchInterval: 10_000,
+    staleTime: 30_000,
   })
 
   const queryClient = useQueryClient()
 
-  // 위젯 마운트 시 모든 기간 데이터를 백그라운드 prefetch
   useEffect(() => {
     if (!stockCode) return
     const end = formatApiDate(new Date())
@@ -108,7 +139,6 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     queryFn:  () => marketApi.getMinuteChart(stockCode, { ncnt: periodCfg.ncnt }),
     enabled:  !!stockCode && isMinute,
     staleTime: 60_000,
-    refetchInterval: 60_000,
   })
 
   const { data: chartRaw } = useQuery({
@@ -118,12 +148,41 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     staleTime: 5 * 60 * 1000,
   })
 
-  const { miniChartData, latestCandle } = useMemo(() => {
+  // ── STOMP 실시간 체결 구독 ──────────────────────────────────────
+  const liveTrade = useStompSubscription(stockCode ? `/topic/stock/trade/${stockCode}` : null)
+
+  useEffect(() => {
+    if (!liveTrade) return
+    const price  = Number(liveTrade.price)
+    const volume = Number(liveTrade.cvolume)
+    if (!price || !volume) return
+
+    const chetime = liveTrade.chetime ?? ''
+    if (chetime.length < 4) return
+    const time = toMinuteBucketTime(chetime)
+
+    // 캔들 누적 (분봉 기간일 때만 차트 업데이트)
+    if (isMinute) {
+      setLiveCandle((prev) => {
+        if (!prev || prev.time !== time) {
+          return { time, open: price, high: price, low: price, close: price }
+        }
+        return { ...prev, high: Math.max(prev.high, price), low: Math.min(prev.low, price), close: price }
+      })
+    }
+
+    const changeRate   = Number(liveTrade.drate ?? 0)
+    const changeAmount = Number(liveTrade.change ?? 0) * (changeRate >= 0 ? 1 : -1)
+    setLivePrice({ currentPrice: price, changeRate, changeAmount })
+  }, [liveTrade, isMinute])
+
+  // ── 차트 데이터 ────────────────────────────────────────────────
+  const { candleData, latestCandle } = useMemo(() => {
     let series = isMinute
       ? normalizeMinuteSeries(minuteRaw?.data ?? minuteRaw)
       : normalizeDailySeries(chartRaw?.data)
 
-    // 1일(분봉)은 오늘 세션만 표시 — API가 여러 날 반환할 수 있음
+    // 분봉: 오늘 세션만 표시
     if (isMinute) {
       const today = new Date()
       const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`
@@ -133,28 +192,30 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
 
     const toTime = (p) => Math.floor(p.timestamp / 1000)
     return {
-      miniChartData: series.map((p) => ({ time: toTime(p), value: p.close })),
-      latestCandle:  series[series.length - 1] ?? null,
+      candleData:   series.map((p) => ({ time: toTime(p), open: p.open, high: p.high, low: p.low, close: p.close })),
+      latestCandle: series[series.length - 1] ?? null,
     }
   }, [isMinute, minuteRaw, chartRaw])
 
-  const hasPrice = priceData != null
+  // ── 가격 표시용 (STOMP > REST 우선) ───────────────────────────
+  const priceSource = livePrice ?? priceData
+  const hasPrice = priceSource != null
   const stock = {
     ...stockMeta,
     name:      stockName ?? stockMeta.name,
     code:      stockCode ?? stockMeta.code,
-    price:     priceData?.currentPrice != null
-                 ? Number(priceData.currentPrice).toLocaleString('ko-KR')
+    price:     priceSource?.currentPrice != null
+                 ? Number(priceSource.currentPrice).toLocaleString('ko-KR')
                  : '-',
-    change:    priceData?.changeRate ?? 0,
-    changeAmt: priceData?.changeAmount != null
-                 ? Math.abs(Number(priceData.changeAmount)).toLocaleString('ko-KR')
+    change:    priceSource?.changeRate ?? 0,
+    changeAmt: priceSource?.changeAmount != null
+                 ? Math.abs(Number(priceSource.changeAmount)).toLocaleString('ko-KR')
                  : '-',
     open:       latestCandle ? Number(latestCandle.open).toLocaleString('ko-KR') : '-',
     high:       latestCandle ? Number(latestCandle.high).toLocaleString('ko-KR') : '-',
     low:        latestCandle ? Number(latestCandle.low).toLocaleString('ko-KR')  : '-',
-    volume:     priceData?.volume != null
-                  ? fmtVolume(priceData.volume)
+    volume:     priceSource?.volume != null
+                  ? fmtVolume(priceSource.volume)
                   : latestCandle ? fmtVolume(latestCandle.volume) : '-',
     marketType: config.marketType ?? stockMeta.market ?? null,
   }
@@ -169,12 +230,14 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     />
   )
 
+  // ── variants ──────────────────────────────────────────────────
+
   if (variant === 'stock-wide') {
     return (
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
           <div className="flex h-full gap-2.5 min-h-0">
-            <div className="flex flex-col justify-between shrink-0">
+            <div className="flex flex-col gap-1.5 shrink-0 justify-between">
               <div className="flex items-center gap-1.5">
                 <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
                 <div>
@@ -185,8 +248,9 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
                   <div className="text-[9px] text-foreground-disabled mt-0.5">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
                 </div>
               </div>
+              {periodTabs}
               <div>
-                <div className={`text-[18px] font-bold leading-tight text-foreground`}>{stock.price}</div>
+                <div className="text-[18px] font-bold leading-tight text-foreground">{stock.price}</div>
                 {hasPrice
                   ? <div className={`text-[10px] ${isUp ? 'text-up' : 'text-down'}`}>
                       {isUp ? '▲' : '▼'} {stock.changeAmt}원 ({isUp ? '+' : ''}{stock.change}%)
@@ -195,7 +259,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
                 }
               </div>
             </div>
-            <MiniChart data={miniChartData} isMinute={isMinute} isUp={isUp} className="flex-1 min-h-0" />
+            <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} className="flex-1 min-h-0" />
           </div>
         </WidgetCard>
         {selectModal}
@@ -219,24 +283,14 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               </div>
             </div>
             <div className="text-right">
-              <div className={`text-[20px] font-bold leading-tight text-foreground`}>{stock.price}</div>
+              <div className="text-[20px] font-bold leading-tight text-foreground">{stock.price}</div>
               <PriceChange value={stock.change} className="text-[10px]" />
             </div>
           </div>
           <div className="flex items-center shrink-0 mb-1.5">
-            <div className="flex gap-1.5">
-              {PERIODS.map((p) => (
-                <button
-                  key={p}
-                  onClick={(e) => { e.stopPropagation(); setActivePeriod(p) }}
-                  className={`text-[9px] px-1.5 py-0.5 rounded font-medium transition-colors duration-[150ms] ${activePeriod === p ? 'bg-primary-light text-primary' : 'text-foreground-disabled hover:text-foreground'}`}
-                >
-                  {p}
-                </button>
-              ))}
-            </div>
+            {periodTabs}
           </div>
-          <MiniChart data={miniChartData} isMinute={isMinute} isUp={isUp} className="flex-1 min-h-0 rounded-xl" />
+          <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} className="flex-1 min-h-0 rounded-xl" />
           <div className="flex justify-between shrink-0 mt-1.5">
             {[
               { label: '시가',  val: stock.open },
@@ -272,11 +326,14 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               </div>
             </div>
             <div className="text-right">
-              <div className={`text-[18px] font-bold leading-tight text-foreground`}>{stock.price}</div>
+              <div className="text-[18px] font-bold leading-tight text-foreground">{stock.price}</div>
               <PriceChange value={stock.change} className="text-[10px]" />
             </div>
           </div>
-          <MiniChart data={miniChartData} isMinute={isMinute} isUp={isUp} className="flex-1 min-h-0 rounded-xl mb-1.5" />
+          <div className="flex shrink-0 mb-1">
+            {periodTabs}
+          </div>
+          <MiniChart candleData={candleData} liveCandle={isMinute ? liveCandle : null} isMinute={isMinute} className="flex-1 min-h-0 rounded-xl mb-1.5" />
           <div className="flex justify-between shrink-0">
             {[
               { label: '시가', val: stock.open },

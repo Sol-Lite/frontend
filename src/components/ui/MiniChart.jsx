@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { LineSeries, createChart } from 'lightweight-charts'
+import { CandlestickSeries, createChart } from 'lightweight-charts'
 
 function getChartColors() {
   const style = getComputedStyle(document.documentElement)
@@ -10,22 +10,22 @@ function getChartColors() {
 }
 
 /**
- * 위젯용 미니 라인 차트 (lightweight-charts)
- * @param {{ time: number, value: number }[]} data      - 라인용 (unix seconds)
- * @param {boolean} isMinute  - true면 X축에 시간(HH:MM), false면 날짜(M/D)
- * @param {boolean} isUp
+ * 위젯용 캔들 차트 (lightweight-charts)
+ * @param {{ time: number, open, high, low, close: number }[]} candleData - 캔들 데이터 (unix seconds)
+ * @param {{ time: number, open, high, low, close: number }}   liveCandle - STOMP 실시간 업데이트 포인트
+ * @param {boolean} isMinute  - true면 X축 HH:MM / 좌측 고정, false면 M/D
  * @param {string}  className
  */
-export default function MiniChart({ data, isMinute = false, isUp, className = '' }) {
+export default function MiniChart({ candleData, liveCandle, isMinute = false, className = '' }) {
   const ref       = useRef(null)
   const seriesRef = useRef(null)
 
+  // 차트 생성 — candleData / isMinute 변경 시 재생성
   useEffect(() => {
     const el = ref.current
     if (!el) return
 
     const { up, down, textMuted } = getChartColors()
-    const lineColor = isUp ? up : down
 
     const chart = createChart(el, {
       width:  el.clientWidth,
@@ -41,7 +41,15 @@ export default function MiniChart({ data, isMinute = false, isUp, className = ''
         horzLines: { visible: false },
       },
       leftPriceScale:  { visible: false },
-      rightPriceScale: { visible: false },
+      rightPriceScale: {
+        visible:       true,
+        borderVisible: false,
+        minimumWidth:  48,
+        scaleMargins:  { top: 0.08, bottom: 0.08 },
+      },
+      localization: {
+        priceFormatter: (price) => Math.round(price).toLocaleString('ko-KR'),
+      },
       timeScale: {
         visible:        true,
         timeVisible:    isMinute,
@@ -49,7 +57,7 @@ export default function MiniChart({ data, isMinute = false, isUp, className = ''
         borderVisible:  false,
         ticksVisible:   false,
         fixLeftEdge:    true,
-        fixRightEdge:   true,
+        fixRightEdge:   !isMinute, // 분봉: 우측 열린 상태로 캔들이 오른쪽으로 추가됨
         tickMarkFormatter: (time, tickMarkType) => {
           const d = new Date(time * 1000)
           if (isMinute) {
@@ -69,18 +77,26 @@ export default function MiniChart({ data, isMinute = false, isUp, className = ''
       handleScale:  false,
     })
 
-    const series = chart.addSeries(LineSeries, {
-      lineColor,
-      lineWidth:              1.5,
-      priceLineVisible:       false,
-      lastValueVisible:       false,
-      crosshairMarkerVisible: false,
+    const series = chart.addSeries(CandlestickSeries, {
+      upColor:         up,
+      borderUpColor:   up,
+      wickUpColor:     up,
+      downColor:       down,
+      borderDownColor: down,
+      wickDownColor:   down,
+      priceLineVisible: false,
+      lastValueVisible: false,
     })
     seriesRef.current = series
 
-    if (data?.length) {
-      series.setData(data)
-      chart.timeScale().fitContent()
+    if (candleData?.length) {
+      series.setData(candleData)
+      if (isMinute) {
+        // 09:01(첫 캔들)을 좌측에 고정, 오른쪽으로 채워지도록
+        chart.timeScale().setVisibleLogicalRange({ from: -0.5, to: candleData.length - 0.5 })
+      } else {
+        chart.timeScale().fitContent()
+      }
     }
 
     const ro = new ResizeObserver(([entry]) => {
@@ -97,14 +113,13 @@ export default function MiniChart({ data, isMinute = false, isUp, className = ''
       chart.remove()
       seriesRef.current = null
     }
-  }, [data, isMinute]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [candleData, isMinute])
 
-  // isUp 변경 시 차트 재생성 없이 색상만 업데이트
+  // STOMP 실시간 캔들 업데이트 — 차트 재생성 없이 마지막 봉만 갱신
   useEffect(() => {
-    if (!seriesRef.current) return
-    const { up, down } = getChartColors()
-    seriesRef.current.applyOptions({ lineColor: isUp ? up : down })
-  }, [isUp])
+    if (!seriesRef.current || !liveCandle) return
+    seriesRef.current.update(liveCandle)
+  }, [liveCandle])
 
   return <div ref={ref} className={`overflow-hidden ${className}`} />
 }
