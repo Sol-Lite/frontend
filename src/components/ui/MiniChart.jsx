@@ -45,7 +45,7 @@ export default function MiniChart({ candleData, liveCandle, isMinute = false, cl
         visible:       true,
         borderVisible: false,
         minimumWidth:  48,
-        scaleMargins:  { top: 0.08, bottom: 0.08 },
+        scaleMargins:  { top: 0.15, bottom: 0.08 },
       },
       localization: {
         priceFormatter: (price) => Math.round(price).toLocaleString('ko-KR'),
