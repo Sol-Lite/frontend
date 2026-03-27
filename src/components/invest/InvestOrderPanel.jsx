@@ -6,14 +6,13 @@ import {
   formatDisplayPrice,
   formatNumber,
   getDisplayPriceUnitLabel,
-  toDisplayPriceInputValue,
 } from '@/features/invest/formatters'
 import { ORDER_TYPE_OPTIONS } from '@/mocks/invest'
 import { cn } from '@/lib/cn'
 import AccountPinKeypad from '@/components/signup/AccountPinKeypad'
 
-const SECTION_LABEL = 'mb-1.5 text-[10px] font-semibold uppercase tracking-[.04em] text-foreground-disabled'
-const TYPE_BTN_BASE = 'flex-1 rounded-[9px] border-[1.5px] py-[7px] text-xs font-semibold transition-colors'
+const SECTION_LABEL = 'mb-1 text-[9px] font-semibold uppercase tracking-[.04em] text-foreground-disabled'
+const TYPE_BTN_BASE = 'flex-1 rounded-[9px] border-[1.5px] py-1.5 text-[11px] font-semibold transition-colors'
 const TYPE_BTN_OFF  = 'border-stroke-input bg-surface text-foreground-tertiary'
 
 const ORDER_KIND_LABEL = { market: '시장가', limit: '지정가', current: '현재가' }
@@ -44,16 +43,20 @@ export default function InvestOrderPanel({
   onConfirm,
   onBack,
   onPinChange,
+  rememberPin,
+  onRememberPinChange,
   onPinDone,
   onPinClose,
   isSubmitting,
+  orderError = '',
 }) {
   const isBuy = side === 'buy'
   const totalAmount = quantity * unitPrice
   const isConfirm = step === 'confirm'
   const priceUnitLabel = getDisplayPriceUnitLabel({ marketType, displayCurrency })
-  const displaySelectedPrice = toDisplayPriceInputValue(selectedPrice, { marketType, displayCurrency, usdRate })
-  const priceInputStep = priceUnitLabel === '달러' ? '0.01' : '1'
+  const formattedSelectedPrice = selectedPrice == null
+    ? ''
+    : formatDisplayPrice(selectedPrice, { marketType, displayCurrency, usdRate })
 
   const tone = isBuy
     ? {
@@ -82,7 +85,7 @@ export default function InvestOrderPanel({
     <section className="flex w-[250px] shrink-0 flex-col overflow-hidden bg-surface">
 
       {/* 상단 탭 — 항상 고정 */}
-      <div className="border-b border-stroke px-3 py-2.5 shrink-0">
+      <div className="border-b border-stroke px-3 py-2 shrink-0">
         <div className="flex gap-0.5 rounded-[10px] bg-background p-0.5">
           {[{ key: 'buy', label: '매수' }, { key: 'sell', label: '매도' }].map((item) => {
             const isActive = side === item.key
@@ -92,7 +95,7 @@ export default function InvestOrderPanel({
                 key={item.key}
                 onClick={() => !isConfirm && onSideChange(item.key)}
                 className={cn(
-                  'flex-1 rounded-lg py-2 text-[13px] font-semibold transition-colors',
+                  'flex-1 rounded-lg py-1.5 text-[12px] font-semibold transition-colors',
                   isActive ? activeClass : 'text-foreground-disabled',
                   isConfirm && 'cursor-default',
                 )}
@@ -110,14 +113,14 @@ export default function InvestOrderPanel({
         {/* 입력 뷰 */}
         <div
           className={cn(
-            'absolute inset-0 overflow-y-auto px-3 py-3 flex flex-col gap-3.5 transition-opacity duration-200',
+            'absolute inset-0 overflow-y-auto px-3 py-2.5 flex flex-col gap-3 transition-opacity duration-200',
             isConfirm ? 'opacity-0 pointer-events-none' : 'opacity-100',
           )}
         >
           {/* 주문 유형 */}
           <div>
             <div className={SECTION_LABEL}>주문 유형</div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.75">
               {ORDER_TYPE_OPTIONS.map((item) => {
                 const isOn = orderType === item.key
                 const onClass = isBuy
@@ -138,19 +141,19 @@ export default function InvestOrderPanel({
 
           {/* 주문 수량 */}
           <div>
-            <div className="mb-1.5 flex items-center justify-between">
+            <div className="mb-1 flex items-center justify-between">
               <span className={SECTION_LABEL.replace('mb-1.5 ', '')}>주문 수량</span>
               <span className="text-[10px] text-foreground-disabled">
                 {availabilityLabel}{' '}
                 <span className="font-bold text-primary">{availabilityValue}</span>
               </span>
             </div>
-            <div className="mb-1.5 flex items-center gap-1.5">
+            <div className="mb-1 flex items-center gap-1">
               <button type="button" onClick={() => onQuantityDelta(-1)}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-[1.5px] border-stroke-input bg-surface text-foreground-secondary transition-colors hover:border-primary hover:text-primary">
-                <Minus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                className="flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-lg border-[1.5px] border-stroke-input bg-surface text-foreground-secondary transition-colors hover:border-primary hover:text-primary">
+                <Minus className="h-3 w-3" strokeWidth={2.5} />
               </button>
-              <div className="flex-1 rounded-[10px] border-[1.5px] border-stroke-input bg-surface px-3 py-1.5 text-center flex items-center justify-center focus-within:border-primary transition-colors">
+              <div className="flex-1 rounded-[10px] border-[1.5px] border-stroke-input bg-surface px-2.5 py-1 text-center flex items-center justify-center focus-within:border-primary transition-colors">
                 <input
                   type="number"
                   value={quantity}
@@ -162,22 +165,22 @@ export default function InvestOrderPanel({
                     const v = parseInt(e.target.value, 10)
                     onQuantityChange?.(isNaN(v) || v < 1 ? 1 : v)
                   }}
-                  className="w-full bg-transparent text-[20px] font-black text-foreground text-center outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="w-full bg-transparent text-[18px] font-black text-foreground text-center outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
                 <span className="ml-1 shrink-0 text-[10px] text-foreground-disabled">주</span>
               </div>
               <button type="button" onClick={() => onQuantityDelta(1)}
-                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border-[1.5px] border-stroke-input bg-surface text-foreground-secondary transition-colors hover:border-primary hover:text-primary">
-                <Plus className="h-3.5 w-3.5" strokeWidth={2.5} />
+                className="flex h-7.5 w-7.5 shrink-0 items-center justify-center rounded-lg border-[1.5px] border-stroke-input bg-surface text-foreground-secondary transition-colors hover:border-primary hover:text-primary">
+                <Plus className="h-3 w-3" strokeWidth={2.5} />
               </button>
             </div>
-            <div className="flex gap-1">
+            <div className="flex gap-0.75">
               {QUICK_RATIOS.map((item) => {
                 const isMax = item.ratio === 1
                 return (
                   <button key={item.label} onClick={() => onPresetApply(item.ratio)}
                     className={cn(
-                      'flex-1 rounded-[7px] border-[1.5px] py-1.5 text-[10px] font-semibold transition-colors',
+                      'flex-1 rounded-[7px] border-[1.5px] py-1.25 text-[9px] font-semibold transition-colors',
                       isMax
                         ? isBuy ? 'border-up-border bg-up-bg text-up' : 'border-down-border bg-down-bg text-down'
                         : 'border-stroke-input bg-surface-subtle text-foreground-tertiary hover:border-primary hover:text-primary',
@@ -194,24 +197,26 @@ export default function InvestOrderPanel({
           <div>
             <div className={SECTION_LABEL}>주문 가격</div>
             <div className={cn(
-              'rounded-[10px] border-[1.5px] bg-surface px-3 py-2.5 flex items-center justify-between transition-colors',
+              'rounded-[10px] border-[1.5px] bg-surface px-3 py-2 flex items-center justify-between transition-colors',
               orderType === 'limit' ? 'border-stroke-input focus-within:border-primary' : 'border-stroke-input',
             )}>
               {orderType === 'limit' ? (
                 <input
-                  type="number"
-                  step={priceInputStep}
-                  value={displaySelectedPrice}
+                  type="text"
+                  inputMode={priceUnitLabel === '달러' ? 'decimal' : 'numeric'}
+                  value={formattedSelectedPrice}
                   onChange={(e) => {
-                    const v = Number(e.target.value)
+                    const rawValue = e.target.value.replaceAll(',', '').trim()
+                    if (rawValue === '') return
+                    const v = Number(rawValue)
                     const marketValue = convertDisplayValueToMarketValue(v, { marketType, displayCurrency, usdRate })
                     if (!isNaN(v) && v >= 0 && marketValue != null) onSelectPrice?.(marketValue)
                   }}
-                  className="w-full bg-transparent text-[17px] font-black text-foreground outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                  className="w-full bg-transparent text-[16px] font-black text-foreground outline-none"
                   placeholder="0"
                 />
               ) : (
-                <span className="text-[17px] font-black text-foreground">
+                <span className="text-[16px] font-black text-foreground">
                   {formatDisplayPrice(unitPrice, { marketType, displayCurrency, usdRate })}
                 </span>
               )}
@@ -220,22 +225,22 @@ export default function InvestOrderPanel({
           </div>
 
           {/* 주문 요약 */}
-          <div className={cn('rounded-[10px] border-[1.5px] p-3', tone.wrapper)}>
-            <div className="mb-2 flex items-center justify-between">
+          <div className={cn('rounded-[10px] border-[1.5px] p-2.5', tone.wrapper)}>
+            <div className="mb-1.5 flex items-center justify-between">
               <span className={cn('text-[10px] font-bold uppercase tracking-[.04em]', tone.title)}>
                 {isBuy ? '매수 요약' : '매도 요약'}
               </span>
-              <span className={cn('rounded-full px-2 py-0.5 text-[9px] font-bold', tone.badge)}>
+              <span className={cn('rounded-full px-1.5 py-0.5 text-[8px] font-bold', tone.badge)}>
                 {ORDER_TYPE_OPTIONS.find((o) => o.key === orderType)?.label}
               </span>
             </div>
-            <div className="flex flex-col gap-1.5">
+            <div className="flex flex-col gap-1">
               {[
                 { label: '종목', value: stockName },
                 { label: '수량', value: `${formatNumber(quantity)}주` },
                 { label: '단가', value: formatCurrency(unitPrice, { marketType, displayCurrency, usdRate }) },
               ].map(({ label, value }) => (
-                <div key={label} className="flex items-center justify-between text-[10px]">
+                <div key={label} className="flex items-center justify-between text-[9px]">
                   <span className="text-foreground-disabled">{label}</span>
                   <span className="font-semibold text-foreground">{value}</span>
                 </div>
@@ -245,10 +250,10 @@ export default function InvestOrderPanel({
                 <span className="text-[10px] text-foreground-disabled">
                   {isBuy ? '예상 합계' : '예상 매도금액'}
                 </span>
-                <span className={cn('text-[17px] font-black', tone.helper)}>
-                  {formatCurrency(totalAmount, { marketType, displayCurrency, usdRate })}
-                </span>
-              </div>
+                  <span className={cn('text-[16px] font-black', tone.helper)}>
+                    {formatCurrency(totalAmount, { marketType, displayCurrency, usdRate })}
+                  </span>
+                </div>
             </div>
           </div>
         </div>
@@ -261,8 +266,8 @@ export default function InvestOrderPanel({
           )}
         >
           {/* 주문 요약 (compact) */}
-          <div className="px-4 pt-4 pb-2 flex flex-col gap-2">
-            <div className={cn('text-[11px] font-bold uppercase tracking-wide', tone.title)}>
+          <div className="px-4 pt-3 pb-1.5 flex flex-col gap-1.5">
+            <div className={cn('text-[10px] font-bold uppercase tracking-wide', tone.title)}>
               주문 내용 확인
             </div>
             {[
@@ -273,17 +278,17 @@ export default function InvestOrderPanel({
                 value: formatCurrency(unitPrice, { marketType, displayCurrency, usdRate }),
               },
             ].map(({ label, value }) => (
-              <div key={label} className="flex items-center justify-between text-[12px]">
+              <div key={label} className="flex items-center justify-between text-[11px]">
                 <span className="text-foreground-disabled">{label}</span>
                 <span className="font-semibold text-foreground">{value}</span>
               </div>
             ))}
             <div className="h-px bg-stroke" />
             <div className="flex items-center justify-between">
-              <span className="text-[11px] text-foreground-disabled">
+              <span className="text-[10px] text-foreground-disabled">
                 {isBuy ? '예상 총 매수금액' : '예상 총 매도금액'}
               </span>
-              <span className={cn('text-[20px] font-black', tone.title)}>
+              <span className={cn('text-[18px] font-black', tone.title)}>
                 {formatCurrency(totalAmount, { marketType, displayCurrency, usdRate })}
               </span>
             </div>
@@ -291,12 +296,12 @@ export default function InvestOrderPanel({
 
           {/* PIN 입력 영역 */}
           {showPin && (
-            <div className="border-t border-stroke mt-1">
-              <div className="px-4 pt-3 pb-1">
+            <div className="border-t border-stroke mt-0.5">
+              <div className="px-4 pt-2.5 pb-0.5">
                 <div className="text-[10px] font-semibold text-foreground-disabled uppercase tracking-wide">계좌 비밀번호</div>
-              <div className="text-[9px] text-foreground-disabled mt-0.5 mb-2">인증 후 30분간 비밀번호를 기억해요</div>
+                <div className="text-[8px] text-foreground-disabled mt-0.5 mb-1.5">비밀번호 4자리를 입력해주세요</div>
                 {/* 도트 */}
-                <div className="flex justify-center gap-3 py-2">
+                <div className="flex justify-center gap-2 py-1">
                   {Array.from({ length: 4 }, (_, i) => (
                     <div
                       key={i}
@@ -311,7 +316,7 @@ export default function InvestOrderPanel({
                   <p className="text-center text-[10px] text-up mb-1">{pinError}</p>
                 )}
               </div>
-              <div className="sol-pin-keypad-compact px-3 pb-3">
+              <div className="sol-pin-keypad-compact px-2.5">
                 <AccountPinKeypad
                   isOpen
                   variant="desktop"
@@ -321,19 +326,67 @@ export default function InvestOrderPanel({
                   onClose={onPinClose}
                 />
               </div>
+              <div className="px-2.5 pb-2.5 pt-1">
+                <label
+                  className={cn(
+                    'flex cursor-pointer items-center justify-between rounded-[10px] border px-2.5 py-1.5 transition-colors',
+                    rememberPin
+                      ? 'border-primary-border bg-primary-light'
+                      : 'border-stroke-input bg-surface-subtle hover:bg-surface-muted',
+                  )}
+                >
+                  <input
+                    type="checkbox"
+                    checked={rememberPin}
+                    onChange={(e) => onRememberPinChange?.(e.target.checked)}
+                    className="sr-only"
+                  />
+                  <span className={cn('text-[9px] font-semibold', rememberPin ? 'text-primary' : 'text-foreground-secondary')}>
+                    30분간 비밀번호 기억하기
+                  </span>
+                  <span
+                    className={cn(
+                      'flex h-4 w-4 items-center justify-center rounded-[6px] border-[1.5px] text-[10px] font-black transition-colors',
+                      rememberPin
+                        ? 'border-primary bg-primary text-white'
+                        : 'border-stroke-input bg-surface text-transparent',
+                    )}
+                  >
+                    ✓
+                  </span>
+                </label>
+              </div>
             </div>
           )}
         </div>
       </div>
 
+      {orderError && (
+        <div className="shrink-0 px-3 pt-2">
+          <div
+            className={cn(
+              'w-full rounded-xl bg-surface px-3 py-2.5 shadow-sm',
+              isBuy ? 'border border-up-border' : 'border border-down-border',
+            )}
+          >
+            <div className="min-w-0">
+              <div className={cn('text-[10px] font-bold uppercase tracking-[.04em]', tone.title)}>주문 실패</div>
+              <div className="mt-0.75 text-[11px] leading-[1.45] text-foreground-secondary">
+                {orderError}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* 하단 버튼 — 항상 고정 */}
-      <div className="shrink-0 px-3 pb-4 pt-2 border-t border-stroke">
+      <div className="shrink-0 px-3 pb-3 pt-2 border-t border-stroke">
         {isConfirm ? (
           <div className="flex gap-2">
             <button
               onClick={showPin ? onPinClose : onBack}
               disabled={isSubmitting}
-              className="flex-1 py-3 rounded-xl border border-stroke-input text-[13px] font-semibold text-foreground-secondary hover:bg-surface-muted transition-colors disabled:opacity-50"
+              className="flex-1 py-2.5 rounded-xl border border-stroke-input text-[12px] font-semibold text-foreground-secondary hover:bg-surface-muted transition-colors disabled:opacity-50"
             >
               취소
             </button>
@@ -341,7 +394,7 @@ export default function InvestOrderPanel({
               <button
                 onClick={onConfirm}
                 disabled={isSubmitting}
-                className={cn('flex-1 py-3 rounded-xl text-[13px] font-bold transition-opacity disabled:opacity-60', tone.button)}
+                className={cn('flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-opacity disabled:opacity-60', tone.button)}
               >
                 {isSubmitting ? '처리 중...' : (isBuy ? '매수 확정' : '매도 확정')}
               </button>
@@ -350,7 +403,7 @@ export default function InvestOrderPanel({
         ) : (
           <button
             onClick={onSubmit}
-            className={cn('w-full rounded-xl py-3 text-sm font-black', tone.button)}
+            className={cn('w-full rounded-xl py-2.5 text-[13px] font-black', tone.button)}
           >
             {tone.cta} →
           </button>

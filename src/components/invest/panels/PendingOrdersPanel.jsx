@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 import { formatCurrency, formatNumber } from '@/features/invest/formatters'
+import { buildInvestNavigationState } from '@/features/invest/navigation'
 import { orderApi } from '@/api/order'
 import AccountPinKeypad from '@/components/signup/AccountPinKeypad'
 import StockAvatar from '@/components/ui/StockAvatar'
@@ -11,6 +13,7 @@ import useAuthStore from '@/store/useAuthStore'
 
 
 export default function PendingOrdersPanel({ stockCode, marketType, displayCurrency, usdRate }) {
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { isPinCached, verifyAndCachePin } = usePinAuth()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
@@ -129,8 +132,16 @@ export default function PendingOrdersPanel({ stockCode, marketType, displayCurre
           return (
             <div key={row.orderId ?? row.id} className="flex items-center gap-2 border-b border-stroke-subtle px-2.5 py-1.5">
               <div className="grid flex-1 grid-cols-[24px_minmax(0,1fr)_40px_60px_80px] gap-2 items-center">
-                <StockAvatar name={row.stockName ?? row.stockCode} stockCode={row.stockCode} marketType={rowMarketType} size="sm" />
-                <span className="truncate text-[10px] font-semibold text-foreground">{row.stockName ?? row.stockCode}</span>
+                <button
+                  type="button"
+                  onClick={() => navigate(`/invest/${row.stockCode}`, { state: buildInvestNavigationState({ ...row, marketType: rowMarketType }) })}
+                  className="col-span-2 grid grid-cols-[24px_minmax(0,1fr)] items-center gap-2 text-left transition-opacity hover:opacity-80"
+                >
+                  <StockAvatar name={row.stockName ?? row.stockCode} stockCode={row.stockCode} marketType={rowMarketType} size="sm" />
+                  <span className="truncate text-[10px] font-semibold text-foreground">
+                    {row.stockName ?? row.stockCode}
+                  </span>
+                </button>
                 <span className={cn('rounded-[4px] px-1 py-0.5 text-center text-[8px] font-bold', isBuy ? 'bg-up-bg text-up' : 'bg-down-bg text-down')}>
                   {isBuy ? '매수' : '매도'}
                 </span>

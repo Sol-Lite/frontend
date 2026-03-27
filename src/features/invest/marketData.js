@@ -39,9 +39,9 @@ export function resolveStockMeta(stockCode, locationState) {
     sector: known?.sector ?? '-',
     isDomestic,
     availableAmount: known?.availableAmount ?? INVEST_STOCK.availableAmount,
-    price: known?.price ?? INVEST_STOCK.price,
-    diff: known?.diff ?? 0,
-    changeRate: known?.changeRate ?? 0,
+    price: locationState?.price ?? known?.price ?? null,
+    diff: locationState?.diff ?? known?.diff ?? 0,
+    changeRate: locationState?.changeRate ?? known?.changeRate ?? 0,
     open: known?.open ?? null,
     high: known?.high ?? null,
     low: known?.low ?? null,
@@ -52,8 +52,13 @@ export function resolveStockMeta(stockCode, locationState) {
 // 날짜/시간 파싱 유틸 (domestic/foreign normalize에서 공유)
 export function toLocalTimestamp(value, fallbackTime = '00:00:00') {
   if (typeof value === 'string') {
-    const normalized = value.includes('T') ? value : `${value}T${fallbackTime}`
-    return new Date(normalized).getTime()
+    const [datePart, timePart = fallbackTime] = value.includes('T')
+      ? value.split('T')
+      : [value, fallbackTime]
+    const [year, month, day] = datePart.split('-').map(Number)
+    const [hour = 0, minute = 0, second = 0] = timePart.split(':').map(Number)
+
+    return new Date(year, (month ?? 1) - 1, day ?? 1, hour, minute, second).getTime()
   }
 
   if (Array.isArray(value)) {
