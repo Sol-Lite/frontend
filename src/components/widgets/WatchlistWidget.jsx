@@ -8,11 +8,15 @@ import WidgetCard from './WidgetCard'
 import StockSelectModal from './StockSelectModal'
 import { useWatchlist, watchlistApi } from '@/api/watchlist'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
+import { isForeignMarketType } from '@/features/invest/formatters'
 
 const EXCHANGE_CODE_BY_MARKET_TYPE = { NASDAQ: 'NAS', NYSE: 'NYS', AMEX: 'AMS' }
 
-function fmtPrice(n) {
-  return `₩${Number(n ?? 0).toLocaleString('ko-KR')}`
+function fmtPrice(n, marketType) {
+  if (n == null) return null
+  return isForeignMarketType(marketType)
+    ? `$${Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+    : `₩${Number(n).toLocaleString('ko-KR')}`
 }
 
 function useWatchlistMutations() {
@@ -99,7 +103,11 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
               >
                 <span className="text-[10px] font-medium text-foreground truncate">{item.stockName}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[10px] font-semibold text-foreground">{fmtPrice(item.currentPrice)}</span>
+                  {fmtPrice(item.currentPrice, item.marketType) && (
+                    <span className="text-[10px] font-semibold text-foreground tabular-nums">
+                      {fmtPrice(item.currentPrice, item.marketType)}
+                    </span>
+                  )}
                   <PriceChange value={item.changeRate} className="text-[9px] font-medium" />
                   <button
                     onClick={(e) => handleRemove(e, item.stockCode)}
