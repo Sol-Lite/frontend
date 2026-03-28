@@ -50,6 +50,7 @@ function PresetPickerModal({ onSelect, onClose }) {
             </p>
           </div>
           <button
+            aria-label="닫기"
             onClick={onClose}
             className="w-7 h-7 rounded-full border border-stroke-input bg-surface-muted flex items-center justify-center text-foreground-tertiary hover:text-foreground transition-colors"
           >

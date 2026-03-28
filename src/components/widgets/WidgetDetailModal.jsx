@@ -92,22 +92,21 @@ export default function WidgetDetailModal() {
       <div
         ref={sheetRef}
         className={cn(
-          'relative bg-surface rounded-t-[20px] shadow-modal flex flex-col pointer-events-auto',
+          'relative bg-surface rounded-t-[20px] shadow-modal flex flex-col pointer-events-auto h-[99%]',
           isClosing ? 'animate-slide-down' : 'animate-slide-up',
         )}
-        style={{ height: '99%' }}
       >
         {/* 드래그 핸들 + 닫기 버튼 */}
         <div
-          className="flex items-center justify-between pt-2.5 pb-1.5 px-4 shrink-0 cursor-grab active:cursor-grabbing"
+          className="flex items-center justify-between pt-2.5 pb-1.5 px-4 shrink-0 cursor-grab active:cursor-grabbing touch-none"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
-          style={{ touchAction: 'none' }}
         >
           <div className="w-6" />
           <div className="w-9 h-1 rounded-full bg-stroke" />
           <button
+            aria-label="닫기"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={handleClose}
             className="p-1 rounded-lg hover:bg-surface-muted transition-colors"

@@ -1,5 +1,5 @@
 /**
- * 대시보드 프리셋 — DB (fin97901@gmail.com, user_id=204) 에서 읽은 좌표 그대로
+ * 대시보드 프리셋
  *
  * positionX → gridCol, positionY → gridRow, width → colSpan, height → rowSpan
  * configJson.variantId → variantId
