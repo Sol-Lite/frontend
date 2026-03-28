@@ -27,7 +27,7 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between mb-1.5 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
           <div className="flex gap-0.5">
             {TABS.map((tab) => (
               <TabChip
@@ -47,12 +47,12 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
               className="flex items-center justify-between px-1 py-1 hover:bg-surface-subtle rounded-lg transition-colors cursor-pointer"
             >
               <div className="flex items-center gap-1.5">
-                <span className={`text-[9px] font-bold w-4 text-center shrink-0 ${stock.rank === 1 ? 'text-primary' : 'text-foreground-disabled'}`}>
+                <span className={`text-widget-9 font-bold w-4 text-center shrink-0 ${stock.rank === 1 ? 'text-primary' : 'text-foreground-disabled'}`}>
                   {stock.rank}
                 </span>
-                <span className="text-[10px] font-semibold text-foreground">{stock.name}</span>
+                <span className="text-widget-10 font-semibold text-foreground">{stock.name}</span>
               </div>
-              <PriceChange value={stock.change} className="text-[10px]" />
+              <PriceChange value={stock.change} className="text-widget-10" />
             </div>
           ))}
         </div>
@@ -64,7 +64,7 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
       <div className="flex items-center justify-between mb-1.5 shrink-0">
-        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
+        <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
         <div className="flex gap-0.5">
           {TABS.map((tab) => (
             <TabChip
@@ -84,12 +84,12 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
             className="flex items-center justify-between px-1.5 py-1.5 rounded-xl hover:bg-surface-subtle transition-colors cursor-pointer"
           >
             <div className="flex items-center gap-1.5">
-              <span className={`text-[9px] font-bold w-3 text-center shrink-0 ${stock.rank === 1 ? 'text-primary' : 'text-foreground-disabled'}`}>
+              <span className={`text-widget-9 font-bold w-3 text-center shrink-0 ${stock.rank === 1 ? 'text-primary' : 'text-foreground-disabled'}`}>
                 {stock.rank}
               </span>
-              <span className="text-[10px] font-semibold text-foreground">{stock.name}</span>
+              <span className="text-widget-10 font-semibold text-foreground">{stock.name}</span>
             </div>
-            <PriceChange value={stock.change} className="text-[10px]" />
+            <PriceChange value={stock.change} className="text-widget-10" />
           </div>
         ))}
       </div>

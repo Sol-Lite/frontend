@@ -41,13 +41,13 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[13px] font-bold text-foreground">표시할 지수 선택</span>
+          <span className="text-widget-13 font-bold text-foreground">표시할 지수 선택</span>
           <button onClick={onClose} className="text-foreground-disabled hover:text-foreground transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <p className="text-[10px] text-foreground-disabled mb-3">
+        <p className="text-widget-10 text-foreground-disabled mb-3">
           최대 {max}개 선택 가능
         </p>
 
@@ -74,7 +74,7 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
                   onChange={() => toggle(code)}
                   className="accent-primary w-3.5 h-3.5"
                 />
-                <span className={`text-[12px] font-semibold ${isChecked ? 'text-primary' : 'text-foreground'}`}>
+                <span className={`text-widget-12 font-semibold ${isChecked ? 'text-primary' : 'text-foreground'}`}>
                   {label}
                 </span>
               </label>
@@ -85,7 +85,7 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
         <button
           disabled={selected.length === 0}
           onClick={() => onSave(selected)}
-          className="w-full py-2 rounded-xl bg-primary text-white text-[12px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-2 rounded-xl bg-primary text-white text-widget-12 font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
           저장
         </button>

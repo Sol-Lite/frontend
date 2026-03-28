@@ -92,8 +92,8 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between mb-2 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
-          <span className="text-[9px] text-foreground-disabled">{monthLabel}</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
+          <span className="text-widget-9 text-foreground-disabled">{monthLabel}</span>
         </div>
         <div className="flex flex-1 min-h-0 gap-4">
           {/* 좌: 캘린더 */}
@@ -109,7 +109,7 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
                 const trades = k ? (tradeMap[k] ?? null) : null
                 return (
                   <div key={i} className="flex flex-col items-start rounded p-0.5">
-                    <span className={cn('text-[9px] leading-none mb-px', d ? 'text-foreground' : 'invisible')}>
+                    <span className={`text-widget-9 leading-none mb-px ${d ? 'text-foreground' : 'invisible'}`}>
                       {d ?? '0'}
                     </span>
                     {trades && trades.slice(0, 2).map((tr, j) => (
@@ -125,10 +125,10 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
           </div>
           {/* 우: 목록 */}
           <div className="flex flex-col min-h-0 border-l border-stroke pl-4 shrink-0 w-[40%]">
-            <span className="text-[9px] font-semibold text-foreground-disabled mb-1 shrink-0">거래 내역</span>
+            <span className="text-widget-9 font-semibold text-foreground-disabled mb-1 shrink-0">거래 내역</span>
             <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1.5">
               {isLoading
-                ? <div className="text-[9px] text-foreground-disabled">불러오는 중...</div>
+                ? <div className="text-widget-9 text-foreground-disabled">불러오는 중...</div>
                 : recentTrades.length > 0 ? recentTrades.map(({ name, type, qty, price, date }) => (
                 <div key={`${name}-${date}`} className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 min-w-0">
@@ -138,15 +138,15 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
                     )}>
                       {type}
                     </span>
-                    <span className="text-[10px] text-foreground truncate">{name}</span>
+                    <span className="text-widget-10 text-foreground truncate">{name}</span>
                   </div>
                   <div className="flex flex-col items-end shrink-0">
-                    <span className="text-[9px] font-semibold text-foreground">{price}</span>
+                    <span className="text-widget-9 font-semibold text-foreground">{price}</span>
                     <span className="text-[8px] text-foreground-disabled">{qty} · {date}</span>
                   </div>
                 </div>
               )) : (
-                <div className="flex-1 flex items-center justify-center text-[9px] text-foreground-disabled">거래내역 없음</div>
+                <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">거래내역 없음</div>
               )}
             </div>
           </div>
@@ -161,8 +161,8 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between mb-2 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
-          <span className="text-[9px] text-foreground-disabled">{monthLabel}</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
+          <span className="text-widget-9 text-foreground-disabled">{monthLabel}</span>
         </div>
         <div className="grid grid-cols-7 gap-0.5 shrink-0 mb-1">
           {WEEK_DAYS.map((d) => (
@@ -172,11 +172,12 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
         <div className="grid grid-cols-7 gap-0.5 flex-1 min-h-0">
           {weekCells.map(({ d, key }, i) => {
             const trades = tradeMap[key] ?? null
+            const visible = trades ? trades.slice(0, 5) : null
             return (
-              <div key={i} className="flex flex-col items-start rounded-lg p-1 bg-background/50">
-                <span className="text-[9px] leading-none mb-1 text-foreground">{d}</span>
-                {trades && trades.map((tr, j) => (
-                  <div key={j} className="flex items-center gap-0.5 w-full mb-0.5">
+              <div key={i} className="flex flex-col items-start rounded-lg p-1 overflow-hidden">
+                <span className="text-widget-9 leading-none mb-1 text-foreground shrink-0">{d}</span>
+                {visible && visible.map((tr, j) => (
+                  <div key={j} className="flex items-center gap-0.5 w-full mb-0.5 shrink-0">
                     <div className={cn('w-0.5 rounded-full shrink-0 self-stretch', tr.buy ? 'bg-up' : 'bg-down')} />
                     <span className="text-[8px] leading-snug truncate text-foreground">{tr.s}</span>
                   </div>
@@ -195,8 +196,8 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between mb-2 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
-          <span className="text-[9px] text-foreground-disabled">{monthLabel}</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
+          <span className="text-widget-9 text-foreground-disabled">{monthLabel}</span>
         </div>
         <div className="grid grid-cols-7 gap-0.5 shrink-0 mb-1">
           {WEEK_DAYS.map((d) => (
@@ -209,7 +210,7 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
             const trades = k ? (tradeMap[k] ?? null) : null
             return (
               <div key={i} className="flex flex-col items-start rounded p-0.5">
-                <span className={cn('text-[9px] leading-none mb-px', d ? 'text-foreground' : 'invisible')}>
+                <span className={`text-widget-9 leading-none mb-px ${d ? 'text-foreground' : 'invisible'}`}>
                   {d ?? '0'}
                 </span>
                 {trades && trades.slice(0, 2).map((tr, j) => (
@@ -231,11 +232,11 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
       <div className="flex items-center justify-between mb-2 shrink-0">
-        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
+        <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
       </div>
       <div className="flex-1 flex flex-col gap-1.5 min-h-0 overflow-y-auto">
         {isLoading
-          ? <div className="text-[9px] text-foreground-disabled">불러오는 중...</div>
+          ? <div className="text-widget-9 text-foreground-disabled">불러오는 중...</div>
           : recentTrades.length > 0 ? recentTrades.map(({ name, type, qty, date }) => (
           <div key={`${name}-${date}`} className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 min-w-0">
@@ -245,15 +246,15 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
               )}>
                 {type}
               </span>
-              <span className="text-[10px] text-foreground truncate">{name}</span>
+              <span className="text-widget-10 text-foreground truncate">{name}</span>
             </div>
             <div className="flex items-center gap-1.5 shrink-0">
-              <span className="text-[9px] text-foreground-disabled">{qty}</span>
+              <span className="text-widget-9 text-foreground-disabled">{qty}</span>
               <span className="text-[8px] text-foreground-disabled">{date}</span>
             </div>
           </div>
         )) : (
-          <div className="flex-1 flex items-center justify-center text-[9px] text-foreground-disabled">거래내역 없음</div>
+          <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">거래내역 없음</div>
         )}
       </div>
       {!isRestoring && !isAuthenticated && <LockedOverlay message="거래내역을 보려면" />}
