@@ -35,7 +35,8 @@ function WatchlistRow({ item, onStockClick, onRemove }) {
   const changeAmt  = fmtChange(item.change ?? item.changeAmount, item.marketType)
   const isUp       = (item.changeRate ?? 0) >= 0
 
-  const { data: sparkData = [] } = useSparkline(item.stockCode, item.marketType)
+  const exchangeCode = item.exchangeCode ?? EXCHANGE_CODE_BY_MARKET_TYPE[item.marketType] ?? null
+  const { data: sparkData = [] } = useSparkline(item.stockCode, item.marketType, exchangeCode)
 
   return (
     <button

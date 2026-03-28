@@ -38,7 +38,7 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
 
     return {
       ...baseStockMeta,
-      marketType: baseStockMeta.market,
+      marketType: baseStockMeta.market,  // NASDAQ / NYSE / AMEX — API 파라미터용으로 유지
       name: infoQuery.data?.korname ?? baseStockMeta.name,
       nameEn: infoQuery.data?.engname ?? baseStockMeta.nameEn,
       market: infoQuery.data?.exchangeName ?? baseStockMeta.market,

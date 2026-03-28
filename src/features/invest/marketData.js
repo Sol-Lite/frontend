@@ -22,10 +22,15 @@ export function getChartPeriodLabel(periodKey, minuteInterval) {
   return getChartPeriodConfig(periodKey).periodLabel
 }
 
+const MARKET_TYPE_BY_EXCHANGE_CODE = { NAS: 'NASDAQ', NYS: 'NYSE', AMS: 'AMEX' }
+
 export function resolveStockMeta(stockCode, locationState) {
   const known = STOCK_META_BY_CODE[stockCode]
-  const marketType = locationState?.marketType ?? known?.market ?? null
   const exchangeCode = locationState?.exchangeCode ?? null
+  // exchangeCode가 있으면 역으로 marketType 파생 가능
+  const marketType = locationState?.marketType
+    ?? known?.market
+    ?? (exchangeCode ? MARKET_TYPE_BY_EXCHANGE_CODE[exchangeCode] : null)
   const isDomestic = exchangeCode == null
     ? (!marketType || ['KOSPI', 'KOSDAQ'].includes(marketType))
     : ['KOSPI', 'KOSDAQ'].includes(marketType)
