@@ -7,6 +7,7 @@ import useAuthStore from '@/store/useAuthStore'
 import WidgetCard from './WidgetCard'
 import StockSelectModal from './StockSelectModal'
 import { useWatchlist, watchlistApi } from '@/api/watchlist'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
 function fmtPrice(n) {
   return `₩${Number(n ?? 0).toLocaleString('ko-KR')}`
@@ -34,6 +35,19 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
   const { data: items = [], isError } = useWatchlist({ enabled: isAuthenticated && !isRestoring })
   const { add, remove } = useWatchlistMutations()
   const [isAddOpen, setIsAddOpen] = useState(false)
+  const openDetail = useWidgetDetailStore((s) => s.open)
+
+  function handleWidgetClick() {
+    openDetail({ widgetTypeId: 'watchlist', config: {} })
+  }
+
+  function handleStockClick(e, item) {
+    e.stopPropagation()
+    openDetail({
+      widgetTypeId: 'stock-chart',
+      config: { stockCode: item.stockCode, stockName: item.stockName, marketType: item.marketType ?? null },
+    })
+  }
 
   const list = items.slice(0, 5)
 
@@ -65,7 +79,7 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
   if (variant === 'watchlist-wide') {
     return (
       <>
-        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
           <div className="flex items-center justify-between mb-2 shrink-0">
             <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
             {addBtn}
@@ -73,14 +87,18 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
           <div className="flex-1 flex flex-col gap-1.5 min-h-0">
             {isError
               ? <span className="text-[10px] text-foreground-disabled">불러오기에 실패했습니다</span>
-              : list.length > 0 ? list.map(({ stockCode, stockName, currentPrice, changeRate }) => (
-              <div key={stockCode} className="flex items-center justify-between gap-2 group">
-                <span className="text-[10px] font-medium text-foreground truncate">{stockName}</span>
+              : list.length > 0 ? list.map((item) => (
+              <div
+                key={item.stockCode}
+                onClick={(e) => handleStockClick(e, item)}
+                className="flex items-center justify-between gap-2 group cursor-pointer pl-1.5 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
+              >
+                <span className="text-[10px] font-medium text-foreground truncate">{item.stockName}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
-                  <span className="text-[10px] font-semibold text-foreground">{fmtPrice(currentPrice)}</span>
-                  <PriceChange value={changeRate} className="text-[9px] font-medium" />
+                  <span className="text-[10px] font-semibold text-foreground">{fmtPrice(item.currentPrice)}</span>
+                  <PriceChange value={item.changeRate} className="text-[9px] font-medium" />
                   <button
-                    onClick={(e) => handleRemove(e, stockCode)}
+                    onClick={(e) => handleRemove(e, item.stockCode)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-foreground-disabled hover:text-down"
                   >
                     <X className="w-3 h-3" />
@@ -109,13 +127,17 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
         <div className="flex-1 flex flex-col gap-1.5 min-h-0">
           {isError
             ? <span className="text-[10px] text-foreground-disabled">불러오기에 실패했습니다</span>
-            : list.length > 0 ? list.map(({ stockCode, stockName, changeRate }) => (
-            <div key={stockCode} className="flex items-center justify-between group">
-              <span className="text-[10px] font-medium text-foreground truncate">{stockName}</span>
+            : list.length > 0 ? list.map((item) => (
+            <div
+              key={item.stockCode}
+              onClick={(e) => handleStockClick(e, item)}
+              className="flex items-center justify-between group cursor-pointer pl-1.5 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
+            >
+              <span className="text-[10px] font-medium text-foreground truncate">{item.stockName}</span>
               <div className="flex items-center gap-1 shrink-0">
-                <PriceChange value={changeRate} className="text-[9px] font-semibold" />
+                <PriceChange value={item.changeRate} className="text-[9px] font-semibold" />
                 <button
-                  onClick={(e) => handleRemove(e, stockCode)}
+                  onClick={(e) => handleRemove(e, item.stockCode)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-foreground-disabled hover:text-down"
                 >
                   <X className="w-3 h-3" />
