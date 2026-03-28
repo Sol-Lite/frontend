@@ -8,6 +8,7 @@ import WidgetCard from './WidgetCard'
 import ExchangeConfigModal from './ExchangeConfigModal'
 import useWidgetStore from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
 
 const ALL_CURRENCIES = [
@@ -57,6 +58,12 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
   const { mutate: saveDashboard } = useDashboardSave()
   const [isConfigOpen, setIsConfigOpen] = useState(false)
 
+  const open = useWidgetDetailStore((s) => s.open)
+  const handleCurrencyClick = (e, code) => {
+    e.stopPropagation()
+    open({ widgetTypeId: 'exchange', config: { currency: code } })
+  }
+
   const liveUsd = useCurrencyRate('USD')
   const liveJpy = useCurrencyRate('JPY')
   const liveEur = useCurrencyRate('EUR')
@@ -104,11 +111,16 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
             {settingsBtn}
           </div>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-            {currencies.map(({ pair, live }, i) => {
+            {currencies.map(({ code, pair, live }, i) => {
               const isUp = (live?.change ?? 0) > 0
               const { pr, pl } = paddings[i] ?? { pr: '', pl: 'pl-2.5' }
               return (
-                <div key={pair} className={`flex flex-col justify-center ${pr} ${pl}`} style={{ flex: flexValues[i] ?? '1' }}>
+                <div
+                  key={pair}
+                  className={`relative flex flex-col justify-center ${pr} ${pl} cursor-pointer group`}
+                  style={{ flex: flexValues[i] ?? '1' }}
+                  onClick={(e) => handleCurrencyClick(e, code)}
+                >
                   <div className="text-center">
                     <div className="text-[9px] text-foreground-disabled">{pair}</div>
                     <div className={`${rateSize[i] ?? 'text-[16px]'} font-bold text-foreground leading-tight`}>{formatRate(live?.rate)}</div>
@@ -118,6 +130,7 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
                       </div>
                     )}
                   </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               )
             })}
@@ -138,14 +151,19 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
             {settingsBtn}
           </div>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-            {currencies.map(({ pair, live }, i) => {
+            {currencies.map(({ code, pair, live }, i) => {
               const isUp = (live?.change ?? 0) > 0
               const rateSize = i === 0 ? 'text-[20px]' : 'text-[16px]'
               const pr = i === 0 ? 'pr-3' : ''
               const pl = i > 0 ? 'pl-3' : ''
               const flex = i === 0 ? '1.2' : '1'
               return (
-                <div key={pair} className={`flex flex-col justify-center ${pr} ${pl}`} style={{ flex }}>
+                <div
+                  key={pair}
+                  className={`relative flex flex-col justify-center ${pr} ${pl} cursor-pointer group`}
+                  style={{ flex }}
+                  onClick={(e) => handleCurrencyClick(e, code)}
+                >
                   <div className="text-center">
                     <div className="text-[9px] text-foreground-disabled">{pair}</div>
                     <div className={`${rateSize} font-bold text-foreground leading-tight`}>{formatRate(live?.rate)}</div>
@@ -155,6 +173,7 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
                       </div>
                     )}
                   </div>
+                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               )
             })}
@@ -176,16 +195,23 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
             <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
             {settingsBtn}
           </div>
-          <div className="shrink-0">
+          <div
+            className="shrink-0 cursor-pointer"
+            onClick={(e) => handleCurrencyClick(e, primary?.code ?? 'USD')}
+          >
             <div className="text-[9px] text-foreground-disabled">{primary?.pair ?? 'USD / KRW'}</div>
             <RateDisplay live={primary?.live} rateClassName="text-[22px]" />
           </div>
 
           <div className="flex-1 flex flex-col gap-2 min-h-0 overflow-y-auto">
-            {rest.map(({ flag, pair, live }) => {
+            {rest.map(({ code, flag, pair, live }) => {
               const isUp = (live?.change ?? 0) > 0
               return (
-                <div key={pair} className="flex items-center justify-between px-1">
+                <div
+                  key={pair}
+                  className="flex items-center justify-between px-1 cursor-pointer rounded-lg hover:bg-surface-muted transition-colors"
+                  onClick={(e) => handleCurrencyClick(e, code)}
+                >
                   <div className="flex items-center gap-2">
                     <span className="text-[14px]">{flag}</span>
                     <span className="text-[10px] text-foreground-secondary">{pair}</span>
@@ -224,7 +250,12 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
 
   return (
     <>
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <WidgetCard
+        colSpan={colSpan}
+        rowSpan={rowSpan}
+        onDelete={onDelete}
+        onClick={(e) => handleCurrencyClick(e, 'USD')}
+      >
         <div className="flex items-center justify-between shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
         </div>

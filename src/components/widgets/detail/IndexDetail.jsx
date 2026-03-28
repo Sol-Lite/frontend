@@ -4,67 +4,89 @@ import TabChip from '@/components/ui/TabChip'
 import DetailChart from './DetailChart'
 import useMarketIndices from '@/features/market/useMarketIndices'
 import useIndexChart from '@/features/market/useIndexChart'
+import useForexChart from '@/features/market/useForexChart'
 import { cn } from '@/lib/cn'
 
-const INDEX_LIST = [
-  { code: '001',      label: 'KOSPI'   },
-  { code: '301',      label: 'KOSDAQ'  },
-  { code: 'NAS@IXIC', label: 'NASDAQ'  },
-  { code: 'SPI@SPX',  label: 'S&P 500' },
+const SIDEBAR_ITEMS = [
+  { type: 'index', code: '001',        label: 'KOSPI'   },
+  { type: 'index', code: '301',        label: 'KOSDAQ'  },
+  { type: 'index', code: 'NAS@IXIC',  label: 'NASDAQ'  },
+  { type: 'index', code: 'SPI@SPX',   label: 'S&P 500' },
+  { type: 'forex', code: 'USD',        symbol: 'USDKRW=X', label: 'USD/KRW' },
 ]
 
 const PERIODS = ['1D', '1M', '3M', '1Y']
 
 export default function IndexDetail({ config = {} }) {
-  const [code, setCode]               = useState(config.code ?? '001')
+  const initialCode = config.code ?? (config.currency === 'USD' ? 'USD' : '001')
+  const [selected, setSelected]       = useState(() => SIDEBAR_ITEMS.find((i) => i.code === initialCode) ?? SIDEBAR_ITEMS[0])
   const [period, setPeriod]           = useState('3M')
   const [fetchPeriod, setFetchPeriod] = useState(null)
   const [chartType, setChartType]     = useState(
-    () => localStorage.getItem('index.chartType') ?? 'candle',
+    () => localStorage.getItem('market.chartType') ?? 'candle',
   )
 
   useEffect(() => {
-    localStorage.setItem('index.chartType', chartType)
+    localStorage.setItem('market.chartType', chartType)
   }, [chartType])
 
-  // t3518 rate limit(1 req/sec) 대응
-  useEffect(() => {
-    const timer = setTimeout(() => setFetchPeriod(period), 1200)
-    return () => clearTimeout(timer)
-  }, [period])
-
-  // 지수 전환 시 fetchPeriod 리셋 후 재요청
+  // 인덱스 전환 시 fetchPeriod 리셋 (t3518 rate limit 대응)
   useEffect(() => {
     setFetchPeriod(null)
     const timer = setTimeout(() => setFetchPeriod(period), 1200)
     return () => clearTimeout(timer)
-  }, [code]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [selected.code]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 기간 변경 시 debounce
+  useEffect(() => {
+    if (selected.type === 'index') {
+      const timer = setTimeout(() => setFetchPeriod(period), 1200)
+      return () => clearTimeout(timer)
+    } else {
+      setFetchPeriod(period)
+    }
+  }, [period, selected.type])
 
   const { indices } = useMarketIndices()
-  const currentMeta = INDEX_LIST.find((m) => m.code === code)
-  const idx         = indices.find((i) => i.code === code)
 
-  const price      = idx ? Number(idx.price).toLocaleString('ko-KR', { maximumFractionDigits: 2 }) : '—'
-  const changeRate = idx?.changeRate ?? null
-  const isUp       = changeRate != null ? changeRate >= 0 : true
+  // 두 훅 모두 호출 — enabled 조건으로 실제 요청 제어
+  const { lineData: idxLine, candleData: idxCandle, isLoading: idxLoading, isIntraday: idxIsIntraday, error: idxError } =
+    useIndexChart(selected.type === 'index' ? selected.code : null, selected.type === 'index' ? fetchPeriod : null)
 
-  const { lineData, candleData, isLoading, isIntraday, error } = useIndexChart(code, fetchPeriod)
-  const hasData = chartType === 'candle' ? candleData.length > 0 : lineData.length > 0
+  const { lineData: fxLine, candleData: fxCandle, isLoading: fxLoading, isIntraday: fxIsIntraday, error: fxError } =
+    useForexChart(selected.type === 'forex' ? selected.symbol : null, selected.type === 'forex' ? fetchPeriod : null)
+
+  const isForex    = selected.type === 'forex'
+  const lineData   = isForex ? fxLine   : idxLine
+  const candleData = isForex ? fxCandle : idxCandle
+  const isLoading  = isForex ? fxLoading  : idxLoading
+  const isIntraday = isForex ? fxIsIntraday : idxIsIntraday
+  const error      = isForex ? fxError   : idxError
+  const hasData    = chartType === 'candle' ? candleData.length > 0 : lineData.length > 0
+
+  // 헤더용 현재가/등락률 — USD 포함 모두 indices에서 조회
+  const selectedIdx = indices.find((i) => i.code === selected.code)
+  const headerPrice = selectedIdx ? Number(selectedIdx.price).toLocaleString('ko-KR', { maximumFractionDigits: 2 }) : '—'
+  const headerRate  = selectedIdx?.changeRate ?? null
+  const headerIsUp  = headerRate != null ? headerRate >= 0 : true
+
+  function handleSelect(item) {
+    setSelected(item)
+    setPeriod('3M')
+  }
 
   return (
     <div className="flex flex-1 min-h-0 overflow-hidden">
 
       {/* ── 좌측: 차트 영역 ── */}
       <div className="flex flex-col flex-1 min-w-0 min-h-0 overflow-hidden">
-        {/* 헤더 */}
         <div className="flex items-center justify-between px-5 py-3 border-b border-stroke shrink-0">
           <div className="flex items-baseline gap-3">
-            <span className="text-[15px] font-bold text-foreground">{currentMeta?.label ?? code}</span>
-            <span className="text-[20px] font-extrabold text-foreground">{price}</span>
-            {changeRate != null && <PriceChange value={changeRate} className="text-[13px]" />}
+            <span className="text-[15px] font-bold text-foreground">{selected.label}</span>
+            <span className="text-[20px] font-extrabold text-foreground">{headerPrice}</span>
+            {headerRate != null && <PriceChange value={headerRate} className="text-[13px]" />}
           </div>
           <div className="flex items-center gap-2">
-            {/* 캔들/라인 토글 */}
             <div className="flex items-center rounded-lg bg-surface-muted p-0.5">
               {[{ key: 'candle', label: '캔들' }, { key: 'line', label: '라인' }].map((type) => (
                 <button
@@ -82,8 +104,6 @@ export default function IndexDetail({ config = {} }) {
                 </button>
               ))}
             </div>
-
-            {/* 기간 탭 */}
             <div className="flex gap-1">
               {PERIODS.map((p) => (
                 <TabChip key={p} isActive={period === p} onClick={() => setPeriod(p)}>
@@ -94,7 +114,6 @@ export default function IndexDetail({ config = {} }) {
           </div>
         </div>
 
-        {/* 차트 */}
         <div className="flex-1 min-h-0 p-4">
           {isLoading ? (
             <div className="h-full flex items-center justify-center text-[12px] text-foreground-disabled">불러오는 중...</div>
@@ -106,7 +125,7 @@ export default function IndexDetail({ config = {} }) {
               candleData={candleData}
               chartType={chartType}
               isMinute={isIntraday}
-              isUp={isUp}
+              isUp={headerIsUp}
               className="w-full h-full"
             />
           ) : (
@@ -115,21 +134,21 @@ export default function IndexDetail({ config = {} }) {
         </div>
       </div>
 
-      {/* ── 우측: 지수 목록 ── */}
+      {/* ── 우측: 목록 ── */}
       <div className="w-[200px] shrink-0 border-l border-stroke flex flex-col py-2 overflow-y-auto">
-        <p className="px-4 pt-2 pb-3 text-[11px] font-semibold text-foreground-disabled">주가지수</p>
-        {INDEX_LIST.map((item) => {
-          const itemIdx   = indices.find((i) => i.code === item.code)
-          const itemPrice = itemIdx ? Number(itemIdx.price).toLocaleString('ko-KR', { maximumFractionDigits: 2 }) : '—'
-          const itemRate  = itemIdx?.changeRate ?? null
+        <p className="px-4 pt-2 pb-3 text-[11px] font-semibold text-foreground-disabled">시장</p>
+        {SIDEBAR_ITEMS.map((item) => {
+          const idx      = indices.find((i) => i.code === item.code)
+          const itemPrice = idx ? Number(idx.price).toLocaleString('ko-KR', { maximumFractionDigits: 2 }) : '—'
+          const itemRate  = idx?.changeRate ?? null
           const itemIsUp  = itemRate != null ? itemRate >= 0 : true
-          const isActive  = item.code === code
+          const isActive = item.code === selected.code
 
           return (
             <button
               key={item.code}
               type="button"
-              onClick={() => setCode(item.code)}
+              onClick={() => handleSelect(item)}
               className={cn(
                 'flex items-center gap-2 px-4 py-2.5 text-left transition-colors',
                 isActive ? 'bg-surface-subtle' : 'hover:bg-surface-muted',

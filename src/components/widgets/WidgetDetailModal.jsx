@@ -8,6 +8,7 @@ import IndexDetail from './detail/IndexDetail'
 import MarketNewsDetail from './detail/MarketNewsDetail'
 import StockNewsDetail from './detail/StockNewsDetail'
 import WatchlistDetail from './detail/WatchlistDetail'
+import ExchangeDetail from './detail/ExchangeDetail'
 import { cn } from '@/lib/cn'
 
 const DETAIL_MAP = {
@@ -18,6 +19,7 @@ const DETAIL_MAP = {
   'market-overview': MarketNewsDetail,
   'stock-news':      StockNewsDetail,
   'watchlist':       WatchlistDetail,
+  'exchange':        ExchangeDetail,
 }
 
 const DRAG_CLOSE_THRESHOLD = 80
@@ -25,6 +27,7 @@ const DRAG_CLOSE_THRESHOLD = 80
 export default function WidgetDetailModal() {
   const { openWidget, close } = useWidgetDetailStore()
   const [isClosing, setIsClosing] = useState(false)
+  const [slideUpDone, setSlideUpDone] = useState(false)
   const localWidget  = useRef(null)
   const closeTimer   = useRef(null)
   const sheetRef     = useRef(null)
@@ -40,6 +43,7 @@ export default function WidgetDetailModal() {
         closeTimer.current = null
       }
       setIsClosing(false)
+      setSlideUpDone(false)
     }
   }, [openWidget])
 
@@ -103,8 +107,9 @@ export default function WidgetDetailModal() {
         ref={sheetRef}
         className={cn(
           'relative bg-surface rounded-t-[20px] shadow-modal flex flex-col pointer-events-auto h-[99%]',
-          isClosing ? 'animate-slide-down' : 'animate-slide-up',
+          isClosing ? 'animate-slide-down' : slideUpDone ? '' : 'animate-slide-up',
         )}
+        onAnimationEnd={(e) => { if (e.animationName === 'slide-up') setSlideUpDone(true) }}
       >
         {/* 드래그 핸들 + 닫기 버튼 */}
         <div

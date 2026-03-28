@@ -60,6 +60,7 @@ export const marketApi = {
   getFinance: (stockCode) => get(`/stocks/${stockCode}/finance`),
   getStockInfo: (stockCode) => get(`/stocks/${stockCode}/info`),
   searchStocks: (keyword) => get('/stocks/search', { keyword }),
+  getForexChart: (params) => get('/forex/chart', params),
 }
 
 export const foreignMarketApi = {
