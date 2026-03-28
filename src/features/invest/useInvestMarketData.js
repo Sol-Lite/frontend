@@ -27,10 +27,11 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
 
   const stockMeta = useMemo(() => {
     if (isDomestic) {
+      const resolvedMarket = infoQuery.data?.marketName ?? baseStockMeta.market
       return {
         ...baseStockMeta,
-        marketType: baseStockMeta.market,
-        market: infoQuery.data?.marketName ?? baseStockMeta.market,
+        marketType: resolvedMarket,
+        market: resolvedMarket,
         sector: infoQuery.data?.sector ?? baseStockMeta.sector,
       }
     }

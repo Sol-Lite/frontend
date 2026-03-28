@@ -34,7 +34,7 @@ export function resolveStockMeta(stockCode, locationState) {
     name: known?.name ?? locationState?.stockName ?? stockCode,
     nameEn: locationState?.stockNameEn ?? null,
     code: stockCode,
-    market: known?.market ?? marketType ?? '-',
+    market: known?.market ?? marketType ?? null,
     exchangeCode,
     sector: known?.sector ?? '-',
     isDomestic,
