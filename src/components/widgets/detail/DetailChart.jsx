@@ -11,6 +11,48 @@ function getColors() {
   }
 }
 
+function formatTz(epochSec, timezone, isMinute) {
+  const d = new Date(epochSec * 1000)
+  if (timezone) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(d)
+    const get = (type) => parts.find((p) => p.type === type)?.value ?? '00'
+    if (isMinute) return `${get('year')}/${get('month')}/${get('day')} ${get('hour')}:${get('minute')}`
+    return `${get('year')}/${get('month')}/${get('day')}`
+  }
+  const m  = String(d.getMonth() + 1).padStart(2, '0')
+  const dd = String(d.getDate()).padStart(2, '0')
+  if (isMinute) {
+    const hh = String(d.getHours()).padStart(2, '0')
+    const mi = String(d.getMinutes()).padStart(2, '0')
+    return `${d.getFullYear()}/${m}/${dd} ${hh}:${mi}`
+  }
+  return `${d.getFullYear()}/${m}/${dd}`
+}
+
+function getTickLabel(epochSec, tickMarkType, timezone, isMinute) {
+  const d = new Date(epochSec * 1000)
+  if (timezone) {
+    const parts = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', hour12: false,
+    }).formatToParts(d)
+    const get = (type) => parts.find((p) => p.type === type)?.value ?? '00'
+    if (isMinute) return `${get('hour')}:${get('minute')}`
+    if (tickMarkType <= 1) return `${Number(get('month'))}월`
+    return `${Number(get('month'))}/${Number(get('day'))}`
+  }
+  if (isMinute) {
+    return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  }
+  if (tickMarkType <= 1) return `${d.getMonth() + 1}월`
+  return `${d.getMonth() + 1}/${d.getDate()}`
+}
+
 /**
  * 상세 차트 — 선형 / 캔들 전환 지원
  * @param {{ time: number, value: number }[]}                       lineData
@@ -18,9 +60,10 @@ function getColors() {
  * @param {'line'|'candle'} chartType
  * @param {boolean} isMinute
  * @param {boolean} isUp
+ * @param {string}  [timezone]  - IANA timezone (e.g. 'America/New_York'). 없으면 로컬 시간.
  * @param {string}  className
  */
-export default function DetailChart({ lineData, candleData, chartType = 'line', isMinute, isUp, className = '' }) {
+export default function DetailChart({ lineData, candleData, chartType = 'line', isMinute, isUp, timezone, className = '' }) {
   const ref = useRef(null)
 
   useEffect(() => {
@@ -48,6 +91,9 @@ export default function DetailChart({ lineData, candleData, chartType = 'line', 
         borderVisible: false,
         textColor: textMuted,
       },
+      localization: {
+        timeFormatter: (time) => formatTz(time, timezone, isMinute),
+      },
       timeScale: {
         visible:        true,
         timeVisible:    isMinute,
@@ -56,14 +102,7 @@ export default function DetailChart({ lineData, candleData, chartType = 'line', 
         ticksVisible:   false,
         fixLeftEdge:    true,
         fixRightEdge:   true,
-        tickMarkFormatter: (time, tickMarkType) => {
-          const d = new Date(time * 1000)
-          if (isMinute) {
-            return `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
-          }
-          if (tickMarkType <= 1) return `${d.getMonth() + 1}월`
-          return `${d.getMonth() + 1}/${d.getDate()}`
-        },
+        tickMarkFormatter: (time, tickMarkType) => getTickLabel(time, tickMarkType, timezone, isMinute),
       },
       crosshair: {
         vertLine: { color: primary, width: 1, style: 1, labelBackgroundColor: primary },
@@ -116,7 +155,7 @@ export default function DetailChart({ lineData, candleData, chartType = 'line', 
       ro.disconnect()
       chart.remove()
     }
-  }, [lineData, candleData, chartType, isMinute, isUp]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lineData, candleData, chartType, isMinute, isUp, timezone]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div ref={ref} className={`overflow-hidden ${className}`} />
 }

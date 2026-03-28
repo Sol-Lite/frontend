@@ -126,6 +126,7 @@ export default function IndexDetail({ config = {} }) {
               chartType={chartType}
               isMinute={isIntraday}
               isUp={headerIsUp}
+
               className="w-full h-full"
             />
           ) : (
