@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { Pencil, LayoutTemplate, X, ChevronRight } from 'lucide-react'
+import { Pencil, LayoutTemplate, X, ChevronRight, LayoutGrid, Plus } from 'lucide-react'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
