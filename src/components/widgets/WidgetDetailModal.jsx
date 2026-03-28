@@ -103,8 +103,7 @@ export default function WidgetDetailModal() {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          {/* pill을 화면 시각적 중앙(main + 채팅패널 절반)에 정렬 */}
-          <div className="absolute left-[calc(50%+calc(var(--spacing-chat-panel)/2))] -translate-x-1/2 w-9 h-1 rounded-full bg-stroke" />
+          <div className="absolute left-1/2 -translate-x-1/2 w-9 h-1 rounded-full bg-stroke" />
           <button
             aria-label="닫기"
             onPointerDown={(e) => e.stopPropagation()}
