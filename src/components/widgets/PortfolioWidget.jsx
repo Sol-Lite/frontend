@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import WidgetCard from './WidgetCard'
 import { useDomesticHoldings } from '@/api/balance'
 
@@ -68,6 +69,7 @@ function usePortfolio(enabled) {
 
 export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
+  const { open } = useWidgetDetailStore()
   const portfolio = usePortfolio(isAuthenticated && !isRestoring)
 
   const conicStops = portfolio.items.reduce((acc, item, i) => {
@@ -82,7 +84,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
   const returnRateColor = (portfolio.returnRate ?? 0) >= 0 ? 'text-up' : 'text-down'
 
   return (
-    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={() => open({ widgetTypeId: 'balance', config: {} })}>
       {variant === 'portfolio-wide' ? (
         <>
           <div className="flex items-center justify-between mb-1 shrink-0">

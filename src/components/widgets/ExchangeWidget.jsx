@@ -3,6 +3,7 @@ import { Settings2 } from 'lucide-react'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 import useCurrencyRate from '@/hooks/useCurrencyRate'
+import useMarketIndices from '@/features/market/useMarketIndices'
 import WidgetCard from './WidgetCard'
 import ExchangeConfigModal from './ExchangeConfigModal'
 import useWidgetStore from '@/store/useWidgetStore'
@@ -214,18 +215,22 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
     )
   }
 
-  /* exchange-sm (default) */
-  const primary = currencies[0]
+  /* exchange-sm (default, 1x1) */
+  const { indices } = useMarketIndices()
+  const usdIdx = indices.find((i) => i.code === 'USD')
+  const smLive = usdIdx
+    ? { rate: usdIdx.price, change: usdIdx.change, drate: usdIdx.changeRate }
+    : currencies[0]?.live ?? null
+
   return (
     <>
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
-          {settingsBtn}
         </div>
         <div className="flex-1 flex flex-col justify-center min-h-0">
-          <div className="text-[9px] text-foreground-disabled">{primary?.pair ?? 'USD / KRW'}</div>
-          <RateDisplay live={primary?.live} rateClassName="text-[18px]" />
+          <div className="text-[9px] text-foreground-disabled">USD / KRW</div>
+          <RateDisplay live={smLive} rateClassName="text-[18px]" />
         </div>
         {!isRestoring && !isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
       </WidgetCard>
