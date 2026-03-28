@@ -23,16 +23,23 @@ export function useDashboardLoad() {
     if (!isAuthenticated) resetLayout()
   }, [isAuthenticated, resetLayout])
 
-  const { data } = useQuery({
+  const { data, isError } = useQuery({
     queryKey: ['dashboard', 'me'],
     queryFn: dashboardApi.getMyDashboard,
     enabled: isAuthenticated && !isLoaded,
     staleTime: Infinity,
+    // 404(데이터 없음)는 즉시 폴백, 일시적 오류(네트워크·5xx)는 3회 재시도
+    retry: (failureCount, error) => error?.response?.status !== 404 && failureCount < 3,
   })
 
   useEffect(() => {
     if (data) loadFromServer(data)
   }, [data, loadFromServer])
+
+  // 서버에 대시보드 없음(404 등) → 빈 배열로 처리 → INITIAL 레이아웃 유지
+  useEffect(() => {
+    if (isError) loadFromServer([])
+  }, [isError, loadFromServer])
 }
 
 /**
