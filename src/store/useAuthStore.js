@@ -68,13 +68,18 @@ const useAuthStore = create((set, get) => ({
     }
   },
 
-  logout: () => {
+  logout: ({ broadcast = true } = {}) => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('user')
     sessionStorage.removeItem('accessToken')
     sessionStorage.removeItem('user')
     queryClient.clear()
     set({ isAuthenticated: false, user: null, accessToken: null })
+    if (broadcast && typeof BroadcastChannel !== 'undefined') {
+      const ch = new BroadcastChannel('sol_auth')
+      ch.postMessage({ type: 'LOGOUT' })
+      ch.close()
+    }
   },
 
   openLoginModal: (view = 'login') => {
