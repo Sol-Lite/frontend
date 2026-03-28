@@ -3,11 +3,21 @@ import { X } from 'lucide-react'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import StockChartDetail from './detail/StockChartDetail'
 import BalanceDetail from './detail/BalanceDetail'
+import RankingDetail from './detail/RankingDetail'
+import IndexDetail from './detail/IndexDetail'
+import MarketNewsDetail from './detail/MarketNewsDetail'
+import StockNewsDetail from './detail/StockNewsDetail'
+import WatchlistDetail from './detail/WatchlistDetail'
 import { cn } from '@/lib/cn'
 
 const DETAIL_MAP = {
-  'stock-chart': StockChartDetail,
-  'balance':     BalanceDetail,
+  'stock-chart':     StockChartDetail,
+  'balance':         BalanceDetail,
+  'ranking':         RankingDetail,
+  'index':           IndexDetail,
+  'market-overview': MarketNewsDetail,
+  'stock-news':      StockNewsDetail,
+  'watchlist':       WatchlistDetail,
 }
 
 const DRAG_CLOSE_THRESHOLD = 80

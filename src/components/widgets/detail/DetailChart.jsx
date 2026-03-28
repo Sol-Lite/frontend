@@ -7,7 +7,7 @@ function getColors() {
     up:        style.getPropertyValue('--color-up').trim()                  || '#E8393E',
     down:      style.getPropertyValue('--color-down').trim()                || '#0075E8',
     textMuted: style.getPropertyValue('--color-foreground-disabled').trim() || '#9CA3AF',
-    stroke:    style.getPropertyValue('--color-stroke').trim()              || '#EAECF0',
+    primary:   style.getPropertyValue('--color-primary').trim()             || '#0046FF',
   }
 }
 
@@ -26,7 +26,8 @@ export default function DetailChart({ lineData, candleData, chartType = 'line', 
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    const { up, down, textMuted, stroke } = getColors()
+    const { up, down, textMuted, primary } = getColors()
+    const lineColor = isUp ? up : down
 
     const chart = createChart(el, {
       width:  el.clientWidth,
@@ -38,11 +39,15 @@ export default function DetailChart({ lineData, candleData, chartType = 'line', 
         fontSize:   10,
       },
       grid: {
-        vertLines: { visible: false },
-        horzLines: { color: stroke },
+        vertLines: { color: '#F3F4F6' },
+        horzLines: { color: '#F3F4F6' },
       },
       leftPriceScale:  { visible: false },
-      rightPriceScale: { visible: true, borderVisible: false, textColor: textMuted },
+      rightPriceScale: {
+        visible: true,
+        borderVisible: false,
+        textColor: textMuted,
+      },
       timeScale: {
         visible:        true,
         timeVisible:    isMinute,
@@ -61,8 +66,8 @@ export default function DetailChart({ lineData, candleData, chartType = 'line', 
         },
       },
       crosshair: {
-        vertLine: { color: stroke },
-        horzLine: { color: stroke },
+        vertLine: { color: primary, width: 1, style: 1, labelBackgroundColor: primary },
+        horzLine: { color: primary, width: 1, style: 1, labelBackgroundColor: primary },
       },
       handleScroll: false,
       handleScale:  false,
@@ -70,19 +75,20 @@ export default function DetailChart({ lineData, candleData, chartType = 'line', 
 
     if (chartType === 'candle') {
       const series = chart.addSeries(CandlestickSeries, {
-        upColor:        up,
-        downColor:      down,
-        borderUpColor:  up,
+        upColor:         up,
+        downColor:       down,
+        borderUpColor:   up,
         borderDownColor: down,
-        wickUpColor:    up,
-        wickDownColor:  down,
+        wickUpColor:     up,
+        wickDownColor:   down,
+        priceLineVisible: false,
+        lastValueVisible: false,
       })
       if (candleData?.length) {
         series.setData(candleData)
         chart.timeScale().fitContent()
       }
     } else {
-      const lineColor = isUp ? up : down
       const series = chart.addSeries(LineSeries, {
         lineColor,
         lineWidth:              2,
