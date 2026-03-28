@@ -122,7 +122,7 @@ export default function useDomesticMarketData(stockCode, { enabled, activeDetail
     () => initialPeriod ?? localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
   )
   const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(
-    () => initialMinuteInterval ?? Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL,
+    () => initialMinuteInterval ?? (Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL),
   )
   const [liveCandle, setLiveCandle] = useState(null)
   const [liveTrades, setLiveTrades] = useState([])

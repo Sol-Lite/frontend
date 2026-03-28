@@ -24,7 +24,7 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled, initi
     () => initialPeriod ?? localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
   )
   const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(
-    () => initialMinuteInterval ?? Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL,
+    () => initialMinuteInterval ?? (Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL),
   )
 
   const { endDate, startDate } = useMemo(() => {
