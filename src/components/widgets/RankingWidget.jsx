@@ -1,8 +1,10 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import PriceChange from '@/components/ui/PriceChange'
 import TabChip from '@/components/ui/TabChip'
 import WidgetCard from './WidgetCard'
 import useMarketRanking from '@/features/market/useMarketRanking'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
 const TABS = ['거래대금', '급상승', '거래량']
 
@@ -16,6 +18,14 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
   const [activeTab, setActiveTab] = useState(
     () => localStorage.getItem('rankingWidget.activeTab') ?? '거래대금'
   )
+  const open     = useWidgetDetailStore((s) => s.open)
+  const navigate = useNavigate()
+
+  const handleCardClick  = () => open({ widgetTypeId: 'ranking', config: { initialSortFilter: TAB_TO_SORT[activeTab] } })
+  const handleStockClick = (e, stock) => {
+    e.stopPropagation()
+    navigate(`/invest/${stock.stockCode}`, { state: { stockName: stock.name, marketType: stock.marketType ?? stock.market } })
+  }
 
   function handleTabChange(tab) {
     setActiveTab(tab)
@@ -25,7 +35,7 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
 
   if (variant === 'ranking-lg') {
     return (
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
         <div className="flex items-center justify-between mb-1.5 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
           <div className="flex gap-0.5">
@@ -44,7 +54,8 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
           {stocks.map((stock) => (
             <div
               key={stock.id ?? stock.rank}
-              className="flex items-center justify-between px-1 py-1 hover:bg-surface-subtle rounded-lg transition-colors cursor-pointer"
+              className="flex items-center justify-between px-1 py-1 rounded-r-lg border-l-2 border-transparent hover:border-primary hover:bg-surface-subtle transition-colors cursor-pointer"
+              onClick={(e) => handleStockClick(e, stock)}
             >
               <div className="flex items-center gap-1.5">
                 <span className={`text-[9px] font-bold w-4 text-center shrink-0 ${stock.rank === 1 ? 'text-primary' : 'text-foreground-disabled'}`}>
@@ -62,7 +73,7 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
 
   /* ranking-wide (default) */
   return (
-    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
       <div className="flex items-center justify-between mb-1.5 shrink-0">
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
         <div className="flex gap-0.5">
@@ -81,7 +92,8 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
         {stocks.map((stock) => (
           <div
             key={stock.id ?? stock.rank}
-            className="flex items-center justify-between px-1.5 py-1.5 rounded-xl hover:bg-surface-subtle transition-colors cursor-pointer"
+            className="flex items-center justify-between px-1.5 py-1.5 rounded-r-xl border-l-2 border-transparent hover:border-primary hover:bg-surface-subtle transition-colors cursor-pointer"
+            onClick={(e) => handleStockClick(e, stock)}
           >
             <div className="flex items-center gap-1.5">
               <span className={`text-[9px] font-bold w-3 text-center shrink-0 ${stock.rank === 1 ? 'text-primary' : 'text-foreground-disabled'}`}>
