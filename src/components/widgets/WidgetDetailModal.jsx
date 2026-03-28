@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { X } from 'lucide-react'
+import { X, ChevronLeft } from 'lucide-react'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import StockChartDetail from './detail/StockChartDetail'
 import BalanceDetail from './detail/BalanceDetail'
@@ -9,6 +9,7 @@ import MarketNewsDetail from './detail/MarketNewsDetail'
 import StockNewsDetail from './detail/StockNewsDetail'
 import WatchlistDetail from './detail/WatchlistDetail'
 import ExchangeDetail from './detail/ExchangeDetail'
+import TradeHistoryDetail from './detail/TradeHistoryDetail'
 import { cn } from '@/lib/cn'
 
 const DETAIL_MAP = {
@@ -20,12 +21,17 @@ const DETAIL_MAP = {
   'stock-news':      StockNewsDetail,
   'watchlist':       WatchlistDetail,
   'exchange':        ExchangeDetail,
+  'trade-history':   TradeHistoryDetail,
 }
 
 const DRAG_CLOSE_THRESHOLD = 80
 
 export default function WidgetDetailModal() {
-  const { openWidget, close } = useWidgetDetailStore()
+  const { openWidget, close, back, history, isBack } = useWidgetDetailStore()
+  const canGoBack  = history.length > 0
+  const isBackRef  = useRef(isBack)
+  isBackRef.current = isBack
+
   const [isClosing, setIsClosing] = useState(false)
   const [slideUpDone, setSlideUpDone] = useState(false)
   const localWidget  = useRef(null)
@@ -42,8 +48,15 @@ export default function WidgetDetailModal() {
         clearTimeout(closeTimer.current)
         closeTimer.current = null
       }
+      // 드래그 잔여 transform 초기화
+      if (sheetRef.current) {
+        sheetRef.current.style.transition = ''
+        sheetRef.current.style.transform  = ''
+      }
+      dragStartY.current   = null
+      dragCurrentY.current = 0
       setIsClosing(false)
-      setSlideUpDone(false)
+      if (!isBackRef.current) setSlideUpDone(false)
     }
   }, [openWidget])
 
@@ -75,7 +88,15 @@ export default function WidgetDetailModal() {
     dragStartY.current = null
 
     if (dragCurrentY.current >= DRAG_CLOSE_THRESHOLD) {
-      handleClose()
+      // 현재 위치에서 계속 아래로 슬라이드
+      if (sheetRef.current) {
+        sheetRef.current.style.transition = 'transform 220ms ease-in'
+        sheetRef.current.style.transform  = 'translateY(100%)'
+      }
+      dragCurrentY.current = 0
+      closeTimer.current = setTimeout(() => {
+        close()
+      }, 220)
     } else {
       // 스냅백
       if (sheetRef.current) {
@@ -111,14 +132,26 @@ export default function WidgetDetailModal() {
         )}
         onAnimationEnd={(e) => { if (e.animationName === 'slide-up') setSlideUpDone(true) }}
       >
-        {/* 드래그 핸들 + 닫기 버튼 */}
+        {/* 드래그 핸들 + 뒤로가기 + 닫기 버튼 */}
         <div
-          className="relative flex items-center justify-end pt-2.5 pb-1.5 px-4 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+          className="relative flex items-center justify-between pt-2.5 pb-1.5 px-4 shrink-0 cursor-grab active:cursor-grabbing touch-none"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
           <div className="absolute left-1/2 -translate-x-1/2 w-9 h-1 rounded-full bg-stroke" />
+          {canGoBack ? (
+            <button
+              aria-label="뒤로가기"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={back}
+              className="p-1 rounded-lg hover:bg-surface-muted transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4 text-foreground-tertiary" />
+            </button>
+          ) : (
+            <div className="w-6" />
+          )}
           <button
             aria-label="닫기"
             onPointerDown={(e) => e.stopPropagation()}

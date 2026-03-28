@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import WidgetCard from './WidgetCard'
 import { cn } from '@/lib/cn'
 import { orderApi } from '@/api/order'
@@ -30,7 +31,9 @@ function buildTradeMap(orders) {
     const d = new Date(raw.length === 10 ? raw + 'T00:00:00' : raw)
     const k = dateKey(d)
     if (!map[k]) map[k] = []
-    map[k].push({ s: o.stockName, buy: o.orderSide === 'BUY' })
+    const buy = o.orderSide === 'BUY'
+    const isDup = map[k].some((t) => t.s === o.stockName && t.buy === buy)
+    if (!isDup) map[k].push({ s: o.stockName, buy })
   })
   return map
 }
@@ -65,6 +68,8 @@ function useFilledOrders(enabled) {
 
 export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
+  const open = useWidgetDetailStore((s) => s.open)
+  const handleCardClick = () => open({ widgetTypeId: 'trade-history', config: {} })
   const { data: orders, isLoading } = useFilledOrders(isAuthenticated && !isRestoring)
 
   const now = new Date()
@@ -90,7 +95,7 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
   /* ── trade-3x2: 캘린더 + 목록 3×2 ── */
   if (variant === 'trade-3x2') {
     return (
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
         <div className="flex items-center justify-between mb-2 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
           <span className="text-[9px] text-foreground-disabled">{monthLabel}</span>
@@ -159,7 +164,7 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
   /* ── trade-wide: 주간 캘린더 2×1 ── */
   if (variant === 'trade-wide') {
     return (
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
         <div className="flex items-center justify-between mb-2 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
           <span className="text-[9px] text-foreground-disabled">{monthLabel}</span>
@@ -193,7 +198,7 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
   /* ── trade-cal: 월간 캘린더 2×2 ── */
   if (variant === 'trade-cal') {
     return (
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
         <div className="flex items-center justify-between mb-2 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
           <span className="text-[9px] text-foreground-disabled">{monthLabel}</span>
@@ -229,7 +234,7 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
 
   /* ── trade-list: 목록형 1×1 (default) ── */
   return (
-    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
       <div className="flex items-center justify-between mb-2 shrink-0">
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
       </div>
