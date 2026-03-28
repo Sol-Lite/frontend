@@ -18,7 +18,7 @@ export default function useSparkline(stockCode, marketType, exchangeCode, { enab
     queryKey: ['sparkline', stockCode, resolvedMarketType],
     queryFn: async () => {
       if (isForeign) {
-        const res = await foreignMarketApi.getMinuteChart(stockCode, exchcd, { ncnt: 5 })
+        const res = await foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: 5 })
         return normalizeForeignMinuteSeries(res?.data ?? [])
       }
       const res = await marketApi.getMinuteChart(stockCode, { ncnt: 5 })
