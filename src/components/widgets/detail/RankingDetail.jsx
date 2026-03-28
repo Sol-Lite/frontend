@@ -1,5 +1,5 @@
-import MarketPage from '@/pages/MarketPage'
+import { MarketContent } from '@/pages/MarketPage'
 
 export default function RankingDetail({ config = {} }) {
-  return <MarketPage initialSortFilter={config.initialSortFilter} />
+  return <MarketContent initialSortFilter={config.initialSortFilter} />
 }

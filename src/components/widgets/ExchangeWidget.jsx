@@ -117,8 +117,8 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
               return (
                 <div
                   key={pair}
-                  className={`relative flex flex-col justify-center ${pr} ${pl} cursor-pointer group`}
-                  style={{ flex: flexValues[i] ?? '1' }}
+                  className={`relative flex flex-col justify-center ${pr} ${pl} cursor-pointer group [flex:var(--flex-val)]`}
+                  style={{ '--flex-val': flexValues[i] ?? '1' }}
                   onClick={(e) => handleCurrencyClick(e, code)}
                 >
                   <div className="text-center">
@@ -160,8 +160,8 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
               return (
                 <div
                   key={pair}
-                  className={`relative flex flex-col justify-center ${pr} ${pl} cursor-pointer group`}
-                  style={{ flex }}
+                  className={`relative flex flex-col justify-center ${pr} ${pl} cursor-pointer group [flex:var(--flex-val)]`}
+                  style={{ '--flex-val': flex }}
                   onClick={(e) => handleCurrencyClick(e, code)}
                 >
                   <div className="text-center">

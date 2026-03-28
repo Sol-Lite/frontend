@@ -103,6 +103,9 @@
   --shadow-focus-ring:    0 0 0 3px rgba(0,70,255,.08);
   --shadow-delete-btn:    0 2px 6px rgba(0,0,0,.22);
 
+  /* ── Summary Card ── */
+  --background-summary-card: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary-dim) 100%);
+
   /* ── Animation ── */
   --animate-pulse-dot:  pulse-dot 2000ms ease-in-out infinite;
   --animate-bubble-in:  bubble-in 220ms ease both;

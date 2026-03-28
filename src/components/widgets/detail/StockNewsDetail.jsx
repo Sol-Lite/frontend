@@ -85,10 +85,7 @@ function ArticleView({ newsId, stockName, onBack }) {
           {data.summary && (
             <div className="flex flex-col gap-1.5">
               <span className="text-[10px] font-bold text-foreground-disabled uppercase tracking-widest">한 줄 요약</span>
-              <div
-                className="rounded-xl px-4 py-3"
-                style={{ background: 'linear-gradient(135deg, #EEF2FF 0%, #E0E7FF 100%)' }}
-              >
+              <div className="rounded-xl px-4 py-3 [background:var(--background-summary-card)]">
                 <p className="text-[14px] font-semibold text-foreground leading-relaxed">
                   <HighlightedText text={data.summary} />
                 </p>
@@ -127,8 +124,7 @@ function ArticleView({ newsId, stockName, onBack }) {
               {paragraphs.map((p, i) => (
                 <p
                   key={i}
-                  className="text-[13px] text-foreground leading-[1.8]"
-                  style={{ marginBottom: i < paragraphs.length - 1 ? '1rem' : 0 }}
+                  className={`text-[13px] text-foreground leading-[1.8]${i < paragraphs.length - 1 ? ' mb-4' : ''}`}
                 >
                   {p}
                 </p>

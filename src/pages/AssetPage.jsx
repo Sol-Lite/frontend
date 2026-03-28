@@ -626,6 +626,10 @@ function AuthGuard() {
 
 // ── 메인 페이지 ───────────────────────────────────────────────────
 export default function AssetPage() {
+  return <AssetContent />
+}
+
+export function AssetContent() {
   const { isAuthenticated, isRestoring, user } = useAuthStore()
   const [assetFlowRange, setAssetFlowRange] = useState('1M')
   const data = useAssetPage(isAuthenticated && !isRestoring, assetFlowRange)

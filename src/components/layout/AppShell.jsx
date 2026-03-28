@@ -253,7 +253,7 @@ export default function AppShell() {
         <CurrencySync />
         <AppHeader />
         <div className="flex flex-1 overflow-hidden">
-          <main className="relative flex-1 overflow-hidden bg-background">
+          <main className="relative flex-1 overflow-hidden bg-background isolate">
             <Outlet />
             <WidgetDetailModal />
           </main>

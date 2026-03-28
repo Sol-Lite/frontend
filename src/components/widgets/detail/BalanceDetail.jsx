@@ -1,5 +1,5 @@
-import AssetPage from '@/pages/AssetPage'
+import { AssetContent } from '@/pages/AssetPage'
 
 export default function BalanceDetail() {
-  return <AssetPage />
+  return <AssetContent />
 }
