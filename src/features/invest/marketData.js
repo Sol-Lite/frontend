@@ -23,6 +23,8 @@ export function getChartPeriodLabel(periodKey, minuteInterval) {
 }
 
 const MARKET_TYPE_BY_EXCHANGE_CODE = { NAS: 'NASDAQ', NYS: 'NYSE', AMS: 'AMEX' }
+// 국내 종목코드는 항상 6자리 숫자 (005930), 해외는 알파벳 포함 (NVDA, AAPL)
+const DOMESTIC_CODE_RE = /^\d{6}$/
 
 export function resolveStockMeta(stockCode, locationState) {
   const known = STOCK_META_BY_CODE[stockCode]
@@ -31,9 +33,15 @@ export function resolveStockMeta(stockCode, locationState) {
   const marketType = locationState?.marketType
     ?? known?.market
     ?? (exchangeCode ? MARKET_TYPE_BY_EXCHANGE_CODE[exchangeCode] : null)
-  const isDomestic = exchangeCode == null
-    ? (!marketType || ['KOSPI', 'KOSDAQ'].includes(marketType))
-    : ['KOSPI', 'KOSDAQ'].includes(marketType)
+
+  // 종목코드 패턴 기반 해외 여부 (marketType/exchangeCode 없을 때 최후 가드)
+  const looksLikeForeign = !DOMESTIC_CODE_RE.test(stockCode)
+
+  const isDomestic = looksLikeForeign
+    ? false  // 알파벳 포함 코드는 항상 해외
+    : exchangeCode == null
+      ? (!marketType || ['KOSPI', 'KOSDAQ'].includes(marketType))
+      : ['KOSPI', 'KOSDAQ'].includes(marketType)
 
   return {
     name: known?.name ?? locationState?.stockName ?? stockCode,

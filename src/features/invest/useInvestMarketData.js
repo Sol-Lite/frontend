@@ -36,9 +36,12 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
       }
     }
 
+    // exchangeName은 표시용(예: '나스닥'), marketType은 API 파라미터용(NASDAQ/NYSE/AMEX)
+    const MARKET_TYPE_BY_EXCHCD = { '82': 'NASDAQ', '81': 'NYSE' }
+    const resolvedMarketType = baseStockMeta.market ?? MARKET_TYPE_BY_EXCHCD[exchcd] ?? 'NASDAQ'
     return {
       ...baseStockMeta,
-      marketType: baseStockMeta.market,  // NASDAQ / NYSE / AMEX — API 파라미터용으로 유지
+      marketType: resolvedMarketType,
       name: infoQuery.data?.korname ?? baseStockMeta.name,
       nameEn: infoQuery.data?.engname ?? baseStockMeta.nameEn,
       market: infoQuery.data?.exchangeName ?? baseStockMeta.market,

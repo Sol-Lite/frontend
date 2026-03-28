@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { marketApi, foreignMarketApi, getExchcd } from '@/api/market'
 import { normalizeMinuteSeries } from '@/features/invest/domestic/normalize'
+import { normalizeForeignMinuteSeries } from '@/features/invest/foreign/normalize'
 import { isForeignMarketType } from '@/features/invest/formatters'
 
 const EXCHANGE_CODE_BY_MARKET_TYPE = { NASDAQ: 'NAS', NYSE: 'NYS', AMEX: 'AMS' }
@@ -16,9 +17,11 @@ export default function useSparkline(stockCode, marketType, exchangeCode, { enab
   return useQuery({
     queryKey: ['sparkline', stockCode, resolvedMarketType],
     queryFn: async () => {
-      const res = isForeign
-        ? await foreignMarketApi.getMinuteChart(stockCode, exchcd, { ncnt: 5 })
-        : await marketApi.getMinuteChart(stockCode, { ncnt: 5 })
+      if (isForeign) {
+        const res = await foreignMarketApi.getMinuteChart(stockCode, exchcd, { ncnt: 5 })
+        return normalizeForeignMinuteSeries(res?.data ?? [])
+      }
+      const res = await marketApi.getMinuteChart(stockCode, { ncnt: 5 })
       return normalizeMinuteSeries(res?.data ?? [])
     },
     staleTime: 1000 * 60,
