@@ -103,7 +103,7 @@ export default function WidgetDetailModal() {
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          <div className="absolute left-1/2 -translate-x-1/2 w-9 h-1 rounded-full bg-primary" />
+          <div className="absolute left-1/2 -translate-x-1/2 w-9 h-1 rounded-full bg-stroke" />
           <button
             aria-label="닫기"
             onPointerDown={(e) => e.stopPropagation()}
