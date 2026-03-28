@@ -127,17 +127,15 @@ export default function WatchlistDetail() {
     <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
       {/* 헤더 */}
       <div className="shrink-0 px-8 pt-4 pb-3 border-b border-stroke">
-        <div className="flex items-center justify-between">
-          <h2 className="text-[15px] font-bold text-foreground">관심 종목</h2>
-          <span className="text-[11px] text-foreground-disabled">{items.length}개</span>
-        </div>
+        <h2 className="text-[15px] font-bold text-foreground">관심 종목</h2>
       </div>
 
       {/* 컬럼 헤더 */}
       {items.length > 0 && (
-        <div className="shrink-0 px-8 py-2 flex items-center text-[10px] font-semibold text-foreground-disabled border-b border-stroke">
+        <div className="shrink-0 px-8 py-2 flex items-center gap-3 text-[10px] font-semibold text-foreground-disabled border-b border-stroke">
+          <span className="w-8 shrink-0" />
           <span className="flex-1">종목</span>
-          <span className="w-[80px] text-center">차트</span>
+          <span className="w-[80px]" />
           <span className="w-[96px] text-right">현재가</span>
           <span className="w-[100px] text-right">등락</span>
           <span className="w-8" />
