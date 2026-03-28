@@ -21,10 +21,10 @@ const WIDGET_PERIOD_MAP = {
 export default function StockChartDetail({ config = {}, onClose }) {
   const stockCode     = config.stockCode ?? INVEST_STOCK.code
   const locationState = {
-    stockName:    config.stockName  ?? null,
+    stockName:    config.stockName   ?? null,
     stockNameEn:  null,
-    marketType:   config.marketType ?? null,
-    exchangeCode: null,
+    marketType:   config.marketType  ?? null,
+    exchangeCode: config.exchangeCode ?? null,
   }
 
   const periodInit = WIDGET_PERIOD_MAP[config.widgetPeriod] ?? {}

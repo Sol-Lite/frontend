@@ -119,7 +119,7 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
   /* watchlist-sm (default) */
   return (
     <>
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
         <div className="flex items-center justify-between mb-2 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
           {addBtn}
