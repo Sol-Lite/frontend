@@ -1,93 +1,155 @@
+import { useState } from 'react'
+import { ChevronDown } from 'lucide-react'
 import WidgetCard from './WidgetCard'
+import StockSelectModal from './StockSelectModal'
+import useStockNews from '@/features/market/useStockNews'
+import useWidgetStore from '@/store/useWidgetStore'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
-const MOCK_STOCK = { name: '삼성전자', code: '005930' }
-
-const MOCK_NEWS = [
-  { title: 'HBM 공급 본격화 — 엔비디아향 납품 재개', desc: '3분기 HBM3E 공급 계약 확인. AI 서버 수요 확대로 수혜 기대.' },
-  { title: '외국인 6거래일 연속 순매수', desc: '누적 순매수 1.2조원. 반도체 업황 개선 기대에 외국인 수급 집중.' },
-  { title: '파운드리 2나노 시범 생산 개시', desc: '하반기 양산 목표로 TSMC와 경쟁 본격화.' },
-]
-
-function StockChip({ showCode = false }) {
+function StockChip({ name, onClick }) {
   return (
-    <span className="text-[9px] font-semibold text-primary bg-primary-light px-1.5 py-px rounded shrink-0">
-      {MOCK_STOCK.name}{showCode && ` ${MOCK_STOCK.code}`}
-    </span>
+    <button
+      onClick={onClick}
+      className="flex items-center gap-0.5 text-[9px] font-semibold text-primary shrink-0 hover:opacity-70"
+    >
+      {name ?? '종목 선택'}
+      <ChevronDown size={10} />
+    </button>
   )
 }
 
-export default function StockNewsWidget({ variant = 'stock-news-sm', colSpan = 1, rowSpan = 1, onDelete }) {
+function NewsCard({ item, onClickNews }) {
+  return (
+    <div
+      className="flex gap-2 py-2 border-b border-stroke last:border-b-0 cursor-pointer pl-2 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
+      onClick={(e) => { e.stopPropagation(); onClickNews(item.newsId) }}
+    >
+      <div className="flex-1 flex flex-col gap-0.5 min-w-0">
+        <p className="text-[11px] font-semibold text-foreground leading-snug line-clamp-2">
+          {item.title}
+        </p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          {item.source && <span className="text-[9px] text-foreground-disabled">{item.source}</span>}
+          {item.source && item.publishedAt && <span className="text-[9px] text-stroke">·</span>}
+          {item.publishedAt && <span className="text-[9px] text-foreground-disabled">{item.publishedAt}</span>}
+        </div>
+      </div>
+      {item.thumbnailUrl && (
+        <img
+          src={item.thumbnailUrl}
+          alt=""
+          className="w-10 h-10 object-cover rounded-lg shrink-0"
+          onError={(e) => { e.currentTarget.style.display = 'none' }}
+        />
+      )}
+    </div>
+  )
+}
+
+function NewsListCompact({ items, onClickNews }) {
+  return items.map((item, i) => (
+    <div
+      key={item.newsId ?? i}
+      className="flex items-start gap-1.5 py-1 border-b border-stroke last:border-b-0 cursor-pointer pl-2 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
+      onClick={(e) => { e.stopPropagation(); onClickNews(item.newsId) }}
+    >
+      <span className="text-[9px] font-bold text-primary mt-[1px] shrink-0">{i + 1}</span>
+      <p className="text-[10px] text-foreground leading-snug line-clamp-2">{item.title}</p>
+    </div>
+  ))
+}
+
+export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm', colSpan = 1, rowSpan = 1, config = {}, onDelete }) {
+  const [showModal, setShowModal] = useState(false)
+  const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
+  const openDetail = useWidgetDetailStore((s) => s.open)
+
+  const stockCode = config.stockCode ?? null
+  const stockName = config.stockName ?? null
+
+  const size = variant === 'stock-news-2x2' ? 5 : 3
+  const { news, isLoading } = useStockNews(stockCode, size)
+
+  function handleStockSave({ stockCode: newCode, stockName: newName }) {
+    updateWidgetConfig(instanceId, { stockCode: newCode, stockName: newName })
+    setShowModal(false)
+  }
+
+  function handleWidgetClick() {
+    if (!stockCode) return
+    openDetail({ widgetTypeId: 'stock-news', config: { stockCode, stockName } })
+  }
+
+  function handleNewsClick(newsId) {
+    openDetail({ widgetTypeId: 'stock-news', config: { stockCode, stockName, newsId } })
+  }
+
+  const chip = (
+    <StockChip
+      name={stockName}
+      onClick={(e) => { e.stopPropagation(); setShowModal(true) }}
+    />
+  )
+  const empty   = <p className="text-[10px] text-foreground-disabled py-2">뉴스가 없습니다</p>
+  const loading = <p className="text-[10px] text-foreground-disabled py-2">로딩 중...</p>
+  const noStock = <p className="text-[10px] text-foreground-disabled py-2">종목을 선택하세요</p>
+
+  const modal = showModal && (
+    <StockSelectModal
+      currentCode={stockCode}
+      currentName={stockName}
+      onSave={handleStockSave}
+      onClose={() => setShowModal(false)}
+    />
+  )
+
   if (variant === 'stock-news-2x2') {
     return (
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-        <div className="flex items-center justify-between mb-2 shrink-0">
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
+        <div className="flex items-center justify-between mb-1 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
-          <StockChip showCode />
+          {chip}
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
-          {MOCK_NEWS.map((item, i) => (
-            <div
-              key={i}
-              className={`px-2.5 py-2 rounded-xl border-l-[3px] ${
-                i === 0
-                  ? 'bg-primary-light border-primary'
-                  : 'bg-surface-subtle border-stroke'
-              }`}
-            >
-              <p className="text-[11px] font-bold text-foreground leading-snug">{item.title}</p>
-              <p className="text-[9px] text-foreground-disabled leading-relaxed mt-0.5">{item.desc}</p>
-            </div>
-          ))}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {isLoading ? loading : !stockCode ? noStock : !news.length ? empty :
+            news.map((item, i) => <NewsCard key={item.newsId ?? i} item={item} onClickNews={handleNewsClick} />)
+          }
         </div>
+        {modal}
       </WidgetCard>
     )
   }
 
   if (variant === 'stock-news-wide') {
     return (
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-        <div className="flex items-center justify-between mb-2 shrink-0">
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
+        <div className="flex items-center justify-between mb-1 shrink-0">
           <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
-          <StockChip showCode />
+          {chip}
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
-          {MOCK_NEWS.slice(0, 2).map((item, i) => (
-            <div
-              key={i}
-              className={`px-2 py-1.5 rounded-lg border-l-[3px] ${
-                i === 0
-                  ? 'bg-primary-light border-primary'
-                  : 'bg-surface-subtle border-stroke'
-              }`}
-            >
-              <p className="text-[10px] font-bold text-foreground leading-snug">{item.title}</p>
-              <p className="text-[9px] text-foreground-disabled leading-relaxed mt-0.5">{item.desc}</p>
-            </div>
-          ))}
+        <div className="flex-1 min-h-0 overflow-y-auto">
+          {isLoading ? loading : !stockCode ? noStock : !news.length ? empty :
+            news.slice(0, 2).map((item, i) => <NewsCard key={item.newsId ?? i} item={item} onClickNews={handleNewsClick} />)
+          }
         </div>
+        {modal}
       </WidgetCard>
     )
   }
 
-  /* stock-news-sm (default) — 헤드라인 3줄 */
+  /* stock-news-sm */
   return (
-    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-      <div className="flex items-center justify-between mb-2">
+    <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
+      <div className="flex items-center justify-between mb-1 shrink-0">
         <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
-        <StockChip />
+        {chip}
       </div>
-      <div className="flex-1 flex flex-col gap-1.5 overflow-hidden">
-        {MOCK_NEWS.map((item, i) => (
-          <p
-            key={i}
-            className={`text-[10px] leading-snug truncate ${
-              i === 0 ? 'font-bold text-foreground' : 'text-foreground-disabled'
-            }`}
-          >
-            {item.title}
-          </p>
-        ))}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {isLoading ? loading : !stockCode ? noStock : !news.length ? empty :
+          <NewsListCompact items={news} onClickNews={handleNewsClick} />
+        }
       </div>
+      {modal}
     </WidgetCard>
   )
 }
