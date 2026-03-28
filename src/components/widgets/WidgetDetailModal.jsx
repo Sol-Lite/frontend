@@ -98,13 +98,13 @@ export default function WidgetDetailModal() {
       >
         {/* 드래그 핸들 + 닫기 버튼 */}
         <div
-          className="flex items-center justify-between pt-2.5 pb-1.5 px-4 shrink-0 cursor-grab active:cursor-grabbing touch-none"
+          className="relative flex items-center justify-end pt-2.5 pb-1.5 px-4 shrink-0 cursor-grab active:cursor-grabbing touch-none"
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          <div className="w-6" />
-          <div className="w-9 h-1 rounded-full bg-stroke" />
+          {/* pill을 화면 시각적 중앙(main + 채팅패널 절반)에 정렬 */}
+          <div className="absolute left-[calc(50%+calc(var(--spacing-chat-panel)/2))] -translate-x-1/2 w-9 h-1 rounded-full bg-stroke" />
           <button
             aria-label="닫기"
             onPointerDown={(e) => e.stopPropagation()}
