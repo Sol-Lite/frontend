@@ -13,6 +13,20 @@ const CHART_COLORS = [
   'var(--color-chart-5)',
 ]
 
+function ItemBar({ item, barHeight = 'h-[3px]' }) {
+  return (
+    <div>
+      <div className="flex justify-between mb-0.5">
+        <span className="text-widget-10 text-foreground-secondary">{item.name}</span>
+        <span className="text-widget-10 font-semibold text-foreground">{item.ratio}%</span>
+      </div>
+      <div className={`${barHeight} bg-surface-muted rounded-full overflow-hidden`}>
+        <div className="h-full rounded-full" style={{ width: `${item.ratio}%`, background: item.color }} />
+      </div>
+    </div>
+  )
+}
+
 function usePortfolio(enabled) {
   const { data: holdings = [], isLoading } = useDomesticHoldings({ enabled })
 
@@ -91,24 +105,16 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
             <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
             <span className={`text-widget-10 font-semibold ${returnRateColor}`}>{returnRateStr}</span>
           </div>
-          <div className="flex flex-col gap-2 flex-1 min-h-0">
-            {portfolio.items.slice(0, 3).map((item) => (
-              <div key={item.name}>
-                <div className="flex justify-between mb-0.5">
-                  <span className="text-widget-10 text-foreground-secondary">{item.name}</span>
-                  <span className="text-widget-10 font-semibold text-foreground">{item.ratio}%</span>
-                </div>
-                <div className="h-[3px] bg-surface-muted rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${item.ratio}%`, background: item.color }} />
-                </div>
-              </div>
+          <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-hidden">
+            {portfolio.items.map((item) => (
+              <ItemBar key={item.name} item={item} barHeight="h-[3px]" />
             ))}
           </div>
         </>
       ) : variant === 'portfolio-2x2' ? (
         <>
           <div className="flex items-center justify-between mb-1 shrink-0">
-            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">섹터별 비중</span>
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
           </div>
           <div className="flex flex-col flex-1 gap-3">
             <div className="flex items-center gap-3 shrink-0">
