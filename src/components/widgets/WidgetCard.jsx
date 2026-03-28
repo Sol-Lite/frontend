@@ -23,7 +23,7 @@ export default function WidgetCard({ children, className = '', onDelete, onClick
       >
         <div
           className={cn(
-            'h-full bg-surface border rounded-2xl p-[14px_16px]',
+            'h-full bg-surface border rounded-2xl p-[14px_16px] overflow-hidden',
             'flex flex-col',
             isEditMode
               ? 'border-stroke-input shadow-widget-edit'
