@@ -19,12 +19,12 @@ const STALE = {
   orderBook: 1000 * 5,
 }
 
-export default function useForeignMarketData(stockCode, exchcd, { enabled }) {
+export default function useForeignMarketData(stockCode, exchcd, { enabled, initialPeriod, initialMinuteInterval }) {
   const [selectedChartPeriod, setSelectedChartPeriod] = useState(
-    () => localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
+    () => initialPeriod ?? localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
   )
   const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(
-    () => Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL,
+    () => initialMinuteInterval ?? Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL,
   )
 
   const { endDate, startDate } = useMemo(() => {

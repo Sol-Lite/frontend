@@ -11,6 +11,13 @@ import {
 import useCurrencyStore from '@/store/useCurrencyStore'
 import { INVEST_STOCK } from '@/mocks/invest'
 
+const WIDGET_PERIOD_MAP = {
+  '1일': { initialPeriod: 'MINUTE', initialMinuteInterval: 5  },
+  '1주': { initialPeriod: 'MINUTE', initialMinuteInterval: 30 },
+  '1달': { initialPeriod: 'MINUTE', initialMinuteInterval: 60 },
+  '3달': { initialPeriod: 'DAILY',  initialMinuteInterval: undefined },
+}
+
 export default function StockChartDetail({ config = {}, onClose }) {
   const stockCode     = config.stockCode ?? INVEST_STOCK.code
   const locationState = {
@@ -19,6 +26,8 @@ export default function StockChartDetail({ config = {}, onClose }) {
     marketType:   config.marketType ?? null,
     exchangeCode: null,
   }
+
+  const periodInit = WIDGET_PERIOD_MAP[config.widgetPeriod] ?? {}
 
   const {
     stockMeta,
@@ -39,7 +48,7 @@ export default function StockChartDetail({ config = {}, onClose }) {
     onChartPeriodChange,
     onLoadMoreChartHistory,
     onMinuteIntervalChange,
-  } = useInvestMarketData(stockCode, locationState, { activeLeftTab: 'daily' })
+  } = useInvestMarketData(stockCode, locationState, { activeLeftTab: 'daily', ...periodInit })
 
   const marketType      = stockMeta.marketType ?? stockMeta.market
   const isForeignMarket = isForeignMarketType(marketType)

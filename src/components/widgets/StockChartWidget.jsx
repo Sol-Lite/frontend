@@ -82,8 +82,9 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
       widgetTypeId: 'stock-chart',
       config: {
         stockCode,
-        stockName: stockName ?? stockMeta.name,
-        marketType: config.marketType ?? stockMeta.market ?? null,
+        stockName:    stockName ?? stockMeta.name,
+        marketType:   config.marketType ?? stockMeta.market ?? null,
+        widgetPeriod: activePeriod,
       },
     })
   }

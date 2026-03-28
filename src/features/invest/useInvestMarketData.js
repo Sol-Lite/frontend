@@ -9,7 +9,7 @@ import {
 import useDomesticMarketData from '@/features/invest/domestic/useMarketData'
 import useForeignMarketData from '@/features/invest/foreign/useMarketData'
 
-export default function useInvestMarketData(stockCode, locationState, { activeLeftTab = 'daily' } = {}) {
+export default function useInvestMarketData(stockCode, locationState, { activeLeftTab = 'daily', initialPeriod, initialMinuteInterval } = {}) {
   const baseStockMeta = resolveStockMeta(stockCode, locationState)
   const { isDomestic } = baseStockMeta
   const exchcd = isDomestic ? null : getExchcd(baseStockMeta.exchangeCode)
@@ -45,8 +45,8 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
     }
   }, [baseStockMeta, infoQuery.data, isDomestic])
 
-  const domestic = useDomesticMarketData(stockCode, { enabled: isDomestic, activeDetailTab: activeLeftTab })
-  const foreign = useForeignMarketData(stockCode, exchcd, { enabled: !isDomestic, activeDetailTab: activeLeftTab })
+  const domestic = useDomesticMarketData(stockCode, { enabled: isDomestic, activeDetailTab: activeLeftTab, initialPeriod, initialMinuteInterval })
+  const foreign = useForeignMarketData(stockCode, exchcd, { enabled: !isDomestic, activeDetailTab: activeLeftTab, initialPeriod, initialMinuteInterval })
 
   const active = isDomestic ? domestic : foreign
   const { marketState, chartState, detailState, selectedChartPeriod, selectedMinuteInterval } = active
