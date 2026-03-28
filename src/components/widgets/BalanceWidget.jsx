@@ -4,44 +4,52 @@ import useAuthStore from '@/store/useAuthStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import WidgetCard from './WidgetCard'
 import { balanceApi, useDomesticHoldings } from '@/api/balance'
+import { cn } from '@/lib/cn'
 
 function fmt(n) {
-  return Number(n ?? 0).toLocaleString('ko-KR')
+  return Math.floor(Number(n ?? 0)).toLocaleString('ko-KR')
 }
 
 function useBalance(enabled) {
-  const { data: holdings = [], isLoading: holdingsLoading } = useDomesticHoldings({ enabled })
-  const { data: cashData, isLoading: cashLoading } = useQuery({
-    queryKey: ['balance', 'cash'],
-    queryFn:  balanceApi.getCashBalances,
+  const { data: summary, isLoading: summaryLoading } = useQuery({
+    queryKey: ['balance', 'summary'],
+    queryFn:  balanceApi.getBalanceSummary,
+    enabled,
+    staleTime: 30_000,
+  })
+  const { data: assetFlow } = useQuery({
+    queryKey: ['balance', 'flow', '1W'],
+    queryFn:  () => balanceApi.getAssetFlow('1W'),
     enabled,
     staleTime: 30_000,
   })
 
-  const isLoading = enabled && (holdingsLoading || cashLoading)
+  const isLoading = enabled && summaryLoading
 
   if (isLoading) {
-    return { total: '-', profit: '-', profitRate: '-', invested: '-', available: '-', isProfit: true, isLoading: true }
+    return { total: '-', profit: '-', profitRate: '-', invested: '-', available: '-', isProfit: true, isLoading: true, flowPoints: [] }
   }
 
-  const krwEntry  = Array.isArray(cashData)
-    ? (cashData.find((c) => c.currencyCode === 'KRW') ?? cashData[0])
-    : cashData
-  const cash      = krwEntry?.totalAmount ?? krwEntry?.availableAmount ?? 0
-  const invested  = holdings.reduce((s, h) => s + (h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
-  const stockVal  = holdings.reduce((s, h) => s + (h.currentPrice ?? h.avgPrice ?? h.avgBuyPrice ?? 0) * (h.holdingQuantity ?? h.availableQuantity ?? 0), 0)
-  const total     = stockVal + cash
-  const profit    = stockVal - invested
-  const profitRate = invested > 0 ? (profit / invested) * 100 : 0
+  const cashList  = summary?.cashBalances ?? []
+  const krwEntry  = cashList.find((c) => c.currencyCode === 'KRW') ?? {}
+  const total     = Number(summary?.totalAssets ?? 0)
+  const profit    = Number(summary?.accountProfitLoss ?? 0)
+  const profitRate = Number(summary?.accountProfitLossRate ?? 0)
+  const invested  = total - profit - Number(krwEntry.totalAmount ?? 0)
+
+  const flowPoints = (assetFlow?.points ?? []).map((p) => Number(p.cumulativeReturnRate ?? 0))
+  const maxRate    = flowPoints.reduce((m, r) => Math.max(m, Math.abs(r)), 0)
 
   return {
     total:      fmt(total),
     profit:     (profit >= 0 ? '+' : '-') + fmt(Math.abs(profit)),
     profitRate: (profitRate >= 0 ? '+' : '') + profitRate.toFixed(2) + '%',
-    invested:   fmt(invested),
-    available:  fmt(krwEntry?.availableAmount ?? cash),
+    invested:   fmt(Math.max(0, invested)),
+    available:  fmt(Number(krwEntry.availableAmount ?? krwEntry.totalAmount ?? 0)),
     isProfit:   profit >= 0,
     isLoading:  false,
+    flowPoints,
+    maxRate,
   }
 }
 
@@ -107,13 +115,53 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
             </div>
           </div>
           <div className="flex flex-col flex-1 min-w-0 pl-4 border-l border-stroke">
-            <div className="text-[9px] text-foreground-disabled shrink-0">수익 추이 (30일)</div>
-            <div className="flex-1 min-h-0 flex items-end gap-px my-2">
-              {[30,38,35,50,55,65,70,80,85,92].map((h, i) => (
-                <div key={i} className="flex-1 bg-up/50 rounded-sm" style={{ height: `${h}%` }} />
-              ))}
+            <div className="text-[9px] text-foreground-disabled shrink-0">수익 추이 (7일)</div>
+            <div className="flex-1 min-h-0 relative my-2">
+              {BALANCE.flowPoints.length > 1 ? (() => {
+                const pts = BALANCE.flowPoints
+                const min = Math.min(...pts)
+                const max = Math.max(...pts)
+                const range = max - min || 1
+                const W = 100 / (pts.length - 1)
+                const isUp = pts[pts.length - 1] >= pts[0]
+                return (
+                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <polyline
+                      points={pts.map((r, i) => {
+                        const x = i * W
+                        const y = 10 + (1 - (r - min) / range) * 80
+                        return `${x},${y}`
+                      }).join(' ')}
+                      fill="none"
+                      stroke={isUp ? 'var(--color-up)' : 'var(--color-down)'}
+                      strokeWidth="2"
+                      vectorEffect="non-scaling-stroke"
+                    />
+                    {pts.map((r, i) => {
+                      const x = i * W
+                      const y = 10 + (1 - (r - min) / range) * 80
+                      return (
+                        <circle
+                          key={i}
+                          cx={x}
+                          cy={y}
+                          r="3"
+                          fill={r >= 0 ? 'var(--color-up)' : 'var(--color-down)'}
+                          vectorEffect="non-scaling-stroke"
+                        />
+                      )
+                    })}
+                  </svg>
+                )
+              })() : (
+                <div className="absolute inset-0 flex items-center justify-center text-[8px] text-foreground-disabled">데이터 없음</div>
+              )}
             </div>
-            <div className="text-[9px] text-foreground-disabled text-right shrink-0">최고 +5.2%</div>
+            {BALANCE.flowPoints.length > 0 && (
+              <div className={cn('text-[9px] text-right shrink-0', BALANCE.flowPoints[BALANCE.flowPoints.length - 1] >= 0 ? 'text-up' : 'text-down')}>
+                {`${BALANCE.flowPoints[BALANCE.flowPoints.length - 1] >= 0 ? '+' : ''}${BALANCE.flowPoints[BALANCE.flowPoints.length - 1].toFixed(2)}%`}
+              </div>
+            )}
           </div>
         </div>
       ) : variant === 'balance-2x2' ? (
