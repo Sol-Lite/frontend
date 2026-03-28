@@ -9,6 +9,8 @@ import StockSelectModal from './StockSelectModal'
 import { useWatchlist, watchlistApi } from '@/api/watchlist'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
+const EXCHANGE_CODE_BY_MARKET_TYPE = { NASDAQ: 'NAS', NYSE: 'NYS', AMEX: 'AMS' }
+
 function fmtPrice(n) {
   return `₩${Number(n ?? 0).toLocaleString('ko-KR')}`
 }
@@ -43,9 +45,11 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
 
   function handleStockClick(e, item) {
     e.stopPropagation()
+    const marketType   = item.marketType ?? null
+    const exchangeCode = item.exchangeCode ?? EXCHANGE_CODE_BY_MARKET_TYPE[marketType] ?? null
     openDetail({
       widgetTypeId: 'stock-chart',
-      config: { stockCode: item.stockCode, stockName: item.stockName, marketType: item.marketType ?? null },
+      config: { stockCode: item.stockCode, stockName: item.stockName, marketType, exchangeCode },
     })
   }
 
