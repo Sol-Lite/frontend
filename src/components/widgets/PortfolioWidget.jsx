@@ -106,7 +106,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
             <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
             <span className={`text-widget-10 font-semibold ${returnRateColor}`}>{returnRateStr}</span>
           </div>
-          <div className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-hidden">
             {portfolio.items.map((item) => (
               <ItemBar key={item.name} item={item} barHeight="h-[3px]" />
             ))}
@@ -115,7 +115,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
       ) : variant === 'portfolio-2x2' ? (
         <>
           <div className="flex items-center justify-between mb-1 shrink-0">
-            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">섹터별 비중</span>
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
           </div>
           <div className="flex flex-col flex-1 gap-3 min-h-0">
             <div className="flex items-center gap-3 shrink-0">

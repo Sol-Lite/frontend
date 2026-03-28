@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { cn } from '@/lib/cn'
 import { X, LogOut } from 'lucide-react'
 import SplashScreenFill from '@/components/ui/SplashScreenFill'
 import { useNavigate } from 'react-router-dom'
@@ -70,11 +71,12 @@ function FontSizeSettings() {
             <button
               key={value}
               onClick={() => setFontSize(value)}
-              className={`flex-1 py-2 rounded-lg border text-[12px] font-medium transition-colors ${
+              className={cn(
+                'flex-1 py-2 rounded-lg border text-[12px] font-medium transition-colors',
                 fontSize === value
                   ? 'bg-primary text-white border-primary'
-                  : 'bg-surface text-foreground-secondary border-stroke hover:border-primary-border'
-              }`}
+                  : 'bg-surface text-foreground-secondary border-stroke hover:border-primary-border',
+              )}
             >
               {label}
             </button>
@@ -88,12 +90,12 @@ function FontSizeSettings() {
 
 function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
   const tabs = [
-    { id: 'display',                 label: '화면 설정',   danger: false },
     { id: 'update-profile',          label: '프로필',      danger: false },
     { id: 'change-account-password', label: '계정 비밀번호', danger: false },
     { id: 'change-account-pin',      label: '계좌 비밀번호', danger: false },
     { id: 'reset',                   label: '리셋',        danger: true  },
     { id: 'close-account',           label: '계좌 해지',   danger: true  },
+    { id: 'display',                 label: '화면 설정',   danger: false },
   ]
 
   return (
@@ -792,7 +794,7 @@ function ContentArea({ selectedMenuItem, onSuccess }) {
 }
 
 export default function AccountSettingsPanel() {
-  const [selectedMenuItem, setSelectedMenuItem] = useState('display')
+  const [selectedMenuItem, setSelectedMenuItem] = useState('update-profile')
   const [successStatus, setSuccessStatus] = useState(null) // null | 'animating' | 'success'
   const [successMessage, setSuccessMessage] = useState('')
 

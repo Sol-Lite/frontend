@@ -91,7 +91,7 @@
   --color-chart-other: #9CA3AF;
 
   /* ── Widget Font Scale (sm=default, overridden by [data-font-size]) ── */
-  --text-widget-6:  3px;
+  --text-widget-6:  6px;
   --text-widget-7:  7px;
   --text-widget-9:  9px;
   --text-widget-10: 10px;

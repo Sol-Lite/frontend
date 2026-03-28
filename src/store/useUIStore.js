@@ -7,6 +7,7 @@ const useUIStore = create((set) => ({
 
   setFontSize: (fontSize) => {
     localStorage.setItem(STORAGE_KEY, fontSize)
+    document.documentElement.dataset.fontSize = fontSize
     set({ fontSize })
   },
 }))

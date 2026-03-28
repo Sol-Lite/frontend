@@ -126,7 +126,7 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
           {/* 우: 목록 */}
           <div className="flex flex-col min-h-0 border-l border-stroke pl-4 shrink-0 w-[40%]">
             <span className="text-widget-9 font-semibold text-foreground-disabled mb-1 shrink-0">거래 내역</span>
-            <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1.5">
+            <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1">
               {isLoading
                 ? <div className="text-widget-9 text-foreground-disabled">불러오는 중...</div>
                 : recentTrades.length > 0 ? recentTrades.map(({ name, type, qty, price, date }) => (
@@ -234,11 +234,11 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
       <div className="flex items-center justify-between mb-2 shrink-0">
         <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
       </div>
-      <div className="flex-1 flex flex-col gap-1.5 min-h-0 overflow-y-auto">
+      <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-y-auto">
         {isLoading
           ? <div className="text-widget-9 text-foreground-disabled">불러오는 중...</div>
           : recentTrades.length > 0 ? recentTrades.map(({ name, type, qty, date }) => (
-          <div key={`${name}-${date}`} className="flex items-center justify-between">
+          <div key={`${name}-${date}`} className="flex items-center justify-between shrink-0">
             <div className="flex items-center gap-1.5 min-w-0">
               <span className={cn(
                 'text-[8px] font-semibold px-1 py-px rounded shrink-0',

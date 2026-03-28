@@ -12,12 +12,6 @@ export default function App() {
   const authModalView = useAuthStore((s) => s.authModalView)
   const closeLoginModal = useAuthStore((s) => s.closeLoginModal)
   const isRestoring = useAuthStore((s) => s.isRestoring)
-  const fontSize = useUIStore((s) => s.fontSize)
-
-  useEffect(() => {
-    document.documentElement.dataset.fontSize = fontSize
-  }, [fontSize])
-
   useEffect(() => {
     useAuthStore.getState().restoreAuth()
   }, [])
