@@ -17,9 +17,9 @@ const ALL_CURRENCIES = [
 
 const DEFAULT_CURRENCIES = {
   'exchange-sm':   ['USD'],
-  'exchange-wide': ['USD', 'JPY'],
-  'exchange-3x1':  ['USD', 'JPY', 'EUR'],
-  'exchange-2x2':  ['USD', 'JPY', 'EUR'],
+  'exchange-wide': ['USD'],
+  'exchange-3x1':  ['USD'],
+  'exchange-2x2':  ['USD'],
 }
 
 const LIVE_BY_CODE = { USD: 0, JPY: 1, EUR: 2 }
