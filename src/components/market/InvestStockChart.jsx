@@ -24,13 +24,13 @@ function toChartTime(timestamp) {
   return Math.floor(timestamp / 1000)
 }
 
-function formatChartDateTime(time, { isIntraday, useUtc }) {
+function formatChartDateTime(time, { isIntraday }) {
   const date = new Date(time * 1000)
-  const yyyy = useUtc ? date.getUTCFullYear() : date.getFullYear()
-  const mm = String((useUtc ? date.getUTCMonth() : date.getMonth()) + 1).padStart(2, '0')
-  const dd = String(useUtc ? date.getUTCDate() : date.getDate()).padStart(2, '0')
-  const hh = String(useUtc ? date.getUTCHours() : date.getHours()).padStart(2, '0')
-  const mi = String(useUtc ? date.getUTCMinutes() : date.getMinutes()).padStart(2, '0')
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  const hh = String(date.getHours()).padStart(2, '0')
+  const mi = String(date.getMinutes()).padStart(2, '0')
 
   return isIntraday ? `${yyyy}/${mm}/${dd} ${hh}:${mi}` : `${yyyy}/${mm}/${dd}`
 }
@@ -99,7 +99,6 @@ const InvestStockChart = memo(function InvestStockChart({
   }, [chartType])
 
   const isIntraday = selectedPeriod === 'MINUTE'
-  const usesExchangeUtcSlot = !['KOSPI', 'KOSDAQ'].includes(marketType)
 // Effect 1: 차트 생성 — chartType / isIntraday 바뀔 때만 재생성
   useEffect(() => {
     const container = containerRef.current
@@ -130,7 +129,7 @@ const InvestStockChart = memo(function InvestStockChart({
         rightOffset: 6,
         barSpacing: isIntraday ? 10 : 8,
         tickMarkFormatter: (time) => {
-          const formatted = formatChartDateTime(time, { isIntraday, useUtc: usesExchangeUtcSlot })
+          const formatted = formatChartDateTime(time, { isIntraday })
           return isIntraday ? formatted.slice(11) : formatted.slice(5)
         },
       },
@@ -145,7 +144,7 @@ const InvestStockChart = memo(function InvestStockChart({
         locale: 'ko-KR',
         dateFormat: 'yyyy/MM/dd',
         priceFormatter: (price) => formatVisiblePrice(price, { marketType, displayCurrency, usdRate }),
-        timeFormatter: (time) => formatChartDateTime(time, { isIntraday, useUtc: usesExchangeUtcSlot }),
+        timeFormatter: (time) => formatChartDateTime(time, { isIntraday }),
       },
     })
 
@@ -277,7 +276,7 @@ const InvestStockChart = memo(function InvestStockChart({
       volumeSeriesRef.current = null
       areaSeriesRef.current = null
     }
-  }, [chartType, displayCurrency, isIntraday, marketType, usdRate, usesExchangeUtcSlot])
+  }, [chartType, displayCurrency, isIntraday, marketType, usdRate])
 
   // Effect 2: 데이터 업데이트 — series 바뀔 때만 (차트 재생성 없음)
   useEffect(() => {
