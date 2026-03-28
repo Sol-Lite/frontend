@@ -155,7 +155,7 @@ export default function HomePage() {
             </div>
             <button
               onClick={() => { snapshotWidgets(); enterEditMode() }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn"
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition-colors duration-150 shadow-primary-btn"
             >
               <Plus className="w-3.5 h-3.5" strokeWidth={2.5} />
               위젯 추가하기
