@@ -4,6 +4,7 @@ import { RouterProvider } from 'react-router-dom'
 import { router } from './router'
 import { queryClient } from '@/lib/queryClient'
 import useAuthStore from '@/store/useAuthStore'
+import useUIStore from '@/store/useUIStore'
 import LoginModal from '@/components/auth/LoginModal'
 
 export default function App() {
@@ -11,6 +12,11 @@ export default function App() {
   const authModalView = useAuthStore((s) => s.authModalView)
   const closeLoginModal = useAuthStore((s) => s.closeLoginModal)
   const isRestoring = useAuthStore((s) => s.isRestoring)
+  const fontSize = useUIStore((s) => s.fontSize)
+
+  useEffect(() => {
+    document.documentElement.dataset.fontSize = fontSize
+  }, [fontSize])
 
   useEffect(() => {
     useAuthStore.getState().restoreAuth()
