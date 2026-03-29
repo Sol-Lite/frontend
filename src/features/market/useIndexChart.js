@@ -1,31 +1,28 @@
 import { useQuery } from '@tanstack/react-query'
 import { marketApi } from '@/api/market'
 
-function toTime(item, isIntraday) {
+function toTime(item) {
   const raw = item.date ?? item.datetime ?? item.time
-  if (!isIntraday) {
-    if (typeof raw === 'number') return new Date(raw).toISOString().slice(0, 10)
-    return String(raw).slice(0, 10)
-  }
+  if (typeof raw === 'number') return Math.floor(raw / 1000)
   return Math.floor(new Date(raw).getTime() / 1000)
 }
 
-function toLineData(items, isIntraday) {
+function toLineData(items) {
   return items
-    .map((d) => ({ time: toTime(d, isIntraday), value: Number(d.close) }))
-    .sort((a, b) => (a.time > b.time ? 1 : a.time < b.time ? -1 : 0))
+    .map((d) => ({ time: toTime(d), value: Number(d.close) }))
+    .sort((a, b) => a.time - b.time)
 }
 
-function toCandleData(items, isIntraday) {
+function toCandleData(items) {
   return items
     .map((d) => ({
-      time:  toTime(d, isIntraday),
+      time:  toTime(d),
       open:  Number(d.open),
       high:  Number(d.high),
       low:   Number(d.low),
       close: Number(d.close),
     }))
-    .sort((a, b) => (a.time > b.time ? 1 : a.time < b.time ? -1 : 0))
+    .sort((a, b) => a.time - b.time)
 }
 
 // '1D': 분봉(오늘 장중) / 나머지: 일봉
@@ -41,8 +38,8 @@ export default function useIndexChart(code, period = '3M') {
         : await marketApi.getIndexChart(code, { count })
       const items = res.data ?? []
       return {
-        lineData:   toLineData(items, isIntraday),
-        candleData: toCandleData(items, isIntraday),
+        lineData:   toLineData(items),
+        candleData: toCandleData(items),
       }
     },
     enabled: !!code && period !== null,
