@@ -156,16 +156,16 @@ export default function HomePage() {
       e.preventDefault()
       if (Math.abs(deltaX) < SCROLL_THRESHOLD) return
 
-      const pages = pagesRef.current
-      if (pages.length <= 1) return
+      const currentPages = pagesRef.current
+      if (currentPages.length <= 1) return
 
       const now = Date.now()
       if (now - scrollCooldownRef.current < SCROLL_COOLDOWN_MS) return
       scrollCooldownRef.current = now
 
-      const idx = pages.findIndex((p) => p.id === currentPageIdRef.current)
-      if (deltaX > 0 && idx < pages.length - 1) switchPage(pages[idx + 1].id)
-      else if (deltaX < 0 && idx > 0)           switchPage(pages[idx - 1].id)
+      const idx = currentPages.findIndex((p) => p.id === currentPageIdRef.current)
+      if (deltaX > 0 && idx < currentPages.length - 1) switchPage(currentPages[idx + 1].id)
+      else if (deltaX < 0 && idx > 0)                  switchPage(currentPages[idx - 1].id)
     }
 
     el.addEventListener('wheel', handleWheel, { passive: false })
