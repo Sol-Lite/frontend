@@ -88,6 +88,47 @@ function FontSizeSettings() {
   )
 }
 
+function ThemeSettings() {
+  const { theme, setTheme } = useUIStore()
+  const options = [
+    { value: 'light', label: '라이트' },
+    { value: 'dark',  label: '다크'   },
+  ]
+
+  function handleSetTheme(value) {
+    const prev = theme
+    setTheme(value)
+    userApi.updateTheme(value.toUpperCase()).catch(() => {
+      setTheme(prev)
+    })
+  }
+
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <p className="text-[11px] font-semibold text-foreground-secondary mb-3">테마</p>
+        <div className="flex gap-2">
+          {options.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => handleSetTheme(value)}
+              className={cn(
+                'flex-1 py-2 rounded-lg border text-[12px] font-medium transition-colors',
+                theme === value
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface text-foreground-secondary border-stroke hover:border-primary-border',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="text-[11px] text-foreground-disabled leading-relaxed">전체 화면 색상 테마에 반영됩니다.</p>
+    </div>
+  )
+}
+
 function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
   const tabs = [
     { id: 'update-profile',          label: '프로필',      danger: false },
@@ -761,7 +802,11 @@ function ContentArea({ selectedMenuItem, onSuccess }) {
   return (
     <div className="flex-1 flex flex-col p-4 overflow-y-auto">
       {selectedMenuItem === 'display' && (
-        <FontSizeSettings />
+        <div className="flex flex-col gap-6">
+          <FontSizeSettings />
+          <div className="h-px bg-stroke-subtle" />
+          <ThemeSettings />
+        </div>
       )}
 
       {selectedMenuItem === 'update-profile' && (

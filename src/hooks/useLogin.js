@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { authApi } from '@/api/auth'
 import useAuthStore from '@/store/useAuthStore'
 import useRightPanelStore from '@/store/useRightPanelStore'
+import { applyThemeFromServer } from '@/lib/applyTheme'
 
 function delay(ms) {
   if (!ms || ms <= 0) {
@@ -30,6 +31,7 @@ export default function useLogin({ onSuccess, minLoadingMs = 0 } = {}) {
       const res = await authApi.login({ email, password, autoLogin })
       await loadingDelay
       setAuth({ accessToken: res.accessToken, user: res.user, autoLogin })
+      applyThemeFromServer()
       setChatMode()
       onSuccess?.()
     } catch (err) {

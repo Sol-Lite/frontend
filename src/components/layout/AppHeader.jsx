@@ -10,17 +10,20 @@ import { useDashboardSave } from '@/hooks/useDashboardSync'
 import NotificationCenter from '@/components/ui/NotificationCenter'
 
 function Logo() {
+  const navigate = useNavigate()
   return (
-    <div className="flex items-center gap-2 mr-2 shrink-0">
-      <div
-        className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow"
-      >
+    <button
+      onClick={() => navigate('/')}
+      aria-label="홈으로 이동"
+      className="flex items-center gap-2 mr-2 shrink-0"
+    >
+      <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow">
         <Activity className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
       </div>
       <span className="text-[15px] font-bold tracking-tight text-foreground">
         SOL <span className="text-primary">Lite</span>
       </span>
-    </div>
+    </button>
   )
 }
 

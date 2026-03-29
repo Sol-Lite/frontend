@@ -17,4 +17,5 @@ export const userApi = {
   updateProfile: (name, phone) => request('/me', 'PATCH', { name, phone }),
   changePassword: (currentPassword, newPassword) =>
     request('/me/password', 'PATCH', { currentPassword, newPassword, newPasswordConfirm: newPassword }),
+  updateTheme: (theme) => request('/me/theme', 'PATCH', { theme }),
 }

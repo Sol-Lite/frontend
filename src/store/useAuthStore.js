@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { queryClient } from '@/lib/queryClient'
+import useUIStore from '@/store/useUIStore'
+import { applyThemeFromServer } from '@/lib/applyTheme'
 
 function isTokenExpired(token) {
   try {
@@ -52,6 +54,7 @@ const useAuthStore = create((set, get) => ({
 
     if (!isTokenExpired(accessToken)) {
       set({ isAuthenticated: true, user, accessToken, isRestoring: false })
+      applyThemeFromServer()
       return
     }
 
@@ -62,6 +65,7 @@ const useAuthStore = create((set, get) => ({
       const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
       storage.setItem('accessToken', newToken)
       set({ isAuthenticated: true, user, accessToken: newToken, isRestoring: false })
+      applyThemeFromServer()
     } catch {
       get().logout()
       set({ isRestoring: false })
@@ -71,9 +75,11 @@ const useAuthStore = create((set, get) => ({
   logout: ({ broadcast = true } = {}) => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('user')
+    localStorage.removeItem('ui:theme')
     sessionStorage.removeItem('accessToken')
     sessionStorage.removeItem('user')
     queryClient.clear()
+    useUIStore.getState().setTheme('light')
     set({ isAuthenticated: false, user: null, accessToken: null })
     if (broadcast && typeof BroadcastChannel !== 'undefined') {
       const ch = new BroadcastChannel('sol_auth')

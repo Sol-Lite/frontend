@@ -4,14 +4,14 @@ export default function SplashScreenFill({ inline = false, animated = true }) {
       {/* 로고 fill-up */}
       <div className="relative w-20 h-20">
         <img
-          src="/shinhan-logo.png"
+          src="/shc_symbol_ci.png"
           alt=""
-          className="w-20 h-20 object-contain mix-blend-multiply opacity-15"
+          className="w-20 h-20 object-contain opacity-15"
         />
         <img
-          src="/shinhan-logo.png"
+          src="/shc_symbol_ci.png"
           alt="SOL Lite"
-          className={`absolute inset-0 w-20 h-20 object-contain mix-blend-multiply ${animated ? 'animate-fill-up' : ''}`}
+          className={`absolute inset-0 w-20 h-20 object-contain ${animated ? 'animate-fill-up' : ''}`}
         />
       </div>
 
