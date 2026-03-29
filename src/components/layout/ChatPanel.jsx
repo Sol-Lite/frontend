@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { MessageCircle, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useQueryClient } from "@tanstack/react-query";
 import LiveDot from "@/components/ui/LiveDot";
 import useAuthStore from "@/store/useAuthStore";
 import { chatApi } from "@/api/chat";
@@ -9,6 +11,9 @@ import ChatOrderCard from "@/components/layout/ChatOrderCard";
 import ChatExchangeCard from "@/components/layout/ChatExchangeCard";
 import { marketApi } from "@/api/market";
 import { balanceApi } from "@/api/balance";
+import { orderApi, ORDER_SIDE, ORDER_KIND } from "@/api/order";
+import usePinAuth from "@/hooks/usePinAuth";
+import ChatPinBubble from "@/components/layout/ChatPinBubble";
 
 function getTimestamp() {
   return new Date().toLocaleTimeString("ko-KR", {
@@ -202,7 +207,7 @@ function ChatBubble({
 }
 
 // ── ChatMessages ───────────────────────────────────────────────
-function ChatMessages({ messages, isTyping, bottomRef, onRetry }) {
+function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, onOrderDetail }) {
   return (
     <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
       {messages.map((msg) => {
@@ -210,10 +215,29 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry }) {
         if (msg.type === 'order' && msg.stock) {
           return (
             <div key={msg.id} className="flex flex-col gap-1">
-              <ChatOrderCard {...msg.stock} />
+              <ChatOrderCard
+                {...msg.stock}
+                onBuy={(qty) => onOrderAction?.(msg.stock, 'buy', qty)}
+                onSell={(qty) => onOrderAction?.(msg.stock, 'sell', qty)}
+                onDetail={() => onOrderDetail?.(msg.stock)}
+              />
               {msg.time && (
                 <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
               )}
+            </div>
+          )
+        }
+        // PIN 입력 버블
+        if (msg.type === 'pin') {
+          return (
+            <div key={msg.id} className="flex justify-start animate-bubble-in">
+              <ChatPinBubble
+                stockCode={msg.stockCode}
+                marketType={msg.marketType}
+                name={msg.name}
+                side={msg.side}
+                quantity={msg.quantity}
+              />
             </div>
           )
         }
@@ -374,6 +398,9 @@ function LoginPrompt() {
 
 // ── ChatPanel (root) ───────────────────────────────────────────
 export default function ChatPanel() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isPinCached, verifyAndCachePin } = usePinAuth();
   const { isAuthenticated, isRestoring } = useAuthStore();
   const [messages, setMessages] = useState(loadMessages);
   const [isTyping, setIsTyping] = useState(false);
@@ -381,6 +408,7 @@ export default function ChatPanel() {
   const lastFailedTextRef = useRef(null);
   // 복원 완료 후 isAuthenticated의 이전 값 추적 (null = 복원 전)
   const prevIsAuthRef = useRef(null);
+
 
   // 메시지 변경 시 sessionStorage에 저장
   useEffect(() => {
@@ -492,6 +520,63 @@ export default function ChatPanel() {
     handleSend(text);
   }, [handleSend]);
 
+  function handleOrderAction(stock, side, quantity) {
+    if (isPinCached()) {
+      // PIN 캐시 있으면 바로 PIN 버블 없이 주문 — ChatPinBubble과 동일한 로직
+      orderApi.placeOrder({
+        stockCode: stock.stockCode,
+        marketType: stock.marketType,
+        orderSide: ORDER_SIDE[side],
+        orderKind: ORDER_KIND.market,
+        orderChannel: 'CHAT',
+        orderQuantity: quantity,
+      }).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['balance'] });
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            role: 'ai',
+            text: `**${stock.name}** ${side === 'buy' ? '매수' : '매도'} ${quantity}주 주문이 접수되었습니다.`,
+            time: getTimestamp(),
+          },
+        ]);
+      }).catch((err) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            role: 'ai',
+            text: `주문 접수에 실패했습니다. ${err?.message ?? ''}`.trim(),
+            time: getTimestamp(),
+            isError: true,
+          },
+        ]);
+      });
+    } else {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: 'pin',
+          stockCode: stock.stockCode,
+          marketType: stock.marketType,
+          name: stock.name,
+          side,
+          quantity,
+          time: getTimestamp(),
+        },
+      ]);
+    }
+  }
+
+  function handleOrderDetail(stock) {
+    navigate(`/invest/${stock.stockCode}`, {
+      state: { stockName: stock.name, marketType: stock.marketType },
+    });
+  }
+
   return (
     <>
       <ChatHeader />
@@ -502,12 +587,15 @@ export default function ChatPanel() {
             isTyping={isTyping}
             bottomRef={bottomRef}
             onRetry={handleRetry}
+            onOrderAction={handleOrderAction}
+            onOrderDetail={handleOrderDetail}
           />
           <ChatInput onSend={handleSend} />
         </>
       ) : (
         <LoginPrompt />
       )}
+
     </>
   );
 }
