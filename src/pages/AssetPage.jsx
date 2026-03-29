@@ -1,12 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ArrowLeftRight } from 'lucide-react'
 import ReactECharts from 'echarts-for-react'
 import { getStockLogoUrl } from '@/lib/stockLogo'
 import { extractDominantColor } from '@/lib/extractLogoColor'
 import StockAvatar from '@/components/ui/StockAvatar'
-import FilterChip from '@/components/ui/FilterChip'
+import { cn } from '@/lib/cn'
 import ExchangeModal from '@/components/asset/ExchangeModal'
 import useAuthStore from '@/store/useAuthStore'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import { useMyAccount } from '@/api/account'
 import { useAssetPage } from '@/features/asset/useAssetPage'
 
@@ -123,7 +125,7 @@ function AccountCard({ data }) {
 
   return (
     <section className="flex h-full min-w-0 flex-col border-r border-stroke-subtle">
-      <div className="px-5 py-2.5">
+      <div className="flex min-h-[44px] items-center px-5">
         <div className="text-[13px] font-bold text-foreground">계좌</div>
       </div>
       <div className="h-px bg-stroke-subtle" />
@@ -180,7 +182,7 @@ function AssetBreakdownCard({ data }) {
 
   return (
     <section className="flex h-full min-w-0 flex-col border-r border-stroke-subtle">
-      <div className="px-5 py-2.5">
+      <div className="flex min-h-[44px] items-center px-5">
         <div className="text-[13px] font-bold text-foreground">자산 구성</div>
       </div>
       <div className="h-px bg-stroke-subtle" />
@@ -205,19 +207,32 @@ function AssetBreakdownCard({ data }) {
 
 // ── 자산 흐름 카드 ────────────────────────────────────────────────
 function AssetFlowCard({ data, assetFlowRange, onChangeAssetFlowRange }) {
-  const { isAccountProfit, isLoading, assetFlowPoints, latestDailyReturnRate, latestCumulativeReturnRate } = data
+  const { isAccountProfit, assetFlowPoints } = data
   const hasFlow = assetFlowPoints.length > 0
   const [mode, setMode] = useState('assets')
+  const [chartOpacity, setChartOpacity] = useState(1)
+  const pendingMode = useRef(null)
+
+  function handleModeChange(newMode) {
+    if (newMode === mode) return
+    pendingMode.current = newMode
+    setChartOpacity(0)
+  }
+
+  function handleTransitionEnd() {
+    if (pendingMode.current === null) return
+    setMode(pendingMode.current)
+    pendingMode.current = null
+    setChartOpacity(1)
+  }
 
   const isAssetMode = mode === 'assets'
   const seriesData = isAssetMode
     ? assetFlowPoints.map((point) => point.totalAssets)
     : assetFlowPoints.map((point) => point.cumulativeReturnRate)
-  const headlineValue = isAssetMode ? latestDailyReturnRate : latestCumulativeReturnRate
-  const headlineLabel = isAssetMode ? '전일 대비 수익률' : '누적 수익률'
   const chartColor = isAssetMode
     ? (isAccountProfit ? '#16A34A' : '#E11D48')
-    : (headlineValue >= 0 ? '#16A34A' : '#E11D48')
+    : ((assetFlowPoints[assetFlowPoints.length - 1]?.cumulativeReturnRate ?? 0) >= 0 ? '#16A34A' : '#E11D48')
 
   const chartOption = {
     backgroundColor: 'transparent',
@@ -275,49 +290,58 @@ function AssetFlowCard({ data, assetFlowRange, onChangeAssetFlowRange }) {
         data: seriesData,
         lineStyle: { width: 3, color: chartColor },
         itemStyle: { color: chartColor },
-        areaStyle: {
-          color: chartColor === '#16A34A'
-            ? 'rgba(22,163,74,0.14)'
-            : 'rgba(225,29,72,0.14)',
-        },
       },
     ],
   }
 
   return (
     <section className="flex h-full min-w-0 flex-col overflow-hidden">
-      <div className="flex items-center justify-between px-5 py-2.5">
+      <div className="flex min-h-[44px] items-center justify-between gap-3 px-5">
         <div className="text-[13px] font-bold text-foreground">자산 흐름</div>
+        <div className="flex items-center rounded-lg bg-surface-muted p-0.5">
+          {ASSET_FLOW_MODES.map(({ key, label }) => (
+            <button
+              key={key}
+              onClick={() => handleModeChange(key)}
+              className={cn(
+                'rounded-md px-2.5 py-0.5 text-[10px] font-semibold transition-all',
+                mode === key
+                  ? 'bg-primary text-white shadow-control'
+                  : 'text-foreground-disabled hover:text-foreground-secondary',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
       <div className="h-px bg-stroke-subtle" />
-
-      <div className="flex items-center justify-between gap-2 px-5 pt-2.5">
-        <div className="flex items-center gap-1.5">
-          {ASSET_FLOW_MODES.map(({ key, label }) => (
-            <FilterChip key={key} isActive={mode === key} onClick={() => setMode(key)}>
-              {label}
-            </FilterChip>
-          ))}
-        </div>
-        <div className="flex items-center gap-1.5">
+      <div className="flex justify-end px-5 py-1 shrink-0">
+        <div className="flex items-center rounded-lg bg-surface-muted p-0.5">
           {ASSET_FLOW_RANGES.map(({ key, label }) => (
-            <FilterChip key={key} isActive={assetFlowRange === key} onClick={() => onChangeAssetFlowRange(key)}>
+            <button
+              key={key}
+              onClick={() => onChangeAssetFlowRange(key)}
+              className={cn(
+                'rounded-md px-2.5 py-0.5 text-[10px] font-semibold transition-all',
+                assetFlowRange === key
+                  ? 'bg-primary text-white shadow-control'
+                  : 'text-foreground-disabled hover:text-foreground-secondary',
+              )}
+            >
               {label}
-            </FilterChip>
+            </button>
           ))}
         </div>
       </div>
 
-      <div className="shrink-0 px-5 pt-2">
-        <div className="text-[9px] text-foreground-disabled">{headlineLabel}</div>
-        <div className={`text-[18px] font-black ${headlineValue >= 0 ? 'text-up' : 'text-down'}`}>
-          {isLoading ? '-' : fmtRate(headlineValue)}
-        </div>
-      </div>
-
-      <div className="h-[88px] overflow-hidden rounded-xl px-5">
+      <div
+        className="flex-1 min-h-0 overflow-hidden px-5 pb-3"
+        style={{ opacity: chartOpacity, transition: 'opacity 150ms ease' }}
+        onTransitionEnd={handleTransitionEnd}
+      >
         {hasFlow ? (
-          <ReactECharts option={chartOption} className="w-full h-full" opts={{ renderer: 'svg' }} />
+          <ReactECharts option={chartOption} style={{ width: '100%', height: '100%' }} opts={{ renderer: 'svg' }} />
         ) : (
           <div className="flex items-center justify-center h-full text-[11px] text-foreground-disabled">
             데이터 없음
@@ -472,12 +496,27 @@ function PortfolioPanel({ data }) {
   )
 }
 
+const EXCHANGE_CODE_BY_MARKET_TYPE = { NASDAQ: 'NAS', NYSE: 'NYS', AMEX: 'AMS' }
+
 // ── 보유 종목 행 ──────────────────────────────────────────────────
 function HoldingRow({ h }) {
   const { stockName, stockCode, marketType, qty, cur, avg, investedLocal, pnl, pnlRate, isUp, isKrw, hasCurrentPrice } = h
+  const open = useWidgetDetailStore((s) => s.open)
+
+  function handleClick() {
+    open({
+      widgetTypeId: 'stock-chart',
+      config: {
+        stockCode,
+        stockName,
+        marketType,
+        exchangeCode: EXCHANGE_CODE_BY_MARKET_TYPE[marketType] ?? null,
+      },
+    })
+  }
 
   return (
-    <div className="grid grid-cols-[1fr_62px_82px_78px_92px] items-center px-4 py-2.5 border-b border-stroke-subtle cursor-pointer hover:bg-surface-subtle transition-colors">
+    <div onClick={handleClick} className="grid grid-cols-[1fr_62px_82px_78px_92px] items-center px-4 py-2.5 border-b border-stroke-subtle cursor-pointer hover:bg-surface-subtle transition-colors">
       <div className="flex items-center gap-2.5">
         <StockAvatar name={stockName} stockCode={stockCode} marketType={marketType} size="md" />
         <div className="min-w-0">
@@ -532,27 +571,31 @@ function HoldingsPanel({ data }) {
   const totalIsUp = totalPnl >= 0
 
   const filters = [
-    { key: 'all',      label: `전체 ${allRows.length}` },
-    { key: 'domestic', label: `국내주식 ${domesticRows.length}` },
-    { key: 'overseas', label: `해외주식 ${overseasRows.length}` },
+    { key: 'all',      label: '전체' },
+    { key: 'domestic', label: '국내주식' },
+    { key: 'overseas', label: '해외주식' },
   ]
 
   return (
     <div className="flex-1 min-w-0 bg-surface flex flex-col overflow-hidden">
 
       {/* 헤더: 필터 + 시간 */}
-      <div className="shrink-0 flex min-h-[44px] items-center justify-between px-4 py-2.5 border-b border-stroke">
+      <div className="shrink-0 flex min-h-[44px] items-center justify-between px-4 border-b border-stroke">
         <div className="text-[13px] font-bold text-foreground">보유종목</div>
-        <div className="flex items-center gap-0.5">
+        <div className="flex items-center rounded-lg bg-surface-muted p-0.5">
           {filters.map(({ key, label }) => (
-            <FilterChip
+            <button
               key={key}
-              isActive={filter === key}
               onClick={() => setFilter(key)}
-              className="px-1.5 py-0.5 text-[9px]"
+              className={cn(
+                'rounded-md px-2.5 py-0.5 text-[10px] font-semibold transition-all',
+                filter === key
+                  ? 'bg-primary text-white shadow-control'
+                  : 'text-foreground-disabled hover:text-foreground-secondary',
+              )}
             >
               {label}
-            </FilterChip>
+            </button>
           ))}
         </div>
       </div>
@@ -631,7 +674,7 @@ export default function AssetPage() {
 
 export function AssetContent() {
   const { isAuthenticated, isRestoring, user } = useAuthStore()
-  const [assetFlowRange, setAssetFlowRange] = useState('1M')
+  const [assetFlowRange, setAssetFlowRange] = useState('1W')
   const data = useAssetPage(isAuthenticated && !isRestoring, assetFlowRange)
   const [showExchange, setShowExchange] = useState(false)
 

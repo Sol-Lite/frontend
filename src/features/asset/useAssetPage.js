@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { balanceApi, useDomesticHoldings, useOverseasHoldings } from '@/api/balance'
 import { useMyAccount } from '@/api/account'
 import { orderApi } from '@/api/order'
@@ -7,6 +7,79 @@ import useCurrencyStore from '@/store/useCurrencyStore'
 
 const SEED_MONEY = 100_000_000
 const FALLBACK_USD_RATE = 1350
+const ASSET_PAGE_SNAPSHOT_KEY = 'asset.page.snapshot.v1'
+
+function formatDateKey(date) {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function fillAssetFlowPoints(points, range, startDate) {
+  if (!Array.isArray(points) || points.length === 0 || !startDate) {
+    return points
+  }
+
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const accountStart = new Date(startDate)
+  accountStart.setHours(0, 0, 0, 0)
+
+  let effectiveStart = accountStart
+  if (range === '1W' || range === '1M') {
+    const days = range === '1W' ? 7 : 30
+    const windowStart = new Date(today)
+    windowStart.setDate(windowStart.getDate() - (days - 1))
+    effectiveStart = accountStart > windowStart ? accountStart : windowStart
+  }
+  const byDate = new Map(points.map((point) => [point.date, point]))
+  const firstPointDate = points[0]?.date ?? null
+
+  let carry = null
+  const filled = []
+
+  for (let cursor = new Date(effectiveStart); cursor <= today; cursor.setDate(cursor.getDate() + 1)) {
+    const key = formatDateKey(cursor)
+    const existing = byDate.get(key)
+    if (existing) {
+      carry = existing
+      filled.push(existing)
+      continue
+    }
+    if (firstPointDate && key < firstPointDate) {
+      filled.push({
+        date: key,
+        totalAssets: SEED_MONEY,
+        dailyReturnRate: 0,
+        cumulativeReturnRate: 0,
+      })
+      continue
+    }
+    if (carry) {
+      filled.push({
+        ...carry,
+        date: key,
+        dailyReturnRate: 0,
+      })
+    }
+  }
+
+  return filled.length > 0 ? filled : points
+}
+
+function readAssetPageSnapshot(range) {
+  try {
+    const raw = localStorage.getItem(ASSET_PAGE_SNAPSHOT_KEY)
+    if (!raw) return null
+    const parsed = JSON.parse(raw)
+    if (parsed?.range !== range) return null
+    return parsed?.data ?? null
+  } catch {
+    return null
+  }
+}
 
 function buildHoldingRow(h) {
   const qty = h.holdingQuantity ?? 0
@@ -33,8 +106,13 @@ function buildHoldingRow(h) {
   }
 }
 
-export function useAssetPage(enabled, assetFlowRange = '1M') {
+export function useAssetPage(enabled, assetFlowRange = '1W') {
   const usdRate = useCurrencyStore((s) => s.rates['USD']?.rate ?? FALLBACK_USD_RATE)
+  const [cachedSnapshot, setCachedSnapshot] = useState(() => readAssetPageSnapshot(assetFlowRange))
+
+  useEffect(() => {
+    setCachedSnapshot(readAssetPageSnapshot(assetFlowRange))
+  }, [assetFlowRange])
 
   const { data: summary, isLoading: sl } = useQuery({
     queryKey: ['balance', 'summary'],
@@ -58,6 +136,7 @@ export function useAssetPage(enabled, assetFlowRange = '1M') {
     queryFn: () => balanceApi.getAssetFlow(assetFlowRange),
     enabled,
     staleTime: 30_000,
+    placeholderData: keepPreviousData,
   })
 
   const { data: accountInfo } = useMyAccount()
@@ -69,8 +148,9 @@ export function useAssetPage(enabled, assetFlowRange = '1M') {
     staleTime: 60_000,
   })
 
-  return useMemo(() => {
-    const isLoading = enabled && (sl || dl || ol || pl || fl)
+  const derived = useMemo(() => {
+    const isLoading = enabled && (sl || dl || ol || pl)
+    const flowLoading = enabled && fl
 
     // Cash
     const cashList = summary?.cashBalances ?? []
@@ -120,12 +200,13 @@ export function useAssetPage(enabled, assetFlowRange = '1M') {
       : totalAssets > 0 ? ((totalAssets - SEED_MONEY) / SEED_MONEY) * 100 : 0
     const isSimProfit = simReturn >= 0
 
-    const assetFlowPoints = (assetFlow?.points ?? []).map((point) => ({
+    const rawAssetFlowPoints = (assetFlow?.points ?? []).map((point) => ({
       date: point.date,
       totalAssets: Number(point.totalAssets ?? 0),
       dailyReturnRate: Number(point.dailyReturnRate ?? 0),
       cumulativeReturnRate: Number(point.cumulativeReturnRate ?? 0),
     }))
+    const assetFlowPoints = fillAssetFlowPoints(rawAssetFlowPoints, assetFlowRange, startDate)
     const latestFlowPoint = assetFlowPoints[assetFlowPoints.length - 1] ?? null
     const latestDailyReturnRate = latestFlowPoint?.dailyReturnRate ?? 0
     const latestCumulativeReturnRate = latestFlowPoint?.cumulativeReturnRate ?? 0
@@ -163,6 +244,7 @@ export function useAssetPage(enabled, assetFlowRange = '1M') {
 
     return {
       isLoading,
+      flowLoading,
       // Summary
       totalAssets,
       accountProfit,
@@ -192,5 +274,38 @@ export function useAssetPage(enabled, assetFlowRange = '1M') {
       latestCumulativeReturnRate,
       tradeCount: filledOrders.length,
     }
-  }, [summary, domestic, overseas, portfolio, assetFlow, accountInfo, filledOrders, usdRate, sl, dl, ol, pl, fl, enabled])
+  }, [summary, domestic, overseas, portfolio, assetFlow, accountInfo, filledOrders, usdRate, sl, dl, ol, pl, fl, enabled, assetFlowRange])
+
+  useEffect(() => {
+    if (!enabled || derived.isLoading) {
+      return
+    }
+    try {
+      localStorage.setItem(
+        ASSET_PAGE_SNAPSHOT_KEY,
+        JSON.stringify({
+          range: assetFlowRange,
+          data: derived,
+          savedAt: Date.now(),
+        }),
+      )
+      setCachedSnapshot(derived)
+    } catch {
+      // ignore storage failures
+    }
+  }, [enabled, assetFlowRange, derived])
+
+  return useMemo(() => {
+    if (enabled && cachedSnapshot && derived.isLoading) {
+      return {
+        ...cachedSnapshot,
+        flowLoading: derived.flowLoading,
+        isRefreshing: true,
+      }
+    }
+    return {
+      ...derived,
+      isRefreshing: false,
+    }
+  }, [cachedSnapshot, derived, enabled])
 }
