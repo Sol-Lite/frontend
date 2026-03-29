@@ -2,13 +2,14 @@ import { useQuery } from '@tanstack/react-query'
 import { marketApi } from '@/api/market'
 
 function toTime(item, isIntraday) {
-  return Math.floor(new Date(isIntraday ? item.datetime : item.date).getTime() / 1000)
+  if (!isIntraday) return String(item.date).slice(0, 10)
+  return Math.floor(new Date(item.datetime).getTime() / 1000)
 }
 
 function toLineData(items, isIntraday) {
   return items
     .map((d) => ({ time: toTime(d, isIntraday), value: Number(d.close) }))
-    .sort((a, b) => a.time - b.time)
+    .sort((a, b) => (a.time > b.time ? 1 : a.time < b.time ? -1 : 0))
 }
 
 function toCandleData(items, isIntraday) {
@@ -20,7 +21,7 @@ function toCandleData(items, isIntraday) {
       low:   Number(d.low),
       close: Number(d.close),
     }))
-    .sort((a, b) => a.time - b.time)
+    .sort((a, b) => (a.time > b.time ? 1 : a.time < b.time ? -1 : 0))
 }
 
 // '1D': 분봉(오늘 장중) / 나머지: 일봉
