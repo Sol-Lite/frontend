@@ -1,5 +1,7 @@
+import { useEffect } from 'react'
 import { cn } from '@/lib/cn'
 import { LEFT_TABS, RIGHT_TABS } from '@/features/invest/constants'
+import { isForeignMarketType } from '@/features/invest/formatters'
 import DailyPriceTable from '@/components/invest/panels/DailyPriceTable'
 import RealtimeTradeTable from '@/components/invest/panels/RealtimeTradeTable'
 import OpinionTable from '@/components/invest/panels/OpinionTable'
@@ -49,10 +51,22 @@ export default function InvestBottomPanels({
   displayCurrency,
   usdRate,
 }) {
+  const isForeign = isForeignMarketType(marketType)
+  const DOMESTIC_ONLY_TABS = ['investor', 'opinion', 'finance']
+  const visibleLeftTabs = isForeign
+    ? LEFT_TABS.filter((t) => !DOMESTIC_ONLY_TABS.includes(t.key))
+    : LEFT_TABS
+
+  useEffect(() => {
+    if (isForeign && DOMESTIC_ONLY_TABS.includes(leftTab)) {
+      onLeftTabChange('daily')
+    }
+  }, [isForeign, leftTab, onLeftTabChange])
+
   return (
     <div className="flex h-[210px] shrink-0 overflow-hidden border-t-2 border-stroke bg-surface">
       <section className="flex min-w-0 flex-1 flex-col overflow-hidden border-r border-stroke">
-        <SectionTabs items={LEFT_TABS} activeKey={leftTab} onChange={onLeftTabChange} />
+        <SectionTabs items={visibleLeftTabs} activeKey={leftTab} onChange={onLeftTabChange} />
         {leftTab === 'daily' && <DailyPriceTable rows={dailyRows} isLoading={dailyLoading} errorMessage={errorMessage} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}
         {leftTab === 'realtime' && <RealtimeTradeTable rows={realtimeRows} isLoading={realtimeLoading} errorMessage={errorMessage} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}
         {leftTab === 'opinion' && <OpinionTable data={opinion} isLoading={detailLoading} marketType={marketType} displayCurrency={displayCurrency} usdRate={usdRate} />}

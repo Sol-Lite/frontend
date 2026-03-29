@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 
 const CURSOR_OPACITY = 0.86
 const CURSOR_SCALE = 1
@@ -235,7 +236,7 @@ export default function DecoyCursorOverlay({ active, containerRef, count = 5 }) 
 
   if (!active || !isPointerDevice || !overlayState) return null
 
-  return (
+  return createPortal(
     <div className="pointer-events-none fixed inset-0 z-[70] hidden md:block">
       <div
         className="absolute left-0 top-0 -translate-x-[6px] -translate-y-[2px] transition-transform duration-75 ease-out"
@@ -261,6 +262,7 @@ export default function DecoyCursorOverlay({ active, containerRef, count = 5 }) 
           </div>
         )
       })}
-    </div>
+    </div>,
+    document.body,
   )
 }
