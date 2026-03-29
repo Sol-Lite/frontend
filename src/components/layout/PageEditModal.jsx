@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { X, Trash2, Plus } from 'lucide-react'
 import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
@@ -146,12 +146,15 @@ export default function PageEditModal({ onClose }) {
   const [pendingAction, setPendingAction]     = useState(null)
 
   /* staged 변경사항 여부: 원본 대비 페이지 추가/삭제가 있으면 true */
-  const originalIds = new Set(pages.map((p) => p.id))
-  const stagedIds   = new Set(stagedPages.map((p) => p.id))
-  const hasStagedChanges =
-    stagedIds.size !== originalIds.size ||
-    [...stagedIds].some((id) => !originalIds.has(id)) ||
-    [...originalIds].some((id) => !stagedIds.has(id))
+  const hasStagedChanges = useMemo(() => {
+    const originalIds = new Set(pages.map((p) => p.id))
+    const stagedIds   = new Set(stagedPages.map((p) => p.id))
+    return (
+      stagedIds.size !== originalIds.size ||
+      [...stagedIds].some((id) => !originalIds.has(id)) ||
+      [...originalIds].some((id) => !stagedIds.has(id))
+    )
+  }, [pages, stagedPages])
 
   function handleAddPage() {
     const newId = crypto.randomUUID()
@@ -164,16 +167,14 @@ export default function PageEditModal({ onClose }) {
 
   function handleDeletePage(pageId) {
     if (stagedPages.length <= 1) return
-    setStagedPages((prev) => {
-      const next = prev.filter((p) => p.id !== pageId)
-      // 현재 페이지를 삭제한 경우 stagedCurrentId를 인접 페이지로 갱신
-      if (pageId === stagedCurrentId) {
-        const deletedIndex = prev.findIndex((p) => p.id === pageId)
-        const fallback = next[deletedIndex] ?? next[deletedIndex - 1]
-        setStagedCurrentId(fallback.id)
-      }
-      return next
-    })
+    const next = stagedPages.filter((p) => p.id !== pageId)
+    // 현재 페이지를 삭제한 경우 stagedCurrentId를 인접 페이지로 갱신
+    if (pageId === stagedCurrentId) {
+      const deletedIndex = stagedPages.findIndex((p) => p.id === pageId)
+      const fallback = next[deletedIndex] ?? next[deletedIndex - 1]
+      setStagedCurrentId(fallback.id)
+    }
+    setStagedPages(next)
   }
 
   function handleSave() {
