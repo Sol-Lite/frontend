@@ -34,7 +34,7 @@ function PageThumbnail({ widgets }) {
           className="bg-surface rounded-[3px] overflow-hidden min-w-0 min-h-0 relative"
           style={{
             gridColumn: `${w.gridCol} / span ${w.colSpan}`,
-            gridRow: `${w.gridRow} / span ${w.rowSpan}`,
+            gridRow:    `${w.gridRow} / span ${w.rowSpan}`,
           }}
         >
           {/* 실제 위젯 미리보기: 600% 크기로 렌더링 후 1/6 스케일 축소 */}
@@ -116,7 +116,6 @@ function AddPageSlot({ onClick }) {
 export default function PageEditModal({ onClose }) {
   const { pages, currentPageId, applyPageChanges } = useWidgetStore()
 
-  // 취소 지원을 위한 로컬 staged 상태
   const [stagedPages, setStagedPages] = useState(() => pages.map((p) => ({ ...p })))
   const [stagedCurrentId] = useState(currentPageId)
 
@@ -135,7 +134,6 @@ export default function PageEditModal({ onClose }) {
   }
 
   function handleSave() {
-    // 삭제된 페이지가 현재 페이지일 경우 첫 번째 페이지로 fallback
     const targetId = stagedPages.find((p) => p.id === stagedCurrentId)
       ? stagedCurrentId
       : stagedPages[0].id

@@ -8,7 +8,7 @@ const DEBUG_MARKET_INDICES = import.meta.env.DEV
 // 백엔드 code → WebSocket topic 매핑
 const INDEX_TOPICS = {
   '001':      '/topic/index/domestic/001',
-  '101':      '/topic/index/domestic/101',
+  '301':      '/topic/index/domestic/301',
   'SPI@SPX':  '/topic/index/foreign/SPI@SPX',
   'NAS@IXIC': '/topic/index/foreign/NAS@IXIC',
   USD:        '/topic/currency/USD',

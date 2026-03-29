@@ -6,6 +6,10 @@
  * @param {string}  className
  */
 export default function PriceChange({ value, variant = 'text', paren = false, className = '' }) {
+  if (value == null) {
+    return <span className={`font-bold text-foreground-disabled ${className}`}>-</span>
+  }
+
   const isUp = value > 0
   const isZero = value === 0
   const sign = isUp ? '+' : isZero ? '' : '-'

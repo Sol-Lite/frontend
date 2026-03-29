@@ -117,12 +117,12 @@ function formatLocalDateTime(timestamp) {
   return `${yyyy}-${mm}-${dd}T${hh}:${mi}:${ss}`
 }
 
-export default function useDomesticMarketData(stockCode, { enabled, activeDetailTab = 'daily' }) {
+export default function useDomesticMarketData(stockCode, { enabled, activeDetailTab = 'daily', initialPeriod, initialMinuteInterval }) {
   const [selectedChartPeriod, setSelectedChartPeriod] = useState(
-    () => localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
+    () => initialPeriod ?? localStorage.getItem('invest.chartPeriod') ?? 'MINUTE',
   )
   const [selectedMinuteInterval, setSelectedMinuteInterval] = useState(
-    () => Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL,
+    () => initialMinuteInterval ?? (Number(localStorage.getItem('invest.minuteInterval')) || DEFAULT_MINUTE_INTERVAL),
   )
   const [liveCandle, setLiveCandle] = useState(null)
   const [liveTrades, setLiveTrades] = useState([])

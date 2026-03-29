@@ -3,7 +3,7 @@ import { X } from 'lucide-react'
 
 const ALL_INDICES = [
   { code: '001',      label: 'KOSPI' },
-  { code: '101',      label: 'KOSDAQ' },
+  { code: '301',      label: 'KOSDAQ' },
   { code: 'NAS@IXIC', label: 'NASDAQ' },
   { code: 'SPI@SPX',  label: 'S&P 500' },
 ]

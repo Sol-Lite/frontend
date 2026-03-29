@@ -2,7 +2,7 @@ import useEditModeStore from '@/store/useEditModeStore'
 import EditHandle from './EditHandle'
 import { cn } from '@/lib/cn'
 
-export default function WidgetCard({ children, className = '', onDelete }) {
+export default function WidgetCard({ children, className = '', onDelete, onClick }) {
   const { isEditMode, wiggleDelay, wiggleSyncKey } = useEditModeStore()
 
   return (
@@ -18,11 +18,12 @@ export default function WidgetCard({ children, className = '', onDelete }) {
             : 'cursor-pointer',
         )}
         style={isEditMode ? { animationDelay: `${wiggleDelay}ms` } : undefined}
+        onClick={!isEditMode ? onClick : undefined}
       >
         {isEditMode && <EditHandle onDelete={onDelete} />}
         <div
           className={cn(
-            'h-full bg-surface border rounded-2xl p-[14px_16px]',
+            'h-full bg-surface border rounded-2xl p-[14px_16px] overflow-hidden',
             'flex flex-col',
             isEditMode
               ? 'border-stroke-input shadow-widget-edit'

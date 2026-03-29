@@ -9,6 +9,7 @@ import StockSelectModal from './StockSelectModal'
 import { HOME_STOCKS } from '@/mocks/home'
 import { marketApi, foreignMarketApi } from '@/api/market'
 import useWidgetStore from '@/store/useWidgetStore'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import useStompSubscription from '@/hooks/useStompSubscription'
 import { normalizeDailySeries, normalizeMinuteSeries } from '@/features/invest/domestic/normalize'
@@ -74,6 +75,20 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   const [liveCandle, setLiveCandle] = useState(null)
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
   const { mutate: saveDashboard } = useDashboardSave()
+  const openDetail = useWidgetDetailStore((s) => s.open)
+
+  const handleCardClick = () => {
+    openDetail({
+      widgetTypeId: 'stock-chart',
+      config: {
+        stockCode,
+        stockName:    stockName ?? stockMeta.name,
+        marketType:   config.marketType ?? stockMeta.market ?? null,
+        exchangeCode: config.exchangeCode ?? null,
+        widgetPeriod: activePeriod,
+      },
+    })
+  }
 
   const stockId    = config.stockId ?? 'samsung'
   const stockCode  = config.stockCode ?? STOCK_CODE_MAP[stockId]
@@ -331,7 +346,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   if (variant === 'stock-wide') {
     return (
       <>
-        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
           <div className="flex h-full gap-2.5 min-h-0">
             <div className="flex flex-col shrink-0 justify-between">
               <div>
@@ -368,7 +383,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   if (variant === 'stock-3x2') {
     return (
       <>
-        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
           <div className="flex items-start justify-between mb-1.5 shrink-0">
             <div className="flex items-center gap-2">
               <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
@@ -397,7 +412,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               { label: '거래량', val: stock.volume },
             ].map(({ label, val }) => (
               <div key={label} className="text-center">
-                <div className="text-[8px] text-foreground-disabled">{label}</div>
+                <div className="text-widget-8 text-foreground-disabled">{label}</div>
                 <div className="text-widget-10 font-semibold text-foreground">{val}</div>
               </div>
             ))}
@@ -411,7 +426,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   if (variant === 'stock-2x2') {
     return (
       <>
-        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
+        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
           <div className="flex items-start justify-between mb-1.5 shrink-0">
             <div className="flex items-center gap-2">
               <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
@@ -453,15 +468,15 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   /* stock-sm (default) */
   return (
     <>
-      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-        <div className="flex items-center gap-1.5 shrink-0 min-w-0">
-          <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
-          <div className="min-w-0">
-            <div className="flex items-center gap-1">
-              <div className="text-widget-12 font-bold text-foreground leading-none truncate">{stock.name}</div>
-              {settingsBtn}
-            </div>
-            <div className="text-widget-9 text-foreground-disabled mt-0.5">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
+      <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
+        <div className="flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-1.5">
+            <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
+            <span className="text-widget-12 font-bold text-foreground leading-none">{stock.name}</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span className="text-widget-9 text-foreground-disabled">{stock.code}</span>
+            {settingsBtn}
           </div>
         </div>
         <div className="flex-1 flex flex-col justify-end min-h-0">

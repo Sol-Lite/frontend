@@ -45,6 +45,8 @@ async function get(path, params, options = {}) {
 
 export const marketApi = {
   getIndices: () => get('/indices'),
+  getIndexChart: (code, params) => get(`/indices/${encodeURIComponent(code)}/chart`, params),
+  getIndexMinuteChart: (code, params) => get(`/indices/${encodeURIComponent(code)}/minute-chart`, params),
   getRanking: (params) => get('/stocks/ranking', params),
   getCurrentPrice: (stockCode) => get(`/stocks/${stockCode}/price`),
   getDailyPrice: (stockCode, params) => get(`/stocks/${stockCode}/daily`, params),
@@ -58,6 +60,7 @@ export const marketApi = {
   getFinance: (stockCode) => get(`/stocks/${stockCode}/finance`),
   getStockInfo: (stockCode) => get(`/stocks/${stockCode}/info`),
   searchStocks: (keyword) => get('/stocks/search', { keyword }),
+  getForexChart: (params) => get('/forex/chart', params),
 }
 
 export const foreignMarketApi = {

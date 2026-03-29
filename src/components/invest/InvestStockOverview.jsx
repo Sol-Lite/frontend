@@ -40,6 +40,8 @@ export default function InvestStockOverview({
   displayCurrency,
   usdRate,
   onDisplayCurrencyChange,
+  hideSearch = false,
+  className = '',
 }) {
   const marketType = stockMeta.marketType ?? stockMeta.market
   const isForeignMarket = isForeignMarketType(marketType)
@@ -49,8 +51,8 @@ export default function InvestStockOverview({
   const changeTone = getDirectionClass(changeAmount)
 
   return (
-    <section className="flex min-w-0 basis-0 flex-1 flex-col overflow-hidden border-r border-stroke bg-surface">
-      <div className="border-b border-stroke px-[14px] py-2.5 shrink-0">
+    <section className={cn('flex min-w-0 basis-0 flex-1 flex-col overflow-hidden border-r border-stroke bg-surface', className)}>
+      {!hideSearch && <div className="border-b border-stroke px-[14px] py-2.5 shrink-0">
         <div className="flex items-center gap-2">
           <div className="min-w-0 flex-1">
             <InvestStockSearch stockMeta={stockMeta} />
@@ -82,7 +84,7 @@ export default function InvestStockOverview({
         {errorMessage && (
           <div className="mt-1.5 text-[10px] text-danger">{errorMessage}</div>
         )}
-      </div>
+      </div>}
 
       <div className="border-b border-stroke px-[14px] py-2.5 shrink-0">
         <div className="flex items-center gap-2">

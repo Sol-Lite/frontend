@@ -3,6 +3,25 @@ import useAuthStore from '@/store/useAuthStore'
 let isRefreshing = false
 let refreshSubscribers = []
 
+// 탭 간 refresh/logout 동기화
+const authChannel = typeof BroadcastChannel !== 'undefined'
+  ? new BroadcastChannel('sol_auth')
+  : null
+
+authChannel?.addEventListener('message', ({ data }) => {
+  if (data.type === 'TOKEN_REFRESHED') {
+    const { accessToken } = data
+    const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
+    storage.setItem('accessToken', accessToken)
+    useAuthStore.setState({ accessToken })
+  } else if (data.type === 'LOGOUT') {
+    if (useAuthStore.getState().isAuthenticated) {
+      useAuthStore.getState().logout({ broadcast: false })
+      useAuthStore.getState().openLoginModal()
+    }
+  }
+})
+
 function onRefreshed(newToken) {
   refreshSubscribers.forEach((cb) => cb(newToken))
   refreshSubscribers = []
@@ -83,12 +102,23 @@ export async function fetchWithAuth(url, options = {}) {
         const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
         storage.setItem('accessToken', newToken)
         useAuthStore.setState({ accessToken: newToken })
+        // 다른 탭에 새 토큰 브로드캐스트
+        authChannel?.postMessage({ type: 'TOKEN_REFRESHED', accessToken: newToken })
         onRefreshed(newToken)
       })
       .catch((err) => {
-        onRefreshFailed(err)
-        useAuthStore.getState().logout()
-        useAuthStore.getState().openLoginModal()
+        // 다른 탭이 이미 rotation 완료했는지 확인 (멀티탭 race condition)
+        const latestToken =
+          localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken')
+        const currentToken = useAuthStore.getState().accessToken
+        if (latestToken && latestToken !== currentToken) {
+          useAuthStore.setState({ accessToken: latestToken })
+          onRefreshed(latestToken)
+        } else {
+          onRefreshFailed(err)
+          useAuthStore.getState().logout({ broadcast: true })
+          useAuthStore.getState().openLoginModal()
+        }
       })
       .finally(() => {
         isRefreshing = false

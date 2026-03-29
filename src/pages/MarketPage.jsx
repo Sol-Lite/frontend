@@ -99,8 +99,12 @@ function StockTableHeader({ sortFilter }) {
 }
 
 export default function MarketPage() {
+  return <MarketContent />
+}
+
+export function MarketContent({ initialSortFilter }) {
   const [marketFilter, setMarketFilter] = useState('kr')
-  const [sortFilter, setSortFilter]     = useState('volume_value')
+  const [sortFilter, setSortFilter]     = useState(initialSortFilter ?? 'volume_value')
   const { watchedSet, toggle }          = useWatchlistSet()
 
   const { stocks, isLoading, errorMessage } = useMarketRanking(sortFilter, marketFilter)

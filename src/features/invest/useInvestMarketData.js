@@ -9,7 +9,7 @@ import {
 import useDomesticMarketData from '@/features/invest/domestic/useMarketData'
 import useForeignMarketData from '@/features/invest/foreign/useMarketData'
 
-export default function useInvestMarketData(stockCode, locationState, { activeLeftTab = 'daily' } = {}) {
+export default function useInvestMarketData(stockCode, locationState, { activeLeftTab = 'daily', initialPeriod, initialMinuteInterval } = {}) {
   const baseStockMeta = resolveStockMeta(stockCode, locationState)
   const { isDomestic } = baseStockMeta
   const exchcd = isDomestic ? null : getExchcd(baseStockMeta.exchangeCode)
@@ -27,17 +27,21 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
 
   const stockMeta = useMemo(() => {
     if (isDomestic) {
+      const resolvedMarket = infoQuery.data?.marketName ?? baseStockMeta.market
       return {
         ...baseStockMeta,
-        marketType: baseStockMeta.market,
-        market: infoQuery.data?.marketName ?? baseStockMeta.market,
+        marketType: resolvedMarket,
+        market: resolvedMarket,
         sector: infoQuery.data?.sector ?? baseStockMeta.sector,
       }
     }
 
+    // exchangeName은 표시용(예: '나스닥'), marketType은 API 파라미터용(NASDAQ/NYSE/AMEX)
+    const MARKET_TYPE_BY_EXCHCD = { '82': 'NASDAQ', '81': 'NYSE' }
+    const resolvedMarketType = baseStockMeta.market ?? MARKET_TYPE_BY_EXCHCD[exchcd] ?? 'NASDAQ'
     return {
       ...baseStockMeta,
-      marketType: baseStockMeta.market,
+      marketType: resolvedMarketType,
       name: infoQuery.data?.korname ?? baseStockMeta.name,
       nameEn: infoQuery.data?.engname ?? baseStockMeta.nameEn,
       market: infoQuery.data?.exchangeName ?? baseStockMeta.market,
@@ -45,8 +49,8 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
     }
   }, [baseStockMeta, infoQuery.data, isDomestic])
 
-  const domestic = useDomesticMarketData(stockCode, { enabled: isDomestic, activeDetailTab: activeLeftTab })
-  const foreign = useForeignMarketData(stockCode, exchcd, { enabled: !isDomestic, activeDetailTab: activeLeftTab })
+  const domestic = useDomesticMarketData(stockCode, { enabled: isDomestic, activeDetailTab: activeLeftTab, initialPeriod, initialMinuteInterval })
+  const foreign = useForeignMarketData(stockCode, exchcd, { enabled: !isDomestic, activeDetailTab: activeLeftTab, initialPeriod, initialMinuteInterval })
 
   const active = isDomestic ? domestic : foreign
   const { marketState, chartState, detailState, selectedChartPeriod, selectedMinuteInterval } = active
