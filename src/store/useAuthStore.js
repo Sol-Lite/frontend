@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { queryClient } from '@/lib/queryClient'
+import useUIStore from '@/store/useUIStore'
 
 function isTokenExpired(token) {
   try {
@@ -8,6 +9,19 @@ function isTokenExpired(token) {
   } catch {
     return true
   }
+}
+
+async function applyThemeFromServer(token) {
+  try {
+    const res = await fetch('/api/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
+    })
+    if (res.ok) {
+      const profile = await res.json()
+      if (profile?.theme) useUIStore.getState().setTheme(profile.theme.toLowerCase())
+    }
+  } catch {}
 }
 
 async function silentRefresh() {
@@ -52,6 +66,7 @@ const useAuthStore = create((set, get) => ({
 
     if (!isTokenExpired(accessToken)) {
       set({ isAuthenticated: true, user, accessToken, isRestoring: false })
+      applyThemeFromServer(accessToken)
       return
     }
 
@@ -62,6 +77,7 @@ const useAuthStore = create((set, get) => ({
       const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
       storage.setItem('accessToken', newToken)
       set({ isAuthenticated: true, user, accessToken: newToken, isRestoring: false })
+      applyThemeFromServer(newToken)
     } catch {
       get().logout()
       set({ isRestoring: false })
@@ -71,9 +87,11 @@ const useAuthStore = create((set, get) => ({
   logout: ({ broadcast = true } = {}) => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('user')
+    localStorage.removeItem('ui:theme')
     sessionStorage.removeItem('accessToken')
     sessionStorage.removeItem('user')
     queryClient.clear()
+    useUIStore.getState().setTheme('light')
     set({ isAuthenticated: false, user: null, accessToken: null })
     if (broadcast && typeof BroadcastChannel !== 'undefined') {
       const ch = new BroadcastChannel('sol_auth')

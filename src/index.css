@@ -285,6 +285,64 @@ select:-webkit-autofill:focus {
   }
 }
 
+/* ─────────────────────────────────────────────
+   Dark Mode Token Override
+   [data-theme="dark"] 로 color CSS variable 재정의
+───────────────────────────────────────────── */
+[data-theme="dark"] {
+  /* ── Foreground / Text ── */
+  --color-foreground:           #E8EAED;
+  --color-foreground-secondary: #BDC1CA;
+  --color-foreground-tertiary:  #8A8D93;
+  --color-foreground-disabled:  #55585E;
+
+  /* ── Background ── */
+  --color-background:     #0F1117;
+  --color-surface:        #181B24;
+  --color-surface-subtle: #1E2130;
+  --color-surface-muted:  #252836;
+
+  /* ── Border ── */
+  --color-stroke:              #2E3140;
+  --color-stroke-subtle:       #252836;
+  --color-stroke-input:        #3A3D4A;
+  --color-widget-border-hover: #3D5BD9;
+
+  /* ── Brand 파생 (라이트 계열 → 다크 계열로 반전) ── */
+  --color-primary-light:  #1A2147;
+  --color-primary-border: #2D3F8F;
+  --color-primary-dim:    #1E2E6E;
+
+  /* ── Stock Avatar 테마 ── */
+  --color-warning-bg:            #2A1F00;
+  --color-avatar-warning-bg:     #2A1F00;
+  --color-avatar-warning-border: #7C4A00;
+  --color-avatar-green-bg:       #052E1C;
+  --color-avatar-green-border:   #065F35;
+  --color-avatar-purple-bg:      #1E1440;
+  --color-avatar-purple-border:  #4C2E96;
+  --color-avatar-yellow-bg:      #2A2200;
+  --color-avatar-yellow-border:  #7A6200;
+  --color-avatar-teal-bg:        #052926;
+  --color-avatar-teal-border:    #0A5E56;
+  --color-avatar-orange-bg:      #2A1400;
+  --color-avatar-orange-border:  #7C3500;
+
+  /* ── Box Shadow ── */
+  --shadow-brand-glow:    0 0 14px rgba(0,70,255,.50);
+  --shadow-brand-glow-sm: 0 0 14px rgba(0,70,255,.45);
+  --shadow-control:       0 1px 3px rgba(0,0,0,.30);
+  --shadow-dropdown:      0 10px 30px rgba(0,0,0,.50);
+  --shadow-widget-hover:  0 4px 16px rgba(0,70,255,.15);
+  --shadow-widget-edit:   0 4px 14px rgba(0,0,0,.30);
+  --shadow-modal:         0 20px 50px rgba(0,0,0,.60);
+  --shadow-focus-ring:    0 0 0 3px rgba(0,70,255,.20);
+  --shadow-delete-btn:    0 2px 6px rgba(0,0,0,.50);
+
+  /* ── Summary Card ── */
+  --background-summary-card: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary-dim) 100%);
+}
+
 /* lightweight-charts TradingView attribution 숨김 */
 .tv-lightweight-charts a[href*="tradingview"] {
   display: none !important;

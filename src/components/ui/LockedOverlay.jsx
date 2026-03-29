@@ -6,7 +6,7 @@ export default function LockedOverlay({ message = '계좌 정보를 보려면' }
 
   return (
     <>
-      <div className="absolute inset-0 rounded-2xl bg-white/85 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
+      <div className="absolute inset-0 rounded-2xl bg-surface/90 backdrop-blur-sm flex flex-col items-center justify-center gap-2">
         <div className="w-9 h-9 rounded-xl bg-surface-muted flex items-center justify-center">
           <Lock className="w-[18px] h-[18px] text-foreground-disabled" />
         </div>

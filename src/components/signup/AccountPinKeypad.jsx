@@ -8,7 +8,7 @@ const Keyboard = KeyboardModule.default ?? KeyboardModule.KeyboardReact ?? Keybo
 
 const DUMMY_KEYS = ['{mark-a}', '{mark-b}']
 const ACTION_KEYS = ['{shuffle}', '{bksp}', '{done}', '{close}']
-const LOCK_ICON = '<span class="sol-pin-keyboard__lock"><img src="/shinhan-logo.png" alt="" class="sol-pin-keyboard__lock-icon" /></span>'
+const LOCK_ICON = '<span class="sol-pin-keyboard__lock"><img src="/shc_symbol_ci.png" alt="" class="sol-pin-keyboard__lock-icon" /></span>'
 
 const DISPLAY = {
   '{mark-a}': LOCK_ICON,
