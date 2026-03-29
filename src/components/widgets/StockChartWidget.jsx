@@ -469,14 +469,14 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   return (
     <>
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
-        <div className="flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-1.5">
-            <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
-            <span className="text-widget-12 font-bold text-foreground leading-none">{stock.name}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <span className="text-widget-9 text-foreground-disabled">{stock.code}</span>
-            {settingsBtn}
+        <div className="flex items-center gap-1.5 shrink-0 min-w-0">
+          <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-1">
+              <div className="text-widget-12 font-bold text-foreground leading-none truncate">{stock.name}</div>
+              {settingsBtn}
+            </div>
+            <div className="text-widget-9 text-foreground-disabled mt-0.5">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
           </div>
         </div>
         <div className="flex-1 flex flex-col justify-end min-h-0">
