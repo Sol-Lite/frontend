@@ -313,20 +313,33 @@ select:-webkit-autofill:focus {
   --color-primary-border: #2D3F8F;
   --color-primary-dim:    #1E2E6E;
 
+  /* ── Up / Down 배경 (라이트 파스텔 → 다크 계열로 반전) ── */
+  --color-up-bg:       #2D0E0F;
+  --color-up-border:   #7A2326;
+  --color-up-fill:     rgba(232,57,62,0.12);
+  --color-down-bg:     #07213D;
+  --color-down-border: #1A4A7A;
+  --color-down-fill:   rgba(0,117,232,0.12);
+
   /* ── Stock Avatar 테마 ── */
   --color-warning-bg:            #2A1F00;
   --color-avatar-warning-bg:     #2A1F00;
   --color-avatar-warning-border: #7C4A00;
   --color-avatar-green-bg:       #052E1C;
   --color-avatar-green-border:   #065F35;
+  --color-avatar-green-text:     #34D399;
   --color-avatar-purple-bg:      #1E1440;
   --color-avatar-purple-border:  #4C2E96;
+  --color-avatar-purple-text:    #A78BFA;
   --color-avatar-yellow-bg:      #2A2200;
   --color-avatar-yellow-border:  #7A6200;
+  --color-avatar-yellow-text:    #FCD34D;
   --color-avatar-teal-bg:        #052926;
   --color-avatar-teal-border:    #0A5E56;
+  --color-avatar-teal-text:      #2DD4BF;
   --color-avatar-orange-bg:      #2A1400;
   --color-avatar-orange-border:  #7C3500;
+  --color-avatar-orange-text:    #FB923C;
 
   /* ── Box Shadow ── */
   --shadow-brand-glow:    0 0 14px rgba(0,70,255,.50);
@@ -341,6 +354,13 @@ select:-webkit-autofill:focus {
 
   /* ── Summary Card ── */
   --background-summary-card: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary-dim) 100%);
+
+  /* ── Portfolio Chart Palette (다크 배경 대비 조정, chart-1은 브랜드 컬러 유지) ── */
+  --color-chart-2:     #2ECF9E;
+  --color-chart-3:     #FFB340;
+  --color-chart-4:     #F87171;
+  --color-chart-5:     #A78BFA;
+  --color-chart-other: #9CA3AF;
 }
 
 /* lightweight-charts TradingView attribution 숨김 */

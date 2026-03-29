@@ -14,6 +14,7 @@ function Logo() {
   return (
     <button
       onClick={() => navigate('/')}
+      aria-label="홈으로 이동"
       className="flex items-center gap-2 mr-2 shrink-0"
     >
       <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow">

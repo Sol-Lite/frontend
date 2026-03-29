@@ -96,8 +96,11 @@ function ThemeSettings() {
   ]
 
   function handleSetTheme(value) {
+    const prev = theme
     setTheme(value)
-    userApi.updateTheme(value.toUpperCase()).catch(() => {})
+    userApi.updateTheme(value.toUpperCase()).catch(() => {
+      setTheme(prev)
+    })
   }
 
   return (
