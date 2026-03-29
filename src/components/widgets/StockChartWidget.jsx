@@ -133,7 +133,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
         <button
           key={p}
           onClick={(e) => { e.stopPropagation(); handlePeriodChange(p) }}
-          className={`text-[9px] px-1.5 py-0.5 rounded font-medium transition-colors duration-[150ms] ${activePeriod === p ? 'bg-primary-light text-primary' : 'text-foreground-disabled hover:text-foreground'}`}
+          className={`text-widget-9 px-1.5 py-0.5 rounded font-medium transition-colors duration-[150ms] ${activePeriod === p ? 'bg-primary-light text-primary' : 'text-foreground-disabled hover:text-foreground'}`}
         >
           {p}
         </button>
@@ -354,21 +354,21 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
                   <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
                   <div>
                     <div className="flex items-center gap-1">
-                      <div className="text-[11px] font-bold text-foreground leading-none">{stock.name}</div>
+                      <div className="text-widget-11 font-bold text-foreground leading-none">{stock.name}</div>
                       {settingsBtn}
                     </div>
-                    <div className="text-[9px] text-foreground-disabled mt-0.5">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
+                    <div className="text-widget-9 text-foreground-disabled mt-0.5">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
                   </div>
                 </div>
                 {periodTabs}
               </div>
               <div>
-                <div className="text-[18px] font-bold leading-tight text-foreground">{stock.price}</div>
+                <div className="text-widget-18 font-bold leading-tight text-foreground">{stock.price}</div>
                 {hasPrice
-                  ? <div className={`text-[10px] ${isUp ? 'text-up' : 'text-down'}`}>
+                  ? <div className={`text-widget-10 ${isUp ? 'text-up' : 'text-down'}`}>
                       {isUp ? '▲' : '▼'} {stock.changeAmt}원 ({isUp ? '+' : ''}{stock.change}%)
                     </div>
-                  : <div className="text-[10px] text-foreground-disabled">-</div>
+                  : <div className="text-widget-10 text-foreground-disabled">-</div>
                 }
               </div>
             </div>
@@ -389,15 +389,15 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
               <div>
                 <div className="flex items-center gap-1">
-                  <div className="text-[13px] font-bold text-foreground">{stock.name}</div>
+                  <div className="text-widget-13 font-bold text-foreground">{stock.name}</div>
                   {settingsBtn}
                 </div>
-                <div className="text-[9px] text-foreground-disabled">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
+                <div className="text-widget-9 text-foreground-disabled">{stock.code}{stock.marketType ? ` · ${stock.marketType}` : ''}</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[20px] font-bold leading-tight text-foreground">{stock.price}</div>
-              <PriceChange value={stock.change} className="text-[10px]" />
+              <div className="text-widget-20 font-bold leading-tight text-foreground">{stock.price}</div>
+              <PriceChange value={stock.change} className="text-widget-10" />
             </div>
           </div>
           <div className="flex items-center shrink-0 mb-1.5">
@@ -412,8 +412,8 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               { label: '거래량', val: stock.volume },
             ].map(({ label, val }) => (
               <div key={label} className="text-center">
-                <div className="text-[8px] text-foreground-disabled">{label}</div>
-                <div className="text-[10px] font-semibold text-foreground">{val}</div>
+                <div className="text-widget-8 text-foreground-disabled">{label}</div>
+                <div className="text-widget-10 font-semibold text-foreground">{val}</div>
               </div>
             ))}
           </div>
@@ -432,15 +432,15 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
               <div>
                 <div className="flex items-center gap-1">
-                  <div className="text-[13px] font-bold text-foreground">{stock.name}</div>
+                  <div className="text-widget-13 font-bold text-foreground">{stock.name}</div>
                   {settingsBtn}
                 </div>
-                <div className="text-[9px] text-foreground-disabled">{stock.code}</div>
+                <div className="text-widget-9 text-foreground-disabled">{stock.code}</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[18px] font-bold leading-tight text-foreground">{stock.price}</div>
-              <PriceChange value={stock.change} className="text-[10px]" />
+              <div className="text-widget-18 font-bold leading-tight text-foreground">{stock.price}</div>
+              <PriceChange value={stock.change} className="text-widget-10" />
             </div>
           </div>
           <div className="flex shrink-0 mb-1">
@@ -454,8 +454,8 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
               { label: '저가', val: stock.low },
             ].map(({ label, val }) => (
               <div key={label} className="text-center">
-                <div className="text-[9px] text-foreground-disabled">{label}</div>
-                <div className="text-[11px] font-semibold text-foreground">{val}</div>
+                <div className="text-widget-9 text-foreground-disabled">{label}</div>
+                <div className="text-widget-11 font-semibold text-foreground">{val}</div>
               </div>
             ))}
           </div>
@@ -472,22 +472,22 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
         <div className="flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5">
             <StockAvatar name={stock.name} stockCode={stock.code} marketType={stock.marketType} color={stock.color} size="sm" />
-            <span className="text-[12px] font-bold text-foreground leading-none">{stock.name}</span>
+            <span className="text-widget-12 font-bold text-foreground leading-none">{stock.name}</span>
           </div>
           <div className="flex items-center gap-1">
-            <span className="text-[9px] text-foreground-disabled">{stock.code}</span>
+            <span className="text-widget-9 text-foreground-disabled">{stock.code}</span>
             {settingsBtn}
           </div>
         </div>
         <div className="flex-1 flex flex-col justify-end min-h-0">
-          <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground">
+          <div className="text-widget-18 font-bold leading-tight tracking-tight text-foreground">
             {stock.price}
           </div>
           {hasPrice
-            ? <div className={`text-[10px] mt-0.5 ${isUp ? 'text-up' : 'text-down'}`}>
+            ? <div className={`text-widget-10 mt-0.5 ${isUp ? 'text-up' : 'text-down'}`}>
                 {isUp ? '▲' : '▼'} {stock.changeAmt}원 ({isUp ? '+' : ''}{stock.change}%)
               </div>
-            : <div className="text-[10px] mt-0.5 text-foreground-disabled">-</div>
+            : <div className="text-widget-10 mt-0.5 text-foreground-disabled">-</div>
           }
         </div>
       </WidgetCard>

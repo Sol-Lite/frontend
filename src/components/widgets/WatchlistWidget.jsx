@@ -78,7 +78,7 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
   const addBtn = (
     <button
       onClick={(e) => { e.stopPropagation(); setIsAddOpen(true) }}
-      className="text-[10px] text-primary font-semibold hover:underline"
+      className="text-widget-10 text-primary font-semibold hover:underline"
     >
       + 추가
     </button>
@@ -89,26 +89,26 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
           <div className="flex items-center justify-between mb-2 shrink-0">
-            <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
             {addBtn}
           </div>
           <div className="flex-1 flex flex-col gap-1.5 min-h-0">
             {isError
-              ? <span className="text-[10px] text-foreground-disabled">불러오기에 실패했습니다</span>
+              ? <span className="text-widget-10 text-foreground-disabled">불러오기에 실패했습니다</span>
               : list.length > 0 ? list.map((item) => (
               <div
                 key={item.stockCode}
                 onClick={(e) => handleStockClick(e, item)}
                 className="flex items-center justify-between gap-2 group cursor-pointer pl-1.5 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
               >
-                <span className="text-[10px] font-medium text-foreground truncate">{item.stockName}</span>
+                <span className="text-widget-10 font-medium text-foreground truncate">{item.stockName}</span>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {fmtPrice(item.currentPrice, item.marketType) && (
-                    <span className="text-[10px] font-semibold text-foreground tabular-nums">
+                    <span className="text-widget-10 font-semibold text-foreground tabular-nums">
                       {fmtPrice(item.currentPrice, item.marketType)}
                     </span>
                   )}
-                  <PriceChange value={item.changeRate} className="text-[9px] font-medium" />
+                  <PriceChange value={item.changeRate} className="text-widget-9 font-medium" />
                   <button
                     onClick={(e) => handleRemove(e, item.stockCode)}
                     className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-foreground-disabled hover:text-down"
@@ -118,7 +118,7 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
                 </div>
               </div>
             )) : (
-              <div className="flex-1 flex items-center justify-center text-[9px] text-foreground-disabled">관심 종목 없음</div>
+              <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">관심 종목 없음</div>
             )}
           </div>
           {!isRestoring && !isAuthenticated && <LockedOverlay message="관심 종목을 보려면" />}
@@ -133,21 +133,21 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
     <>
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
         <div className="flex items-center justify-between mb-2 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
           {addBtn}
         </div>
         <div className="flex-1 flex flex-col gap-1.5 min-h-0">
           {isError
-            ? <span className="text-[10px] text-foreground-disabled">불러오기에 실패했습니다</span>
+            ? <span className="text-widget-10 text-foreground-disabled">불러오기에 실패했습니다</span>
             : list.length > 0 ? list.map((item) => (
             <div
               key={item.stockCode}
               onClick={(e) => handleStockClick(e, item)}
               className="flex items-center justify-between group cursor-pointer pl-1.5 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
             >
-              <span className="text-[10px] font-medium text-foreground truncate">{item.stockName}</span>
+              <span className="text-widget-10 font-medium text-foreground truncate">{item.stockName}</span>
               <div className="flex items-center gap-1 shrink-0">
-                <PriceChange value={item.changeRate} className="text-[9px] font-semibold" />
+                <PriceChange value={item.changeRate} className="text-widget-9 font-semibold" />
                 <button
                   onClick={(e) => handleRemove(e, item.stockCode)}
                   className="opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded text-foreground-disabled hover:text-down"
@@ -157,7 +157,7 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
               </div>
             </div>
           )) : (
-            <div className="flex-1 flex items-center justify-center text-[9px] text-foreground-disabled">관심 종목 없음</div>
+            <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">관심 종목 없음</div>
           )}
         </div>
         {!isRestoring && !isAuthenticated && <LockedOverlay message="관심 종목을 보려면" />}

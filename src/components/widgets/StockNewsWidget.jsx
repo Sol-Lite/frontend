@@ -10,7 +10,7 @@ function StockChip({ name, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-0.5 text-[9px] font-semibold text-primary shrink-0 hover:opacity-70"
+      className="flex items-center gap-0.5 text-widget-9 font-semibold text-primary shrink-0 hover:opacity-70"
     >
       {name ?? '종목 선택'}
       <ChevronDown size={10} />
@@ -25,13 +25,13 @@ function NewsCard({ item, onClickNews }) {
       onClick={(e) => { e.stopPropagation(); onClickNews(item.newsId) }}
     >
       <div className="flex-1 flex flex-col gap-0.5 min-w-0">
-        <p className="text-[11px] font-semibold text-foreground leading-snug line-clamp-2">
+        <p className="text-widget-11 font-semibold text-foreground leading-snug line-clamp-2">
           {item.title}
         </p>
         <div className="flex items-center gap-1.5 mt-0.5">
-          {item.source && <span className="text-[9px] text-foreground-disabled">{item.source}</span>}
-          {item.source && item.publishedAt && <span className="text-[9px] text-stroke">·</span>}
-          {item.publishedAt && <span className="text-[9px] text-foreground-disabled">{item.publishedAt}</span>}
+          {item.source && <span className="text-widget-9 text-foreground-disabled">{item.source}</span>}
+          {item.source && item.publishedAt && <span className="text-widget-9 text-stroke">·</span>}
+          {item.publishedAt && <span className="text-widget-9 text-foreground-disabled">{item.publishedAt}</span>}
         </div>
       </div>
       {item.thumbnailUrl && (
@@ -53,8 +53,8 @@ function NewsListCompact({ items, onClickNews }) {
       className="flex items-start gap-1.5 py-1 border-b border-stroke last:border-b-0 cursor-pointer pl-2 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
       onClick={(e) => { e.stopPropagation(); onClickNews(item.newsId) }}
     >
-      <span className="text-[9px] font-bold text-primary mt-[1px] shrink-0">{i + 1}</span>
-      <p className="text-[10px] text-foreground leading-snug line-clamp-2">{item.title}</p>
+      <span className="text-widget-9 font-bold text-primary mt-[1px] shrink-0">{i + 1}</span>
+      <p className="text-widget-10 text-foreground leading-snug line-clamp-2">{item.title}</p>
     </div>
   ))
 }
@@ -90,9 +90,9 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
       onClick={(e) => { e.stopPropagation(); setShowModal(true) }}
     />
   )
-  const empty   = <p className="text-[10px] text-foreground-disabled py-2">뉴스가 없습니다</p>
-  const loading = <p className="text-[10px] text-foreground-disabled py-2">로딩 중...</p>
-  const noStock = <p className="text-[10px] text-foreground-disabled py-2">종목을 선택하세요</p>
+  const empty   = <p className="text-widget-10 text-foreground-disabled py-2">뉴스가 없습니다</p>
+  const loading = <p className="text-widget-10 text-foreground-disabled py-2">로딩 중...</p>
+  const noStock = <p className="text-widget-10 text-foreground-disabled py-2">종목을 선택하세요</p>
 
   const modal = showModal && (
     <StockSelectModal
@@ -107,7 +107,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
         <div className="flex items-center justify-between mb-1 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
           {chip}
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -124,7 +124,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
         <div className="flex items-center justify-between mb-1 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
           {chip}
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -141,7 +141,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
       <div className="flex items-center justify-between mb-1 shrink-0">
-        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+        <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
         {chip}
       </div>
       <div className="flex-1 flex flex-col overflow-hidden">

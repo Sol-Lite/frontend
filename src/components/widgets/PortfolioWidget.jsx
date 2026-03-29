@@ -88,15 +88,15 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
       {variant === 'portfolio-wide' ? (
         <>
           <div className="flex items-center justify-between mb-1 shrink-0">
-            <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
-            <span className={`text-[10px] font-semibold ${returnRateColor}`}>{returnRateStr}</span>
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
+            <span className={`text-widget-10 font-semibold ${returnRateColor}`}>{returnRateStr}</span>
           </div>
           <div className="flex flex-col gap-2 flex-1 min-h-0">
             {portfolio.items.slice(0, 3).map((item) => (
               <div key={item.name}>
                 <div className="flex justify-between mb-0.5">
-                  <span className="text-[10px] text-foreground-secondary">{item.name}</span>
-                  <span className="text-[10px] font-semibold text-foreground">{item.ratio}%</span>
+                  <span className="text-widget-10 text-foreground-secondary">{item.name}</span>
+                  <span className="text-widget-10 font-semibold text-foreground">{item.ratio}%</span>
                 </div>
                 <div className="h-[3px] bg-surface-muted rounded-full overflow-hidden">
                   <div className="h-full rounded-full" style={{ width: `${item.ratio}%`, background: item.color }} />
@@ -108,7 +108,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
       ) : variant === 'portfolio-2x2' ? (
         <>
           <div className="flex items-center justify-between mb-1 shrink-0">
-            <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">섹터별 비중</span>
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">섹터별 비중</span>
           </div>
           <div className="flex flex-col flex-1 gap-3">
             <div className="flex items-center gap-3 shrink-0">
@@ -117,17 +117,17 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
                 style={{ background: `conic-gradient(${conicStops})` }}
               />
               <div>
-                <div className="text-[9px] text-foreground-disabled">총 수익률</div>
-                <div className={`text-[22px] font-bold leading-tight ${returnRateColor}`}>{returnRateStr}</div>
-                <div className="text-[9px] text-foreground-disabled mt-0.5">+4,280,000원</div>
+                <div className="text-widget-9 text-foreground-disabled">총 수익률</div>
+                <div className={`text-widget-22 font-bold leading-tight ${returnRateColor}`}>{returnRateStr}</div>
+                <div className="text-widget-9 text-foreground-disabled mt-0.5">+4,280,000원</div>
               </div>
             </div>
             <div className="flex flex-col gap-2.5 flex-1">
               {portfolio.items.map((item) => (
                 <div key={item.name}>
                   <div className="flex justify-between mb-0.5">
-                    <span className="text-[10px] text-foreground-tertiary">{item.name}</span>
-                    <span className="text-[10px] font-semibold text-foreground">{item.ratio}%</span>
+                    <span className="text-widget-10 text-foreground-tertiary">{item.name}</span>
+                    <span className="text-widget-10 font-semibold text-foreground">{item.ratio}%</span>
                   </div>
                   <div className="h-[4px] bg-surface-muted rounded-full overflow-hidden">
                     <div className="h-full rounded-full" style={{ width: `${item.ratio}%`, background: item.color }} />
@@ -141,8 +141,8 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
         /* portfolio-sm (default) */
         <>
           <div className="flex items-center justify-between mb-1 shrink-0">
-            <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
-            <span className={`text-[10px] font-semibold ${returnRateColor}`}>{returnRateStr}</span>
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
+            <span className={`text-widget-10 font-semibold ${returnRateColor}`}>{returnRateStr}</span>
           </div>
           <div className="flex items-center gap-2.5 flex-1 min-h-0">
             <div
@@ -153,7 +153,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
               {portfolio.items.map((item) => (
                 <div key={item.name} className="flex items-center gap-1">
                   <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: item.color }} />
-                  <span className="text-[10px] text-foreground-secondary">{item.name}</span>
+                  <span className="text-widget-10 text-foreground-secondary">{item.name}</span>
                 </div>
               ))}
             </div>

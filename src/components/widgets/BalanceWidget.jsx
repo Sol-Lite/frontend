@@ -61,19 +61,19 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={() => open({ widgetTypeId: 'balance', config: {} })}>
       <div className="mb-2 shrink-0">
-        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">계좌 잔고</span>
+        <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">계좌 잔고</span>
       </div>
 
       {variant === 'balance-lg' ? (
         <div className="flex flex-col flex-1 gap-1.5 min-h-0">
           <div className="shrink-0">
-            <div className="text-[8px] text-foreground-disabled">총 평가자산</div>
-            <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
+            <div className="text-widget-8 text-foreground-disabled">총 평가자산</div>
+            <div className="text-widget-18 font-bold leading-tight tracking-tight text-foreground mt-0.5">
               {BALANCE.total}
             </div>
             {BALANCE.isLoading
-              ? <div className="text-[9px] text-foreground-disabled mt-0.5">-</div>
-              : <div className={`text-[9px] font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+              ? <div className="text-widget-9 text-foreground-disabled mt-0.5">-</div>
+              : <div className={`text-widget-9 font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
             }
           </div>
           <div className="h-px bg-stroke-subtle shrink-0" />
@@ -84,8 +84,8 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
               { label: '주문가능', val: BALANCE.available, color: 'text-foreground' },
             ].map(({ label, val, color }) => (
               <div key={label} className="flex-1 min-w-0">
-                <div className="text-[10px] text-foreground-disabled">{label}</div>
-                <div className={`text-[13px] font-semibold truncate ${color}`}>{val}</div>
+                <div className="text-widget-10 text-foreground-disabled">{label}</div>
+                <div className={`text-widget-13 font-semibold truncate ${color}`}>{val}</div>
               </div>
             ))}
           </div>
@@ -94,28 +94,28 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
         <div className="flex flex-1 gap-4 min-h-0">
           <div className="flex flex-col flex-1 min-w-0">
             <div className="flex-1 flex flex-col justify-center">
-              <div className="text-[9px] text-foreground-disabled">총 평가자산</div>
-              <div className="text-[22px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
+              <div className="text-widget-9 text-foreground-disabled">총 평가자산</div>
+              <div className="text-widget-22 font-bold leading-tight tracking-tight text-foreground mt-0.5">
                 {BALANCE.total}
               </div>
               {BALANCE.isLoading
-                ? <div className="text-[10px] text-foreground-disabled mt-0.5">-</div>
-                : <div className={`text-[10px] font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+                ? <div className="text-widget-10 text-foreground-disabled mt-0.5">-</div>
+                : <div className={`text-widget-10 font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
               }
             </div>
             <div className="flex gap-6 shrink-0">
               <div>
-                <div className="text-[9px] text-foreground-disabled">투자원금</div>
-                <div className="text-[11px] font-semibold text-foreground">{BALANCE.invested}</div>
+                <div className="text-widget-9 text-foreground-disabled">투자원금</div>
+                <div className="text-widget-11 font-semibold text-foreground">{BALANCE.invested}</div>
               </div>
               <div>
-                <div className="text-[9px] text-foreground-disabled">주문가능</div>
-                <div className="text-[11px] font-semibold text-foreground">{BALANCE.available}</div>
+                <div className="text-widget-9 text-foreground-disabled">주문가능</div>
+                <div className="text-widget-11 font-semibold text-foreground">{BALANCE.available}</div>
               </div>
             </div>
           </div>
           <div className="flex flex-col flex-1 min-w-0 pl-4 border-l border-stroke">
-            <div className="text-[9px] text-foreground-disabled shrink-0">수익 추이 (7일)</div>
+            <div className="text-widget-9 text-foreground-disabled shrink-0">수익 추이 (7일)</div>
             <div className="flex-1 min-h-0 relative my-2">
               {BALANCE.flowPoints.length > 1 ? (() => {
                 const pts = BALANCE.flowPoints
@@ -154,11 +154,11 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
                   </svg>
                 )
               })() : (
-                <div className="absolute inset-0 flex items-center justify-center text-[8px] text-foreground-disabled">데이터 없음</div>
+                <div className="absolute inset-0 flex items-center justify-center text-widget-8 text-foreground-disabled">데이터 없음</div>
               )}
             </div>
             {BALANCE.flowPoints.length > 0 && (
-              <div className={cn('text-[9px] text-right shrink-0', BALANCE.flowPoints[BALANCE.flowPoints.length - 1] >= 0 ? 'text-up' : 'text-down')}>
+              <div className={cn('text-widget-9 text-right shrink-0', BALANCE.flowPoints[BALANCE.flowPoints.length - 1] >= 0 ? 'text-up' : 'text-down')}>
                 {`${BALANCE.flowPoints[BALANCE.flowPoints.length - 1] >= 0 ? '+' : ''}${BALANCE.flowPoints[BALANCE.flowPoints.length - 1].toFixed(2)}%`}
               </div>
             )}
@@ -167,13 +167,13 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
       ) : variant === 'balance-2x2' ? (
         <div className="flex flex-col flex-1 gap-2.5">
           <div>
-            <div className="text-[10px] text-foreground-disabled">총 평가자산</div>
-            <div className="text-[22px] font-bold leading-tight tracking-tight text-foreground mt-0.5">
-              {BALANCE.total}<span className="text-[12px] font-medium text-foreground-tertiary ml-0.5">원</span>
+            <div className="text-widget-10 text-foreground-disabled">총 평가자산</div>
+            <div className="text-widget-22 font-bold leading-tight tracking-tight text-foreground mt-0.5">
+              {BALANCE.total}<span className="text-widget-12 font-medium text-foreground-tertiary ml-0.5">원</span>
             </div>
             {BALANCE.isLoading
-              ? <div className="text-[12px] text-foreground-disabled mt-0.5">-</div>
-              : <div className={`text-[12px] font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+              ? <div className="text-widget-12 text-foreground-disabled mt-0.5">-</div>
+              : <div className={`text-widget-12 font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
             }
           </div>
           <div className="grid grid-cols-2 gap-2 shrink-0">
@@ -184,8 +184,8 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
               { label: '수익률',   val: BALANCE.profitRate,  color: BALANCE.isProfit ? 'text-up' : 'text-down' },
             ].map(({ label, val, color }) => (
               <div key={label} className="bg-background rounded-xl px-3 py-2">
-                <div className="text-[9px] text-foreground-disabled">{label}</div>
-                <div className={`text-[12px] font-bold ${color} mt-0.5`}>{val}</div>
+                <div className="text-widget-9 text-foreground-disabled">{label}</div>
+                <div className={`text-widget-12 font-bold ${color} mt-0.5`}>{val}</div>
               </div>
             ))}
           </div>
@@ -198,13 +198,13 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
       ) : (
         /* balance-sm (default) */
         <div className="flex-1 flex flex-col justify-end min-h-0">
-          <div className="text-[10px] text-foreground-disabled mb-0.5">총 평가자산</div>
-          <div className="text-[18px] font-bold leading-tight tracking-tight text-foreground">
+          <div className="text-widget-10 text-foreground-disabled mb-0.5">총 평가자산</div>
+          <div className="text-widget-18 font-bold leading-tight tracking-tight text-foreground">
             {BALANCE.total}
           </div>
           {BALANCE.isLoading
-            ? <div className="text-[11px] text-foreground-disabled mt-1">-</div>
-            : <div className={`text-[11px] font-semibold mt-1 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+            ? <div className="text-widget-11 text-foreground-disabled mt-1">-</div>
+            : <div className={`text-widget-11 font-semibold mt-1 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
           }
         </div>
       )}

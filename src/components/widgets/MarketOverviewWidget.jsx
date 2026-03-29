@@ -15,7 +15,7 @@ function NewsCard({ item, showSummary = false, onClickNews }) {
       className="group flex flex-col gap-0.5 py-2 border-b border-stroke last:border-b-0 cursor-pointer pl-2 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
       onClick={(e) => { e.stopPropagation(); onClickNews(item.newsId) }}
     >
-      <p className="text-[11px] font-semibold text-foreground leading-snug line-clamp-2">
+      <p className="text-widget-11 font-semibold text-foreground leading-snug line-clamp-2">
         {item.title}
       </p>
       {showSummary && item.oneLineSummary && (
@@ -25,12 +25,12 @@ function NewsCard({ item, showSummary = false, onClickNews }) {
       )}
       <div className="flex items-center gap-1.5 mt-0.5">
         {item.source && (
-          <span className="text-[9px] text-foreground-disabled">{item.source}</span>
+          <span className="text-widget-9 text-foreground-disabled">{item.source}</span>
         )}
         {item.publishedAt && (
           <>
-            {item.source && <span className="text-[9px] text-stroke">·</span>}
-            <span className="text-[9px] text-foreground-disabled">{item.publishedAt}</span>
+            {item.source && <span className="text-widget-9 text-stroke">·</span>}
+            <span className="text-widget-9 text-foreground-disabled">{item.publishedAt}</span>
           </>
         )}
       </div>
@@ -45,8 +45,8 @@ function NewsListCompact({ items, onClickNews }) {
       className="flex items-start gap-1.5 py-1 border-b border-stroke last:border-b-0 cursor-pointer pl-2 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
       onClick={(e) => { e.stopPropagation(); onClickNews(item.newsId) }}
     >
-      <span className="text-[9px] font-bold text-primary mt-[1px] shrink-0">{i + 1}</span>
-      <p className="text-[10px] text-foreground leading-snug line-clamp-2">{item.title}</p>
+      <span className="text-widget-9 font-bold text-primary mt-[1px] shrink-0">{i + 1}</span>
+      <p className="text-widget-10 text-foreground leading-snug line-clamp-2">{item.title}</p>
     </div>
   ))
 }
@@ -73,7 +73,7 @@ export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 
           type="button"
           onClick={(e) => { e.stopPropagation(); setTab(t.key) }}
           className={cn(
-            'px-2 py-0.5 text-[9px] font-semibold rounded-md transition-colors',
+            'px-2 py-0.5 text-widget-9 font-semibold rounded-md transition-colors',
             tab === t.key
               ? 'bg-primary text-white'
               : 'text-foreground-disabled hover:text-foreground-secondary',
@@ -85,14 +85,14 @@ export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 
     </div>
   )
 
-  const empty = <div className="text-[10px] text-foreground-disabled py-2">뉴스가 없습니다.</div>
-  const loading = <div className="text-[10px] text-foreground-disabled py-2">불러오는 중...</div>
+  const empty = <div className="text-widget-10 text-foreground-disabled py-2">뉴스가 없습니다.</div>
+  const loading = <div className="text-widget-10 text-foreground-disabled py-2">불러오는 중...</div>
 
   if (variant === 'market-2x2') {
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
         <div className="flex items-center justify-between mb-1 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
           {tabBar}
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -108,7 +108,7 @@ export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
         <div className="flex items-center justify-between mb-1 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
           {tabBar}
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -124,7 +124,7 @@ export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
       <div className="flex items-center justify-between mb-1 shrink-0">
-        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
+        <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
         {tabBar}
       </div>
       <div className="flex-1 flex flex-col overflow-hidden">

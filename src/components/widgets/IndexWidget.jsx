@@ -89,13 +89,13 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={(e) => handleIndexClick(e, shown.code)}>
           <div className="flex items-center justify-between shrink-0">
-            <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
             <SettingsButton onClick={() => setIsConfigOpen(true)} />
           </div>
           <div className="relative flex-1 flex flex-col justify-center items-center text-center min-h-0 group">
-            <div className="text-[9px] text-foreground-disabled">{shown.label}</div>
-            <div className="text-[18px] font-bold text-foreground leading-tight">{shown.value}</div>
-            <ChangeLabel changeAmt={shown.changeAmt} changeRate={shown.changeRate} className="text-[9px]" />
+            <div className="text-widget-9 text-foreground-disabled">{shown.label}</div>
+            <div className="text-widget-18 font-bold text-foreground leading-tight">{shown.value}</div>
+            <ChangeLabel changeAmt={shown.changeAmt} changeRate={shown.changeRate} className="text-widget-9" />
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
           </div>
         </WidgetCard>
@@ -116,7 +116,7 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
           <div className="flex items-center justify-between shrink-0">
-            <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
             <SettingsButton onClick={() => setIsConfigOpen(true)} />
           </div>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke mt-1">
@@ -126,9 +126,9 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
                 className="relative flex-1 flex flex-col justify-center items-center text-center px-2 cursor-pointer group"
                 onClick={(e) => handleIndexClick(e, idx.code)}
               >
-                <div className="text-[9px] text-foreground-disabled">{idx.label}</div>
-                <div className="text-[17px] font-bold text-foreground leading-tight">{idx.value}</div>
-                <ChangeLabel changeAmt={idx.changeAmt} changeRate={idx.changeRate} className="text-[10px]" />
+                <div className="text-widget-9 text-foreground-disabled">{idx.label}</div>
+                <div className="text-widget-17 font-bold text-foreground leading-tight">{idx.value}</div>
+                <ChangeLabel changeAmt={idx.changeAmt} changeRate={idx.changeRate} className="text-widget-10" />
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             ))}
@@ -151,7 +151,7 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
           <div className="flex items-center justify-between mb-2 shrink-0">
-            <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
             <SettingsButton onClick={() => setIsConfigOpen(true)} />
           </div>
           <div className="flex flex-col flex-1 justify-center gap-3">
@@ -161,9 +161,9 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
                 className="relative flex-1 min-w-0 cursor-pointer px-1 group"
                 onClick={(e) => handleIndexClick(e, idx.code)}
               >
-                <div className="text-[9px] text-foreground-disabled">{idx.label}</div>
-                <div className="text-[15px] font-bold text-foreground leading-tight">{idx.value}</div>
-                <ChangeLabel changeAmt={idx.changeAmt} changeRate={idx.changeRate} className="text-[10px]" />
+                <div className="text-widget-9 text-foreground-disabled">{idx.label}</div>
+                <div className="text-widget-15 font-bold text-foreground leading-tight">{idx.value}</div>
+                <ChangeLabel changeAmt={idx.changeAmt} changeRate={idx.changeRate} className="text-widget-10" />
                 <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             ))}
@@ -186,7 +186,7 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
     <>
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
           <SettingsButton onClick={() => setIsConfigOpen(true)} />
         </div>
         <div className="flex flex-1 min-h-0 divide-x divide-stroke mt-1">
@@ -196,9 +196,9 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
               className="relative flex-1 flex flex-col justify-center items-center text-center px-3 py-1 cursor-pointer group"
               onClick={(e) => handleIndexClick(e, idx.code)}
             >
-              <div className="text-[9px] text-foreground-disabled">{idx.label}</div>
-              <div className="text-[16px] font-bold text-foreground leading-tight">{idx.value}</div>
-              <ChangeLabel changeAmt={idx.changeAmt} changeRate={idx.changeRate} className="text-[9px]" />
+              <div className="text-widget-9 text-foreground-disabled">{idx.label}</div>
+              <div className="text-widget-16 font-bold text-foreground leading-tight">{idx.value}</div>
+              <ChangeLabel changeAmt={idx.changeAmt} changeRate={idx.changeRate} className="text-widget-9" />
               <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
           ))}
