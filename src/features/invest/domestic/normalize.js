@@ -3,8 +3,8 @@ import { toLocalTimestamp, extractDateKey, computeDepth } from '@/features/inves
 export function normalizeDailySeries(data) {
   return (data ?? [])
     .map((item) => ({
-      date: extractDateKey(item.date),
-      timestamp: toLocalTimestamp(item.date),
+      date: extractDateKey(item.time),
+      timestamp: toLocalTimestamp(item.time),
       open: Number(item.open),
       high: Number(item.high),
       low: Number(item.low),
@@ -18,8 +18,8 @@ export function normalizeMinuteSeries(data) {
   const now = Date.now()
   const normalized = (data ?? [])
     .map((item) => ({
-      timestamp: toLocalTimestamp(item.datetime),
-      sessionDate: extractDateKey(item.datetime),
+      timestamp: toLocalTimestamp(item.time),
+      sessionDate: extractDateKey(item.time),
       open: Number(item.open),
       high: Number(item.high),
       low: Number(item.low),

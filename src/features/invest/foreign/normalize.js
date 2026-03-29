@@ -28,30 +28,12 @@ function isLsRawFormat(raw) {
   return raw?.offerho1 != null || raw?.bidho1 != null || raw?.totofferrem != null || raw?.totbidrem != null
 }
 
-function toExchangeLocalTimestamp(value, fallbackTime = '00:00:00') {
-  if (typeof value === 'string') {
-    const [datePart, timePart = fallbackTime] = value.includes('T')
-      ? value.split('T')
-      : [value, fallbackTime]
-    const [year, month, day] = datePart.split('-').map(Number)
-    const [hour = 0, minute = 0, second = 0] = timePart.split(':').map(Number)
-
-    return Date.UTC(year, (month ?? 1) - 1, day ?? 1, hour, minute, second)
-  }
-
-  if (Array.isArray(value)) {
-    const [year = 1970, month = 1, day = 1, hour = 0, minute = 0, second = 0] = value
-    return Date.UTC(year, month - 1, day, hour, minute, second)
-  }
-
-  return Number.NaN
-}
 
 export function normalizeForeignDailySeries(dataPoints) {
   return (dataPoints ?? [])
     .map((item) => ({
-      date: extractDateKey(item.date),
-      timestamp: toExchangeLocalTimestamp(item.date),
+      date: extractDateKey(item.time),
+      timestamp: toLocalTimestamp(item.time),
       open: Number(item.open),
       high: Number(item.high),
       low: Number(item.low),
@@ -64,8 +46,8 @@ export function normalizeForeignDailySeries(dataPoints) {
 export function normalizeForeignMinuteSeries(dataPoints) {
   return (dataPoints ?? [])
     .map((item) => ({
-      timestamp: toLocalTimestamp(item.dateTime),
-      sessionDate: extractDateKey(item.dateTime),
+      timestamp: toLocalTimestamp(item.time),
+      sessionDate: extractDateKey(item.time),
       open: Number(item.open),
       high: Number(item.high),
       low: Number(item.low),

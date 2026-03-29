@@ -11,8 +11,13 @@ function getColors() {
   }
 }
 
-function formatTz(epochSec, timezone, isMinute) {
-  const d = new Date(epochSec * 1000)
+// LightweightCharts는 yyyy-mm-dd 문자열을 BusinessDay { year, month, day } 객체로 변환해 formatter에 전달
+function formatTz(time, timezone, isMinute) {
+  if (typeof time === 'object' && time !== null) {
+    const { year, month, day } = time
+    return `${year}/${String(month).padStart(2, '0')}/${String(day).padStart(2, '0')}`
+  }
+  const d = new Date(time * 1000)
   if (timezone) {
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,
@@ -33,8 +38,13 @@ function formatTz(epochSec, timezone, isMinute) {
   return `${d.getFullYear()}/${m}/${dd}`
 }
 
-function getTickLabel(epochSec, tickMarkType, timezone, isMinute) {
-  const d = new Date(epochSec * 1000)
+function getTickLabel(time, tickMarkType, timezone, isMinute) {
+  if (typeof time === 'object' && time !== null) {
+    const { month, day } = time
+    if (tickMarkType <= 1) return `${month}월`
+    return `${month}/${day}`
+  }
+  const d = new Date(time * 1000)
   if (timezone) {
     const parts = new Intl.DateTimeFormat('en-US', {
       timeZone: timezone,

@@ -8,33 +8,31 @@ const PERIOD_MAP = {
   '1Y': { interval: '1d', range: '1y'  },
 }
 
-// 1d 미만 interval: Unix timestamp (초) — datetime 문자열
-// 1d interval: "YYYY-MM-DD" 문자열 — 타임존 이슈 방지
-function toTime(timeStr, isIntraday) {
-  if (isIntraday) return Math.floor(new Date(timeStr).getTime() / 1000)
-  return timeStr.slice(0, 10)
+function toTime(timeStr) {
+  if (typeof timeStr === 'number') return Math.floor(timeStr / 1000)
+  return Math.floor(new Date(timeStr).getTime() / 1000)
 }
 
-function toLineData(candles, isIntraday) {
+function toLineData(candles) {
   return candles
-    .map((c) => ({ time: toTime(c.time, isIntraday), value: Number(c.close) }))
-    .sort((a, b) => (a.time > b.time ? 1 : a.time < b.time ? -1 : 0))
+    .map((c) => ({ time: toTime(c.time), value: Number(c.close) }))
+    .sort((a, b) => a.time - b.time)
 }
 
-function toCandleData(candles, isIntraday) {
+function toCandleData(candles) {
   return candles
     .map((c) => ({
-      time:  toTime(c.time, isIntraday),
+      time:  toTime(c.time),
       open:  Number(c.open),
       high:  Number(c.high),
       low:   Number(c.low),
       close: Number(c.close),
     }))
-    .sort((a, b) => (a.time > b.time ? 1 : a.time < b.time ? -1 : 0))
+    .sort((a, b) => a.time - b.time)
 }
 
 export default function useForexChart(symbol, period) {
-  const isIntraday = period === '1D' || period === '1M'
+  const isIntraday = period === '1D'
   const { interval, range } = PERIOD_MAP[period] ?? PERIOD_MAP['3M']
 
   const { data, isLoading, error } = useQuery({
@@ -43,8 +41,8 @@ export default function useForexChart(symbol, period) {
       const res = await marketApi.getForexChart({ symbol, interval, range })
       const candles = res.data ?? []
       return {
-        lineData:   toLineData(candles, isIntraday),
-        candleData: toCandleData(candles, isIntraday),
+        lineData:   toLineData(candles),
+        candleData: toCandleData(candles),
       }
     },
     enabled: !!symbol && !!period,

@@ -3,7 +3,6 @@ import { Settings2 } from 'lucide-react'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 import useCurrencyRate from '@/hooks/useCurrencyRate'
-import useMarketIndices from '@/features/market/useMarketIndices'
 import WidgetCard from './WidgetCard'
 import ExchangeConfigModal from './ExchangeConfigModal'
 import useWidgetStore from '@/store/useWidgetStore'
@@ -43,7 +42,7 @@ function RateDisplay({ live, rateClassName = 'text-widget-15' }) {
       <div className={`${rateClassName} font-bold text-foreground leading-tight`}>
         {formatRate(live?.rate)}
       </div>
-      {live && (
+      {live?.change != null && (
         <div className={`text-widget-9 ${isUp ? 'text-up' : 'text-down'}`}>
           {isUp ? '▲' : '▼'} {Math.abs(live.change)} ({formatPct(live.drate)})
         </div>
@@ -124,7 +123,7 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
                   <div className="text-center">
                     <div className="text-widget-9 text-foreground-disabled">{pair}</div>
                     <div className={`${rateSize[i] ?? 'text-widget-16'} font-bold text-foreground leading-tight`}>{formatRate(live?.rate)}</div>
-                    {live && (
+                    {live?.change != null && (
                       <div className={`text-widget-9 ${isUp ? 'text-up' : 'text-down'}`}>
                         {isUp ? '▲' : '▼'} {Math.abs(live.change)}
                       </div>
@@ -167,7 +166,7 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
                   <div className="text-center">
                     <div className="text-widget-9 text-foreground-disabled">{pair}</div>
                     <div className={`${rateSize} font-bold text-foreground leading-tight`}>{formatRate(live?.rate)}</div>
-                    {live && (
+                    {live?.change != null && (
                       <div className={`text-widget-9 ${isUp ? 'text-up' : 'text-down'}`}>
                         {isUp ? '▲' : '▼'} {Math.abs(live.change)}
                       </div>
@@ -242,11 +241,7 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
   }
 
   /* exchange-sm (default, 1x1) */
-  const { indices } = useMarketIndices()
-  const usdIdx = indices.find((i) => i.code === 'USD')
-  const smLive = usdIdx
-    ? { rate: usdIdx.price, change: usdIdx.change, drate: usdIdx.changeRate }
-    : currencies[0]?.live ?? null
+  const smLive = currencies[0]?.live ?? null
 
   return (
     <>

@@ -64,6 +64,8 @@ export function resolveStockMeta(stockCode, locationState) {
 
 // 날짜/시간 파싱 유틸 (domestic/foreign normalize에서 공유)
 export function toLocalTimestamp(value, fallbackTime = '00:00:00') {
+  if (typeof value === 'number') return value  // epoch ms (새 API 포맷)
+
   if (typeof value === 'string') {
     const [datePart, timePart = fallbackTime] = value.includes('T')
       ? value.split('T')
@@ -83,6 +85,11 @@ export function toLocalTimestamp(value, fallbackTime = '00:00:00') {
 }
 
 export function extractDateKey(value) {
+  if (typeof value === 'number') {  // epoch ms (새 API 포맷)
+    const d = new Date(value)
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  }
+
   if (typeof value === 'string') {
     return value.slice(0, 10)
   }
