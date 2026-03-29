@@ -2,8 +2,12 @@ import { useQuery } from '@tanstack/react-query'
 import { marketApi } from '@/api/market'
 
 function toTime(item, isIntraday) {
-  if (!isIntraday) return String(item.date).slice(0, 10)
-  return Math.floor(new Date(item.datetime).getTime() / 1000)
+  const raw = item.date ?? item.datetime ?? item.time
+  if (!isIntraday) {
+    if (typeof raw === 'number') return new Date(raw).toISOString().slice(0, 10)
+    return String(raw).slice(0, 10)
+  }
+  return Math.floor(new Date(raw).getTime() / 1000)
 }
 
 function toLineData(items, isIntraday) {
