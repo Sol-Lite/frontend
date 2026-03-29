@@ -4,19 +4,6 @@ import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
 
-const WIDGET_LABELS = {
-  'balance':         '계좌잔고',
-  'index':           '주요지수',
-  'portfolio':       '포트폴리오',
-  'stock-chart':     '차트',
-  'ranking':         '순위',
-  'watchlist':       '관심종목',
-  'market-overview': '시황',
-  'stock-news':      '뉴스',
-  'exchange':        '환율',
-  'trade-history':   '거래내역',
-}
-
 /* 6×4 미니 그리드 썸네일 */
 function PageThumbnail({ widgets }) {
   if (widgets.length === 0) {
@@ -37,7 +24,6 @@ function PageThumbnail({ widgets }) {
             gridRow:    `${w.gridRow} / span ${w.rowSpan}`,
           }}
         >
-          {/* 실제 위젯 미리보기: 600% 크기로 렌더링 후 1/6 스케일 축소 */}
           <div className="absolute top-0 left-0 w-[600%] h-[600%] origin-top-left scale-[0.1667] pointer-events-none p-[14px_16px]">
             <PreviewContent type={w.variantId} />
           </div>
@@ -47,17 +33,21 @@ function PageThumbnail({ widgets }) {
   )
 }
 
-function PageCard({ page, isActive, canDelete, onDelete }) {
+function PageCard({ page, isActive, canDelete, onDelete, onNavigate }) {
   return (
     <div className="w-[148px] shrink-0">
-      <div className={cn(
-        'rounded-[14px] overflow-hidden',
-        isActive
-          ? 'border-2 border-primary shadow-widget-hover'
-          : 'border border-stroke',
-      )}>
+      <button
+        onClick={isActive ? undefined : onNavigate}
+        aria-label={isActive ? undefined : `${page.name}으로 이동`}
+        className={cn(
+          'w-full rounded-[14px] overflow-hidden text-left',
+          isActive
+            ? 'border-2 border-primary shadow-widget-hover cursor-default'
+            : 'border border-stroke hover:border-primary hover:shadow-widget-hover transition-all duration-150 cursor-pointer',
+        )}
+      >
         <PageThumbnail widgets={page.widgets} />
-      </div>
+      </button>
 
       <div className="flex items-center justify-between mt-2.5 px-0.5">
         <div className="flex items-center gap-1 min-w-0">
@@ -78,9 +68,9 @@ function PageCard({ page, isActive, canDelete, onDelete }) {
           )}
         </div>
 
-        {!isActive && canDelete && (
+        {canDelete && (
           <button
-            onClick={onDelete}
+            onClick={(e) => { e.stopPropagation(); onDelete() }}
             aria-label={`${page.name} 삭제`}
             className="flex items-center gap-0.5 px-2 py-0.5 rounded-lg border border-danger/20 bg-danger/5 text-danger text-[10px] font-semibold hover:opacity-80 transition-opacity shrink-0"
           >
@@ -113,11 +103,55 @@ function AddPageSlot({ onClick }) {
   )
 }
 
-export default function PageEditModal({ onClose }) {
-  const { pages, currentPageId, applyPageChanges } = useWidgetStore()
+/* 변경사항 저장 확인 모달
+   - type 'close'    : 저장 → applyPageChanges 후 닫기 / 저장 안 함 → 그냥 닫기
+   - type 'navigate' : 저장 → applyPageChanges 후 닫기 / 저장 안 함 → switchPage 후 닫기 */
+function ConfirmModal({ onSave, onDiscard, onCancel }) {
+  return (
+    <div
+      className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-surface rounded-2xl shadow-modal w-[320px] p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-sm font-bold text-foreground mb-1">저장하지 않은 변경사항이 있습니다</h3>
+        <p className="text-xs text-foreground-secondary mb-5">저장하지 않으면 변경사항이 사라집니다.</p>
+        <div className="flex gap-2">
+          <button
+            onClick={onDiscard}
+            className="flex-1 py-2 rounded-xl border border-stroke-input text-xs text-foreground-secondary font-medium hover:bg-surface-muted transition-colors"
+          >
+            저장 안 함
+          </button>
+          <button
+            onClick={onSave}
+            className="flex-1 py-2 rounded-xl bg-primary text-white text-xs font-semibold hover:bg-primary-hover transition-colors shadow-primary-btn"
+          >
+            저장
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
 
-  const [stagedPages, setStagedPages] = useState(() => pages.map((p) => ({ ...p })))
-  const [stagedCurrentId] = useState(currentPageId)
+export default function PageEditModal({ onClose }) {
+  const { pages, currentPageId, applyPageChanges, switchPage } = useWidgetStore()
+
+  const [stagedPages, setStagedPages]         = useState(() => pages.map((p) => ({ ...p })))
+  const [stagedCurrentId, setStagedCurrentId] = useState(currentPageId)
+  // null | { type: 'close' } | { type: 'navigate', pageId: string }
+  const [pendingAction, setPendingAction]     = useState(null)
+
+  /* staged 변경사항 여부: 원본 대비 페이지 추가/삭제가 있으면 true */
+  const originalIds = new Set(pages.map((p) => p.id))
+  const stagedIds   = new Set(stagedPages.map((p) => p.id))
+  const hasStagedChanges =
+    stagedIds.size !== originalIds.size ||
+    [...stagedIds].some((id) => !originalIds.has(id)) ||
+    [...originalIds].some((id) => !stagedIds.has(id))
 
   function handleAddPage() {
     const newId = crypto.randomUUID()
@@ -130,23 +164,66 @@ export default function PageEditModal({ onClose }) {
 
   function handleDeletePage(pageId) {
     if (stagedPages.length <= 1) return
-    setStagedPages((prev) => prev.filter((p) => p.id !== pageId))
+    setStagedPages((prev) => {
+      const next = prev.filter((p) => p.id !== pageId)
+      // 현재 페이지를 삭제한 경우 stagedCurrentId를 인접 페이지로 갱신
+      if (pageId === stagedCurrentId) {
+        const deletedIndex = prev.findIndex((p) => p.id === pageId)
+        const fallback = next[deletedIndex] ?? next[deletedIndex - 1]
+        setStagedCurrentId(fallback.id)
+      }
+      return next
+    })
   }
 
   function handleSave() {
-    const targetId = stagedPages.find((p) => p.id === stagedCurrentId)
-      ? stagedCurrentId
-      : stagedPages[0].id
+    applyPageChanges(stagedPages, stagedCurrentId)
+    onClose()
+  }
+
+  /* 백드롭 / X 버튼 클릭 */
+  function handleAttemptClose() {
+    if (hasStagedChanges) {
+      setPendingAction({ type: 'close' })
+      return
+    }
+    onClose()
+  }
+
+  /* 비활성 페이지 카드 클릭 */
+  function handleNavigateTo(pageId) {
+    if (!hasStagedChanges) {
+      switchPage(pageId)
+      onClose()
+      return
+    }
+    setPendingAction({ type: 'navigate', pageId })
+  }
+
+  /* 확인 모달 — 저장 후 처리 */
+  function handleConfirmSave() {
+    const targetId = pendingAction.type === 'navigate' ? pendingAction.pageId : stagedCurrentId
     applyPageChanges(stagedPages, targetId)
+    setPendingAction(null)
+    onClose()
+  }
+
+  /* 확인 모달 — 저장 없이 처리 */
+  function handleConfirmDiscard() {
+    if (pendingAction.type === 'navigate') {
+      switchPage(pendingAction.pageId)
+    }
+    setPendingAction(null)
     onClose()
   }
 
   return (
+    <>
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       {/* 백드롭 */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-[6px]"
-        onClick={onClose}
+        onClick={handleAttemptClose}
       />
 
       {/* 모달 카드 */}
@@ -160,7 +237,7 @@ export default function PageEditModal({ onClose }) {
             </p>
           </div>
           <button
-            onClick={onClose}
+            onClick={handleAttemptClose}
             aria-label="닫기"
             className="w-7 h-7 rounded-full border border-stroke-input bg-surface-muted flex items-center justify-center text-foreground-tertiary hover:text-foreground transition-colors"
           >
@@ -177,6 +254,7 @@ export default function PageEditModal({ onClose }) {
               isActive={page.id === stagedCurrentId}
               canDelete={stagedPages.length > 1}
               onDelete={() => handleDeletePage(page.id)}
+              onNavigate={() => handleNavigateTo(page.id)}
             />
           ))}
           <AddPageSlot onClick={handleAddPage} />
@@ -199,5 +277,14 @@ export default function PageEditModal({ onClose }) {
         </div>
       </div>
     </div>
+
+    {pendingAction && (
+      <ConfirmModal
+        onSave={handleConfirmSave}
+        onDiscard={handleConfirmDiscard}
+        onCancel={() => setPendingAction(null)}
+      />
+    )}
+    </>
   )
 }

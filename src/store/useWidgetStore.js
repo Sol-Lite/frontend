@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { GRID_COLS, GRID_ROWS } from '@/lib/gridConstants'
 import { fromApiResponse } from './widgetApi'
 
+const STORAGE_KEY_CURRENT_PAGE = STORAGE_KEY_CURRENT_PAGE
+
 /* ── 충돌 판정 ──────────────────────────────────────────────
    모든 좌표는 1-indexed (CSS grid와 동일).
 ──────────────────────────────────────────────────────────── */
@@ -224,7 +226,10 @@ const useWidgetStore = create((set) => ({
         const emptyPage = { id: 'page-1', name: '대시보드 1', widgets: [] }
         return { pages: [emptyPage], currentPageId: 'page-1', widgets: [], isLoaded: true }
       }
-      const currentPage = pages[0]
+      // 새로고침 전 마지막 페이지 복원 (sessionStorage에 저장된 값 우선)
+      const savedPageId = sessionStorage.getItem(STORAGE_KEY_CURRENT_PAGE)
+      const restoredPage = savedPageId ? pages.find((p) => p.id === savedPageId) : null
+      const currentPage = restoredPage ?? pages[0]
       return {
         pages,
         currentPageId: currentPage.id,
@@ -235,13 +240,15 @@ const useWidgetStore = create((set) => ({
 
   // 로그아웃 시 INITIAL 레이아웃으로 초기화.
   // isLoaded를 false로 되돌려 재로그인 시 서버에서 새로 불러올 수 있게 함.
-  resetLayout: () =>
+  resetLayout: () => {
+    sessionStorage.removeItem(STORAGE_KEY_CURRENT_PAGE)
     set({
       pages:         INITIAL_PAGES,
       currentPageId: 'page-1',
       widgets:       INITIAL_WIDGETS,
       isLoaded:      false,
-    }),
+    })
+  },
 
 
   // ── 페이지 전환 ─────────────────────────────────────────
@@ -249,6 +256,7 @@ const useWidgetStore = create((set) => ({
     set((state) => {
       const page = state.pages.find((p) => p.id === pageId)
       if (!page || page.id === state.currentPageId) return state
+      sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, pageId)
       return { currentPageId: pageId, widgets: page.widgets }
     }),
 
@@ -262,6 +270,7 @@ const useWidgetStore = create((set) => ({
   applyPageChanges: (newPages, newCurrentId) =>
     set(() => {
       const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
+      sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, currentPage.id)
       return {
         pages: newPages,
         currentPageId: currentPage.id,
