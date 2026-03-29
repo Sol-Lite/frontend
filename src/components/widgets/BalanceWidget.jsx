@@ -76,14 +76,14 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
               : <div className={`text-widget-11 font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
             }
           </div>
-          <div className="flex flex-col justify-center gap-2 shrink-0 border-l border-stroke pl-3">
+          <div className="flex flex-col justify-center gap-1 shrink-0 border-l border-stroke pl-3">
             {[
               { label: '투자원금', val: BALANCE.invested, color: 'text-foreground' },
               { label: '평가손익', val: BALANCE.profit,   color: BALANCE.isProfit ? 'text-up' : 'text-down' },
               { label: '주문가능', val: BALANCE.available, color: 'text-foreground' },
             ].map(({ label, val, color }) => (
               <div key={label}>
-                <div className="text-widget-9 text-foreground-disabled">{label}</div>
+                <div className="text-widget-7 text-foreground-disabled">{label}</div>
                 <div className={`text-widget-10 font-semibold ${color}`}>{val}</div>
               </div>
             ))}
