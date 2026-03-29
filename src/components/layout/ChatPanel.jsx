@@ -5,6 +5,10 @@ import remarkGfm from "remark-gfm";
 import LiveDot from "@/components/ui/LiveDot";
 import useAuthStore from "@/store/useAuthStore";
 import { chatApi } from "@/api/chat";
+import ChatOrderCard from "@/components/layout/ChatOrderCard";
+import ChatExchangeCard from "@/components/layout/ChatExchangeCard";
+import { marketApi } from "@/api/market";
+import { balanceApi } from "@/api/balance";
 
 function getTimestamp() {
   return new Date().toLocaleTimeString("ko-KR", {
@@ -201,16 +205,41 @@ function ChatBubble({
 function ChatMessages({ messages, isTyping, bottomRef, onRetry }) {
   return (
     <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
-      {messages.map((msg) => (
-        <ChatBubble
-          key={msg.id}
-          role={msg.role}
-          text={msg.text}
-          time={msg.time}
-          isError={msg.isError}
-          onRetry={msg.isError ? onRetry : undefined}
-        />
-      ))}
+      {messages.map((msg) => {
+        // 주문 카드
+        if (msg.type === 'order' && msg.stock) {
+          return (
+            <div key={msg.id} className="flex flex-col gap-1">
+              <ChatOrderCard {...msg.stock} />
+              {msg.time && (
+                <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
+              )}
+            </div>
+          )
+        }
+        // 환전 카드
+        if (msg.type === 'exchange') {
+          return (
+            <div key={msg.id} className="flex flex-col gap-1">
+              <ChatExchangeCard krwBalance={msg.krwBalance} usdBalance={msg.usdBalance} />
+              {msg.time && (
+                <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
+              )}
+            </div>
+          )
+        }
+        // 일반 말풍선
+        return (
+          <ChatBubble
+            key={msg.id}
+            role={msg.role}
+            text={msg.text}
+            time={msg.time}
+            isError={msg.isError}
+            onRetry={msg.isError ? onRetry : undefined}
+          />
+        )
+      })}
       {isTyping && <ChatBubble role="ai" isTyping />}
       {/* 자동 스크롤 앵커 */}
       <div ref={bottomRef} />
@@ -397,10 +426,48 @@ export default function ChatPanel() {
     try {
       const data = await chatApi.sendMessage(text);
       lastFailedTextRef.current = null;
+
+      // 말풍선 먼저 추가
       setMessages((prev) => [
         ...prev,
         { id: Date.now(), role: "ai", text: data.reply, time: getTimestamp() },
       ]);
+
+      if (data.type === "order" && data.stock_code) {
+        // 종목 검색 + 현재가 병렬 조회
+        const [searchResults, priceData] = await Promise.all([
+          marketApi.searchStocks(data.stock_code),
+          marketApi.getCurrentPrice(data.stock_code),
+        ]);
+        const info = searchResults?.[0];
+        const stock = {
+          name: info?.stockName ?? data.stock_code,
+          stockCode: data.stock_code,
+          marketType: info?.marketType ?? "KOSPI",
+          price: priceData?.currentPrice ?? 0,
+          changeRate: priceData?.changeRate ?? 0,
+        };
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now(), type: "order", stock, time: getTimestamp() },
+        ]);
+      } else if (data.type === "exchange") {
+        // 잔고 조회 후 환전 카드를 채팅 메시지로 추가
+        const summary = await balanceApi.getBalanceSummary();
+        const cashList = summary?.cashBalances ?? [];
+        const krw = cashList.find((b) => b.currencyCode === "KRW");
+        const usd = cashList.find((b) => b.currencyCode === "USD");
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            type: "exchange",
+            krwBalance: Number(krw?.availableAmount ?? 0),
+            usdBalance: Number(usd?.totalAmount ?? 0),
+            time: getTimestamp(),
+          },
+        ]);
+      }
     } catch {
       lastFailedTextRef.current = text;
       setMessages((prev) => [
