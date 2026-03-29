@@ -12,7 +12,8 @@ const PERIOD_MAP = {
 // 1d interval: "YYYY-MM-DD" 문자열 — 타임존 이슈 방지
 function toTime(timeStr, isIntraday) {
   if (isIntraday) return Math.floor(new Date(timeStr).getTime() / 1000)
-  return timeStr.slice(0, 10)
+  if (typeof timeStr === 'number') return new Date(timeStr).toISOString().slice(0, 10)
+  return String(timeStr).slice(0, 10)
 }
 
 function toLineData(candles, isIntraday) {
