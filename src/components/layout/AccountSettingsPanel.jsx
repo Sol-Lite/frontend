@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { cn } from '@/lib/cn'
 import { X, LogOut } from 'lucide-react'
 import SplashScreenFill from '@/components/ui/SplashScreenFill'
@@ -129,7 +129,7 @@ function ThemeSettings() {
   )
 }
 
-function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
+function MenuTabs({ selectedMenuItem, onSelectMenuItem, disabled }) {
   const tabs = [
     { id: 'update-profile',          label: '프로필',      danger: false },
     { id: 'change-account-password', label: '계정 비밀번호', danger: false },
@@ -147,7 +147,8 @@ function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
           <button
             key={id}
             onClick={() => onSelectMenuItem(id)}
-            className={`px-3 py-[10px] text-[12px] border-b-2 transition-colors whitespace-nowrap ${
+            disabled={disabled}
+            className={`px-3 py-[10px] text-[12px] border-b-2 transition-colors whitespace-nowrap disabled:pointer-events-none disabled:opacity-40 ${
               active
                 ? danger
                   ? 'font-bold text-up border-b-up'
@@ -842,14 +843,20 @@ export default function AccountSettingsPanel() {
   const [selectedMenuItem, setSelectedMenuItem] = useState('update-profile')
   const [successStatus, setSuccessStatus] = useState(null) // null | 'animating' | 'success'
   const [successMessage, setSuccessMessage] = useState('')
+  const successTimerRef = useRef(null)
+
+  useEffect(() => {
+    return () => clearTimeout(successTimerRef.current)
+  }, [])
 
   const handleSuccess = (message) => {
     setSuccessMessage(message)
     setSuccessStatus('animating')
-    setTimeout(() => setSuccessStatus('success'), 1600)
+    successTimerRef.current = setTimeout(() => setSuccessStatus('success'), 1600)
   }
 
   const handleReset = () => {
+    clearTimeout(successTimerRef.current)
     setSuccessStatus(null)
     setSuccessMessage('')
   }
@@ -858,7 +865,7 @@ export default function AccountSettingsPanel() {
     <div className="flex flex-col h-full">
       <Header />
 
-      <MenuTabs selectedMenuItem={selectedMenuItem} onSelectMenuItem={setSelectedMenuItem} />
+      <MenuTabs selectedMenuItem={selectedMenuItem} onSelectMenuItem={(item) => { handleReset(); setSelectedMenuItem(item) }} disabled={successStatus === 'animating'} />
 
       {successStatus ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">
