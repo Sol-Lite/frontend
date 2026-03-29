@@ -15,6 +15,9 @@ import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CE
 import { DASHBOARD_PRESETS } from '@/data/dashboardPresets'
 import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
 
+const SCROLL_COOLDOWN_MS = 500
+const SCROLL_THRESHOLD   = 30
+
 function PresetThumbnail({ widgets }) {
   return (
     <div className="bg-background h-[152px] p-1.5 grid grid-cols-6 grid-rows-4 gap-[2px]">
@@ -122,6 +125,10 @@ export default function HomePage() {
   const safeWidgets = (!isRestoring && (isLoaded || !isAuthenticated)) ? widgets : []
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
+  const pageContainerRef = useRef(null)
+  const scrollCooldownRef = useRef(0)
+  const pagesRef = useRef(pages)
+  const currentPageIdRef = useRef(currentPageId)
 
   // 빈 대시보드에서도 드롭 가능하도록 그리드 전체를 droppable로 등록
   const { setNodeRef: setGridDroppableRef } = useDroppable({ id: 'dashboard-grid' })
@@ -132,9 +139,38 @@ export default function HomePage() {
     gridElementRef.current = node
   }, [setGridDroppableRef])
 
+  useEffect(() => { isEditModeRef.current = isEditMode },       [isEditMode])
+  useEffect(() => { pagesRef.current = pages },                [pages])
+  useEffect(() => { currentPageIdRef.current = currentPageId }, [currentPageId])
+
+  // 수평 스와이프로 페이지 전환 (편집 모드 포함)
+  // passive: false — 수평 스와이프 감지 즉시 브라우저 뒤로가기/앞으로가기 제스처 차단
   useEffect(() => {
-    isEditModeRef.current = isEditMode
-  }, [isEditMode])
+    const el = pageContainerRef.current
+    if (!el) return
+
+    function handleWheel(e) {
+      const { deltaX, deltaY } = e
+      if (Math.abs(deltaX) <= Math.abs(deltaY)) return
+      // 수평 이벤트 전체에 preventDefault — threshold 이하 초기 이벤트도 차단해야 브라우저 제스처 막힘
+      e.preventDefault()
+      if (Math.abs(deltaX) < SCROLL_THRESHOLD) return
+
+      const pages = pagesRef.current
+      if (pages.length <= 1) return
+
+      const now = Date.now()
+      if (now - scrollCooldownRef.current < SCROLL_COOLDOWN_MS) return
+      scrollCooldownRef.current = now
+
+      const idx = pages.findIndex((p) => p.id === currentPageIdRef.current)
+      if (deltaX > 0 && idx < pages.length - 1) switchPage(pages[idx + 1].id)
+      else if (deltaX < 0 && idx > 0)           switchPage(pages[idx - 1].id)
+    }
+
+    el.addEventListener('wheel', handleWheel, { passive: false })
+    return () => el.removeEventListener('wheel', handleWheel)
+  }, [switchPage])
 
   useEffect(() => {
     const el = gridRef.current
@@ -174,7 +210,7 @@ export default function HomePage() {
 
   return (
     <>
-    <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
+    <div ref={pageContainerRef} className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
       {/* 서브바 */}
       <div className="flex items-center justify-between shrink-0 px-1 h-7">
         <div className="flex items-center gap-2">

@@ -1,6 +1,15 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────
+   글로벌 스타일
+───────────────────────────────────────────── */
+html, body {
+  /* 트랙패드 수평 스와이프 브라우저 뒤로가기/앞으로가기 제스처 비활성화
+     대시보드 수평 스와이프 페이지 전환과의 충돌 방지 */
+  overscroll-behavior-x: none;
+}
+
+/* ─────────────────────────────────────────────
    Pretendard 폰트 로드
 ───────────────────────────────────────────── */
 @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
