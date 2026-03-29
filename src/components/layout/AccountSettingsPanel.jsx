@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react'
+import { cn } from '@/lib/cn'
 import { X, LogOut } from 'lucide-react'
 import SplashScreenFill from '@/components/ui/SplashScreenFill'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import useRightPanelStore from '@/store/useRightPanelStore'
 import useAuthStore from '@/store/useAuthStore'
+import useUIStore from '@/store/useUIStore'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { userApi } from '@/api/user'
 import { accountApi } from '@/api/account'
@@ -53,6 +55,39 @@ function Header() {
   )
 }
 
+function FontSizeSettings() {
+  const { fontSize, setFontSize } = useUIStore()
+  const options = [
+    { value: 'sm', label: '소' },
+    { value: 'md', label: '중' },
+    { value: 'lg', label: '대' },
+  ]
+  return (
+    <div className="flex flex-col gap-4">
+      <div>
+        <p className="text-[11px] font-semibold text-foreground-secondary mb-3">글꼴 크기</p>
+        <div className="flex gap-2">
+          {options.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={() => setFontSize(value)}
+              className={cn(
+                'flex-1 py-2 rounded-lg border text-[12px] font-medium transition-colors',
+                fontSize === value
+                  ? 'bg-primary text-white border-primary'
+                  : 'bg-surface text-foreground-secondary border-stroke hover:border-primary-border',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <p className="text-[11px] text-foreground-disabled leading-relaxed">위젯 및 표의 글씨 크기에 반영됩니다.</p>
+    </div>
+  )
+}
+
 function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
   const tabs = [
     { id: 'update-profile',          label: '프로필',      danger: false },
@@ -60,6 +95,7 @@ function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
     { id: 'change-account-pin',      label: '계좌 비밀번호', danger: false },
     { id: 'reset',                   label: '리셋',        danger: true  },
     { id: 'close-account',           label: '계좌 해지',   danger: true  },
+    { id: 'display',                 label: '화면 설정',   danger: false },
   ]
 
   return (
@@ -724,6 +760,10 @@ function CloseAccountForm() {
 function ContentArea({ selectedMenuItem, onSuccess }) {
   return (
     <div className="flex-1 flex flex-col p-4 overflow-y-auto">
+      {selectedMenuItem === 'display' && (
+        <FontSizeSettings />
+      )}
+
       {selectedMenuItem === 'update-profile' && (
         <UpdateProfileForm onSuccess={onSuccess} />
       )}

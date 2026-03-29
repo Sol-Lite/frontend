@@ -10,7 +10,7 @@ const MOCK_NEWS = [
 
 function StockChip({ showCode = false }) {
   return (
-    <span className="text-[9px] font-semibold text-primary bg-primary-light px-1.5 py-px rounded shrink-0">
+    <span className="text-widget-9 font-semibold text-primary bg-primary-light px-1.5 py-px rounded shrink-0">
       {MOCK_STOCK.name}{showCode && ` ${MOCK_STOCK.code}`}
     </span>
   )
@@ -21,7 +21,7 @@ export default function StockNewsWidget({ variant = 'stock-news-sm', colSpan = 1
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between mb-2 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
           <StockChip showCode />
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
@@ -34,8 +34,8 @@ export default function StockNewsWidget({ variant = 'stock-news-sm', colSpan = 1
                   : 'bg-surface-subtle border-stroke'
               }`}
             >
-              <p className="text-[11px] font-bold text-foreground leading-snug">{item.title}</p>
-              <p className="text-[9px] text-foreground-disabled leading-relaxed mt-0.5">{item.desc}</p>
+              <p className="text-widget-11 font-bold text-foreground leading-snug">{item.title}</p>
+              <p className="text-widget-9 text-foreground-disabled leading-relaxed mt-0.5">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -47,7 +47,7 @@ export default function StockNewsWidget({ variant = 'stock-news-sm', colSpan = 1
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
         <div className="flex items-center justify-between mb-2 shrink-0">
-          <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
           <StockChip showCode />
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
@@ -60,8 +60,8 @@ export default function StockNewsWidget({ variant = 'stock-news-sm', colSpan = 1
                   : 'bg-surface-subtle border-stroke'
               }`}
             >
-              <p className="text-[10px] font-bold text-foreground leading-snug">{item.title}</p>
-              <p className="text-[9px] text-foreground-disabled leading-relaxed mt-0.5">{item.desc}</p>
+              <p className="text-widget-10 font-bold text-foreground leading-snug">{item.title}</p>
+              <p className="text-widget-9 text-foreground-disabled leading-relaxed mt-0.5">{item.desc}</p>
             </div>
           ))}
         </div>
@@ -73,14 +73,14 @@ export default function StockNewsWidget({ variant = 'stock-news-sm', colSpan = 1
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[10px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+        <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
         <StockChip />
       </div>
       <div className="flex-1 flex flex-col gap-1.5 overflow-hidden">
         {MOCK_NEWS.map((item, i) => (
           <p
             key={i}
-            className={`text-[10px] leading-snug truncate ${
+            className={`text-widget-10 leading-snug truncate ${
               i === 0 ? 'font-bold text-foreground' : 'text-foreground-disabled'
             }`}
           >
