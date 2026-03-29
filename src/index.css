@@ -88,6 +88,23 @@
   --color-chart-3: #FF9500;
   --color-chart-4: #EF4444;
   --color-chart-5: #8B5CF6;
+  --color-chart-other: #9CA3AF;
+
+  /* ── Widget Font Scale (sm=default, overridden by [data-font-size]) ── */
+  --text-widget-6:  6px;
+  --text-widget-7:  7px;
+  --text-widget-9:  9px;
+  --text-widget-10: 10px;
+  --text-widget-11: 11px;
+  --text-widget-12: 12px;
+  --text-widget-13: 13px;
+  --text-widget-14: 14px;
+  --text-widget-15: 15px;
+  --text-widget-16: 16px;
+  --text-widget-17: 17px;
+  --text-widget-18: 18px;
+  --text-widget-20: 20px;
+  --text-widget-22: 22px;
 
   /* ── Box Shadow ── */
   --shadow-brand-glow:    0 0 14px rgba(0,70,255,.35);
@@ -163,6 +180,42 @@
   margin: 0;
   padding: 0;
 } */
+
+/* ─────────────────────────────────────────────
+   Widget Font Scale Overrides
+───────────────────────────────────────────── */
+[data-font-size="md"] {
+  --text-widget-6:  5px;
+  --text-widget-7:  8px;
+  --text-widget-9:  10px;
+  --text-widget-10: 11px;
+  --text-widget-11: 12px;
+  --text-widget-12: 13px;
+  --text-widget-13: 14px;
+  --text-widget-14: 15px;
+  --text-widget-15: 16px;
+  --text-widget-16: 17px;
+  --text-widget-17: 18px;
+  --text-widget-18: 20px;
+  --text-widget-20: 22px;
+  --text-widget-22: 24px;
+}
+[data-font-size="lg"] {
+  --text-widget-6:  7px;
+  --text-widget-7:  9px;
+  --text-widget-9:  11px;
+  --text-widget-10: 12px;
+  --text-widget-11: 13px;
+  --text-widget-12: 14px;
+  --text-widget-13: 15px;
+  --text-widget-14: 16px;
+  --text-widget-15: 17px;
+  --text-widget-16: 18px;
+  --text-widget-17: 20px;
+  --text-widget-18: 22px;
+  --text-widget-20: 24px;
+  --text-widget-22: 26px;
+}
 
 html {
   min-width: 1280px; /* desktop-only: 최소 창 너비, 미만 시 수평 스크롤 */

@@ -4,6 +4,7 @@ import { cn } from '@/lib/cn'
 import useGridStore from '@/store/useGridStore'
 import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { GRID_GAP, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
+import StockAvatar from '@/components/ui/StockAvatar'
 
 /* ── 너비 클래스 ─────────────────────────────────────────────
    EditPanel 가로폭을 3등분하여 colSpan 비율을 반영.
@@ -74,9 +75,12 @@ export function PreviewContent({ type }) {
     case 'stock-sm':
       return (
         <div className="flex flex-col justify-between h-full">
-          <div className="flex items-center justify-between">
-            <span className="text-[10px] font-bold text-foreground">삼성전자</span>
-            <span className="text-[8px] text-foreground-disabled">005930</span>
+          <div className="flex items-center gap-1 min-w-0">
+            <StockAvatar name="삼성전자" stockCode="005930" marketType="KOSPI" size="sm" />
+            <div className="min-w-0">
+              <div className="text-[10px] font-bold text-foreground leading-none truncate">삼성전자</div>
+              <div className="text-[8px] text-foreground-disabled mt-0.5">005930 · KOSPI</div>
+            </div>
           </div>
           <div>
             <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
@@ -90,9 +94,12 @@ export function PreviewContent({ type }) {
       return (
         <div className="flex h-full gap-2.5">
           <div className="flex flex-col justify-between shrink-0">
-            <div>
-              <div className="text-[10px] font-bold text-foreground">삼성전자</div>
-              <div className="text-[8px] text-foreground-disabled">005930 · KOSPI</div>
+            <div className="flex items-center gap-1.5">
+              <StockAvatar name="삼성전자" stockCode="005930" marketType="KOSPI" size="sm" />
+              <div>
+                <div className="text-[10px] font-bold text-foreground leading-none">삼성전자</div>
+                <div className="text-[8px] text-foreground-disabled mt-0.5">005930 · KOSPI</div>
+              </div>
             </div>
             <div>
               <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
@@ -565,12 +572,10 @@ export function PreviewContent({ type }) {
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-start justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              <div className="w-7 h-7 rounded-full bg-primary-light border border-primary-border flex items-center justify-center shrink-0">
-                <span className="text-[9px] font-extrabold text-primary">삼성</span>
-              </div>
+              <StockAvatar name="삼성전자" stockCode="005930" marketType="KOSPI" size="sm" />
               <div>
-                <div className="text-[11px] font-bold text-foreground">삼성전자</div>
-                <div className="text-[9px] text-foreground-disabled">005930</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">삼성전자</div>
+                <div className="text-[9px] text-foreground-disabled mt-0.5">005930 · KOSPI</div>
               </div>
             </div>
             <div className="text-right">
@@ -687,12 +692,10 @@ export function PreviewContent({ type }) {
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-start justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              <div className="w-7 h-7 rounded-full bg-primary-light border border-primary-border flex items-center justify-center shrink-0">
-                <span className="text-[9px] font-extrabold text-primary">삼성</span>
-              </div>
+              <StockAvatar name="삼성전자" stockCode="005930" marketType="KOSPI" size="sm" />
               <div>
-                <div className="text-[11px] font-bold text-foreground">삼성전자</div>
-                <div className="text-[8px] text-foreground-disabled">005930 · KOSPI · 반도체</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">삼성전자</div>
+                <div className="text-[8px] text-foreground-disabled mt-0.5">005930 · KOSPI · 반도체</div>
               </div>
             </div>
             <div className="text-right">
@@ -996,7 +999,7 @@ function DraggableVariantItem({ variant, widgetType, canAdd }) {
 
 /* ── WidgetSizeList ─────────────────────────────────────── */
 export default function WidgetSizeList({ widgetType, onBack }) {
-  const { widgets } = useWidgetStore()
+  const widgets = useWidgetStore((s) => s.widgets)
 
   return (
     <>

@@ -2,9 +2,7 @@ import { useState } from 'react'
 import { X } from 'lucide-react'
 
 const ALL_CURRENCIES = [
-  { code: 'USD', label: 'USD / KRW', flag: '🇺🇸' },
-  { code: 'JPY', label: 'JPY / KRW', flag: '🇯🇵' },
-  { code: 'EUR', label: 'EUR / KRW', flag: '🇪🇺' },
+  { code: 'USD', label: 'USD / KRW' },
 ]
 
 const VARIANT_MAX = {
@@ -21,7 +19,10 @@ export default function ExchangeConfigModal({ variant, currentCurrencies, onSave
   function toggle(code) {
     setSelected((prev) => {
       if (prev.includes(code)) return prev.filter((c) => c !== code)
-      if (prev.length >= max) return prev
+      if (prev.length >= max) {
+        if (max === 1) return [code]
+        return prev
+      }
       return [...prev, code]
     })
   }
@@ -36,18 +37,18 @@ export default function ExchangeConfigModal({ variant, currentCurrencies, onSave
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[13px] font-bold text-foreground">표시할 통화 선택</span>
+          <span className="text-widget-13 font-bold text-foreground">표시할 통화 선택</span>
           <button onClick={onClose} className="text-foreground-disabled hover:text-foreground transition-colors">
             <X className="w-4 h-4" />
           </button>
         </div>
 
-        <p className="text-[10px] text-foreground-disabled mb-3">최대 {max}개 선택 가능</p>
+        <p className="text-widget-10 text-foreground-disabled mb-3">최대 {max}개 선택 가능</p>
 
         <div className="flex flex-col gap-2 mb-5">
-          {ALL_CURRENCIES.map(({ code, label, flag }) => {
+          {ALL_CURRENCIES.map(({ code, label }) => {
             const isChecked = selected.includes(code)
-            const isDisabled = !isChecked && selected.length >= max
+            const isDisabled = !isChecked && selected.length >= max && max > 1
             return (
               <label
                 key={code}
@@ -66,8 +67,7 @@ export default function ExchangeConfigModal({ variant, currentCurrencies, onSave
                   onChange={() => toggle(code)}
                   className="accent-primary w-3.5 h-3.5"
                 />
-                <span className="text-[14px]">{flag}</span>
-                <span className={`text-[12px] font-semibold ${isChecked ? 'text-primary' : 'text-foreground'}`}>
+                <span className={`text-widget-12 font-semibold ${isChecked ? 'text-primary' : 'text-foreground'}`}>
                   {label}
                 </span>
               </label>
@@ -78,7 +78,7 @@ export default function ExchangeConfigModal({ variant, currentCurrencies, onSave
         <button
           disabled={selected.length === 0}
           onClick={() => onSave(selected)}
-          className="w-full py-2 rounded-xl bg-primary text-white text-[12px] font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-2 rounded-xl bg-primary text-white text-widget-12 font-semibold hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
         >
           저장
         </button>

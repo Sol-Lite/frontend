@@ -9,7 +9,7 @@ export default function AddWidgetSlot() {
       <div className="w-9 h-9 rounded-full border-2 border-dashed border-stroke-input flex items-center justify-center transition-all duration-[200ms] group-hover:border-primary group-hover:bg-primary-light">
         <Plus className="w-4 h-4 text-foreground-disabled group-hover:text-primary transition-colors duration-[200ms]" />
       </div>
-      <span className="text-[11px] text-foreground-disabled group-hover:text-primary transition-colors duration-[200ms]">
+      <span className="text-widget-11 text-foreground-disabled group-hover:text-primary transition-colors duration-[200ms]">
         위젯 추가
       </span>
     </button>

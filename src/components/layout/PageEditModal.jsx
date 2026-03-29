@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { X, Trash2, Plus } from 'lucide-react'
 import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
+import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
 
 const WIDGET_LABELS = {
   'balance':         '계좌잔고',
@@ -30,15 +31,16 @@ function PageThumbnail({ widgets }) {
       {widgets.map((w) => (
         <div
           key={w.instanceId}
-          className="bg-surface rounded-[3px] p-1 overflow-hidden min-w-0 min-h-0"
+          className="bg-surface rounded-[3px] overflow-hidden min-w-0 min-h-0 relative"
           style={{
             gridColumn: `${w.gridCol} / span ${w.colSpan}`,
             gridRow:    `${w.gridRow} / span ${w.rowSpan}`,
           }}
         >
-          <span className="text-[5px] font-semibold text-foreground-disabled leading-none block truncate">
-            {WIDGET_LABELS[w.widgetTypeId] ?? w.widgetTypeId}
-          </span>
+          {/* 실제 위젯 미리보기: 600% 크기로 렌더링 후 1/6 스케일 축소 */}
+          <div className="absolute top-0 left-0 w-[600%] h-[600%] origin-top-left scale-[0.1667] pointer-events-none p-[14px_16px]">
+            <PreviewContent type={w.variantId} />
+          </div>
         </div>
       ))}
     </div>

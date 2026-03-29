@@ -29,7 +29,7 @@ export default function StockSelectModal({ currentCode, currentName, onSave, onC
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[13px] font-bold text-foreground">종목 선택</span>
+          <span className="text-widget-13 font-bold text-foreground">종목 선택</span>
           <button onClick={onClose} className="text-foreground-disabled hover:text-foreground transition-colors">
             <X className="w-4 h-4" />
           </button>
@@ -43,7 +43,7 @@ export default function StockSelectModal({ currentCode, currentName, onSave, onC
             value={keyword}
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="종목명 또는 코드 검색"
-            className="w-full pl-8 pr-3 py-2 text-[12px] bg-background border border-stroke rounded-xl outline-none focus:border-primary transition-colors"
+            className="w-full pl-8 pr-3 py-2 text-widget-12 bg-background border border-stroke rounded-xl outline-none focus:border-primary transition-colors"
           />
         </div>
 
@@ -51,19 +51,19 @@ export default function StockSelectModal({ currentCode, currentName, onSave, onC
           {keyword.trim().length === 0 && currentCode && (
             <div className="px-3 py-2.5 rounded-xl bg-primary-light border border-primary-border">
               <div className="flex items-center justify-between">
-                <span className="text-[12px] font-semibold text-primary">{currentName ?? currentCode}</span>
-                <span className="text-[10px] text-primary/70">{currentCode}</span>
+                <span className="text-widget-12 font-semibold text-primary">{currentName ?? currentCode}</span>
+                <span className="text-widget-10 text-primary/70">{currentCode}</span>
               </div>
-              <div className="text-[9px] text-primary/60 mt-0.5">현재 선택</div>
+              <div className="text-widget-9 text-primary/60 mt-0.5">현재 선택</div>
             </div>
           )}
 
           {isFetching && (
-            <div className="text-[11px] text-foreground-disabled text-center py-4">검색 중...</div>
+            <div className="text-widget-11 text-foreground-disabled text-center py-4">검색 중...</div>
           )}
 
           {!isFetching && debouncedKeyword.trim().length >= 1 && results.length === 0 && (
-            <div className="text-[11px] text-foreground-disabled text-center py-4">검색 결과 없음</div>
+            <div className="text-widget-11 text-foreground-disabled text-center py-4">검색 결과 없음</div>
           )}
 
           {results.map((stock) => (
@@ -72,8 +72,8 @@ export default function StockSelectModal({ currentCode, currentName, onSave, onC
               onClick={() => onSave({ stockCode: stock.stockCode, stockName: stock.stockName, marketType: stock.marketType, exchangeCode: stock.exchangeCode })}
               className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-surface-subtle transition-colors text-left"
             >
-              <span className="text-[12px] font-semibold text-foreground">{stock.stockName}</span>
-              <span className="text-[10px] text-foreground-disabled">{stock.stockCode}</span>
+              <span className="text-widget-12 font-semibold text-foreground">{stock.stockName}</span>
+              <span className="text-widget-10 text-foreground-disabled">{stock.stockCode}</span>
             </button>
           ))}
         </div>
