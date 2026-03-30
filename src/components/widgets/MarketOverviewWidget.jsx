@@ -73,11 +73,12 @@ export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 
           type="button"
           onClick={(e) => { e.stopPropagation(); setTab(t.key) }}
           className={cn(
-            'px-1.5 py-px text-widget-9 font-semibold rounded transition-colors',
+            'px-1.5 py-px font-semibold rounded transition-colors',
             tab === t.key
               ? 'bg-primary text-white'
               : 'text-foreground-disabled hover:text-foreground-secondary',
           )}
+          style={{ fontSize: 'var(--text-widget-9)' }}
         >
           {t.label}
         </button>
