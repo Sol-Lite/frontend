@@ -104,17 +104,19 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
           {/* 좌: 캘린더 */}
           <div className="flex flex-col flex-1 min-h-0 min-w-0">
             <div className="grid grid-cols-7 gap-0.5 shrink-0 mb-1">
-              {WEEK_DAYS.map((d) => (
-                <div key={d} className="text-center text-[8px] font-semibold text-foreground-disabled">{d}</div>
+              {WEEK_DAYS.map((d, i) => (
+                <div key={d} className={cn('text-[8px] font-semibold text-center', i === 0 ? 'text-up' : i === 6 ? 'text-down' : 'text-foreground-disabled')}>{d}</div>
               ))}
             </div>
             <div className="grid grid-cols-7 gap-0.5 flex-1 min-h-0">
               {monthCells.map((d, i) => {
                 const k = d ? dateKey(new Date(year, month, d)) : null
                 const trades = k ? (tradeMap[k] ?? null) : null
+                const col = i % 7
+                const dateColor = col === 0 ? 'text-up' : col === 6 ? 'text-down' : 'text-foreground'
                 return (
-                  <div key={i} className="flex flex-col items-start rounded p-0.5">
-                    <span className={`text-widget-9 leading-none mb-px ${d ? 'text-foreground' : 'invisible'}`}>
+                  <div key={i} className="flex flex-col items-center rounded p-0.5">
+                    <span className={`text-widget-9 leading-none mb-px w-full text-center ${d ? dateColor : 'invisible'}`}>
                       {d ?? '0'}
                     </span>
                     {trades && trades.slice(0, 2).map((tr, j) => (
@@ -170,17 +172,18 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
           <span className="text-widget-9 text-foreground-disabled">{monthLabel}</span>
         </div>
         <div className="grid grid-cols-7 gap-0.5 shrink-0 mb-1">
-          {WEEK_DAYS.map((d) => (
-            <div key={d} className="text-center text-[8px] font-semibold text-foreground-disabled">{d}</div>
+          {WEEK_DAYS.map((d, i) => (
+            <div key={d} className={cn('text-[8px] font-semibold text-center', i === 0 ? 'text-up' : i === 6 ? 'text-down' : 'text-foreground-disabled')}>{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-0.5 flex-1 min-h-0">
           {weekCells.map(({ d, key }, i) => {
             const trades = tradeMap[key] ?? null
             const visible = trades ? trades.slice(0, 5) : null
+            const dateColor = i === 0 ? 'text-up' : i === 6 ? 'text-down' : 'text-foreground'
             return (
               <div key={i} className="flex flex-col items-start rounded-lg p-1 overflow-hidden">
-                <span className="text-widget-9 leading-none mb-1 text-foreground shrink-0">{d}</span>
+                <span className={`text-widget-9 leading-none mb-1 shrink-0 w-full text-center ${dateColor}`}>{d}</span>
                 {visible && visible.map((tr, j) => (
                   <div key={j} className="flex items-center gap-0.5 w-full mb-0.5 shrink-0">
                     <div className={cn('w-0.5 rounded-full shrink-0 self-stretch', tr.buy ? 'bg-up' : 'bg-down')} />
@@ -205,17 +208,19 @@ export default function TradeHistoryWidget({ variant = 'trade-list', colSpan = 1
           <span className="text-widget-9 text-foreground-disabled">{monthLabel}</span>
         </div>
         <div className="grid grid-cols-7 gap-0.5 shrink-0 mb-1">
-          {WEEK_DAYS.map((d) => (
-            <div key={d} className="text-center text-[8px] font-semibold text-foreground-disabled">{d}</div>
+          {WEEK_DAYS.map((d, i) => (
+            <div key={d} className={cn('text-[8px] font-semibold text-center', i === 0 ? 'text-up' : i === 6 ? 'text-down' : 'text-foreground-disabled')}>{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7 gap-0.5 flex-1 min-h-0">
           {monthCells.map((d, i) => {
             const k = d ? `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}` : null
             const trades = k ? (tradeMap[k] ?? null) : null
+            const col = i % 7
+            const dateColor = col === 0 ? 'text-up' : col === 6 ? 'text-down' : 'text-foreground'
             return (
-              <div key={i} className="flex flex-col items-start rounded p-0.5">
-                <span className={`text-widget-9 leading-none mb-px ${d ? 'text-foreground' : 'invisible'}`}>
+              <div key={i} className="flex flex-col items-center rounded p-0.5">
+                <span className={`text-widget-9 leading-none mb-px ${d ? dateColor : 'invisible'}`}>
                   {d ?? '0'}
                 </span>
                 {trades && trades.slice(0, 2).map((tr, j) => (
