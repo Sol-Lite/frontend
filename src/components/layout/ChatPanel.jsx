@@ -136,7 +136,7 @@ function ChatToastStack({ toasts, onClose }) {
         return (
           <div
             key={toast.id}
-            className="animate-bubble-in rounded-2xl border border-stroke bg-surface px-3.5 py-3 shadow-[0_8px_20px_rgba(15,23,42,0.08)]"
+            className="animate-bubble-in rounded-2xl border border-stroke bg-surface px-3.5 py-3 shadow-toast"
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
@@ -330,7 +330,7 @@ function ChatBubble({
 }
 
 // ── ChatMessages ───────────────────────────────────────────────
-function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, onOrderDetail, onPinClose, onPinSuccess, onPinError }) {
+function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, onExchangeAction, onOrderDetail, onPinClose, onPinSuccess, onExchangePinSuccess, onPinError }) {
   return (
     <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
       {messages.map((msg) => {
@@ -376,7 +376,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
             <div key={msg.id} className="flex flex-col gap-1 animate-bubble-in">
               <ChatExchangePinBubble
                 onClose={() => onPinClose?.(msg.id, msg.sourceExchangeId)}
-                onSubmit={(pinData) => onPinSuccess?.(msg.id, msg.sourceExchangeId, {
+                onSubmit={(pinData) => onExchangePinSuccess?.(msg.id, msg.sourceExchangeId, {
                   ...pinData,
                   fromCurrency: msg.fromCurrency,
                   toCurrency: msg.toCurrency,
@@ -398,7 +398,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
                 krwBalance={msg.krwBalance}
                 usdBalance={msg.usdBalance}
                 isPending={Boolean(msg.isPending)}
-                onSubmit={(payload) => onOrderAction?.(msg.id, payload)}
+                onSubmit={(payload) => onExchangeAction?.(msg.id, payload)}
               />
               {msg.time && (
                 <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
@@ -882,7 +882,6 @@ export default function ChatPanel() {
       pushExchangeToast(result);
     } catch (err) {
       await waitForMinimumDelay(startedAt);
-      setExchangePending(sourceExchangeId, false);
       if (options.pin && !pinVerified) {
         pushErrorToast(err?.message ?? '비밀번호가 올바르지 않습니다.', '계좌 비밀번호 확인');
       } else {
@@ -1015,20 +1014,12 @@ export default function ChatPanel() {
             isTyping={isTyping}
             bottomRef={bottomRef}
             onRetry={handleRetry}
-            onOrderAction={(...args) => {
-              if (args.length === 2 && typeof args[1] === 'object' && args[1]?.fromCurrency) {
-                return handleExchangeAction(args[0], args[1]);
-              }
-              return handleOrderAction(...args);
-            }}
+            onOrderAction={(msgId, stock, side, qty, key) => handleOrderAction(msgId, stock, side, qty, key)}
+            onExchangeAction={(msgId, payload) => handleExchangeAction(msgId, payload)}
             onOrderDetail={handleOrderDetail}
             onPinClose={handlePinClose}
-            onPinSuccess={(...args) => {
-              if (args.length === 3 && args[2]?.fromCurrency) {
-                return handleExchangePinSuccess(args[0], args[1], args[2]);
-              }
-              return handlePinSuccess(...args);
-            }}
+            onPinSuccess={(msgId, sourceOrderId, stockName, side, qty) => handlePinSuccess(msgId, sourceOrderId, stockName, side, qty)}
+            onExchangePinSuccess={(msgId, sourceExchangeId, payload) => handleExchangePinSuccess(msgId, sourceExchangeId, payload)}
             onPinError={handlePinError}
           />
           <ChatToastStack toasts={toasts} onClose={dismissToast} />

@@ -139,19 +139,15 @@ export default function ChatOrderCard({
   const holdingQuantityLabel = holdingQuantity != null ? `${formatNumber(holdingQuantity)}주` : '-'
 
   function decrease() {
-    setQuantity((current) => {
-      const nextQuantity = Math.max(1, current - 1)
-      setQuantityInput(String(nextQuantity))
-      return nextQuantity
-    })
+    const nextQuantity = Math.max(1, quantity - 1)
+    setQuantity(nextQuantity)
+    setQuantityInput(String(nextQuantity))
   }
 
   function increase() {
-    setQuantity((current) => {
-      const nextQuantity = current + 1
-      setQuantityInput(String(nextQuantity))
-      return nextQuantity
-    })
+    const nextQuantity = quantity + 1
+    setQuantity(nextQuantity)
+    setQuantityInput(String(nextQuantity))
   }
 
   function commitQuantity(nextValue) {
