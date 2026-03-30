@@ -18,6 +18,12 @@ export const changePasswordSchema = z.object({
   newPassword: passwordSchema,
   confirmPassword: z.string().min(1, '비밀번호 확인을 입력해주세요.'),
 }).refine(
+  (data) => data.newPassword !== data.currentPassword,
+  {
+    message: '새 비밀번호는 현재 비밀번호와 달라야 합니다.',
+    path: ['newPassword'],
+  }
+).refine(
   (data) => data.newPassword === data.confirmPassword,
   {
     message: '새 비밀번호가 일치하지 않습니다.',
@@ -31,6 +37,12 @@ export const changePinSchema = z.object({
   newPin: pinSchema,
   confirmPin: z.string().length(4, 'PIN은 4자리 숫자여야 합니다.'),
 }).refine(
+  (data) => data.newPin !== data.currentPin,
+  {
+    message: '새 비밀번호는 현재 비밀번호와 달라야 합니다.',
+    path: ['newPin'],
+  }
+).refine(
   (data) => data.newPin === data.confirmPin,
   {
     message: '새 PIN이 일치하지 않습니다.',

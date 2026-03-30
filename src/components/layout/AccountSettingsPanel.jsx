@@ -188,6 +188,13 @@ function UpdateProfileForm({ onSuccess }) {
     e.preventDefault()
     setError('')
 
+    if (!profile) return
+
+    if (name === (profile.name ?? '') && phone === formatPhoneNumber(profile.phone ?? '')) {
+      setError('변경된 내용이 없습니다.')
+      return
+    }
+
     const validation = updateProfileSchema.safeParse({ name, phone })
     if (!validation.success) {
       setError(validation.error.issues[0]?.message ?? '입력 값을 확인해주세요.')
