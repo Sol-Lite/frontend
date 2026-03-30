@@ -270,37 +270,13 @@ export function PreviewContent({ type }) {
       return (
         <div className="flex flex-col h-full">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">환율</span>
-          <div className="flex-1 flex flex-col justify-center min-h-0">
+          <div className="flex-1 flex flex-col items-center justify-center min-h-0 text-center">
             <div className="text-[8px] text-foreground-disabled">USD / KRW</div>
             <div className="text-[15px] font-extrabold text-foreground leading-tight">1,378.50</div>
             <div className="text-[9px] font-semibold text-down mt-0.5">▼ −2.30 (−0.17%)</div>
           </div>
         </div>
       )
-
-    /* 환율 — 복합 2×1 */
-    case 'exchange-wide': {
-      const EX_WIDE = [
-        { pair: 'USD / KRW', rate: '1,378.50', chg: '▼ −2.30 (−0.17%)', up: false, flex: '1.2', pr: 'pr-3', pl: '', rateSize: 'text-[13px]' },
-        { pair: 'JPY / KRW', rate: '9.18',     chg: '▲ +0.05 (+0.54%)', up: true,  flex: '1',   pr: '',    pl: 'pl-3', rateSize: 'text-[11px]' },
-      ]
-      return (
-        <div className="flex flex-col h-full gap-1">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">환율</span>
-          <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-            {EX_WIDE.map(({ pair, rate, chg, up, flex, pr, pl, rateSize }) => (
-              <div key={pair} className={`flex flex-col justify-center ${pr} ${pl}`} style={{ flex }}>
-                <div className="text-center">
-                  <div className="text-[8px] text-foreground-disabled">{pair}</div>
-                  <div className={`${rateSize} font-extrabold text-foreground leading-tight`}>{rate}</div>
-                  <span className={`text-[8px] ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-    }
 
     /* 오늘의 시황 — 헤드라인 1×1 */
     case 'market-sm':
@@ -728,31 +704,6 @@ export function PreviewContent({ type }) {
           </div>
         </div>
       )
-
-    /* 환율 — 3통화 3×1 */
-    case 'exchange-3x1': {
-      const EX_3X1 = [
-        { pair: 'USD / KRW', rate: '1,378.50', chg: '▼ −2.30', up: false, flex: '1.2', pr: 'pr-3', pl: '',    rateSize: 'text-[13px]' },
-        { pair: 'JPY / KRW', rate: '9.18',     chg: '▲ +0.05', up: true,  flex: '1',   pr: 'pr-2', pl: 'pl-2', rateSize: 'text-[11px]' },
-        { pair: 'EUR / KRW', rate: '1,502.30', chg: '▼ −3.20', up: false, flex: '1',   pr: '',    pl: 'pl-2', rateSize: 'text-[11px]' },
-      ]
-      return (
-        <div className="flex flex-col h-full gap-1">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">환율</span>
-          <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-            {EX_3X1.map(({ pair, rate, chg, up, flex, pr, pl, rateSize }) => (
-              <div key={pair} className={`flex flex-col justify-center ${pr} ${pl}`} style={{ flex }}>
-                <div className="text-center">
-                  <div className="text-[8px] text-foreground-disabled">{pair}</div>
-                  <div className={`${rateSize} font-extrabold text-foreground leading-tight`}>{rate}</div>
-                  <span className={`text-[8px] ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      )
-    }
 
     /* 환율 — 대형 (구 2×2, 미사용) */
     case 'exchange-2x2':
