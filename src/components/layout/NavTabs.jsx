@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { X } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 import { LAST_INVEST_PATH_KEY, LAST_INVEST_STATE_KEY } from '@/features/invest/navigation'
@@ -24,7 +25,7 @@ function resolveNavigatePath(path) {
 }
 
 /* 편집 모드 탭 이동 확인 모달 */
-function NavConfirmModal({ isPending, onSave, onDiscard, onCancel }) {
+export function NavConfirmModal({ isPending, onSave, onDiscard, onCancel }) {
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
@@ -34,7 +35,15 @@ function NavConfirmModal({ isPending, onSave, onDiscard, onCancel }) {
         className="bg-surface rounded-2xl shadow-xl w-[320px] p-6"
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-[14px] font-bold text-foreground mb-1">편집 중인 내용이 있습니다</h3>
+        <div className="flex items-start justify-between mb-1">
+          <h3 className="text-[14px] font-bold text-foreground">편집 중인 내용이 있습니다</h3>
+          <button
+            onClick={onCancel}
+            className="w-6 h-6 rounded-full flex items-center justify-center text-foreground-tertiary hover:text-foreground hover:bg-surface-muted transition-colors -mt-0.5 -mr-1"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
         <p className="text-[12px] text-foreground-secondary mb-5">저장하지 않으면 변경사항이 사라집니다.</p>
         <div className="flex gap-2">
           <button
