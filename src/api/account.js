@@ -16,6 +16,7 @@ function request(path, method = 'GET', body = null) {
 
 export const accountApi = {
   getMyAccount: () => request('/me', 'GET'),
+  verifyPin: (accountPin) => request('/verify-pin', 'POST', { accountPin }),
   changePin: (currentPin, newPin) => request('/me/pin', 'PATCH', { currentPin, newPin }),
   requestPinReset: () => request('/pin/reset/request', 'POST'),
   confirmPinReset: (token, newPin) => request('/pin/reset/confirm', 'POST', { token, newPin }),

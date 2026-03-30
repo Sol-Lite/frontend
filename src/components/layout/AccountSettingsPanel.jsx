@@ -256,10 +256,23 @@ function ChangePasswordForm({ onSuccess }) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [currentPasswordError, setCurrentPasswordError] = useState('')
+
+  async function handleCurrentPasswordBlur() {
+    if (!currentPassword) return
+    setCurrentPasswordError('')
+    try {
+      await userApi.verifyPassword(currentPassword)
+    } catch {
+      setCurrentPasswordError('현재 비밀번호가 올바르지 않습니다.')
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (currentPasswordError) return
 
     const validation = changePasswordSchema.safeParse({
       currentPassword,
@@ -280,6 +293,7 @@ function ChangePasswordForm({ onSuccess }) {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
+      setCurrentPasswordError('')
     } catch (err) {
       setError(err?.message ?? '비밀번호 변경에 실패했습니다.')
     } finally {
@@ -295,9 +309,11 @@ function ChangePasswordForm({ onSuccess }) {
         </label>
         <PasswordInput
           value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
+          onChange={(e) => { setCurrentPassword(e.target.value); setCurrentPasswordError('') }}
+          onBlur={handleCurrentPasswordBlur}
           placeholder="현재 비밀번호"
         />
+        {currentPasswordError && <p className="text-[11px] text-up mt-1">{currentPasswordError}</p>}
       </div>
 
       <div>
@@ -391,6 +407,7 @@ function ChangePinForm({ onSuccess }) {
   const [confirmPin, setConfirmPin] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [currentPinError, setCurrentPinError] = useState('')
   const [activePinField, setActivePinField] = useState(null)
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const [resetSent, setResetSent] = useState(false)
@@ -399,6 +416,8 @@ function ChangePinForm({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (currentPinError) return
 
     const validation = changePinSchema.safeParse({
       currentPin,
@@ -419,6 +438,7 @@ function ChangePinForm({ onSuccess }) {
       setCurrentPin('')
       setNewPin('')
       setConfirmPin('')
+      setCurrentPinError('')
     } catch (err) {
       setError(err?.message ?? '계좌 비밀번호 변경에 실패했습니다.')
     } finally {
@@ -431,6 +451,7 @@ function ChangePinForm({ onSuccess }) {
 
     if (activePinField === 'currentPin') {
       setCurrentPin(sanitizedValue)
+      setCurrentPinError('')
       return
     }
     if (activePinField === 'newPin') {
@@ -440,6 +461,18 @@ function ChangePinForm({ onSuccess }) {
     if (activePinField === 'confirmPin') {
       setConfirmPin(sanitizedValue)
       return
+    }
+  }
+
+  async function handleCurrentPinDone() {
+    setIsKeyboardOpen(false)
+    if (currentPin.length === 4) {
+      setCurrentPinError('')
+      try {
+        await accountApi.verifyPin(currentPin)
+      } catch {
+        setCurrentPinError('현재 비밀번호가 올바르지 않습니다.')
+      }
     }
   }
 
@@ -480,10 +513,11 @@ function ChangePinForm({ onSuccess }) {
             isOpen={isKeyboardOpen}
             value={currentPin}
             onChange={handlePinChange}
-            onDone={handlePinDone}
+            onDone={handleCurrentPinDone}
             onClose={() => setIsKeyboardOpen(false)}
           />
         )}
+        {currentPinError && <p className="text-[11px] text-up mt-1">{currentPinError}</p>}
       </div>
 
       <div>
