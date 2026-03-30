@@ -106,6 +106,14 @@ export default function HomePage() {
   const { applyPageChanges } = useWidgetStore()
   const { mutate: saveDashboard } = useDashboardSave()
 
+  // 편집 모드 종료(완료·저장 또는 취소) 시 열려있는 모달 닫기
+  useEffect(() => {
+    if (!isEditMode) {
+      setIsPageEditOpen(false)
+      setIsPresetPickerOpen(false)
+    }
+  }, [isEditMode])
+
   function handleApplyPreset(preset) {
     const newId      = crypto.randomUUID()
     const newWidgets = preset.widgets.map((w) => ({ ...w, instanceId: crypto.randomUUID() }))

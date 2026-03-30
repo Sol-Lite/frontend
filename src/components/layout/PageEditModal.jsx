@@ -135,37 +135,53 @@ export default function PageEditModal({ onClose }) {
   const activePages = stagedPages.filter((p) => !p._deleted)
   const isAtLimit   = activePages.length >= MAX_PAGES
 
+  /* staged 상태를 즉시 스토어에 반영 — 헤더 완료·저장 버튼이 최신 페이지를 읽을 수 있도록 */
+  function syncToStore(newStaged, currentId) {
+    const finalPages = newStaged
+      .filter((p) => !p._deleted)
+      .map(({ _deleted: _, ...rest }) => rest)
+    applyPageChanges(finalPages, currentId)
+  }
+
   function handleAddPage() {
     const newId = crypto.randomUUID()
     const nextIndex = activePages.length + 1
-    setStagedPages((prev) => [
-      ...prev,
+    const newStaged = [
+      ...stagedPages,
       { id: newId, name: `대시보드 ${nextIndex}`, widgets: [] },
-    ])
+    ]
+    setStagedPages(newStaged)
+    syncToStore(newStaged, stagedCurrentId)
   }
 
   function handleDeletePage(pageId) {
     if (activePages.length <= 1) return
-    setStagedPages((prev) => prev.map((p) => p.id === pageId ? { ...p, _deleted: true } : p))
-    // 현재 페이지 삭제 시 인접 활성 페이지로 이동
+    const newStaged = stagedPages.map((p) => p.id === pageId ? { ...p, _deleted: true } : p)
+    let newCurrentId = stagedCurrentId
     if (pageId === stagedCurrentId) {
       const remaining = activePages.filter((p) => p.id !== pageId)
       const deletedIndex = activePages.findIndex((p) => p.id === pageId)
-      const fallback = remaining[deletedIndex] ?? remaining[deletedIndex - 1]
-      setStagedCurrentId(fallback.id)
+      newCurrentId = (remaining[deletedIndex] ?? remaining[deletedIndex - 1]).id
+      setStagedCurrentId(newCurrentId)
     }
+    setStagedPages(newStaged)
+    syncToStore(newStaged, newCurrentId)
   }
 
   function handleRestorePage(pageId) {
-    setStagedPages((prev) => prev.map((p) => p.id === pageId ? { ...p, _deleted: false } : p))
+    const newStaged = stagedPages.map((p) => p.id === pageId ? { ...p, _deleted: false } : p)
+    setStagedPages(newStaged)
+    syncToStore(newStaged, stagedCurrentId)
   }
 
-  /* 페이지 카드 클릭 or backdrop 클릭 — _deleted 제외 후 store에 반영하고 모달 닫기 */
+  /* 페이지 카드 클릭 or backdrop 클릭 — 스토어는 이미 동기화된 상태이므로 모달만 닫기 */
   function handleClose(targetPageId = stagedCurrentId) {
-    const finalPages = stagedPages
-      .filter((p) => !p._deleted)
-      .map(({ _deleted: _, ...rest }) => rest)
-    applyPageChanges(finalPages, targetPageId)
+    if (targetPageId !== stagedCurrentId) {
+      const finalPages = stagedPages
+        .filter((p) => !p._deleted)
+        .map(({ _deleted: _, ...rest }) => rest)
+      applyPageChanges(finalPages, targetPageId)
+    }
     onClose()
   }
 
