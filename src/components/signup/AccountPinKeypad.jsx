@@ -74,6 +74,8 @@ export default function AccountPinKeypad({
   onDone,
   onClose,
   variant = 'both',
+  disabled = false,
+  showDecoyOverlay = true,
 }) {
   const shellRef = useRef(null)
   const flashTimeoutRef = useRef(null)
@@ -110,6 +112,10 @@ export default function AccountPinKeypad({
   }
 
   function handleKeyPress(button) {
+    if (disabled) {
+      return
+    }
+
     if (/^\d$/.test(button)) {
       onChange(`${value}${button}`.slice(0, 4))
       reshuffleInteractiveKeys()
@@ -171,7 +177,7 @@ export default function AccountPinKeypad({
             data-pin-interactive="true"
           >
             {keyboard}
-            <DecoyCursorOverlay active containerRef={shellRef} count={4} />
+            {showDecoyOverlay && <DecoyCursorOverlay active containerRef={shellRef} count={4} />}
           </div>
         </div>
       )}

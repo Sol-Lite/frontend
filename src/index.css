@@ -119,6 +119,7 @@
   --shadow-modal:         0 20px 50px rgba(0,0,0,.22);
   --shadow-focus-ring:    0 0 0 3px rgba(0,70,255,.08);
   --shadow-delete-btn:    0 2px 6px rgba(0,0,0,.22);
+  --shadow-toast:         0 8px 20px rgba(15,23,42,0.08);
 
   /* ── Summary Card ── */
   --background-summary-card: linear-gradient(135deg, var(--color-primary-light) 0%, var(--color-primary-dim) 100%);

@@ -43,7 +43,7 @@ export default function InvestOrderSection({
   const [pinError, setPinError] = useState('')
   const [orderError, setOrderError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [rememberPin, setRememberPin] = useState(true)
+  const [rememberPin, setRememberPin] = useState(false)
   const [isPinVerified, setIsPinVerified] = useState(false)
   const hasManualPriceSelectionRef = useRef(false)
 
@@ -158,7 +158,7 @@ export default function InvestOrderSection({
       setSelectedPrice(marketPrice ?? defaultPrice ?? null)
       setQuantity(1)
       setIsPinVerified(false)
-      setRememberPin(true)
+      setRememberPin(false)
       queryClient.invalidateQueries({ queryKey: ['balance'] })
       queryClient.invalidateQueries({ queryKey: ['orders'] })
     } catch (error) {
@@ -177,7 +177,7 @@ export default function InvestOrderSection({
       setShowPin(true)
       setPin('')
       setPinError('')
-      setRememberPin(true)
+      setRememberPin(false)
     }
   }
 
@@ -207,7 +207,7 @@ export default function InvestOrderSection({
     setShowPin(false)
     setPin('')
     setPinError('')
-    setRememberPin(true)
+    setRememberPin(false)
     setIsPinVerified(false)
   }
 
@@ -219,7 +219,7 @@ export default function InvestOrderSection({
     setShowPin(false)
     setPin('')
     setPinError('')
-    setRememberPin(true)
+    setRememberPin(false)
     setIsPinVerified(false)
   }
 

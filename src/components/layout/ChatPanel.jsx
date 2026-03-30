@@ -1,14 +1,25 @@
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { MessageCircle, Send } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useQueryClient } from "@tanstack/react-query";
 import LiveDot from "@/components/ui/LiveDot";
 import useAuthStore from "@/store/useAuthStore";
 import { chatApi } from "@/api/chat";
 import ChatOrderCard from "@/components/layout/ChatOrderCard";
 import ChatExchangeCard from "@/components/layout/ChatExchangeCard";
-import { marketApi } from "@/api/market";
+import { foreignMarketApi, getExchcd, marketApi } from "@/api/market";
 import { balanceApi } from "@/api/balance";
+import { orderApi, ORDER_SIDE, ORDER_KIND } from "@/api/order";
+import { exchangeApi } from "@/api/exchange";
+import usePinAuth from "@/hooks/usePinAuth";
+import ChatPinBubble from "@/components/layout/ChatPinBubble";
+import ChatExchangePinBubble from "@/components/layout/ChatExchangePinBubble";
+import { isForeignMarketType } from "@/features/invest/formatters";
+import { buildInvestNavigationState } from "@/features/invest/navigation";
+
+const EXCHANGE_RESULT_DELAY_MS = 1400
 
 function getTimestamp() {
   return new Date().toLocaleTimeString("ko-KR", {
@@ -19,6 +30,58 @@ function getTimestamp() {
 }
 
 const STORAGE_KEY = "chat_messages";
+
+function buildClientOrderSeed() {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `chat-order-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function buildOrderIdempotencyKey(requestKeyBase, side, quantity) {
+  const safeSide = side === "sell" ? "sell" : "buy";
+  const safeQty = Number(quantity) > 0 ? Number(quantity) : 1;
+  return `${requestKeyBase ?? buildClientOrderSeed()}:${safeSide}:${safeQty}`;
+}
+
+function normalizeOrderCardPriceData(marketType, priceData) {
+  if (!priceData) return { price: null, changeRate: null };
+
+  if (isForeignMarketType(marketType)) {
+    const price = Number(priceData.price);
+    const rate = Number(priceData.rate);
+    return {
+      price: Number.isFinite(price) && price > 0 ? price : null,
+      changeRate: Number.isFinite(rate) ? rate : null,
+    };
+  }
+
+  const price = Number(priceData.currentPrice);
+  const rate = Number(priceData.changeRate);
+  return {
+    price: Number.isFinite(price) && price > 0 ? price : null,
+    changeRate: Number.isFinite(rate) ? rate : null,
+  };
+}
+
+function formatExchangeAmount(currency, amount) {
+  if (currency === "USD") {
+    return `$${Number(amount ?? 0).toLocaleString("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 4,
+    })}`;
+  }
+
+  return `${Math.round(Number(amount ?? 0)).toLocaleString("ko-KR")}원`;
+}
+
+async function waitForMinimumDelay(startedAt) {
+  const elapsed = Date.now() - startedAt
+  const remaining = Math.max(0, EXCHANGE_RESULT_DELAY_MS - elapsed)
+  if (remaining > 0) {
+    await new Promise((resolve) => window.setTimeout(resolve, remaining))
+  }
+}
 
 // ── 초기 웰컴 메시지 ──────────────────────────────────────────
 function getInitialMessages() {
@@ -35,15 +98,80 @@ function getInitialMessages() {
 function loadMessages() {
   try {
     const saved = sessionStorage.getItem(STORAGE_KEY);
-    if (saved) return JSON.parse(saved);
-  } catch {}
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return parsed
+        .filter((message) => !['pin', 'pin-result', 'exchange-pin'].includes(message?.type))
+        .map((message) => (
+          message?.type === 'order'
+            ? { ...message, pendingPin: false }
+            : message?.type === 'exchange'
+              ? { ...message, isPending: false }
+            : message
+        ));
+    }
+  } catch {
+    return getInitialMessages();
+  }
   return getInitialMessages();
 }
 
 function saveMessages(messages) {
   try {
     sessionStorage.setItem(STORAGE_KEY, JSON.stringify(messages));
-  } catch {}
+  } catch {
+    return;
+  }
+}
+
+function ChatToastStack({ toasts, onClose }) {
+  if (!toasts.length) return null;
+
+  return (
+    <div className="shrink-0 px-3 pb-2 flex flex-col gap-2">
+      {toasts.map((toast) => {
+        const isOrderSuccess = toast.type === "order-success";
+        const isExchangeSuccess = toast.type === "exchange-success";
+        const isBuy = toast.side === "buy";
+        return (
+          <div
+            key={toast.id}
+            className="animate-bubble-in rounded-2xl border border-stroke bg-surface px-3.5 py-3 shadow-toast"
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className={`text-[11px] font-bold uppercase tracking-wide ${
+                  isOrderSuccess
+                    ? (isBuy ? "text-up" : "text-down")
+                    : isExchangeSuccess
+                      ? "text-primary"
+                      : "text-down"
+                }`}>
+                  {toast.title}
+                </p>
+                <p className="mt-1 text-[12px] leading-relaxed text-foreground">
+                  {isOrderSuccess ? (
+                    <>
+                      <span className="font-bold">{toast.name}</span> {isBuy ? "매수" : "매도"} {toast.quantity}주 주문이 접수되었습니다.
+                    </>
+                  ) : (
+                    toast.message
+                  )}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onClose(toast.id)}
+                className="shrink-0 text-[10px] font-semibold text-foreground-disabled hover:text-foreground"
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 // ── 비로그인 기능 소개 카드 ────────────────────────────────────
@@ -202,7 +330,7 @@ function ChatBubble({
 }
 
 // ── ChatMessages ───────────────────────────────────────────────
-function ChatMessages({ messages, isTyping, bottomRef, onRetry }) {
+function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, onExchangeAction, onOrderDetail, onPinClose, onPinSuccess, onExchangePinSuccess, onPinError }) {
   return (
     <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
       {messages.map((msg) => {
@@ -210,7 +338,52 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry }) {
         if (msg.type === 'order' && msg.stock) {
           return (
             <div key={msg.id} className="flex flex-col gap-1">
-              <ChatOrderCard {...msg.stock} />
+              <ChatOrderCard
+                {...msg.stock}
+                onBuy={(qty) => onOrderAction?.(msg.id, msg.stock, 'buy', qty, msg.requestKeyBase)}
+                onSell={(qty) => onOrderAction?.(msg.id, msg.stock, 'sell', qty, msg.requestKeyBase)}
+                onDetail={() => onOrderDetail?.(msg.stock)}
+              />
+              {msg.time && (
+                <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
+              )}
+            </div>
+          )
+        }
+        // PIN 입력 버블
+        if (msg.type === 'pin') {
+          return (
+            <div key={msg.id} className="flex flex-col gap-1 animate-bubble-in">
+              <ChatPinBubble
+                stockCode={msg.stockCode}
+                marketType={msg.marketType}
+                name={msg.name}
+                side={msg.side}
+                quantity={msg.quantity}
+                idempotencyKey={msg.idempotencyKey}
+                onClose={() => onPinClose?.(msg.id, msg.sourceOrderId)}
+                onSuccess={() => onPinSuccess?.(msg.id, msg.sourceOrderId, msg.name, msg.side, msg.quantity)}
+                onError={(message) => onPinError?.(message)}
+              />
+              {msg.time && (
+                <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
+              )}
+            </div>
+          )
+        }
+        if (msg.type === 'exchange-pin') {
+          return (
+            <div key={msg.id} className="flex flex-col gap-1 animate-bubble-in">
+              <ChatExchangePinBubble
+                onClose={() => onPinClose?.(msg.id, msg.sourceExchangeId)}
+                onSubmit={(pinData) => onExchangePinSuccess?.(msg.id, msg.sourceExchangeId, {
+                  ...pinData,
+                  fromCurrency: msg.fromCurrency,
+                  toCurrency: msg.toCurrency,
+                  requestAmount: msg.requestAmount,
+                })}
+                onError={(message) => onPinError?.(message)}
+              />
               {msg.time && (
                 <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
               )}
@@ -221,7 +394,12 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry }) {
         if (msg.type === 'exchange') {
           return (
             <div key={msg.id} className="flex flex-col gap-1">
-              <ChatExchangeCard krwBalance={msg.krwBalance} usdBalance={msg.usdBalance} />
+              <ChatExchangeCard
+                krwBalance={msg.krwBalance}
+                usdBalance={msg.usdBalance}
+                isPending={Boolean(msg.isPending)}
+                onSubmit={(payload) => onExchangeAction?.(msg.id, payload)}
+              />
               {msg.time && (
                 <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
               )}
@@ -374,13 +552,19 @@ function LoginPrompt() {
 
 // ── ChatPanel (root) ───────────────────────────────────────────
 export default function ChatPanel() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { isPinCached, verifyAndCachePin } = usePinAuth();
   const { isAuthenticated, isRestoring } = useAuthStore();
   const [messages, setMessages] = useState(loadMessages);
+  const [toasts, setToasts] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef(null);
   const lastFailedTextRef = useRef(null);
+  const toastTimersRef = useRef(new Map());
   // 복원 완료 후 isAuthenticated의 이전 값 추적 (null = 복원 전)
   const prevIsAuthRef = useRef(null);
+
 
   // 메시지 변경 시 sessionStorage에 저장
   useEffect(() => {
@@ -413,6 +597,147 @@ export default function ChatPanel() {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
 
+  useEffect(() => () => {
+    toastTimersRef.current.forEach((timerId) => {
+      window.clearTimeout(timerId);
+    });
+    toastTimersRef.current.clear();
+  }, []);
+
+  const dismissToast = useCallback((toastId) => {
+    const timerId = toastTimersRef.current.get(toastId);
+    if (timerId) {
+      window.clearTimeout(timerId);
+      toastTimersRef.current.delete(toastId);
+    }
+    setToasts((prev) => prev.filter((toast) => toast.id !== toastId));
+  }, []);
+
+  const pushToast = useCallback((toast, duration = 3200) => {
+    const toastId = Date.now() + Math.random();
+    const nextToast = {
+      id: toastId,
+      ...toast,
+    };
+
+    setToasts((prev) => [...prev, nextToast]);
+
+    const timerId = window.setTimeout(() => {
+      dismissToast(toastId);
+    }, duration);
+    toastTimersRef.current.set(toastId, timerId);
+  }, [dismissToast]);
+
+  const pushOrderToast = useCallback((stockName, side, quantity) => {
+    pushToast({
+      type: "order-success",
+      title: "주문 접수 완료",
+      name: stockName,
+      side,
+      quantity,
+    });
+  }, [pushToast]);
+
+  const pushErrorToast = useCallback((message, title = "주문 처리 실패") => {
+    pushToast({
+      type: "error",
+      title,
+      message,
+    }, 3600);
+  }, [pushToast]);
+
+  const pushExchangeToast = useCallback((result) => {
+    pushToast({
+      type: "exchange-success",
+      title: "환전 완료",
+      message: `${formatExchangeAmount(result.fromCurrency, result.requestAmount)}를 ${formatExchangeAmount(result.toCurrency, result.receiveAmount)}로 환전했습니다.`,
+    });
+  }, [pushToast]);
+
+  const appendOrderCardMessage = useCallback(async (data) => {
+    const searchResults = await marketApi.searchStocks(data.stock_code).catch(() => []);
+    const info =
+      searchResults.find((item) => item.stockCode === data.stock_code) ??
+      searchResults[0] ??
+      null;
+    const marketType = data.market_type ?? info?.marketType ?? null;
+    const exchangeCode = info?.exchangeCode ?? null;
+
+    if (!marketType) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          role: "ai",
+          text: "종목 정보를 찾지 못해 주문 카드를 열지 못했습니다. 잠시 후 다시 시도해 주세요.",
+          time: getTimestamp(),
+        },
+      ]);
+      return;
+    }
+
+    const priceData = await (
+      isForeignMarketType(marketType)
+        ? foreignMarketApi.getCurrentPrice(
+            data.stock_code,
+            getExchcd(exchangeCode ?? (marketType === "NYSE" ? "NYS" : marketType === "AMEX" ? "AMS" : "NAS")),
+          )
+        : marketApi.getCurrentPrice(data.stock_code)
+    ).catch(() => null);
+
+    const normalizedPrice = normalizeOrderCardPriceData(marketType, priceData);
+    const stock = {
+      name: info?.stockName ?? data.stock_code,
+      stockCode: data.stock_code,
+      marketType,
+      exchangeCode,
+      price: normalizedPrice.price,
+      changeRate: normalizedPrice.changeRate,
+    };
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        type: "order",
+        stock,
+        requestKeyBase: buildClientOrderSeed(),
+        time: getTimestamp(),
+      },
+    ]);
+  }, []);
+
+  const appendExchangeCardMessage = useCallback(async () => {
+    try {
+      const summary = await balanceApi.getBalanceSummary();
+      const cashList = summary?.cashBalances ?? [];
+      const krw = cashList.find((balance) => balance.currencyCode === "KRW");
+      const usd = cashList.find((balance) => balance.currencyCode === "USD");
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          type: "exchange",
+          krwBalance: Number(krw?.availableAmount ?? 0),
+          usdBalance: Number(usd?.availableAmount ?? usd?.totalAmount ?? 0),
+          isPending: false,
+          time: getTimestamp(),
+        },
+      ]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: Date.now(),
+          role: "ai",
+          text: "환전 카드를 준비하지 못했습니다. 잠시 후 다시 시도해 주세요.",
+          time: getTimestamp(),
+        },
+      ]);
+    }
+  }, []);
+
   const handleSend = useCallback(async (text) => {
     const userMsg = {
       id: Date.now(),
@@ -434,39 +759,9 @@ export default function ChatPanel() {
       ]);
 
       if (data.type === "order" && data.stock_code) {
-        // 종목 검색 + 현재가 병렬 조회
-        const [searchResults, priceData] = await Promise.all([
-          marketApi.searchStocks(data.stock_code),
-          marketApi.getCurrentPrice(data.stock_code),
-        ]);
-        const info = searchResults?.[0];
-        const stock = {
-          name: info?.stockName ?? data.stock_code,
-          stockCode: data.stock_code,
-          marketType: info?.marketType ?? "KOSPI",
-          price: priceData?.currentPrice ?? 0,
-          changeRate: priceData?.changeRate ?? 0,
-        };
-        setMessages((prev) => [
-          ...prev,
-          { id: Date.now(), type: "order", stock, time: getTimestamp() },
-        ]);
+        await appendOrderCardMessage(data);
       } else if (data.type === "exchange") {
-        // 잔고 조회 후 환전 카드를 채팅 메시지로 추가
-        const summary = await balanceApi.getBalanceSummary();
-        const cashList = summary?.cashBalances ?? [];
-        const krw = cashList.find((b) => b.currencyCode === "KRW");
-        const usd = cashList.find((b) => b.currencyCode === "USD");
-        setMessages((prev) => [
-          ...prev,
-          {
-            id: Date.now(),
-            type: "exchange",
-            krwBalance: Number(krw?.availableAmount ?? 0),
-            usdBalance: Number(usd?.totalAmount ?? 0),
-            time: getTimestamp(),
-          },
-        ]);
+        await appendExchangeCardMessage();
       }
     } catch {
       lastFailedTextRef.current = text;
@@ -483,7 +778,7 @@ export default function ChatPanel() {
     } finally {
       setIsTyping(false);
     }
-  }, []);
+  }, [appendExchangeCardMessage, appendOrderCardMessage]);
 
   const handleRetry = useCallback(() => {
     const text = lastFailedTextRef.current;
@@ -491,6 +786,223 @@ export default function ChatPanel() {
     setMessages((prev) => prev.filter((m) => !m.isError));
     handleSend(text);
   }, [handleSend]);
+
+  const handlePinClose = useCallback((messageId, sourceOrderId) => {
+    setMessages((prev) => prev
+      .filter((message) => (
+        message.id !== messageId
+        && !(message.type === 'pin' && message.sourceOrderId === sourceOrderId)
+      ))
+      .map((message) => {
+        if (message.id !== sourceOrderId) {
+          return message;
+        }
+
+        return {
+          ...message,
+          pendingPin: false,
+        };
+      }));
+  }, []);
+
+  const handlePinSuccess = useCallback((messageId, sourceOrderId, stockName, side, quantity) => {
+    setMessages((prev) => prev
+      .filter((message) => (
+        message.id !== messageId
+        && !(message.type === 'pin' && message.sourceOrderId === sourceOrderId)
+      ))
+      .map((message) => {
+        if (message.id !== sourceOrderId) {
+          return message;
+        }
+
+        return {
+          ...message,
+          pendingPin: false,
+        };
+      }));
+    pushOrderToast(stockName, side, quantity);
+  }, [pushOrderToast]);
+
+  const handlePinError = useCallback((message) => {
+    pushErrorToast(message, '계좌 비밀번호 확인');
+  }, [pushErrorToast]);
+
+  const applyExchangeResultToMessage = useCallback((sourceExchangeId, result) => {
+    const nextKrwBalance = result.fromCurrency === 'KRW'
+      ? Number(result.fromBalanceAfter)
+      : Number(result.toBalanceAfter);
+    const nextUsdBalance = result.fromCurrency === 'USD'
+      ? Number(result.fromBalanceAfter)
+      : Number(result.toBalanceAfter);
+
+    setMessages((prev) => prev.map((message) => {
+      if (message.id !== sourceExchangeId || message.type !== 'exchange') {
+        return message;
+      }
+
+      return {
+        ...message,
+        krwBalance: Number.isFinite(nextKrwBalance) ? nextKrwBalance : message.krwBalance,
+        usdBalance: Number.isFinite(nextUsdBalance) ? nextUsdBalance : message.usdBalance,
+        isPending: false,
+      };
+    }));
+  }, []);
+
+  const setExchangePending = useCallback((sourceExchangeId, isPending) => {
+    setMessages((prev) => prev.map((message) => {
+      if (message.id !== sourceExchangeId || message.type !== 'exchange') {
+        return message;
+      }
+
+      return {
+        ...message,
+        isPending,
+      };
+    }));
+  }, []);
+
+  const runExchangeFlow = useCallback(async (sourceExchangeId, payload, options = {}) => {
+    const startedAt = Date.now();
+    let pinVerified = false;
+    setExchangePending(sourceExchangeId, true);
+
+    try {
+      if (options.pin) {
+        await verifyAndCachePin(options.pin, options.rememberPin);
+        pinVerified = true;
+      }
+
+      const result = await exchangeApi.exchange(payload.fromCurrency, payload.toCurrency, payload.requestAmount);
+      queryClient.invalidateQueries({ queryKey: ['balance'] });
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      await waitForMinimumDelay(startedAt);
+      applyExchangeResultToMessage(sourceExchangeId, result);
+      pushExchangeToast(result);
+    } catch (err) {
+      await waitForMinimumDelay(startedAt);
+      if (options.pin && !pinVerified) {
+        pushErrorToast(err?.message ?? '비밀번호가 올바르지 않습니다.', '계좌 비밀번호 확인');
+      } else {
+        pushErrorToast(err?.message ?? '환전을 실행하지 못했습니다.', '환전 실패');
+      }
+      throw err;
+    } finally {
+      setExchangePending(sourceExchangeId, false);
+    }
+  }, [applyExchangeResultToMessage, pushErrorToast, pushExchangeToast, queryClient, setExchangePending, verifyAndCachePin]);
+
+  const handleExchangePinSuccess = useCallback(async (messageId, sourceExchangeId, payload) => {
+    setMessages((prev) => prev
+      .filter((message) => (
+        message.id !== messageId
+        && !(message.type === 'exchange-pin' && message.sourceExchangeId === sourceExchangeId)
+      )));
+    await runExchangeFlow(sourceExchangeId, payload, {
+      pin: payload.pin,
+      rememberPin: payload.rememberPin,
+    });
+  }, [runExchangeFlow]);
+
+  async function handleOrderAction(messageId, stock, side, quantity, requestKeyBase) {
+    const idempotencyKey = buildOrderIdempotencyKey(requestKeyBase, side, quantity);
+
+    if (isPinCached()) {
+      try {
+        await orderApi.placeOrder({
+          stockCode: stock.stockCode,
+          marketType: stock.marketType,
+          orderSide: ORDER_SIDE[side],
+          orderKind: ORDER_KIND.market,
+          orderChannel: 'CHAT',
+          orderQuantity: quantity,
+          idempotencyKey,
+        });
+        queryClient.invalidateQueries({ queryKey: ['balance'] });
+        queryClient.invalidateQueries({ queryKey: ['orders'] });
+        pushOrderToast(stock.name, side, quantity);
+      } catch (err) {
+        pushErrorToast(err?.message ?? '주문 접수에 실패했습니다.');
+        throw err;
+      }
+    } else {
+      setMessages((prev) => {
+        const alreadyOpen = prev.some(
+          (message) => message.type === 'pin' && message.sourceOrderId === messageId
+        );
+
+        if (alreadyOpen) {
+          return prev;
+        }
+
+        return [
+          ...prev.map((message) => {
+            if (message.id !== messageId) {
+              return message;
+            }
+
+            return {
+              ...message,
+              pendingPin: true,
+            };
+          }),
+          {
+            id: Date.now(),
+            type: 'pin',
+            sourceOrderId: messageId,
+            stockCode: stock.stockCode,
+            marketType: stock.marketType,
+            name: stock.name,
+            side,
+            quantity,
+            idempotencyKey,
+            time: getTimestamp(),
+          },
+        ];
+      });
+    }
+  }
+
+  async function handleExchangeAction(messageId, payload) {
+    if (isPinCached()) {
+      await runExchangeFlow(messageId, payload);
+      return;
+    }
+
+    setMessages((prev) => {
+      const alreadyOpen = prev.some(
+        (message) => message.type === 'exchange-pin' && message.sourceExchangeId === messageId
+      );
+
+      if (alreadyOpen) {
+        return prev;
+      }
+
+      return [
+        ...prev,
+        {
+          id: Date.now(),
+          type: 'exchange-pin',
+          sourceExchangeId: messageId,
+          fromCurrency: payload.fromCurrency,
+          toCurrency: payload.toCurrency,
+          requestAmount: payload.requestAmount,
+          time: getTimestamp(),
+        },
+      ];
+    });
+  }
+
+  function handleOrderDetail(stock) {
+    navigate(`/invest/${stock.stockCode}`, {
+      state: buildInvestNavigationState({
+        stockName: stock.name,
+        marketType: stock.marketType,
+        exchangeCode: stock.exchangeCode,
+      }),
+    });
+  }
 
   return (
     <>
@@ -502,12 +1014,21 @@ export default function ChatPanel() {
             isTyping={isTyping}
             bottomRef={bottomRef}
             onRetry={handleRetry}
+            onOrderAction={(msgId, stock, side, qty, key) => handleOrderAction(msgId, stock, side, qty, key)}
+            onExchangeAction={(msgId, payload) => handleExchangeAction(msgId, payload)}
+            onOrderDetail={handleOrderDetail}
+            onPinClose={handlePinClose}
+            onPinSuccess={(msgId, sourceOrderId, stockName, side, qty) => handlePinSuccess(msgId, sourceOrderId, stockName, side, qty)}
+            onExchangePinSuccess={(msgId, sourceExchangeId, payload) => handleExchangePinSuccess(msgId, sourceExchangeId, payload)}
+            onPinError={handlePinError}
           />
+          <ChatToastStack toasts={toasts} onClose={dismissToast} />
           <ChatInput onSend={handleSend} />
         </>
       ) : (
         <LoginPrompt />
       )}
+
     </>
   );
 }

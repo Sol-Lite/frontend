@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ArrowLeftRight, Loader2 } from 'lucide-react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { exchangeApi } from '@/api/exchange'
+import SplashScreenFill from '@/components/ui/SplashScreenFill'
 
 // ── 포맷 헬퍼 (ExchangeModal과 동일) ──────────────────────────────
 function fmt(n) {
@@ -13,6 +13,10 @@ function fmtUsd(n, min = 0, max = 4) {
     minimumFractionDigits: min,
     maximumFractionDigits: max,
   })
+}
+
+function fmtUsdMoney(n) {
+  return fmtUsd(n, 2, 2)
 }
 
 function fmtRate(n) {
@@ -35,7 +39,7 @@ function normalizeInputRaw(value, direction) {
 
 function getMaxInputRaw(balance, direction) {
   if (direction === 'KRW_TO_USD') return String(Math.floor(Number(balance ?? 0)))
-  return normalizeInputRaw(String(balance ?? 0), direction)
+  return Number(balance ?? 0).toFixed(2)
 }
 
 function Row({ label, value, bold }) {
@@ -49,30 +53,22 @@ function Row({ label, value, bold }) {
   )
 }
 
-const RESULT_DELAY_MS = 1400
-
 /**
  * 채팅창 환전 카드 (ExchangeModal UI 기반)
  * @param {number} krwBalance  - 보유 원화 (availableAmount)
  * @param {number} usdBalance  - 보유 달러 (totalAmount)
  */
-export default function ChatExchangeCard({ krwBalance, usdBalance }) {
-  const queryClient = useQueryClient()
-
+export default function ChatExchangeCard({ krwBalance, usdBalance, onSubmit, isDisabled = false, isPending = false }) {
   const [dir, setDir] = useState('KRW_TO_USD')
   const [inputRaw, setInputRaw] = useState('')
   const [preview, setPreview] = useState(null)
   const [previewLoading, setPreviewLoading] = useState(false)
   const [previewError, setPreviewError] = useState(null)
-  const [resultLoading, setResultLoading] = useState(false)
-  const [done, setDone] = useState(null)
 
   const debounceRef = useRef(null)
-  const resultTimerRef = useRef(null)
 
   useEffect(() => () => {
     clearTimeout(debounceRef.current)
-    clearTimeout(resultTimerRef.current)
   }, [])
 
   const fromCurrency = dir === 'KRW_TO_USD' ? 'KRW' : 'USD'
@@ -117,63 +113,22 @@ export default function ChatExchangeCard({ krwBalance, usdBalance }) {
     setPreviewError(null)
   }
 
-  const { mutate: doExchange, isPending } = useMutation({
-    mutationFn: () =>
-      exchangeApi.exchange(fromCurrency, toCurrency, parseAmount(inputRaw)),
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['balance'] })
-      queryClient.invalidateQueries({ queryKey: ['portfolio'] })
-      setResultLoading(true)
-      clearTimeout(resultTimerRef.current)
-      resultTimerRef.current = setTimeout(() => {
-        setResultLoading(false)
-        setDone(data)
-      }, RESULT_DELAY_MS)
-    },
-  })
-
   const amount = parseAmount(inputRaw)
-  const canSubmit = amount > 0 && amount <= maxBalance && preview && !isPending && !resultLoading
+  const canSubmit = amount > 0 && amount <= maxBalance && preview && !previewLoading && !isDisabled
 
-  // ── 처리 중 화면 ───────────────────────────────────────────────
-  if (resultLoading) {
+  if (isPending) {
     return (
-      <div className="bg-surface border border-stroke rounded-2xl p-6 w-full flex flex-col items-center gap-3 min-h-[160px] justify-center">
-        <Loader2 className="w-7 h-7 text-primary animate-spin" />
-        <p className="text-[13px] font-bold text-foreground">환전 처리 중</p>
-        <p className="text-[11px] text-foreground-disabled text-center leading-relaxed">
-          환전 결과를 정리하고 있어요.<br />잠시만 기다려주세요.
-        </p>
-      </div>
-    )
-  }
-
-  // ── 완료 화면 ─────────────────────────────────────────────────
-  if (done) {
-    const wasKrwToUsd = done.fromCurrency === 'KRW'
-    return (
-      <div className="bg-surface border border-stroke rounded-2xl p-4 w-full flex flex-col gap-3">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow-sm">
-            <ArrowLeftRight className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+      <div className="bg-surface border border-stroke rounded-2xl p-4 w-full">
+        <div className="flex min-h-[320px] flex-col items-center justify-center text-center">
+          <div className="mb-6">
+            <SplashScreenFill inline animated />
           </div>
-          <span className="text-[14px] font-bold text-foreground">환전 완료</span>
-        </div>
-        <div className="flex flex-col gap-2 bg-surface-subtle rounded-xl p-3 text-[11px]">
-          <Row
-            label="환전 금액"
-            value={wasKrwToUsd ? `${fmt(done.requestAmount)}원` : `$${fmtUsd(done.requestAmount)}`}
-          />
-          <Row label="적용 환율" value={`${fmtRate(done.appliedRate)}원/USD`} />
-          <Row
-            label="수수료 (1.75%)"
-            value={wasKrwToUsd ? `${fmtRate(done.feeAmount)}원` : `$${fmtUsd(done.feeAmount, 0, 4)}`}
-          />
-          <Row
-            label="수령 금액"
-            value={wasKrwToUsd ? `$${fmtUsd(done.receiveAmount)}` : `${fmt(done.receiveAmount)}원`}
-            bold
-          />
+          <p className="text-[13px] font-bold text-foreground">환전 처리 중</p>
+          <p className="mt-1 text-[11px] leading-relaxed text-foreground-disabled">
+            환전 결과를 정리하고 있어요.
+            <br />
+            잠시만 기다려주세요.
+          </p>
         </div>
       </div>
     )
@@ -218,7 +173,15 @@ export default function ChatExchangeCard({ krwBalance, usdBalance }) {
           <input
             type="text"
             inputMode="numeric"
-            value={inputRaw ? parseAmount(inputRaw).toLocaleString('ko-KR') : ''}
+            value={
+              inputRaw
+                ? (
+                    dir === 'KRW_TO_USD'
+                      ? parseAmount(inputRaw).toLocaleString('ko-KR')
+                      : fmtUsdMoney(parseAmount(inputRaw))
+                  )
+                : ''
+            }
             onChange={handleInput}
             placeholder="0"
             className="flex-1 text-[16px] font-bold text-foreground bg-transparent outline-none placeholder:text-foreground-disabled"
@@ -227,7 +190,7 @@ export default function ChatExchangeCard({ krwBalance, usdBalance }) {
         </div>
         <div className="flex items-center justify-between mt-1.5">
           <span className="text-[10px] text-foreground-disabled">
-            보유 {fromCurrency}: {dir === 'KRW_TO_USD' ? `${fmt(maxBalance)}원` : `$${fmtUsd(maxBalance)}`}
+            보유 {fromCurrency}: {dir === 'KRW_TO_USD' ? `${fmt(maxBalance)}원` : `$${fmtUsdMoney(maxBalance)}`}
           </span>
           <button
             onClick={handleMax}
@@ -257,11 +220,11 @@ export default function ChatExchangeCard({ krwBalance, usdBalance }) {
           <Row label="적용 환율" value={`${fmtRate(preview.exchangeRate)}원/USD`} />
           <Row
             label="수수료 (1.75%)"
-            value={dir === 'KRW_TO_USD' ? `${fmtRate(preview.feeAmount)}원` : `$${fmtUsd(preview.feeAmount)}`}
+            value={dir === 'KRW_TO_USD' ? `${fmtRate(preview.feeAmount)}원` : `$${fmtUsdMoney(preview.feeAmount)}`}
           />
           <Row
             label="예상 수령액"
-            value={dir === 'KRW_TO_USD' ? `$${fmtUsd(preview.estimatedReceiveAmount)}` : `${fmt(preview.estimatedReceiveAmount)}원`}
+            value={dir === 'KRW_TO_USD' ? `$${fmtUsdMoney(preview.estimatedReceiveAmount)}` : `${fmt(preview.estimatedReceiveAmount)}원`}
             bold
           />
         </div>
@@ -270,10 +233,14 @@ export default function ChatExchangeCard({ krwBalance, usdBalance }) {
       {/* 환전 실행 */}
       <button
         disabled={!canSubmit}
-        onClick={() => doExchange()}
+        onClick={() => onSubmit?.({
+          fromCurrency,
+          toCurrency,
+          requestAmount: amount,
+        })}
         className="w-full py-2.5 rounded-xl bg-primary text-white text-[13px] font-bold shadow-primary-btn hover:bg-primary-hover transition-colors duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
       >
-        {isPending ? '처리 중…' : '환전 실행'}
+        환전 실행
       </button>
 
     </div>
