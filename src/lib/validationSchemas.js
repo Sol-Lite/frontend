@@ -39,7 +39,7 @@ export const changePinSchema = z.object({
 }).refine(
   (data) => data.newPin !== data.currentPin,
   {
-    message: '새 비밀번호는 현재 비밀번호와 달라야 합니다.',
+    message: '새 PIN은 현재 PIN과 달라야 합니다.',
     path: ['newPin'],
   }
 ).refine(

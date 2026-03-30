@@ -394,7 +394,7 @@ function ChangePinForm({ onSuccess }) {
       try {
         await accountApi.verifyPin(currentPin)
       } catch {
-        setCurrentPinError('현재 비밀번호가 올바르지 않습니다.')
+        setCurrentPinError('현재 PIN이 올바르지 않습니다.')
       }
     }
   }
