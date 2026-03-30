@@ -6,26 +6,28 @@ import { formatVisiblePrice } from '@/features/invest/formatters'
 import { cn } from '@/lib/cn'
 import useUIStore from '@/store/useUIStore'
 
+// 볼륨 바 색상은 라이트/다크 공통
+const VOLUME_COLORS = {
+  up:   'rgba(232, 57, 62, 0.28)',
+  down: 'rgba(0, 117, 232, 0.28)',
+}
+
 const LIGHT_COLORS = {
-  background:      '#FFFFFF',
-  primary:         '#0046FF',
-  grid:            '#F3F4F6',
-  text:            '#6B7280',
-  up:              '#E8393E',
-  down:            '#0075E8',
-  volumeUp:        'rgba(232, 57, 62, 0.28)',
-  volumeDown:      'rgba(0, 117, 232, 0.28)',
+  background: '#FFFFFF',
+  primary:    '#0046FF',
+  grid:       '#F3F4F6',
+  text:       '#6B7280',
+  up:         '#E8393E',
+  down:       '#0075E8',
 }
 
 const DARK_COLORS = {
-  background:      '#181B24',
-  primary:         '#0046FF',
-  grid:            '#252836',
-  text:            '#8A8D93',
-  up:              '#E8393E',
-  down:            '#0075E8',
-  volumeUp:        'rgba(232, 57, 62, 0.28)',
-  volumeDown:      'rgba(0, 117, 232, 0.28)',
+  background: '#181B24',
+  primary:    '#0046FF',
+  grid:       '#252836',
+  text:       '#8A8D93',
+  up:         '#E8393E',
+  down:       '#0075E8',
 }
 
 function toChartTime(timestamp) {
@@ -209,7 +211,7 @@ const InvestStockChart = memo(function InvestStockChart({
           current.map((p) => ({
             time: toChartTime(p.timestamp),
             value: p.volume,
-            color: p.close >= p.open ? colors.volumeUp : colors.volumeDown,
+            color: p.close >= p.open ? VOLUME_COLORS.up : VOLUME_COLORS.down,
           })),
         )
         restoreVisibleRange()
@@ -308,7 +310,7 @@ const InvestStockChart = memo(function InvestStockChart({
         series.map((point) => ({
           time: toChartTime(point.timestamp),
           value: point.volume,
-          color: point.close >= point.open ? LIGHT_COLORS.volumeUp : LIGHT_COLORS.volumeDown,
+          color: point.close >= point.open ? VOLUME_COLORS.up : VOLUME_COLORS.down,
         })),
       )
     }
