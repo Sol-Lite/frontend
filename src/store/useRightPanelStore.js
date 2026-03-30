@@ -1,10 +1,11 @@
 import { create } from 'zustand'
 
 const useRightPanelStore = create((set) => ({
-  mode: 'chat', // 'chat' | 'account-settings'
+  mode: 'chat', // 'chat' | 'account-settings' | 'notification-settings'
 
   setChatMode: () => set({ mode: 'chat' }),
   setAccountSettingsMode: () => set({ mode: 'account-settings' }),
+  setNotificationSettingsMode: () => set({ mode: 'notification-settings' }),
 }))
 
 export default useRightPanelStore

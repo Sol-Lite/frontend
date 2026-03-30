@@ -3,6 +3,7 @@ import useRightPanelStore from '@/store/useRightPanelStore'
 import EditPanel from './EditPanel'
 import ChatPanel from './ChatPanel'
 import AccountSettingsPanel from './AccountSettingsPanel'
+import NotificationSettingsPanel from './NotificationSettingsPanel'
 
 export default function RightPanel() {
   const { isEditMode } = useEditModeStore()
@@ -14,6 +15,8 @@ export default function RightPanel() {
     <aside className="w-chat-panel flex flex-col bg-surface border-l border-stroke shrink-0">
       {mode === 'account-settings' ? (
         <AccountSettingsPanel />
+      ) : mode === 'notification-settings' ? (
+        <NotificationSettingsPanel />
       ) : (
         <ChatPanel />
       )}

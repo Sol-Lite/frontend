@@ -4,20 +4,30 @@ import { CandlestickSeries, CrosshairMode, HistogramSeries, LineSeries, createCh
 import { ChevronDown } from 'lucide-react'
 import { formatVisiblePrice } from '@/features/invest/formatters'
 import { cn } from '@/lib/cn'
+import useUIStore from '@/store/useUIStore'
 
-const COLORS = {
+// 볼륨 바 색상은 라이트/다크 공통
+const VOLUME_COLORS = {
+  up:   'rgba(232, 57, 62, 0.28)',
+  down: 'rgba(0, 117, 232, 0.28)',
+}
+
+const LIGHT_COLORS = {
   background: '#FFFFFF',
-  backgroundSubtle: '#F8F9FB',
-  border: '#EAECF0',
-  primary: '#0046FF',
-  primaryArea: 'rgba(0, 70, 255, 0.08)',
-  grid: '#F3F4F6',
-  text: '#6B7280',
-  textStrong: '#191F28',
-  up: '#E8393E',
-  down: '#0075E8',
-  volumeUp: 'rgba(232, 57, 62, 0.28)',
-  volumeDown: 'rgba(0, 117, 232, 0.28)',
+  primary:    '#0046FF',
+  grid:       '#F3F4F6',
+  text:       '#6B7280',
+  up:         '#E8393E',
+  down:       '#0075E8',
+}
+
+const DARK_COLORS = {
+  background: '#181B24',
+  primary:    '#0046FF',
+  grid:       '#252836',
+  text:       '#8A8D93',
+  up:         '#E8393E',
+  down:       '#0075E8',
 }
 
 function toChartTime(timestamp) {
@@ -90,6 +100,8 @@ const InvestStockChart = memo(function InvestStockChart({
     visibleLogicalRangeRef.current = null
   }, [stockCode, selectedPeriod, minuteInterval])
 
+  const theme = useUIStore((s) => s.theme)
+
   const [chartType, setChartType] = useState(
     () => localStorage.getItem('invest.chartType') ?? 'candle',
   )
@@ -99,22 +111,24 @@ const InvestStockChart = memo(function InvestStockChart({
   }, [chartType])
 
   const isIntraday = selectedPeriod === 'MINUTE'
-// Effect 1: 차트 생성 — chartType / isIntraday 바뀔 때만 재생성
+// Effect 1: 차트 생성 — chartType / isIntraday / theme 바뀔 때만 재생성
   useEffect(() => {
     const container = containerRef.current
     if (!container) return
+
+    const colors = theme === 'dark' ? DARK_COLORS : LIGHT_COLORS
 
     const chart = createChart(container, {
       width: container.clientWidth,
       height: container.clientHeight,
       layout: {
-        background: { color: COLORS.background },
-        textColor: COLORS.text,
+        background: { color: colors.background },
+        textColor: colors.text,
         fontFamily: 'Pretendard, -apple-system, BlinkMacSystemFont, Apple SD Gothic Neo, sans-serif',
       },
       grid: {
-        vertLines: { color: COLORS.grid },
-        horzLines: { color: COLORS.grid },
+        vertLines: { color: colors.grid },
+        horzLines: { color: colors.grid },
       },
       rightPriceScale: {
         borderVisible: false,
@@ -135,8 +149,8 @@ const InvestStockChart = memo(function InvestStockChart({
       },
       crosshair: {
         mode: CrosshairMode.Normal,
-        vertLine: { color: COLORS.primary, width: 1, style: 1, labelBackgroundColor: COLORS.primary },
-        horzLine: { color: COLORS.primary, width: 1, style: 1, labelBackgroundColor: COLORS.primary },
+        vertLine: { color: colors.primary, width: 1, style: 1, labelBackgroundColor: colors.primary },
+        horzLine: { color: colors.primary, width: 1, style: 1, labelBackgroundColor: colors.primary },
       },
       handleScroll: { mouseWheel: true, pressedMouseMove: true, horzTouchDrag: true, vertTouchDrag: false },
       handleScale: { axisPressedMouseMove: true, mouseWheel: true, pinch: true },
@@ -164,12 +178,12 @@ const InvestStockChart = memo(function InvestStockChart({
 
     if (chartType === 'candle') {
       candleSeriesRef.current = chart.addSeries(CandlestickSeries, {
-        upColor: COLORS.up,
-        borderUpColor: COLORS.up,
-        wickUpColor: COLORS.up,
-        downColor: COLORS.down,
-        borderDownColor: COLORS.down,
-        wickDownColor: COLORS.down,
+        upColor: colors.up,
+        borderUpColor: colors.up,
+        wickUpColor: colors.up,
+        downColor: colors.down,
+        borderDownColor: colors.down,
+        wickDownColor: colors.down,
         priceLineVisible: true,
         lastValueVisible: true,
       })
@@ -197,14 +211,14 @@ const InvestStockChart = memo(function InvestStockChart({
           current.map((p) => ({
             time: toChartTime(p.timestamp),
             value: p.volume,
-            color: p.close >= p.open ? COLORS.volumeUp : COLORS.volumeDown,
+            color: p.close >= p.open ? VOLUME_COLORS.up : VOLUME_COLORS.down,
           })),
         )
         restoreVisibleRange()
       }
     } else {
       areaSeriesRef.current = chart.addSeries(LineSeries, {
-        lineColor: COLORS.primary,
+        lineColor: colors.primary,
         lineWidth: 2,
         priceLineVisible: true,
         lastValueVisible: true,
@@ -276,7 +290,7 @@ const InvestStockChart = memo(function InvestStockChart({
       volumeSeriesRef.current = null
       areaSeriesRef.current = null
     }
-  }, [chartType, displayCurrency, isIntraday, marketType, usdRate])
+  }, [chartType, displayCurrency, isIntraday, marketType, theme, usdRate])
 
   // Effect 2: 데이터 업데이트 — series 바뀔 때만 (차트 재생성 없음)
   useEffect(() => {
@@ -296,7 +310,7 @@ const InvestStockChart = memo(function InvestStockChart({
         series.map((point) => ({
           time: toChartTime(point.timestamp),
           value: point.volume,
-          color: point.close >= point.open ? COLORS.volumeUp : COLORS.volumeDown,
+          color: point.close >= point.open ? VOLUME_COLORS.up : VOLUME_COLORS.down,
         })),
       )
     }

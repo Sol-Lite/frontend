@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react'
-import { cn } from '@/lib/cn'
+import { useState, useEffect, useRef } from 'react'
 import { X, LogOut } from 'lucide-react'
 import SplashScreenFill from '@/components/ui/SplashScreenFill'
 import { useNavigate } from 'react-router-dom'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import useRightPanelStore from '@/store/useRightPanelStore'
 import useAuthStore from '@/store/useAuthStore'
-import useUIStore from '@/store/useUIStore'
 import { Input, PasswordInput } from '@/components/ui/Input'
 import { userApi } from '@/api/user'
 import { accountApi } from '@/api/account'
@@ -14,7 +12,6 @@ import { authApi } from '@/api/auth'
 import { changePasswordSchema, changePinSchema, resetAccountSchema, closeAccountSchema, updateProfileSchema } from '@/lib/validationSchemas'
 import { formatPhoneNumber } from '@/components/signup/phoneNumber'
 import AccountPinKeypad from '@/components/signup/AccountPinKeypad'
-import DecoyCursorOverlay from '@/components/signup/DecoyCursorOverlay'
 
 function Header() {
   const navigate = useNavigate()
@@ -55,88 +52,14 @@ function Header() {
   )
 }
 
-function FontSizeSettings() {
-  const { fontSize, setFontSize } = useUIStore()
-  const options = [
-    { value: 'sm', label: '소' },
-    { value: 'md', label: '중' },
-    { value: 'lg', label: '대' },
-  ]
-  return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <p className="text-[11px] font-semibold text-foreground-secondary mb-3">글꼴 크기</p>
-        <div className="flex gap-2">
-          {options.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => setFontSize(value)}
-              className={cn(
-                'flex-1 py-2 rounded-lg border text-[12px] font-medium transition-colors',
-                fontSize === value
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-surface text-foreground-secondary border-stroke hover:border-primary-border',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <p className="text-[11px] text-foreground-disabled leading-relaxed">위젯 및 표의 글씨 크기에 반영됩니다.</p>
-    </div>
-  )
-}
 
-function ThemeSettings() {
-  const { theme, setTheme } = useUIStore()
-  const options = [
-    { value: 'light', label: '라이트' },
-    { value: 'dark',  label: '다크'   },
-  ]
-
-  function handleSetTheme(value) {
-    const prev = theme
-    setTheme(value)
-    userApi.updateTheme(value.toUpperCase()).catch(() => {
-      setTheme(prev)
-    })
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div>
-        <p className="text-[11px] font-semibold text-foreground-secondary mb-3">테마</p>
-        <div className="flex gap-2">
-          {options.map(({ value, label }) => (
-            <button
-              key={value}
-              onClick={() => handleSetTheme(value)}
-              className={cn(
-                'flex-1 py-2 rounded-lg border text-[12px] font-medium transition-colors',
-                theme === value
-                  ? 'bg-primary text-white border-primary'
-                  : 'bg-surface text-foreground-secondary border-stroke hover:border-primary-border',
-              )}
-            >
-              {label}
-            </button>
-          ))}
-        </div>
-      </div>
-      <p className="text-[11px] text-foreground-disabled leading-relaxed">전체 화면 색상 테마에 반영됩니다.</p>
-    </div>
-  )
-}
-
-function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
+function MenuTabs({ selectedMenuItem, onSelectMenuItem, disabled }) {
   const tabs = [
     { id: 'update-profile',          label: '프로필',      danger: false },
     { id: 'change-account-password', label: '계정 비밀번호', danger: false },
     { id: 'change-account-pin',      label: '계좌 비밀번호', danger: false },
     { id: 'reset',                   label: '리셋',        danger: true  },
     { id: 'close-account',           label: '계좌 해지',   danger: true  },
-    { id: 'display',                 label: '화면 설정',   danger: false },
   ]
 
   return (
@@ -147,7 +70,8 @@ function MenuTabs({ selectedMenuItem, onSelectMenuItem }) {
           <button
             key={id}
             onClick={() => onSelectMenuItem(id)}
-            className={`px-3 py-[10px] text-[12px] border-b-2 transition-colors whitespace-nowrap ${
+            disabled={disabled}
+            className={`px-3 py-[10px] text-[12px] border-b-2 transition-colors whitespace-nowrap disabled:pointer-events-none disabled:opacity-40 ${
               active
                 ? danger
                   ? 'font-bold text-up border-b-up'
@@ -186,6 +110,13 @@ function UpdateProfileForm({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (!profile) return
+
+    if (name === (profile.name ?? '') && phone === formatPhoneNumber(profile.phone ?? '')) {
+      setError('변경된 내용이 없습니다.')
+      return
+    }
 
     const validation = updateProfileSchema.safeParse({ name, phone })
     if (!validation.success) {
@@ -248,10 +179,23 @@ function ChangePasswordForm({ onSuccess }) {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [currentPasswordError, setCurrentPasswordError] = useState('')
+
+  async function handleCurrentPasswordBlur() {
+    if (!currentPassword) return
+    setCurrentPasswordError('')
+    try {
+      await userApi.verifyPassword(currentPassword)
+    } catch {
+      setCurrentPasswordError('현재 비밀번호가 올바르지 않습니다.')
+    }
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (currentPasswordError) return
 
     const validation = changePasswordSchema.safeParse({
       currentPassword,
@@ -272,6 +216,7 @@ function ChangePasswordForm({ onSuccess }) {
       setCurrentPassword('')
       setNewPassword('')
       setConfirmPassword('')
+      setCurrentPasswordError('')
     } catch (err) {
       setError(err?.message ?? '비밀번호 변경에 실패했습니다.')
     } finally {
@@ -287,9 +232,11 @@ function ChangePasswordForm({ onSuccess }) {
         </label>
         <PasswordInput
           value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
+          onChange={(e) => { setCurrentPassword(e.target.value); setCurrentPasswordError('') }}
+          onBlur={handleCurrentPasswordBlur}
           placeholder="현재 비밀번호"
         />
+        {currentPasswordError && <p className="text-[11px] text-up mt-1">{currentPasswordError}</p>}
       </div>
 
       <div>
@@ -383,6 +330,7 @@ function ChangePinForm({ onSuccess }) {
   const [confirmPin, setConfirmPin] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [currentPinError, setCurrentPinError] = useState('')
   const [activePinField, setActivePinField] = useState(null)
   const [isKeyboardOpen, setIsKeyboardOpen] = useState(false)
   const [resetSent, setResetSent] = useState(false)
@@ -391,6 +339,8 @@ function ChangePinForm({ onSuccess }) {
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+
+    if (currentPinError) return
 
     const validation = changePinSchema.safeParse({
       currentPin,
@@ -411,6 +361,7 @@ function ChangePinForm({ onSuccess }) {
       setCurrentPin('')
       setNewPin('')
       setConfirmPin('')
+      setCurrentPinError('')
     } catch (err) {
       setError(err?.message ?? '계좌 비밀번호 변경에 실패했습니다.')
     } finally {
@@ -423,6 +374,7 @@ function ChangePinForm({ onSuccess }) {
 
     if (activePinField === 'currentPin') {
       setCurrentPin(sanitizedValue)
+      setCurrentPinError('')
       return
     }
     if (activePinField === 'newPin') {
@@ -432,6 +384,18 @@ function ChangePinForm({ onSuccess }) {
     if (activePinField === 'confirmPin') {
       setConfirmPin(sanitizedValue)
       return
+    }
+  }
+
+  async function handleCurrentPinDone() {
+    setIsKeyboardOpen(false)
+    if (currentPin.length === 4) {
+      setCurrentPinError('')
+      try {
+        await accountApi.verifyPin(currentPin)
+      } catch {
+        setCurrentPinError('현재 PIN이 올바르지 않습니다.')
+      }
     }
   }
 
@@ -472,10 +436,11 @@ function ChangePinForm({ onSuccess }) {
             isOpen={isKeyboardOpen}
             value={currentPin}
             onChange={handlePinChange}
-            onDone={handlePinDone}
+            onDone={handleCurrentPinDone}
             onClose={() => setIsKeyboardOpen(false)}
           />
         )}
+        {currentPinError && <p className="text-[11px] text-up mt-1">{currentPinError}</p>}
       </div>
 
       <div>
@@ -801,14 +766,6 @@ function CloseAccountForm() {
 function ContentArea({ selectedMenuItem, onSuccess }) {
   return (
     <div className="flex-1 flex flex-col p-4 overflow-y-auto">
-      {selectedMenuItem === 'display' && (
-        <div className="flex flex-col gap-6">
-          <FontSizeSettings />
-          <div className="h-px bg-stroke-subtle" />
-          <ThemeSettings />
-        </div>
-      )}
-
       {selectedMenuItem === 'update-profile' && (
         <UpdateProfileForm onSuccess={onSuccess} />
       )}
@@ -842,14 +799,20 @@ export default function AccountSettingsPanel() {
   const [selectedMenuItem, setSelectedMenuItem] = useState('update-profile')
   const [successStatus, setSuccessStatus] = useState(null) // null | 'animating' | 'success'
   const [successMessage, setSuccessMessage] = useState('')
+  const successTimerRef = useRef(null)
+
+  useEffect(() => {
+    return () => clearTimeout(successTimerRef.current)
+  }, [])
 
   const handleSuccess = (message) => {
     setSuccessMessage(message)
     setSuccessStatus('animating')
-    setTimeout(() => setSuccessStatus('success'), 1600)
+    successTimerRef.current = setTimeout(() => setSuccessStatus('success'), 1600)
   }
 
   const handleReset = () => {
+    clearTimeout(successTimerRef.current)
     setSuccessStatus(null)
     setSuccessMessage('')
   }
@@ -858,7 +821,7 @@ export default function AccountSettingsPanel() {
     <div className="flex flex-col h-full">
       <Header />
 
-      <MenuTabs selectedMenuItem={selectedMenuItem} onSelectMenuItem={setSelectedMenuItem} />
+      <MenuTabs selectedMenuItem={selectedMenuItem} onSelectMenuItem={(item) => { handleReset(); setSelectedMenuItem(item) }} disabled={successStatus === 'animating'} />
 
       {successStatus ? (
         <div className="flex-1 flex flex-col items-center justify-center gap-5 p-6">

@@ -8,6 +8,7 @@ import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import NotificationCenter from '@/components/ui/NotificationCenter'
+import { FontSizeButton, ThemeButton } from './DisplaySettingsButtons'
 
 function Logo() {
   const navigate = useNavigate()
@@ -134,6 +135,8 @@ export default function AppHeader() {
       <NavTabs />
       <div className="flex-1" />
       {isHome && (isEditMode ? <EditModeActions /> : <WidgetEditButton />)}
+      <FontSizeButton />
+      <ThemeButton />
       <NotificationCenter />
       <UserArea />
     </header>

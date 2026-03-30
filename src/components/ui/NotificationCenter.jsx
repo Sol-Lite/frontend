@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import useAuthStore from '@/store/useAuthStore'
 import useNotificationStore from '@/store/useNotificationStore'
 import useStompSubscription from '@/hooks/useStompSubscription'
+import useRightPanelStore from '@/store/useRightPanelStore'
 
 function timeAgo(dateStr) {
   if (!dateStr) return ''
@@ -56,7 +57,7 @@ function NotificationItem({ notification, onClose }) {
 }
 
 export default function NotificationCenter() {
-  const navigate = useNavigate()
+  const setNotificationSettingsMode = useRightPanelStore((s) => s.setNotificationSettingsMode)
   const { isAuthenticated, user } = useAuthStore()
   const {
     notifications,
@@ -148,7 +149,7 @@ export default function NotificationCenter() {
                 </button>
               )}
               <button
-                onClick={() => { setOpen(false); navigate('/notifications/settings') }}
+                onClick={() => { setOpen(false); setNotificationSettingsMode() }}
                 className="p-1.5 rounded-lg text-foreground-tertiary hover:bg-surface-muted transition-colors"
                 aria-label="알림 설정"
               >
