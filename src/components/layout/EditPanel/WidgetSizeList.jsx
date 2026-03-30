@@ -468,31 +468,31 @@ export function PreviewContent({ type }) {
         { d: 22, trades: null },
       ]
       return (
-        <div className="flex flex-col h-full gap-1">
-          <div className="flex items-center justify-between shrink-0">
-            <span className="text-[9px] font-bold text-foreground">2026년 3월</span>
-            <span className="text-[8px] text-foreground-disabled">3.16 ~ 3.22</span>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-2 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
+            <span className="text-[8px] text-foreground-disabled">2026년 3월</span>
           </div>
-          <div className="grid grid-cols-7 gap-0.5 shrink-0">
-            {wDays.map((d) => (
-              <div key={d} className="text-center text-[7px] font-semibold text-foreground-disabled">{d}</div>
+          <div className="grid grid-cols-7 gap-0.5 shrink-0 mb-1">
+            {wDays.map((d, i) => (
+              <div key={d} className={cn('text-[7px] font-semibold text-center', i === 0 ? 'text-up' : i === 6 ? 'text-down' : 'text-foreground-disabled')}>{d}</div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-0.5 flex-1">
-            {weekCells.map(({ d, trades }, i) => (
-              <div
-                key={i}
-                className="flex flex-col items-start justify-start rounded p-1 bg-background/50"
-              >
-                <span className="text-[8px] leading-none mb-1 text-foreground">{d}</span>
-                {trades && trades.map((tr, j) => (
-                  <div key={j} className="flex items-center gap-0.5 w-full mb-0.5">
-                    <div className={cn('w-0.5 rounded-full shrink-0 self-stretch', tr.buy ? 'bg-up' : 'bg-down')} />
-                    <span className="text-[7px] leading-snug truncate text-foreground">{tr.s}</span>
-                  </div>
-                ))}
-              </div>
-            ))}
+            {weekCells.map(({ d, trades }, i) => {
+              const dateColor = i === 0 ? 'text-up' : i === 6 ? 'text-down' : 'text-foreground'
+              return (
+                <div key={i} className="flex flex-col items-start rounded-lg p-1 overflow-hidden">
+                  <span className={`text-[8px] leading-none mb-1 shrink-0 w-full text-center ${dateColor}`}>{d}</span>
+                  {trades && trades.map((tr, j) => (
+                    <div key={j} className="flex items-center gap-0.5 w-full mb-0.5 shrink-0">
+                      <div className={cn('w-0.5 rounded-full shrink-0 self-stretch', tr.buy ? 'bg-up' : 'bg-down')} />
+                      <span className="text-[7px] leading-snug truncate text-foreground">{tr.s}</span>
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
           </div>
         </div>
       )
@@ -538,25 +538,27 @@ export function PreviewContent({ type }) {
         25: [{ s: '포스코', t: false }],
       }
       return (
-        <div className="flex flex-col h-full gap-1">
-          <div className="flex items-center justify-between shrink-0">
-            <span className="text-[9px] font-bold text-foreground">2026년 3월</span>
-            <span className="text-[8px] text-foreground-disabled">거래내역</span>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-2 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
+            <span className="text-[8px] text-foreground-disabled">2026년 3월</span>
           </div>
-          <div className="grid grid-cols-7 gap-0.5 shrink-0">
-            {days.map((d) => (
-              <div key={d} className="text-center text-[7px] font-semibold text-foreground-disabled">{d}</div>
+          <div className="grid grid-cols-7 gap-0.5 shrink-0 mb-1">
+            {days.map((d, i) => (
+              <div key={d} className={cn('text-[7px] font-semibold text-center', i === 0 ? 'text-up' : i === 6 ? 'text-down' : 'text-foreground-disabled')}>{d}</div>
             ))}
           </div>
           <div className="grid grid-cols-7 gap-0.5 flex-1">
             {cells.map((d, i) => {
               const trades = d ? tradeMap[d] : null
+              const col = i % 7
+              const dateColor = col === 0 ? 'text-up' : col === 6 ? 'text-down' : 'text-foreground'
               return (
                 <div
                   key={i}
-                  className="flex flex-col items-start justify-start rounded p-0.5"
+                  className="flex flex-col items-center rounded p-0.5"
                 >
-                  <span className={`text-[8px] leading-none mb-px ${d ? 'text-foreground' : ''}`}>
+                  <span className={`text-[8px] leading-none mb-px ${d ? dateColor : 'invisible'}`}>
                     {d ?? ''}
                   </span>
                   {trades && trades.slice(0, 2).map((tr, j) => (
@@ -966,48 +968,61 @@ export function PreviewContent({ type }) {
         25: [{ s: '포스코', t: false }],
       }
       const trades = [
-        { name: '삼성전자', type: '매수' }, { name: 'SK하이닉스', type: '매도' },
-        { name: 'LG에너지', type: '매수' }, { name: 'NAVER',      type: '매도' },
-        { name: '현대차',   type: '매수' },
+        { name: '삼성전자',   type: '매수', qty: '10주', price: '75,400', date: '3.18' },
+        { name: 'SK하이닉스', type: '매도', qty: '5주',  price: '182,000', date: '3.17' },
+        { name: 'LG에너지',   type: '매수', qty: '3주',  price: '412,000', date: '3.16' },
+        { name: 'NAVER',      type: '매도', qty: '2주',  price: '215,500', date: '3.15' },
+        { name: '현대차',     type: '매수', qty: '7주',  price: '221,500', date: '3.14' },
       ]
       return (
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between shrink-0 mb-1">
-            <span className="text-[9px] font-bold text-foreground">2026년 3월</span>
+          <div className="flex items-center justify-between mb-2 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">거래내역</span>
+            <span className="text-[8px] text-foreground-disabled">2026년 3월</span>
           </div>
           <div className="flex flex-1 min-h-0 gap-2">
-          <div className="flex flex-col flex-1 min-h-0">
-            <div className="grid grid-cols-7 gap-0.5 shrink-0">
-              {days.map((d) => (
-                <div key={d} className="text-center text-[6px] font-semibold text-foreground-disabled">{d}</div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7 gap-0.5 flex-1">
-              {cells.map((d, i) => {
-                const ts = d ? tradeMap[d] : null
-                return (
-                  <div key={i} className="flex flex-col items-start rounded p-0.5">
-                    <span className={`text-[7px] leading-none mb-px ${d ? 'text-foreground' : ''}`}>{d ?? ''}</span>
-                    {ts && ts.slice(0, 2).map((tr, j) => (
-                      <div key={j} className="flex items-center gap-px w-full">
-                        <div className={`w-0.5 rounded-full shrink-0 self-stretch ${tr.t ? 'bg-up' : 'bg-down'}`} />
-                        <span className="text-[6px] leading-snug truncate text-foreground">{tr.s}</span>
-                      </div>
-                    ))}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-          <div className="flex flex-col border-l border-stroke pl-2 shrink-0 gap-1">
-            <span className="text-[7px] font-semibold text-foreground-disabled shrink-0">거래 내역</span>
-            {trades.map(({ name, type }, i) => (
-              <div key={i} className="flex items-center gap-1">
-                <span className={`text-[6px] font-semibold px-1 py-px rounded shrink-0 ${type === '매수' ? 'text-up bg-up/10' : 'text-down bg-down/10'}`}>{type}</span>
-                <span className="text-[8px] text-foreground truncate">{name}</span>
+            <div className="flex flex-col flex-1 min-h-0">
+              <div className="grid grid-cols-7 gap-0.5 shrink-0 mb-1">
+                {days.map((d, i) => (
+                  <div key={d} className={cn('text-[6px] font-semibold text-center', i === 0 ? 'text-up' : i === 6 ? 'text-down' : 'text-foreground-disabled')}>{d}</div>
+                ))}
               </div>
-            ))}
-          </div>
+              <div className="grid grid-cols-7 gap-0.5 flex-1">
+                {cells.map((d, i) => {
+                  const ts = d ? tradeMap[d] : null
+                  const col = i % 7
+                  const dateColor = col === 0 ? 'text-up' : col === 6 ? 'text-down' : 'text-foreground'
+                  return (
+                    <div key={i} className="flex flex-col items-center rounded p-0.5">
+                      <span className={`text-[7px] leading-none mb-px w-full text-center ${d ? dateColor : 'invisible'}`}>{d ?? ''}</span>
+                      {ts && ts.slice(0, 2).map((tr, j) => (
+                        <div key={j} className="flex items-center gap-px w-full">
+                          <div className={`w-0.5 rounded-full shrink-0 self-stretch ${tr.t ? 'bg-up' : 'bg-down'}`} />
+                          <span className="text-[6px] leading-snug truncate text-foreground">{tr.s}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+            <div className="flex flex-col min-h-0 border-l border-stroke pl-2 shrink-0 w-[40%]">
+              <span className="text-[7px] font-semibold text-foreground-disabled mb-1 shrink-0">거래 내역</span>
+              <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-1">
+                {trades.map(({ name, type, qty, price, date }, i) => (
+                  <div key={i} className="flex items-center justify-between gap-1">
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className={`text-[6px] font-semibold px-1 py-px rounded shrink-0 ${type === '매수' ? 'text-up bg-up/10' : 'text-down bg-down/10'}`}>{type}</span>
+                      <span className="text-[8px] text-foreground truncate">{name}</span>
+                    </div>
+                    <div className="flex flex-col items-end shrink-0">
+                      <span className="text-[7px] font-semibold text-foreground">{price}</span>
+                      <span className="text-[6px] text-foreground-disabled">{qty} · {date}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       )
