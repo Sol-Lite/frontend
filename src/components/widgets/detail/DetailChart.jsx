@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { LineSeries, CandlestickSeries, createChart } from 'lightweight-charts'
+import useUIStore from '@/store/useUIStore'
 
 function getColors() {
   const style = getComputedStyle(document.documentElement)
@@ -8,6 +9,7 @@ function getColors() {
     down:      style.getPropertyValue('--color-down').trim()                || '#0075E8',
     textMuted: style.getPropertyValue('--color-foreground-disabled').trim() || '#9CA3AF',
     primary:   style.getPropertyValue('--color-primary').trim()             || '#0046FF',
+    grid:      style.getPropertyValue('--color-stroke-subtle').trim()       || '#F3F4F6',
   }
 }
 
@@ -75,11 +77,12 @@ function getTickLabel(time, tickMarkType, timezone, isMinute) {
  */
 export default function DetailChart({ lineData, candleData, chartType = 'line', isMinute, isUp, timezone, className = '' }) {
   const ref = useRef(null)
+  const theme = useUIStore((s) => s.theme)
 
   useEffect(() => {
     const el = ref.current
     if (!el) return
-    const { up, down, textMuted, primary } = getColors()
+    const { up, down, textMuted, primary, grid } = getColors()
     const lineColor = isUp ? up : down
 
     const chart = createChart(el, {
@@ -92,8 +95,8 @@ export default function DetailChart({ lineData, candleData, chartType = 'line', 
         fontSize:   10,
       },
       grid: {
-        vertLines: { color: '#F3F4F6' },
-        horzLines: { color: '#F3F4F6' },
+        vertLines: { color: grid },
+        horzLines: { color: grid },
       },
       leftPriceScale:  { visible: false },
       rightPriceScale: {
@@ -165,7 +168,7 @@ export default function DetailChart({ lineData, candleData, chartType = 'line', 
       ro.disconnect()
       chart.remove()
     }
-  }, [lineData, candleData, chartType, isMinute, isUp, timezone]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [lineData, candleData, chartType, isMinute, isUp, timezone, theme]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return <div ref={ref} className={`overflow-hidden ${className}`} />
 }

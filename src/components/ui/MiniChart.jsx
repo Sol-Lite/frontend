@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { CandlestickSeries, createChart } from 'lightweight-charts'
+import useUIStore from '@/store/useUIStore'
 
 function getIntradayFixedLogicalRange(candleData, tickOffset) {
   // 5분봉 세션 슬롯: 09:00 ~ 15:30 (총 79개)
@@ -59,8 +60,9 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
   const ref      = useRef(null)
   const chartRef = useRef(null)
   const seriesRef = useRef(null)
+  const theme = useUIStore((s) => s.theme)
 
-  // 차트 생성 — candleData / isIntraday 변경 시 재생성
+  // 차트 생성 — candleData / isIntraday / theme 변경 시 재생성
   useEffect(() => {
     const el = ref.current
     if (!el) return
@@ -162,7 +164,7 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
       chartRef.current  = null
       seriesRef.current = null
     }
-  }, [candleData, isIntraday, tickOffset, isForceFit])
+  }, [candleData, isIntraday, tickOffset, isForceFit, theme])
 
   // STOMP 실시간 캔들 업데이트 — 차트 재생성 없이 마지막 봉만 갱신
   // isIntraday: 새 버킷이 79슬롯 밖으로 나가면 최신 캔들이 보이도록 scrollToRealTime
