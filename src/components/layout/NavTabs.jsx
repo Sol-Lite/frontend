@@ -38,6 +38,7 @@ export function NavConfirmModal({ isPending, onSave, onDiscard, onCancel }) {
         <div className="flex items-start justify-between mb-1">
           <h3 className="text-[14px] font-bold text-foreground">편집 중인 내용이 있습니다</h3>
           <button
+            aria-label="닫기"
             onClick={onCancel}
             className="w-6 h-6 rounded-full flex items-center justify-center text-foreground-tertiary hover:text-foreground hover:bg-surface-muted transition-colors -mt-0.5 -mr-1"
           >

@@ -86,7 +86,7 @@ function MiniCandleChart({ className = '' }) {
   const lastBodyBottom = PREVIEW_CANDLES[PREVIEW_CANDLES.length - 1][3]
   return (
     <div className={cn('h-full w-full rounded-lg bg-white p-1', className)}>
-      <svg viewBox="0 0 100 42" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+      <svg viewBox="0 0 100 42" preserveAspectRatio="none" className="w-full h-full block">
         <line x1="0" y1={lastBodyBottom} x2="100" y2={lastBodyBottom} stroke="var(--color-up)" strokeWidth="0.7" strokeDasharray="1.5 1.5" vectorEffect="non-scaling-stroke" />
         {PREVIEW_CANDLES.map(([cx, ht, bt, bb, lb, isUp]) => {
           const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
@@ -605,7 +605,7 @@ export function PreviewContent({ type }) {
             <div className="flex flex-col flex-1 min-h-0 border-t border-stroke pt-1">
               <div className="text-[8px] text-foreground-disabled shrink-0">수익 추이 (7일)</div>
               <div className="flex-1 min-h-0 my-1">
-                <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+                <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full block">
                   <polyline points="0,27 12,23 24,25 36,18 50,14 62,10 74,7 86,4 100,1" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
                 </svg>
               </div>
@@ -638,7 +638,7 @@ export function PreviewContent({ type }) {
             ))}
           </div>
           <div className="flex-1 min-h-0 bg-background rounded-lg overflow-hidden">
-            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+            <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full block">
               <polyline points="0,27 10,22 20,24 30,18 40,20 50,13 60,15 70,8 80,10 90,5 100,2" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
             </svg>
           </div>
