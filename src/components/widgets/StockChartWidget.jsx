@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useQuery } from '@tanstack/react-query'
 import { Settings2 } from 'lucide-react'
 import StockAvatar from '@/components/ui/StockAvatar'
 import PriceChange from '@/components/ui/PriceChange'
@@ -155,46 +155,6 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   const priceData = isOverseas && priceRaw
     ? { currentPrice: priceRaw.price, changeRate: priceRaw.rate, changeAmount: priceRaw.diff }
     : priceRaw
-
-  const queryClient = useQueryClient()
-
-  useEffect(() => {
-    if (!stockCode) return
-    const end = formatApiDate(new Date())
-    Object.values(PERIOD_CONFIG).forEach((cfg) => {
-      const effectiveCfgType = isOverseas ? (cfg.overseasType ?? cfg.type) : cfg.type
-      if (effectiveCfgType === 'minute') {
-        if (isOverseas) {
-          queryClient.prefetchQuery({
-            queryKey: ['foreign', 'minuteChart', stockCode, exchcd, cfg.nmin],
-            queryFn:  () => foreignMarketApi.getMinuteChart(stockCode, exchcd, { nmin: cfg.nmin }),
-            staleTime: 60_000,
-          })
-        } else {
-          queryClient.prefetchQuery({
-            queryKey: ['stock', 'minute-chart', stockCode, cfg.ncnt],
-            queryFn:  () => marketApi.getMinuteChart(stockCode, { ncnt: cfg.ncnt }),
-            staleTime: 60_000,
-          })
-        }
-      } else {
-        const start = formatApiDate(new Date(Date.now() - cfg.days * 24 * 60 * 60 * 1000))
-        if (isOverseas) {
-          queryClient.prefetchQuery({
-            queryKey: ['foreign', 'chart', cfg.foreignPeriod, stockCode, exchcd, start, end],
-            queryFn:  () => foreignMarketApi.getChart(stockCode, exchcd, { period: cfg.foreignPeriod, startDate: start, endDate: end }),
-            staleTime: 5 * 60 * 1000,
-          })
-        } else {
-          queryClient.prefetchQuery({
-            queryKey: ['stock', 'chart', cfg.period, stockCode, start, end],
-            queryFn:  () => marketApi.getChart(stockCode, { period: cfg.period, startDate: start, endDate: end }),
-            staleTime: 5 * 60 * 1000,
-          })
-        }
-      }
-    })
-  }, [stockCode, exchcd, isOverseas, queryClient])
 
   const periodCfg    = PERIOD_CONFIG[activePeriod]
   const effectiveType = isOverseas ? (periodCfg.overseasType ?? periodCfg.type) : periodCfg.type
