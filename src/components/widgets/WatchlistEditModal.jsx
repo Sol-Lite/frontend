@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
 import { X, Search, Heart } from 'lucide-react'
 import { marketApi } from '@/api/market'
@@ -46,9 +47,9 @@ export default function WatchlistEditModal({ items, onAdd, onRemove, onClose }) 
 
   const localSet = new Map(localItems.map((i) => [i.stockCode, i.isWatched]))
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/40"
       onClick={onClose}
     >
       <div
@@ -131,6 +132,7 @@ export default function WatchlistEditModal({ items, onAdd, onRemove, onClose }) 
           })}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
