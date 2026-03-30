@@ -14,14 +14,16 @@ import { toApiPayload } from '@/store/widgetApi'
  */
 export function useDashboardLoad() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const isRestoring = useAuthStore((s) => s.isRestoring)
   const isLoaded = useWidgetStore((s) => s.isLoaded)
   const loadFromServer = useWidgetStore((s) => s.loadFromServer)
   const resetLayout = useWidgetStore((s) => s.resetLayout)
 
   // 로그아웃 시 레이아웃 초기화 → 재로그인 시 서버에서 새로 불러올 수 있도록
+  // isRestoring 중에는 실행하지 않음 — auth 복원 전 sessionStorage가 삭제되는 것을 방지
   useEffect(() => {
-    if (!isAuthenticated) resetLayout()
-  }, [isAuthenticated, resetLayout])
+    if (!isAuthenticated && !isRestoring) resetLayout()
+  }, [isAuthenticated, isRestoring, resetLayout])
 
   const { data, isError } = useQuery({
     queryKey: ['dashboard', 'me'],

@@ -2,6 +2,8 @@ import { create } from 'zustand'
 import { GRID_COLS, GRID_ROWS } from '@/lib/gridConstants'
 import { fromApiResponse } from './widgetApi'
 
+const STORAGE_KEY_CURRENT_PAGE = 'dashboard:currentPageId'
+
 /* ── 충돌 판정 ──────────────────────────────────────────────
    모든 좌표는 1-indexed (CSS grid와 동일).
 ──────────────────────────────────────────────────────────── */
@@ -224,7 +226,9 @@ const useWidgetStore = create((set) => ({
         const emptyPage = { id: 'page-1', name: '대시보드 1', widgets: [] }
         return { pages: [emptyPage], currentPageId: 'page-1', widgets: [], isLoaded: true }
       }
-      const currentPage = pages[0]
+      const savedPageId = sessionStorage.getItem(STORAGE_KEY_CURRENT_PAGE)
+      const restoredPage = savedPageId ? pages.find((p) => p.id === savedPageId) : null
+      const currentPage = restoredPage ?? pages[0]
       return {
         pages,
         currentPageId: currentPage.id,
@@ -235,22 +239,26 @@ const useWidgetStore = create((set) => ({
 
   // 로그아웃 시 INITIAL 레이아웃으로 초기화.
   // isLoaded를 false로 되돌려 재로그인 시 서버에서 새로 불러올 수 있게 함.
-  resetLayout: () =>
+  resetLayout: () => {
+    sessionStorage.removeItem(STORAGE_KEY_CURRENT_PAGE)
     set({
       pages:         INITIAL_PAGES,
       currentPageId: 'page-1',
       widgets:       INITIAL_WIDGETS,
       isLoaded:      false,
-    }),
+    })
+  },
 
 
   // ── 페이지 전환 ─────────────────────────────────────────
-  switchPage: (pageId) =>
+  switchPage: (pageId) => {
+    sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, pageId)
     set((state) => {
       const page = state.pages.find((p) => p.id === pageId)
       if (!page || page.id === state.currentPageId) return state
       return { currentPageId: pageId, widgets: page.widgets }
-    }),
+    })
+  },
 
   // ── 페이지 이름 변경 ─────────────────────────────────────
   renamePage: (pageId, name) =>
@@ -259,15 +267,15 @@ const useWidgetStore = create((set) => ({
     })),
 
   // ── 페이지 편집 모달에서 staged 변경사항 일괄 적용 ────────
-  applyPageChanges: (newPages, newCurrentId) =>
-    set(() => {
-      const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
-      return {
-        pages: newPages,
-        currentPageId: currentPage.id,
-        widgets: currentPage.widgets,
-      }
-    }),
+  applyPageChanges: (newPages, newCurrentId) => {
+    const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
+    sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, currentPage.id)
+    set(() => ({
+      pages: newPages,
+      currentPageId: currentPage.id,
+      widgets: currentPage.widgets,
+    }))
+  },
 
   // ── 편집 모드 스냅샷 (전체 pages 스코프) ─────────────────
   // 편집 중 페이지 전환을 지원하기 위해 전체 pages와 진입 시점 pageId를 저장.
