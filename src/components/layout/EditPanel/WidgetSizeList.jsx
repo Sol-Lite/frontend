@@ -1,4 +1,4 @@
-import { ChevronLeft } from 'lucide-react'
+import { ChevronDown, ChevronLeft } from 'lucide-react'
 import { useDraggable } from '@dnd-kit/core'
 import { cn } from '@/lib/cn'
 import useGridStore from '@/store/useGridStore'
@@ -26,6 +26,80 @@ function calcAspectRatio(colSpan, rowSpan, cw, ch) {
   const w = colSpan * cw + (colSpan - 1) * GRID_GAP
   const h = rowSpan * ch + (rowSpan - 1) * GRID_GAP
   return w / h
+}
+
+/* ── 캔들차트 미리보기 ───────────────────────────────────
+   [cx, high_y, body_top, body_bot, low_y, isUp]
+   SVG y: 값이 작을수록 화면 위(=고가), 클수록 아래(=저가)
+─────────────────────────────────────────────────────── */
+function buildPreviewCandles(count = 78) {
+  const candles = []
+  const minY = 5
+  const maxY = 38
+  const clamp = (v) => Math.max(minY, Math.min(maxY, v))
+  const anchors = [
+    [0.00, 31.5], // 시작
+    [0.14, 29.8], // 완만한 초반 상승
+    [0.30, 24.2], // 가속 상승
+    [0.48, 19.4], // 강한 상승
+    [0.66, 16.8], // 고점권
+    [0.82, 20.4], // 눌림
+    [1.00, 17.2], // 상승 재개 후 마감
+  ]
+  const yAt = (t) => {
+    for (let i = 0; i < anchors.length - 1; i += 1) {
+      const [x1, y1] = anchors[i]
+      const [x2, y2] = anchors[i + 1]
+      if (t <= x2) {
+        const p = (t - x1) / (x2 - x1)
+        return y1 + (y2 - y1) * p
+      }
+    }
+    return anchors[anchors.length - 1][1]
+  }
+
+  for (let i = 0; i < count; i += 1) {
+    const t = i / (count - 1)
+    const cx = 2 + t * 96
+    const base = yAt(t)
+    const wave = Math.sin(i * 0.48) * 0.85 + Math.sin(i * 0.16) * 0.45
+    const mid = clamp(base + wave)
+    const prevMid = i === 0 ? mid + 0.3 : (candles[i - 1][2] + candles[i - 1][3]) / 2
+    // 몸통 길이를 다양화해서 실제 캔들 느낌 강화
+    const body = 0.45 + ((i * 5) % 8) * 0.2
+    // 윗꼬리/아랫꼬리 길이를 분리해 비대칭 + 가변 길이로 생성
+    const wickUp = 0.25 + ((i * 7) % 6) * 0.22
+    const wickDown = 0.2 + ((i * 11) % 7) * 0.18
+    const isUp = mid <= prevMid
+    const bodyTop = clamp(mid - body)
+    const bodyBottom = clamp(mid + body)
+    const highY = clamp(bodyTop - wickUp)
+    const lowY = clamp(bodyBottom + wickDown)
+    candles.push([cx, highY, bodyTop, bodyBottom, lowY, isUp])
+  }
+  return candles
+}
+
+const PREVIEW_CANDLES = buildPreviewCandles(65)
+
+function MiniCandleChart({ className = '' }) {
+  const lastBodyBottom = PREVIEW_CANDLES[PREVIEW_CANDLES.length - 1][3]
+  return (
+    <div className={cn('h-full w-full rounded-lg bg-white p-1', className)}>
+      <svg viewBox="0 0 100 42" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
+        <line x1="0" y1={lastBodyBottom} x2="100" y2={lastBodyBottom} stroke="var(--color-up)" strokeWidth="0.7" strokeDasharray="1.5 1.5" vectorEffect="non-scaling-stroke" />
+        {PREVIEW_CANDLES.map(([cx, ht, bt, bb, lb, isUp]) => {
+          const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
+          return (
+            <g key={cx}>
+              <line x1={cx} y1={ht} x2={cx} y2={lb} stroke={color} strokeWidth="0.8" vectorEffect="non-scaling-stroke" />
+              <rect x={cx - 0.45} y={bt} width={0.9} height={Math.max(bb - bt, 0.6)} fill={color} rx="0" />
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
 }
 
 /* ── 위젯별 미리보기 콘텐츠 ─────────────────────────────── */
@@ -58,17 +132,19 @@ export function PreviewContent({ type }) {
               <div className="text-[9px] text-up font-semibold mt-0.5">▲ +2,152,000 (+2.61%)</div>
             </div>
             {/* 우: 3항목 세로 배치 */}
-            <div className="flex flex-col justify-end gap-1 border-l border-stroke pl-3 w-[42%] shrink-0">
-              {[
-                { label: '투자원금', val: '82,168,000', color: 'text-foreground' },
-                { label: '평가손익', val: '+2,152,000', color: 'text-up' },
-                { label: '주문가능', val: '74,780,000', color: 'text-foreground' },
-              ].map(({ label, val, color }) => (
-                <div key={label} className="min-w-0">
-                  <div className="text-[7px] text-foreground-disabled">{label}</div>
-                  <div className={`text-[9px] font-semibold truncate ${color}`}>{val}</div>
-                </div>
-              ))}
+            <div className="flex flex-col justify-end w-[42%] shrink-0">
+              <div className="flex flex-col gap-1 border-l border-stroke pl-3">
+                {[
+                  { label: '투자원금', val: '82,168,000', color: 'text-foreground' },
+                  { label: '평가손익', val: '+2,152,000', color: 'text-up' },
+                  { label: '주문가능', val: '74,780,000', color: 'text-foreground' },
+                ].map(({ label, val, color }) => (
+                  <div key={label} className="min-w-0">
+                    <div className="text-[7px] text-foreground-disabled">{label}</div>
+                    <div className={`text-[9px] font-semibold truncate ${color}`}>{val}</div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
@@ -110,9 +186,7 @@ export function PreviewContent({ type }) {
             </div>
           </div>
           <div className="flex-1 min-h-0">
-            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-              <polyline points="0,28 8,24 16,26 24,20 32,22 40,16 48,18 56,12 64,14 72,8 80,10 88,5 100,2" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-            </svg>
+            <MiniCandleChart />
           </div>
         </div>
       )
@@ -121,10 +195,13 @@ export function PreviewContent({ type }) {
     case 'ranking-wide':
       return (
         <div className="flex flex-col h-full gap-1.5">
-          <div className="flex gap-1.5 shrink-0">
-            {['거래대금', '상승률', '거래량'].map((tab, i) => (
+          <div className="flex items-center justify-between shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
+            <div className="flex gap-1.5 justify-end">
+            {['거래금', '급상승', '거래량'].map((tab, i) => (
               <span key={tab} className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${i === 0 ? 'bg-primary-light text-primary' : 'text-foreground-disabled'}`}>{tab}</span>
             ))}
+            </div>
           </div>
           <div className="flex flex-col gap-1.5">
             {[
@@ -150,10 +227,13 @@ export function PreviewContent({ type }) {
     case 'ranking-lg':
       return (
         <div className="flex flex-col h-full gap-1.5">
-          <div className="flex gap-1.5 shrink-0">
-            {['거래대금', '상승률', '거래량'].map((tab, i) => (
+          <div className="flex items-center justify-between shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
+            <div className="flex gap-1.5 justify-end">
+            {['거래금', '급상승', '거래량'].map((tab, i) => (
               <span key={tab} className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${i === 0 ? 'bg-primary-light text-primary' : 'text-foreground-disabled'}`}>{tab}</span>
             ))}
+            </div>
           </div>
           <div className="flex flex-col gap-1.5">
             {[
@@ -284,30 +364,44 @@ export function PreviewContent({ type }) {
     /* 오늘의 시황 — 헤드라인 1×1 */
     case 'market-sm':
       return (
-        <div className="flex flex-col h-full gap-2">
-          <span className="text-[9px] font-semibold text-foreground-disabled">오늘의 시황</span>
-          <p className="text-[10px] text-foreground-secondary leading-snug">
-            美 CPI 예상치 하회…<br />나스닥 1% 이상 상승.<br />반도체 섹터 강세.
-          </p>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled uppercase tracking-[.04em]">오늘의 시황</span>
+            <div className="flex gap-1">
+              <span className="px-1.5 py-px text-[7px] font-semibold rounded bg-primary text-white">국내</span>
+              <span className="px-1.5 py-px text-[7px] font-semibold rounded text-foreground-disabled">해외</span>
+            </div>
+          </div>
+          <div className="flex flex-col">
+            {['美 CPI 예상치 하회… 나스닥 1% 상승', '外人 순매수 4,200억 · 반도체↑', '원달러 1,378원 소폭 하락'].map((title, i) => (
+              <div key={i} className="flex items-start gap-1.5 py-1 border-b border-stroke last:border-b-0">
+                <span className="text-[8px] font-bold text-primary shrink-0">{i + 1}</span>
+                <p className="text-[8px] text-foreground leading-snug line-clamp-2">{title}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )
 
     /* 오늘의 시황 — 상세 2×1 */
     case 'market-wide':
       return (
-        <div className="flex flex-col h-full gap-1.5">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">오늘의 시황</span>
-          <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled uppercase tracking-[.04em]">오늘의 시황</span>
+            <div className="flex gap-1">
+              <span className="px-1.5 py-px text-[7px] font-semibold rounded bg-primary text-white">국내</span>
+              <span className="px-1.5 py-px text-[7px] font-semibold rounded text-foreground-disabled">해외</span>
+            </div>
+          </div>
+          <div className="flex flex-col">
             {[
               { title: '美 CPI 예상치 하회… 나스닥 1% 상승', desc: '긴축 우려 완화. AI 관련주 반등.' },
               { title: '外人 순매수 4,200억 · 반도체↑',      desc: '삼성·SK하이닉스 강세.' },
             ].map(({ title, desc }, i) => (
-              <div
-                key={i}
-                className={`px-1.5 py-1 rounded border-l-2 ${i === 0 ? 'bg-primary-light border-primary' : 'bg-surface-subtle border-stroke'}`}
-              >
-                <p className="text-[9px] font-bold text-foreground leading-snug">{title}</p>
-                <p className="text-[8px] text-foreground-disabled leading-snug mt-0.5">{desc}</p>
+              <div key={i} className="flex flex-col gap-0.5 py-1.5 border-b border-stroke last:border-b-0 pl-1.5 border-l-2 border-l-transparent">
+                <p className="text-[9px] font-semibold text-foreground leading-snug">{title}</p>
+                <p className="text-[8px] text-foreground-disabled leading-snug">{desc}</p>
               </div>
             ))}
           </div>
@@ -567,9 +661,7 @@ export function PreviewContent({ type }) {
             </div>
           </div>
           <div className="flex-1 min-h-0 overflow-hidden">
-            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-              <polyline points="0,28 6,25 12,26 20,21 28,23 36,17 44,19 52,13 60,15 68,9 76,11 84,5 92,7 100,3" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-            </svg>
+            <MiniCandleChart />
           </div>
           <div className="flex justify-between shrink-0">
             {[
@@ -692,9 +784,7 @@ export function PreviewContent({ type }) {
             ))}
           </div>
           <div className="flex-1 min-h-0 overflow-hidden">
-            <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
-              <polyline points="0,27 10,24 20,25 30,19 40,21 50,15 60,17 70,10 80,12 90,6 100,3" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-            </svg>
+            <MiniCandleChart />
           </div>
           <div className="flex justify-between shrink-0">
             {[
@@ -746,36 +836,57 @@ export function PreviewContent({ type }) {
     /* 종목별 뉴스 — 헤드라인 1×1 */
     case 'stock-news-sm':
       return (
-        <div className="flex flex-col h-full gap-2">
-          <div className="flex items-center justify-between shrink-0">
-            <span className="text-[9px] font-semibold text-foreground-disabled">종목별 뉴스</span>
-            <span className="text-[8px] font-semibold text-primary bg-primary-light px-1.5 py-px rounded">삼성전자</span>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+            <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
+              삼성전자
+              <ChevronDown size={9} />
+            </span>
           </div>
-          <p className="text-[10px] text-foreground-secondary leading-snug">
-            HBM 공급 본격화…<br />엔비디아향 납품 재개.<br />외국인 순매수 지속.
-          </p>
+          <div className="flex-1 flex flex-col overflow-hidden">
+            {[
+              'HBM 공급 본격화 — 엔비디아향 납품 재개',
+              '외국인 6거래일 연속 순매수',
+              '파운드리 2나노 시범 생산 개시',
+            ].map((title, i) => (
+              <div key={i} className="flex items-start gap-1.5 py-1 border-b border-stroke last:border-b-0 pl-2 border-l-2 border-l-transparent">
+                <span className="text-[8px] font-bold text-primary mt-[1px] shrink-0">{i + 1}</span>
+                <p className="text-[9px] text-foreground leading-snug line-clamp-2">{title}</p>
+              </div>
+            ))}
+          </div>
         </div>
       )
 
     /* 종목별 뉴스 — 상세 2×1 */
     case 'stock-news-wide':
       return (
-        <div className="flex flex-col h-full gap-1.5">
-          <div className="flex items-center justify-between shrink-0">
-            <span className="text-[9px] font-semibold text-foreground-disabled">종목별 뉴스</span>
-            <span className="text-[8px] font-semibold text-primary bg-primary-light px-1.5 py-px rounded">삼성전자</span>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+            <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
+              삼성전자
+              <ChevronDown size={9} />
+            </span>
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {[
-              { title: 'HBM 공급 본격화 — 엔비디아향 납품 재개', desc: 'AI 서버 수요 확대 수혜 기대.' },
-              { title: '외국인 6거래일 연속 순매수',               desc: '누적 순매수 1.2조원.' },
-            ].map(({ title, desc }, i) => (
+              { title: 'HBM 공급 본격화 — 엔비디아향 납품 재개', source: '연합뉴스', at: '1시간 전' },
+              { title: '외국인 6거래일 연속 순매수', source: '매일경제', at: '2시간 전' },
+            ].map(({ title, source, at }, i) => (
               <div
                 key={i}
-                className={`px-1.5 py-1 rounded border-l-2 ${i === 0 ? 'bg-primary-light border-primary' : 'bg-surface-subtle border-stroke'}`}
+                className="flex gap-2 py-2 border-b border-stroke last:border-b-0 pl-2 border-l-2 border-l-transparent"
               >
-                <p className="text-[9px] font-bold text-foreground leading-snug">{title}</p>
-                <p className="text-[8px] text-foreground-disabled leading-snug mt-0.5">{desc}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-semibold text-foreground leading-snug line-clamp-2">{title}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[8px] text-foreground-disabled">{source}</span>
+                    <span className="text-[8px] text-stroke">·</span>
+                    <span className="text-[8px] text-foreground-disabled">{at}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -785,23 +896,32 @@ export function PreviewContent({ type }) {
     /* 종목별 뉴스 — 대형 2×2 */
     case 'stock-news-2x2':
       return (
-        <div className="flex flex-col h-full gap-1.5">
-          <div className="flex items-center justify-between shrink-0">
-            <span className="text-[9px] font-semibold text-foreground-disabled">종목별 뉴스</span>
-            <span className="text-[8px] font-semibold text-primary bg-primary-light px-1.5 py-px rounded">삼성전자</span>
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+            <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
+              삼성전자
+              <ChevronDown size={9} />
+            </span>
           </div>
-          <div className="flex flex-col gap-1.5">
+          <div className="flex-1 min-h-0 overflow-y-auto">
             {[
-              { title: 'HBM 공급 본격화 — 엔비디아향 납품 재개', desc: 'AI 서버 수요 확대 수혜 기대.' },
-              { title: '외국인 6거래일 연속 순매수',               desc: '누적 순매수 1.2조원.' },
-              { title: '파운드리 2나노 시범 생산 개시',            desc: 'TSMC와 경쟁 본격화.' },
-            ].map(({ title, desc }, i) => (
+              { title: 'HBM 공급 본격화 — 엔비디아향 납품 재개', source: '연합뉴스', at: '1시간 전' },
+              { title: '외국인 6거래일 연속 순매수', source: '매일경제', at: '2시간 전' },
+              { title: '파운드리 2나노 시범 생산 개시', source: '한국경제', at: '4시간 전' },
+            ].map(({ title, source, at }, i) => (
               <div
                 key={i}
-                className={`px-1.5 py-1 rounded border-l-2 ${i === 0 ? 'bg-primary-light border-primary' : 'bg-surface-subtle border-stroke'}`}
+                className="flex gap-2 py-2 border-b border-stroke last:border-b-0 pl-2 border-l-2 border-l-transparent"
               >
-                <p className="text-[9px] font-bold text-foreground leading-snug">{title}</p>
-                <p className="text-[8px] text-foreground-disabled leading-snug mt-0.5">{desc}</p>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[9px] font-semibold text-foreground leading-snug line-clamp-2">{title}</p>
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[8px] text-foreground-disabled">{source}</span>
+                    <span className="text-[8px] text-stroke">·</span>
+                    <span className="text-[8px] text-foreground-disabled">{at}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -811,20 +931,24 @@ export function PreviewContent({ type }) {
     /* 오늘의 시황 — 대형 2×2 */
     case 'market-2x2':
       return (
-        <div className="flex flex-col h-full gap-1.5">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">오늘의 시황</span>
-          <div className="flex flex-col gap-1.5">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between mb-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled uppercase tracking-[.04em]">오늘의 시황</span>
+            <div className="flex gap-1">
+              <span className="px-1.5 py-px text-[7px] font-semibold rounded bg-primary text-white">국내</span>
+              <span className="px-1.5 py-px text-[7px] font-semibold rounded text-foreground-disabled">해외</span>
+            </div>
+          </div>
+          <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
             {[
               { title: '美 CPI 예상치 하회… 나스닥 1% 상승', desc: '인플레이션 둔화. AI 관련주 반등.' },
               { title: '外人 순매수 4,200억 · 반도체↑',      desc: '삼성·SK하이닉스 강세.' },
               { title: '원달러 1,378원 소폭 하락',            desc: '금리 인하 기대감 반영.' },
+              { title: '美 연준 의사록 공개… 금리 동결 시사', desc: '시장 안도감 회복.' },
             ].map(({ title, desc }, i) => (
-              <div
-                key={i}
-                className={`px-1.5 py-1 rounded border-l-2 ${i === 0 ? 'bg-primary-light border-primary' : 'bg-surface-subtle border-stroke'}`}
-              >
-                <p className="text-[9px] font-bold text-foreground leading-snug">{title}</p>
-                <p className="text-[8px] text-foreground-disabled leading-snug mt-0.5">{desc}</p>
+              <div key={i} className="flex flex-col gap-0.5 py-1.5 border-b border-stroke last:border-b-0 pl-1.5 border-l-2 border-l-transparent">
+                <p className="text-[9px] font-semibold text-foreground leading-snug">{title}</p>
+                <p className="text-[8px] text-foreground-disabled leading-snug">{desc}</p>
               </div>
             ))}
           </div>
