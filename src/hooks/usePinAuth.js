@@ -17,7 +17,7 @@ function clearPin() {
   sessionStorage.removeItem(STORAGE_KEY)
 }
 
-async function verifyAndCachePin(pin, remember = true) {
+async function verifyAndCachePin(pin, remember = false) {
   await fetchWithAuth('/api/accounts/verify-pin', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
