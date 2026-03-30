@@ -251,13 +251,14 @@ const useWidgetStore = create((set) => ({
 
 
   // ── 페이지 전환 ─────────────────────────────────────────
-  switchPage: (pageId) =>
+  switchPage: (pageId) => {
+    sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, pageId)
     set((state) => {
       const page = state.pages.find((p) => p.id === pageId)
       if (!page || page.id === state.currentPageId) return state
-      sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, pageId)
       return { currentPageId: pageId, widgets: page.widgets }
-    }),
+    })
+  },
 
   // ── 페이지 이름 변경 ─────────────────────────────────────
   renamePage: (pageId, name) =>
@@ -266,16 +267,15 @@ const useWidgetStore = create((set) => ({
     })),
 
   // ── 페이지 편집 모달에서 staged 변경사항 일괄 적용 ────────
-  applyPageChanges: (newPages, newCurrentId) =>
-    set(() => {
-      const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
-      sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, currentPage.id)
-      return {
-        pages: newPages,
-        currentPageId: currentPage.id,
-        widgets: currentPage.widgets,
-      }
-    }),
+  applyPageChanges: (newPages, newCurrentId) => {
+    const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
+    sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, currentPage.id)
+    set(() => ({
+      pages: newPages,
+      currentPageId: currentPage.id,
+      widgets: currentPage.widgets,
+    }))
+  },
 
   // ── 편집 모드 스냅샷 (전체 pages 스코프) ─────────────────
   // 편집 중 페이지 전환을 지원하기 위해 전체 pages와 진입 시점 pageId를 저장.

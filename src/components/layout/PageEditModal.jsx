@@ -40,6 +40,7 @@ function PageCard({ page, isActive, canDelete, onDelete, onRestore, onNavigate }
     <div className={cn('w-[148px] shrink-0', isDeleted && 'opacity-40')}>
       <div className="relative">
         <button
+          disabled={isDeleted || isActive}
           onClick={isDeleted || isActive ? undefined : onNavigate}
           aria-label={isDeleted || isActive ? undefined : `${page.name}으로 이동`}
           className={cn(
@@ -160,7 +161,7 @@ export default function PageEditModal({ onClose }) {
   function handleClose(targetPageId = stagedCurrentId) {
     const finalPages = stagedPages
       .filter((p) => !p._deleted)
-      .map(({ _deleted, ...rest }) => rest)
+      .map(({ _deleted: _, ...rest }) => rest)
     applyPageChanges(finalPages, targetPageId)
     onClose()
   }
