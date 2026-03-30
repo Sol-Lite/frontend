@@ -207,3 +207,67 @@
   border-color: rgba(255, 255, 255, 0.22) !important;
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.12) !important;
 }
+
+/* ── Dark Mode ── */
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button {
+  background: #252836 !important;
+  border-color: #3A3D4A !important;
+  box-shadow: none !important;
+  color: #0046ff !important;
+}
+
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button:hover,
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.hg-activeButton {
+  background: #252836 !important;
+  border-color: #3A3D4A !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__action {
+  background: #1E2130 !important;
+  border-color: #3A3D4A !important;
+  color: #BDC1CA !important;
+}
+
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__action:hover,
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__action.hg-activeButton {
+  background: #1E2130 !important;
+  border-color: #3A3D4A !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__action--primary {
+  background: #0046ff !important;
+  border-color: #0046ff !important;
+  box-shadow: 0 4px 14px rgba(0, 70, 255, 0.30) !important;
+  color: #ffffff !important;
+}
+
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__action--primary:hover,
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__action--primary.hg-activeButton {
+  background: #0046ff !important;
+  border-color: #0046ff !important;
+  box-shadow: 0 4px 14px rgba(0, 70, 255, 0.30) !important;
+}
+
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__dummy {
+  background: #1E2130 !important;
+  border-color: #3A3D4A !important;
+  color: #7ea8ff !important;
+}
+
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__dummy:hover,
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__dummy.hg-activeButton {
+  background: #1E2130 !important;
+  border-color: #3A3D4A !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__flash,
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__flash:hover,
+[data-theme="dark"] .sol-pin-keypad-shell--desktop .sol-pin-keyboard .hg-button.sol-pin-keyboard__flash.hg-activeButton {
+  background: rgba(0, 70, 255, 0.15) !important;
+  border-color: rgba(0, 70, 255, 0.40) !important;
+  box-shadow: 0 0 0 2px rgba(0, 70, 255, 0.18) !important;
+  color: #0046ff !important;
+}
