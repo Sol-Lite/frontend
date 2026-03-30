@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Pencil, LayoutTemplate, X, ChevronRight, LayoutGrid, Plus } from 'lucide-react'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import { useDroppable } from '@dnd-kit/core'
@@ -37,7 +38,7 @@ function PresetThumbnail({ widgets }) {
 }
 
 function PresetPickerModal({ onSelect, onClose }) {
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-[6px]" onClick={onClose} />
 
@@ -77,7 +78,8 @@ function PresetPickerModal({ onSelect, onClose }) {
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
 

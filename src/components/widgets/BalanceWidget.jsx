@@ -66,7 +66,7 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
 
       {variant === 'balance-lg' ? (
         <div className="flex flex-1 gap-3 min-h-0">
-          <div className="flex flex-col justify-center flex-1 min-w-0">
+          <div className="flex flex-col justify-end flex-1 min-w-0">
             <div className="text-widget-11 text-foreground-disabled">총 평가자산</div>
             <div className="text-widget-18 font-bold leading-tight tracking-tight text-foreground mt-0.5">
               {BALANCE.total}
@@ -76,44 +76,48 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
               : <div className={`text-widget-11 font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
             }
           </div>
-          <div className="flex flex-col justify-center gap-1 shrink-0 border-l border-stroke pl-3">
+          <div className="flex flex-col justify-end gap-1 min-w-0 w-[42%] shrink-0 border-l border-stroke pl-3">
             {[
               { label: '투자원금', val: BALANCE.invested, color: 'text-foreground' },
               { label: '평가손익', val: BALANCE.profit,   color: BALANCE.isProfit ? 'text-up' : 'text-down' },
               { label: '주문가능', val: BALANCE.available, color: 'text-foreground' },
             ].map(({ label, val, color }) => (
-              <div key={label}>
+              <div key={label} className="min-w-0">
                 <div className="text-widget-7 text-foreground-disabled">{label}</div>
-                <div className={`text-widget-10 font-semibold ${color}`}>{val}</div>
+                <div className={`text-widget-10 font-semibold truncate ${color}`}>{val}</div>
               </div>
             ))}
           </div>
         </div>
       ) : variant === 'balance-3x1' ? (
-        <div className="flex flex-1 gap-4 min-h-0">
-          <div className="flex flex-col flex-1 min-w-0">
-            <div className="flex-1 flex flex-col justify-center">
-              <div className="text-widget-9 text-foreground-disabled">총 평가자산</div>
+        <div className="flex flex-col flex-1 min-h-0 gap-3">
+          {/* 상: 금액 정보 */}
+          <div className="flex flex-col shrink-0 gap-1.5">
+            <div>
+              <div className="text-widget-10 text-foreground-disabled">총 평가자산</div>
               <div className="text-widget-22 font-bold leading-tight tracking-tight text-foreground mt-0.5">
                 {BALANCE.total}
               </div>
               {BALANCE.isLoading
                 ? <div className="text-widget-10 text-foreground-disabled mt-0.5">-</div>
-                : <div className={`text-widget-9 font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+                : <div className={`text-widget-11 font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
               }
             </div>
-            <div className="flex gap-6 shrink-0">
-              <div>
-                <div className="text-widget-7 text-foreground-disabled">투자원금</div>
-                <div className="text-widget-10 font-semibold text-foreground">{BALANCE.invested}</div>
-              </div>
-              <div>
-                <div className="text-widget-7 text-foreground-disabled">주문가능</div>
-                <div className="text-widget-10 font-semibold text-foreground">{BALANCE.available}</div>
-              </div>
+            <div className="grid grid-cols-3">
+              {[
+                { label: '투자원금', val: BALANCE.invested, color: 'text-foreground' },
+                { label: '평가손익', val: BALANCE.profit,   color: BALANCE.isProfit ? 'text-up' : 'text-down' },
+                { label: '주문가능', val: BALANCE.available, color: 'text-foreground' },
+              ].map(({ label, val, color }) => (
+                <div key={label} className="min-w-0">
+                  <div className="text-widget-7 text-foreground-disabled">{label}</div>
+                  <div className={`text-widget-10 font-semibold truncate ${color}`}>{val}</div>
+                </div>
+              ))}
             </div>
           </div>
-          <div className="flex flex-col flex-1 min-w-0 pl-4 border-l border-stroke">
+          {/* 하: 수익 추이 */}
+          <div className="flex flex-col flex-1 min-h-0 border-t border-stroke pt-2">
             <div className="text-widget-9 text-foreground-disabled shrink-0">수익 추이 (7일)</div>
             <div className="flex-1 min-h-0 relative my-2">
               {BALANCE.flowPoints.length > 1 ? (() => {
@@ -140,11 +144,7 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
                       const x = i * W
                       const y = 10 + (1 - (r - min) / range) * 80
                       return (
-                        <circle
-                          key={i}
-                          cx={x}
-                          cy={y}
-                          r="3"
+                        <circle key={i} cx={x} cy={y} r="3"
                           fill={r >= 0 ? 'var(--color-up)' : 'var(--color-down)'}
                           vectorEffect="non-scaling-stroke"
                         />
@@ -153,7 +153,7 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
                   </svg>
                 )
               })() : (
-                <div className="absolute inset-0 flex items-center justify-center text-widget-8 text-foreground-disabled">데이터 없음</div>
+                <div className="absolute inset-0 flex items-center justify-center text-widget-9 text-foreground-disabled">데이터 없음</div>
               )}
             </div>
             {BALANCE.flowPoints.length > 0 && (

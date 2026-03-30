@@ -48,25 +48,28 @@ export function PreviewContent({ type }) {
     /* 계좌 잔고 — 와이드 2×1 */
     case 'balance-lg':
       return (
-        <div className="flex flex-col h-full gap-1.5">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">계좌 잔고</span>
-          <div className="shrink-0">
-            <div className="text-[9px] text-foreground-disabled">총 평가자산</div>
-            <div className="text-[18px] font-extrabold text-foreground leading-tight">84,320,000</div>
-            <div className="text-[10px] text-up font-semibold">▲ +2,152,000 (+2.61%)</div>
-          </div>
-          {/* <div className="h-px bg-stroke-subtle shrink-0" /> */}
-          <div className="flex gap-2 flex-1 items-end">
-            {[
-              { label: '투자원금', val: '82,168,000', color: 'text-foreground' },
-              { label: '평가손익', val: '+2,152,000', color: 'text-up' },
-              { label: '주문가능', val: '74,780,000', color: 'text-foreground' },
-            ].map(({ label, val, color }) => (
-              <div key={label} className="flex-1 min-w-0">
-                <div className="text-[9px] text-foreground-disabled">{label}</div>
-                <div className={`text-[12px] font-semibold truncate ${color}`}>{val}</div>
-              </div>
-            ))}
+        <div className="flex flex-col h-full">
+          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0 mb-1">계좌 잔고</span>
+          <div className="flex flex-1 min-h-0 gap-3">
+            {/* 좌: 총 평가자산 */}
+            <div className="flex flex-col justify-end flex-1 min-w-0">
+              <div className="text-[8px] text-foreground-disabled">총 평가자산</div>
+              <div className="text-[15px] font-extrabold text-foreground leading-tight">84,320,000</div>
+              <div className="text-[9px] text-up font-semibold mt-0.5">▲ +2,152,000 (+2.61%)</div>
+            </div>
+            {/* 우: 3항목 세로 배치 */}
+            <div className="flex flex-col justify-end gap-1 border-l border-stroke pl-3 w-[42%] shrink-0">
+              {[
+                { label: '투자원금', val: '82,168,000', color: 'text-foreground' },
+                { label: '평가손익', val: '+2,152,000', color: 'text-up' },
+                { label: '주문가능', val: '74,780,000', color: 'text-foreground' },
+              ].map(({ label, val, color }) => (
+                <div key={label} className="min-w-0">
+                  <div className="text-[7px] text-foreground-disabled">{label}</div>
+                  <div className={`text-[9px] font-semibold truncate ${color}`}>{val}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       )
@@ -481,32 +484,36 @@ export function PreviewContent({ type }) {
       return (
         <div className="flex flex-col h-full">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0 mb-1">계좌 잔고</span>
-          <div className="flex flex-1 min-h-0 gap-3">
-            <div className="flex flex-col flex-1 min-w-0">
-              <div className="flex-1 flex flex-col justify-center">
+          <div className="flex flex-col flex-1 min-h-0 gap-2">
+            {/* 상: 금액 정보 */}
+            <div className="flex flex-col shrink-0 gap-1">
+              <div>
                 <div className="text-[8px] text-foreground-disabled">총 평가자산</div>
                 <div className="text-[15px] font-extrabold text-foreground leading-none mt-0.5">84,320,000</div>
-                <div className="text-[9px] text-up font-semibold mt-0.5">▲ +2,152,000원 (+2.61%)</div>
+                <div className="text-[8px] text-up font-semibold mt-0.5">▲ +2,152,000 (+2.61%)</div>
               </div>
-              <div className="flex gap-3 shrink-0">
-                <div>
-                  <div className="text-[8px] text-foreground-disabled">투자원금</div>
-                  <div className="text-[10px] font-semibold text-foreground">82,168,000</div>
-                </div>
-                <div>
-                  <div className="text-[8px] text-foreground-disabled">주문가능</div>
-                  <div className="text-[10px] font-semibold text-foreground">74,780,000</div>
-                </div>
+              <div className="grid grid-cols-3">
+                {[
+                  { label: '투자원금', val: '82,168,000' },
+                  { label: '평가손익', val: '+2,152,000' },
+                  { label: '주문가능', val: '74,780,000' },
+                ].map(({ label, val }) => (
+                  <div key={label} className="min-w-0">
+                    <div className="text-[7px] text-foreground-disabled">{label}</div>
+                    <div className="text-[9px] font-semibold text-foreground truncate">{val}</div>
+                  </div>
+                ))}
               </div>
             </div>
-            <div className="flex flex-col flex-1 min-w-0 pl-3 border-l border-stroke">
-              <div className="text-[8px] text-foreground-disabled shrink-0">수익 추이 (30일)</div>
+            {/* 하: 수익 추이 */}
+            <div className="flex flex-col flex-1 min-h-0 border-t border-stroke pt-1">
+              <div className="text-[8px] text-foreground-disabled shrink-0">수익 추이 (7일)</div>
               <div className="flex-1 min-h-0 my-1">
                 <svg viewBox="0 0 100 30" preserveAspectRatio="none" style={{ width: '100%', height: '100%', display: 'block' }}>
                   <polyline points="0,27 12,23 24,25 36,18 50,14 62,10 74,7 86,4 100,1" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
                 </svg>
               </div>
-              <div className="text-[8px] text-foreground-disabled text-right shrink-0">최고 +5.2%</div>
+              <div className="text-[8px] text-up text-right shrink-0">+2.61%</div>
             </div>
           </div>
         </div>

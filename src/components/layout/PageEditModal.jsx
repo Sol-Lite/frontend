@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Trash2, Plus, RotateCcw } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Trash2, Plus, RotateCcw, X } from 'lucide-react'
 import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
@@ -185,7 +186,7 @@ export default function PageEditModal({ onClose }) {
     onClose()
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       {/* 백드롭 */}
       <div
@@ -196,11 +197,20 @@ export default function PageEditModal({ onClose }) {
       {/* 모달 카드 */}
       <div className="relative bg-surface rounded-[20px] p-7 w-[760px] max-w-full border border-stroke shadow-modal animate-modal-in">
         {/* 헤더 */}
-        <div className="mb-6">
-          <h2 className="text-base font-extrabold text-foreground">페이지 편집</h2>
-          <p className="text-[11px] text-foreground-disabled mt-0.5">
-            대시보드 페이지를 추가하거나 삭제하세요
-          </p>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h2 className="text-base font-extrabold text-foreground">페이지 편집</h2>
+            <p className="text-[11px] text-foreground-disabled mt-0.5">
+              대시보드 페이지를 추가하거나 삭제하세요
+            </p>
+          </div>
+          <button
+            aria-label="닫기"
+            onClick={() => handleClose()}
+            className="w-7 h-7 rounded-full border border-stroke-input bg-surface-muted flex items-center justify-center text-foreground-tertiary hover:text-foreground transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {/* 페이지 썸네일 목록 */}
@@ -230,6 +240,7 @@ export default function PageEditModal({ onClose }) {
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

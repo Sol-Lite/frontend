@@ -13,7 +13,7 @@ export const WIDGET_TYPES = [
     variants: [
       { id: 'balance-sm',  label: '소형',  colSpan: 1, rowSpan: 1, preview: 'balance-sm' },
       { id: 'balance-lg',  label: '와이드', colSpan: 2, rowSpan: 1, preview: 'balance-lg' },
-      { id: 'balance-3x1', label: '확장형', colSpan: 3, rowSpan: 1, preview: 'balance-3x1' },
+      { id: 'balance-3x1', label: '차트형', colSpan: 2, rowSpan: 2, preview: 'balance-3x1' },
     ],
   },
   {

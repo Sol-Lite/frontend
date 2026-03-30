@@ -186,7 +186,7 @@
    Widget Font Scale Overrides
 ───────────────────────────────────────────── */
 [data-font-size="md"] {
-  --text-widget-6:  5px;
+  --text-widget-6:  7px;
   --text-widget-7:  8px;
   --text-widget-9:  10px;
   --text-widget-10: 11px;
@@ -202,7 +202,7 @@
   --text-widget-22: 24px;
 }
 [data-font-size="lg"] {
-  --text-widget-6:  7px;
+  --text-widget-6:  8px;
   --text-widget-7:  9px;
   --text-widget-9:  11px;
   --text-widget-10: 12px;
