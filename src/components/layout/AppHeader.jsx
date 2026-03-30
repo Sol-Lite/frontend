@@ -1,30 +1,74 @@
+import { useState } from 'react'
 import { Activity, LayoutGrid } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import NavTabs from './NavTabs'
+import NavTabs, { NavConfirmModal } from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
 import { useMyAccount } from '@/api/account'
 import useRightPanelStore from '@/store/useRightPanelStore'
 import useEditModeStore from '@/store/useEditModeStore'
-import useWidgetStore from '@/store/useWidgetStore'
+import useWidgetStore, { hasUnsavedChanges } from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import NotificationCenter from '@/components/ui/NotificationCenter'
 import { FontSizeButton, ThemeButton } from './DisplaySettingsButtons'
 
 function Logo() {
   const navigate = useNavigate()
+  const { isEditMode, exitEditMode, saveLayout } = useEditModeStore()
+  const { restoreSnapshot, clearSnapshot } = useWidgetStore()
+  const unsaved = useWidgetStore(hasUnsavedChanges)
+  const { mutate: saveDashboard, isPending } = useDashboardSave()
+  const [showConfirm, setShowConfirm] = useState(false)
+
+  function handleClick() {
+    if (!isEditMode) {
+      navigate('/')
+      return
+    }
+    if (!unsaved) {
+      exitEditMode()
+      navigate('/')
+      return
+    }
+    setShowConfirm(true)
+  }
+
   return (
-    <button
-      onClick={() => navigate('/')}
-      aria-label="홈으로 이동"
-      className="flex items-center gap-2 mr-2 shrink-0"
-    >
-      <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow">
-        <Activity className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-      </div>
-      <span className="text-[15px] font-bold tracking-tight text-foreground">
-        SOL <span className="text-primary">Lite</span>
-      </span>
-    </button>
+    <>
+      <button
+        onClick={handleClick}
+        aria-label="홈으로 이동"
+        className="flex items-center gap-2 mr-2 shrink-0"
+      >
+        <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow">
+          <Activity className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
+        </div>
+        <span className="text-[15px] font-bold tracking-tight text-foreground">
+          SOL <span className="text-primary">Lite</span>
+        </span>
+      </button>
+      {showConfirm && (
+        <NavConfirmModal
+          isPending={isPending}
+          onSave={() => {
+            clearSnapshot()
+            saveDashboard(undefined, {
+              onSuccess: () => {
+                saveLayout()
+                navigate('/')
+                setShowConfirm(false)
+              },
+            })
+          }}
+          onDiscard={() => {
+            restoreSnapshot()
+            exitEditMode()
+            navigate('/')
+            setShowConfirm(false)
+          }}
+          onCancel={() => setShowConfirm(false)}
+        />
+      )}
+    </>
   )
 }
 

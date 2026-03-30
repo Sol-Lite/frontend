@@ -98,7 +98,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
   const returnRateStr = portfolio.returnRate != null
     ? `${portfolio.returnRate >= 0 ? '+' : ''}${portfolio.returnRate.toFixed(1)}%`
     : '-'
-  const returnRateColor = (portfolio.returnRate ?? 0) >= 0 ? 'text-up' : 'text-down'
+  const returnRateColor = portfolio.returnRate == null ? 'text-foreground-disabled' : portfolio.returnRate >= 0 ? 'text-up' : 'text-down'
 
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={() => open({ widgetTypeId: 'balance', config: {} })}>
@@ -106,10 +106,16 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
         <>
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
-            <span className={`text-widget-10 font-semibold ${returnRateColor}`}>{returnRateStr}</span>
+            {portfolio.returnRate != null && (
+              <span className={`text-widget-10 font-semibold ${returnRateColor}`}>{returnRateStr}</span>
+            )}
           </div>
           <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-hidden">
-            {portfolio.items.map((item) => (
+            {portfolio.isLoading || portfolio.items.length === 0 ? (
+              <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">
+                {portfolio.isLoading ? '불러오는 중...' : '보유 종목 없음'}
+              </div>
+            ) : portfolio.items.map((item) => (
               <ItemBar key={item.name} item={item} barHeight="h-[3px]" />
             ))}
           </div>
@@ -119,46 +125,60 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
           </div>
-          <div className="flex flex-col flex-1 gap-3 min-h-0">
-            <div className="flex items-center gap-3 shrink-0">
-              <div
-                className="w-16 h-16 rounded-full shrink-0"
-                style={{ background: `conic-gradient(${conicStops})` }}
-              />
-              <div>
-                <div className="text-widget-9 text-foreground-disabled">총 수익률</div>
-                <div className={`text-widget-22 font-bold leading-tight ${returnRateColor}`}>{returnRateStr}</div>
-                <div className="text-widget-9 text-foreground-disabled mt-0.5">+4,280,000원</div>
+          {portfolio.isLoading || portfolio.items.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">
+              {portfolio.isLoading ? '불러오는 중...' : '보유 종목 없음'}
+            </div>
+          ) : (
+            <div className="flex flex-col flex-1 gap-3 min-h-0">
+              <div className="flex items-center gap-3 shrink-0">
+                <div
+                  className="w-16 h-16 rounded-full shrink-0"
+                  style={{ background: `conic-gradient(${conicStops})` }}
+                />
+                <div>
+                  <div className="text-widget-9 text-foreground-disabled">총 수익률</div>
+                  <div className={`text-widget-22 font-bold leading-tight ${returnRateColor}`}>{returnRateStr}</div>
+                  <div className="text-widget-9 text-foreground-disabled mt-0.5">+4,280,000원</div>
+                </div>
+              </div>
+              <div className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-hidden">
+                {portfolio.items.map((item) => (
+                  <ItemBar key={item.name} item={item} barHeight="h-[4px]" />
+                ))}
               </div>
             </div>
-            <div className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-hidden">
-              {portfolio.items.map((item) => (
-                <ItemBar key={item.name} item={item} barHeight="h-[4px]" />
-              ))}
-            </div>
-          </div>
+          )}
         </>
       ) : (
         /* portfolio-sm (default) */
         <>
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 비중</span>
-            <span className={`text-widget-10 font-semibold ${returnRateColor}`}>{returnRateStr}</span>
+            {portfolio.returnRate != null && (
+              <span className={`text-widget-10 font-semibold ${returnRateColor}`}>{returnRateStr}</span>
+            )}
           </div>
-          <div className="flex items-center gap-2.5 flex-1 min-h-0">
-            <div
-              className="w-14 h-14 rounded-full shrink-0"
-              style={{ background: `conic-gradient(${conicStops})` }}
-            />
-            <div className="flex flex-col gap-1 min-w-0 flex-1">
-              {portfolio.items.map((item) => (
-                <div key={item.name} className="flex items-center gap-1 min-w-0">
-                  <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: item.color }} />
-                  <span className="text-widget-10 text-foreground-secondary tracking-tight truncate">{item.name}</span>
-                </div>
-              ))}
+          {portfolio.isLoading || portfolio.items.length === 0 ? (
+            <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">
+              {portfolio.isLoading ? '불러오는 중...' : '보유 종목 없음'}
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2.5 flex-1 min-h-0">
+              <div
+                className="w-14 h-14 rounded-full shrink-0"
+                style={{ background: `conic-gradient(${conicStops})` }}
+              />
+              <div className="flex flex-col gap-1 min-w-0 flex-1">
+                {portfolio.items.map((item) => (
+                  <div key={item.name} className="flex items-center gap-1 min-w-0">
+                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: item.color }} />
+                    <span className="text-widget-10 text-foreground-secondary tracking-tight truncate">{item.name}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </>
       )}
 

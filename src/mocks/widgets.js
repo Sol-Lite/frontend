@@ -13,7 +13,7 @@ export const WIDGET_TYPES = [
     variants: [
       { id: 'balance-sm',  label: '소형',  colSpan: 1, rowSpan: 1, preview: 'balance-sm' },
       { id: 'balance-lg',  label: '와이드', colSpan: 2, rowSpan: 1, preview: 'balance-lg' },
-      { id: 'balance-3x1', label: '확장형', colSpan: 3, rowSpan: 1, preview: 'balance-3x1' },
+      { id: 'balance-3x1', label: '차트형', colSpan: 2, rowSpan: 2, preview: 'balance-3x1' },
     ],
   },
   {
@@ -64,11 +64,9 @@ export const WIDGET_TYPES = [
     id: 'exchange',
     name: '환율',
     category: '기타',
-    description: 'USD · JPY · EUR 실시간 환율',
+    description: 'USD 실시간 환율',
     variants: [
-      { id: 'exchange-sm',   label: '단일',  colSpan: 1, rowSpan: 1, preview: 'exchange-sm' },
-      { id: 'exchange-wide', label: '복합',  colSpan: 2, rowSpan: 1, preview: 'exchange-wide' },
-      { id: 'exchange-3x1',  label: '3통화', colSpan: 3, rowSpan: 1, preview: 'exchange-3x1' },
+      { id: 'exchange-sm', label: '단일', colSpan: 1, rowSpan: 1, preview: 'exchange-sm' },
     ],
   },
   {

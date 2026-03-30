@@ -167,14 +167,19 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
   }, [candleData, isIntraday, tickOffset, isForceFit, theme])
 
   // STOMP 실시간 캔들 업데이트 — 차트 재생성 없이 마지막 봉만 갱신
-  // isIntraday: 새 버킷이 79슬롯 밖으로 나가면 최신 캔들이 보이도록 scrollToRealTime
+  // 정규장(09:00~15:30) 중에는 고정 79슬롯 범위 안에 자연 표시 — scrollToRealTime 불필요
+  // 15:30 이후 새 봉이 슬롯 밖으로 나갈 때만 scrollToRealTime 호출
   useEffect(() => {
     if (!seriesRef.current || !liveCandle) return
     seriesRef.current.update(liveCandle)
     if (isIntraday && chartRef.current) {
-      chartRef.current.timeScale().scrollToRealTime()
+      const d = new Date((liveCandle.time + tickOffset) * 1000)
+      const kstMinutes = d.getUTCHours() * 60 + d.getUTCMinutes()
+      if (kstMinutes > 15 * 60 + 30) {
+        chartRef.current.timeScale().scrollToRealTime()
+      }
     }
-  }, [liveCandle, isIntraday])
+  }, [liveCandle, isIntraday, tickOffset])
 
   return <div ref={ref} className={className} />
 }

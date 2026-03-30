@@ -17,10 +17,8 @@ const ALL_CURRENCIES = [
 ]
 
 const DEFAULT_CURRENCIES = {
-  'exchange-sm':   ['USD'],
-  'exchange-wide': ['USD', 'JPY'],
-  'exchange-3x1':  ['USD', 'JPY', 'EUR'],
-  'exchange-2x2':  ['USD', 'JPY', 'EUR'],
+  'exchange-sm':  ['USD'],
+  'exchange-2x2': ['USD', 'JPY', 'EUR'],
 }
 
 const LIVE_BY_CODE = { USD: 0, JPY: 1, EUR: 2 }
@@ -98,92 +96,6 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
     </button>
   )
 
-  if (variant === 'exchange-3x1') {
-    const flexValues = ['1.2', '1', '1']
-    const paddings   = [{ pr: 'pr-3', pl: '' }, { pr: 'pr-2.5', pl: 'pl-2.5' }, { pr: '', pl: 'pl-2.5' }]
-    const rateSize   = ['text-widget-20', 'text-widget-16', 'text-widget-16']
-    return (
-      <>
-        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-          <div className="flex items-center justify-between mb-1 shrink-0">
-            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
-            {settingsBtn}
-          </div>
-          <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-            {currencies.map(({ code, pair, live }, i) => {
-              const isUp = (live?.change ?? 0) > 0
-              const { pr, pl } = paddings[i] ?? { pr: '', pl: 'pl-2.5' }
-              return (
-                <div
-                  key={pair}
-                  className={`relative flex flex-col justify-center ${pr} ${pl} cursor-pointer group [flex:var(--flex-val)]`}
-                  style={{ '--flex-val': flexValues[i] ?? '1' }}
-                  onClick={(e) => handleCurrencyClick(e, code)}
-                >
-                  <div className="text-center">
-                    <div className="text-widget-9 text-foreground-disabled">{pair}</div>
-                    <div className={`${rateSize[i] ?? 'text-widget-16'} font-bold text-foreground leading-tight`}>{formatRate(live?.rate)}</div>
-                    {live?.change != null && (
-                      <div className={`text-widget-9 ${isUp ? 'text-up' : 'text-down'}`}>
-                        {isUp ? '▲' : '▼'} {Math.abs(live.change)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              )
-            })}
-          </div>
-          {!isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
-        </WidgetCard>
-        {configModal}
-      </>
-    )
-  }
-
-  if (variant === 'exchange-wide') {
-    return (
-      <>
-        <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-          <div className="flex items-center justify-between mb-1 shrink-0">
-            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
-            {settingsBtn}
-          </div>
-          <div className="flex flex-1 min-h-0 divide-x divide-stroke">
-            {currencies.map(({ code, pair, live }, i) => {
-              const isUp = (live?.change ?? 0) > 0
-              const rateSize = i === 0 ? 'text-widget-20' : 'text-widget-16'
-              const pr = i === 0 ? 'pr-3' : ''
-              const pl = i > 0 ? 'pl-3' : ''
-              const flex = i === 0 ? '1.2' : '1'
-              return (
-                <div
-                  key={pair}
-                  className={`relative flex flex-col justify-center ${pr} ${pl} cursor-pointer group [flex:var(--flex-val)]`}
-                  style={{ '--flex-val': flex }}
-                  onClick={(e) => handleCurrencyClick(e, code)}
-                >
-                  <div className="text-center">
-                    <div className="text-widget-9 text-foreground-disabled">{pair}</div>
-                    <div className={`${rateSize} font-bold text-foreground leading-tight`}>{formatRate(live?.rate)}</div>
-                    {live?.change != null && (
-                      <div className={`text-widget-9 ${isUp ? 'text-up' : 'text-down'}`}>
-                        {isUp ? '▲' : '▼'} {Math.abs(live.change)}
-                      </div>
-                    )}
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              )
-            })}
-          </div>
-          {!isRestoring && !isAuthenticated && <LockedOverlay message="환율 정보를 보려면" />}
-        </WidgetCard>
-        {configModal}
-      </>
-    )
-  }
-
   if (variant === 'exchange-2x2') {
     const primary = currencies[0]
     const rest    = currencies.slice(1)
@@ -254,7 +166,7 @@ export default function ExchangeWidget({ instanceId, variant = 'exchange-sm', co
         <div className="flex items-center justify-between shrink-0">
           <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">환율</span>
         </div>
-        <div className="flex-1 flex flex-col justify-center min-h-0">
+        <div className="flex-1 flex flex-col items-center justify-center min-h-0 text-center">
           <div className="text-widget-9 text-foreground-disabled">USD / KRW</div>
           <RateDisplay live={smLive} rateClassName="text-widget-18" />
         </div>

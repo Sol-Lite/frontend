@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Trash2, Plus, RotateCcw } from 'lucide-react'
+import { createPortal } from 'react-dom'
+import { Trash2, Plus, RotateCcw, X } from 'lucide-react'
 import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
@@ -124,6 +125,8 @@ function AddPageSlot({ onClick }) {
   )
 }
 
+const MAX_PAGES = 5
+
 export default function PageEditModal({ onClose }) {
   const { pages, currentPageId, applyPageChanges } = useWidgetStore()
 
@@ -131,42 +134,59 @@ export default function PageEditModal({ onClose }) {
   const [stagedCurrentId, setStagedCurrentId] = useState(currentPageId)
 
   const activePages = stagedPages.filter((p) => !p._deleted)
+  const isAtLimit   = activePages.length >= MAX_PAGES
+
+  /* staged 상태를 즉시 스토어에 반영 — 헤더 완료·저장 버튼이 최신 페이지를 읽을 수 있도록 */
+  function syncToStore(newStaged, currentId) {
+    const finalPages = newStaged
+      .filter((p) => !p._deleted)
+      .map(({ _deleted: _, ...rest }) => rest)
+    applyPageChanges(finalPages, currentId)
+  }
 
   function handleAddPage() {
     const newId = crypto.randomUUID()
     const nextIndex = activePages.length + 1
-    setStagedPages((prev) => [
-      ...prev,
+    const newStaged = [
+      ...stagedPages,
       { id: newId, name: `대시보드 ${nextIndex}`, widgets: [] },
-    ])
+    ]
+    setStagedPages(newStaged)
+    syncToStore(newStaged, stagedCurrentId)
   }
 
   function handleDeletePage(pageId) {
     if (activePages.length <= 1) return
-    setStagedPages((prev) => prev.map((p) => p.id === pageId ? { ...p, _deleted: true } : p))
-    // 현재 페이지 삭제 시 인접 활성 페이지로 이동
+    const newStaged = stagedPages.map((p) => p.id === pageId ? { ...p, _deleted: true } : p)
+    let newCurrentId = stagedCurrentId
     if (pageId === stagedCurrentId) {
       const remaining = activePages.filter((p) => p.id !== pageId)
       const deletedIndex = activePages.findIndex((p) => p.id === pageId)
-      const fallback = remaining[deletedIndex] ?? remaining[deletedIndex - 1]
-      setStagedCurrentId(fallback.id)
+      newCurrentId = (remaining[deletedIndex] ?? remaining[deletedIndex - 1]).id
+      setStagedCurrentId(newCurrentId)
     }
+    setStagedPages(newStaged)
+    syncToStore(newStaged, newCurrentId)
   }
 
   function handleRestorePage(pageId) {
-    setStagedPages((prev) => prev.map((p) => p.id === pageId ? { ...p, _deleted: false } : p))
+    const newStaged = stagedPages.map((p) => p.id === pageId ? { ...p, _deleted: false } : p)
+    setStagedPages(newStaged)
+    syncToStore(newStaged, stagedCurrentId)
   }
 
-  /* 페이지 카드 클릭 or backdrop 클릭 — _deleted 제외 후 store에 반영하고 모달 닫기 */
+  /* 페이지 카드 클릭 or backdrop 클릭 — 스토어는 이미 동기화된 상태이므로 모달만 닫기 */
   function handleClose(targetPageId = stagedCurrentId) {
-    const finalPages = stagedPages
-      .filter((p) => !p._deleted)
-      .map(({ _deleted: _, ...rest }) => rest)
-    applyPageChanges(finalPages, targetPageId)
+    if (targetPageId !== stagedCurrentId) {
+      const finalPages = stagedPages
+        .filter((p) => !p._deleted)
+        .map(({ _deleted: _, ...rest }) => rest)
+      applyPageChanges(finalPages, targetPageId)
+    }
     onClose()
   }
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       {/* 백드롭 */}
       <div
@@ -177,11 +197,20 @@ export default function PageEditModal({ onClose }) {
       {/* 모달 카드 */}
       <div className="relative bg-surface rounded-[20px] p-7 w-[760px] max-w-full border border-stroke shadow-modal animate-modal-in">
         {/* 헤더 */}
-        <div className="mb-6">
-          <h2 className="text-base font-extrabold text-foreground">페이지 편집</h2>
-          <p className="text-[11px] text-foreground-disabled mt-0.5">
-            대시보드 페이지를 추가하거나 삭제하세요
-          </p>
+        <div className="flex items-start justify-between mb-6">
+          <div>
+            <h2 className="text-base font-extrabold text-foreground">페이지 편집</h2>
+            <p className="text-[11px] text-foreground-disabled mt-0.5">
+              대시보드 페이지를 추가하거나 삭제하세요
+            </p>
+          </div>
+          <button
+            aria-label="닫기"
+            onClick={() => handleClose()}
+            className="w-7 h-7 rounded-full border border-stroke-input bg-surface-muted flex items-center justify-center text-foreground-tertiary hover:text-foreground transition-colors"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
         </div>
 
         {/* 페이지 썸네일 목록 */}
@@ -197,9 +226,21 @@ export default function PageEditModal({ onClose }) {
               onNavigate={() => handleClose(page.id)}
             />
           ))}
-          <AddPageSlot onClick={handleAddPage} />
+          {isAtLimit ? (
+            <div className="w-[148px] shrink-0">
+              <div className="w-full h-[148px] rounded-[14px] border border-stroke-input bg-surface-subtle flex flex-col items-center justify-center gap-2">
+                <span className="text-[11px] text-foreground-disabled font-medium text-center px-3">최대 {MAX_PAGES}개까지<br />추가할 수 있어요</span>
+              </div>
+              <div className="mt-2.5 px-0.5">
+                <span className="text-[11px] text-foreground-disabled">페이지 추가 불가</span>
+              </div>
+            </div>
+          ) : (
+            <AddPageSlot onClick={handleAddPage} />
+          )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }

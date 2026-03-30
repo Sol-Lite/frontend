@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
 import { X, Search } from 'lucide-react'
 import { marketApi } from '@/api/market'
@@ -19,7 +20,7 @@ export default function StockSelectModal({ currentCode, currentName, onSave, onC
     staleTime: 30_000,
   })
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
       onClick={onClose}
@@ -78,6 +79,7 @@ export default function StockSelectModal({ currentCode, currentName, onSave, onC
           ))}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   )
 }
