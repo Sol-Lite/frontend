@@ -124,6 +124,8 @@ function AddPageSlot({ onClick }) {
   )
 }
 
+const MAX_PAGES = 5
+
 export default function PageEditModal({ onClose }) {
   const { pages, currentPageId, applyPageChanges } = useWidgetStore()
 
@@ -131,6 +133,7 @@ export default function PageEditModal({ onClose }) {
   const [stagedCurrentId, setStagedCurrentId] = useState(currentPageId)
 
   const activePages = stagedPages.filter((p) => !p._deleted)
+  const isAtLimit   = activePages.length >= MAX_PAGES
 
   function handleAddPage() {
     const newId = crypto.randomUUID()
@@ -197,7 +200,18 @@ export default function PageEditModal({ onClose }) {
               onNavigate={() => handleClose(page.id)}
             />
           ))}
-          <AddPageSlot onClick={handleAddPage} />
+          {isAtLimit ? (
+            <div className="w-[148px] shrink-0">
+              <div className="w-full h-[148px] rounded-[14px] border border-stroke-input bg-surface-subtle flex flex-col items-center justify-center gap-2">
+                <span className="text-[11px] text-foreground-disabled font-medium text-center px-3">최대 {MAX_PAGES}개까지<br />추가할 수 있어요</span>
+              </div>
+              <div className="mt-2.5 px-0.5">
+                <span className="text-[11px] text-foreground-disabled">페이지 추가 불가</span>
+              </div>
+            </div>
+          ) : (
+            <AddPageSlot onClick={handleAddPage} />
+          )}
         </div>
       </div>
     </div>
