@@ -5,8 +5,8 @@ import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import { cn } from '@/lib/cn'
 
 const TABS = [
-  { key: 'kr', label: '한국' },
-  { key: 'us', label: '미국' },
+  { key: 'kr', label: '국내' },
+  { key: 'us', label: '해외' },
 ]
 
 function NewsCard({ item, showSummary = false, onClickNews }) {
@@ -73,11 +73,12 @@ export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 
           type="button"
           onClick={(e) => { e.stopPropagation(); setTab(t.key) }}
           className={cn(
-            'px-2 py-0.5 text-widget-9 font-semibold rounded-md transition-colors',
+            'px-1.5 py-px font-semibold rounded transition-colors',
             tab === t.key
               ? 'bg-primary text-white'
               : 'text-foreground-disabled hover:text-foreground-secondary',
           )}
+          style={{ fontSize: 'var(--text-widget-9)' }}
         >
           {t.label}
         </button>

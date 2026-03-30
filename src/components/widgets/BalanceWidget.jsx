@@ -76,17 +76,19 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
               : <div className={`text-widget-11 font-semibold mt-0.5 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
             }
           </div>
-          <div className="flex flex-col justify-end gap-1 min-w-0 w-[42%] shrink-0 border-l border-stroke pl-3">
-            {[
-              { label: '투자원금', val: BALANCE.invested, color: 'text-foreground' },
-              { label: '평가손익', val: BALANCE.profit,   color: BALANCE.isProfit ? 'text-up' : 'text-down' },
-              { label: '주문가능', val: BALANCE.available, color: 'text-foreground' },
-            ].map(({ label, val, color }) => (
-              <div key={label} className="min-w-0">
-                <div className="text-widget-7 text-foreground-disabled">{label}</div>
-                <div className={`text-widget-10 font-semibold truncate ${color}`}>{val}</div>
-              </div>
-            ))}
+          <div className="flex flex-col justify-end min-w-0 w-[42%] shrink-0">
+            <div className="flex flex-col gap-1 border-l border-stroke pl-3">
+              {[
+                { label: '투자원금', val: BALANCE.invested, color: 'text-foreground' },
+                { label: '평가손익', val: BALANCE.profit,   color: BALANCE.isProfit ? 'text-up' : 'text-down' },
+                { label: '주문가능', val: BALANCE.available, color: 'text-foreground' },
+              ].map(({ label, val, color }) => (
+                <div key={label} className="min-w-0">
+                  <div className="text-widget-7 text-foreground-disabled">{label}</div>
+                  <div className={`text-widget-10 font-semibold truncate ${color}`}>{val}</div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       ) : variant === 'balance-3x1' ? (
