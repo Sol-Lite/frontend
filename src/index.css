@@ -75,6 +75,16 @@
   --color-avatar-orange-border:  #FED7AA;
   --color-avatar-orange-text:    #EA580C;
 
+  /* ── Chat AI Avatar 배경색 ── */
+  --color-chat-avatar-puri:     #F5B89A;
+  --color-chat-avatar-rurulara: #A0C8E0;
+  --color-chat-avatar-doremi:   #4A5568;
+  --color-chat-avatar-shu:      #C8B090;
+  --color-chat-avatar-rino:     #B8D4EC;
+  --color-chat-avatar-molly:    #7B3FE4;
+  --color-chat-avatar-sol:      #1A3A8A;
+  --color-chat-avatar-ray:      #7BAED6;
+
   /* ── Layout Structure (여러 컴포넌트가 참조하는 구조값) ── */
   --spacing-header:       54px;   /* AppHeader 높이 */
   --spacing-chat-panel:   368px;  /* ChatPanel 너비 */

@@ -233,14 +233,14 @@ function ChatHeader() {
 //   타이핑 인디케이터: dot 3개, animate-pulse-dot staggered delay
 
 const AVATARS = [
-  { file: 'puri',     bg: '#F5B89A' },  // 플리
-  { file: 'rurulara', bg: '#A0C8E0' },  // 루루라라
-  { file: 'doremi',   bg: '#4A5568' },  // 도레미
-  { file: 'shu',      bg: '#C8B090' },  // 슈
-  { file: 'rino',     bg: '#B8D4EC' },  // 리노
-  { file: 'molly',    bg: '#7B3FE4' },  // 몰리
-  { file: 'sol',      bg: '#1A3A8A' },  // 쏠
-  { file: 'ray',      bg: '#7BAED6' },  // 레이
+  { file: 'puri',     bgClass: 'bg-chat-avatar-puri'     },  // 플리
+  { file: 'rurulara', bgClass: 'bg-chat-avatar-rurulara' },  // 루루라라
+  { file: 'doremi',   bgClass: 'bg-chat-avatar-doremi'   },  // 도레미
+  { file: 'shu',      bgClass: 'bg-chat-avatar-shu'      },  // 슈
+  { file: 'rino',     bgClass: 'bg-chat-avatar-rino'     },  // 리노
+  { file: 'molly',    bgClass: 'bg-chat-avatar-molly'    },  // 몰리
+  { file: 'sol',      bgClass: 'bg-chat-avatar-sol'      },  // 쏠
+  { file: 'ray',      bgClass: 'bg-chat-avatar-ray'      },  // 레이
 ];
 
 function ChatBubble({
@@ -260,17 +260,12 @@ function ChatBubble({
       className={`flex animate-bubble-in ${isAI ? "justify-start" : "justify-end"}`}
     >
       <div
-        className="flex flex-col gap-1"
-        style={{
-          maxWidth: "85%",
-          alignItems: isAI ? "flex-start" : "flex-end",
-        }}
+        className={cn("flex flex-col gap-1 max-w-[85%]", isAI ? "items-start" : "items-end")}
       >
       {isAI && (
         <div className="flex items-end gap-2">
           <div
-            className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0"
-            style={{ backgroundColor: avatar.bg }}
+            className={cn("w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0", avatar.bgClass)}
           >
             <img
               src={`/avatars/${avatar.file}.png`}
@@ -292,18 +287,9 @@ function ChatBubble({
           {isTyping ? (
             // DESIGN.md §16: dot 3개, w-1.25 h-1.25, pulse-dot 0/150/300ms
             <div className="flex items-center gap-1 py-0.5">
-              <span
-                className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot"
-                style={{ animationDelay: "0ms" }}
-              />
-              <span
-                className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot"
-                style={{ animationDelay: "150ms" }}
-              />
-              <span
-                className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot"
-                style={{ animationDelay: "300ms" }}
-              />
+              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot [animation-delay:0ms]" />
+              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot [animation-delay:150ms]" />
+              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot [animation-delay:300ms]" />
             </div>
           ) : (
             <ReactMarkdown
@@ -351,9 +337,9 @@ function ChatBubble({
         <div className="px-3.5 py-2.5 text-[13px] leading-relaxed bg-surface-muted text-foreground rounded-[0_16px_16px_16px]">
           {isTyping ? (
             <div className="flex items-center gap-1 py-0.5">
-              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot" style={{ animationDelay: "0ms" }} />
-              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot" style={{ animationDelay: "150ms" }} />
-              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot" style={{ animationDelay: "300ms" }} />
+              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot [animation-delay:0ms]" />
+              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot [animation-delay:150ms]" />
+              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot [animation-delay:300ms]" />
             </div>
           ) : (
             <ReactMarkdown
@@ -396,7 +382,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
           return (
             <div key={msg.id} className="flex flex-col gap-1 animate-bubble-in">
               <div className="flex items-end gap-2">
-                <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                <div className={cn("w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0", av.bgClass)}>
                   <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
                 </div>
                 {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
@@ -463,7 +449,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
           return (
             <div key={msg.id} className="flex flex-col gap-1 animate-bubble-in">
               <div className="flex items-end gap-2">
-                <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                <div className={cn("w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0", av.bgClass)}>
                   <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
                 </div>
                 {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
@@ -496,7 +482,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
           return (
             <div key={msg.id} className="flex flex-col gap-1 animate-bubble-in">
               <div className="flex items-end gap-2">
-                <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                <div className={cn("w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0", av.bgClass)}>
                   <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
                 </div>
                 {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
@@ -528,9 +514,9 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
           const isThisPending = pendingMsgId === msg.id
           return (
             <div key={msg.id} className="flex justify-start animate-bubble-in">
-              <div className="flex flex-col gap-1" style={{ maxWidth: '90%', alignItems: 'flex-start' }}>
+              <div className="flex flex-col gap-1 max-w-[90%] items-start">
                 <div className="flex items-end gap-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                  <div className={cn("w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0", av.bgClass)}>
                     <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
                   </div>
                   {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
@@ -554,9 +540,9 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
           const isThisPending = pendingMsgId === msg.id
           return (
             <div key={msg.id} className="flex justify-start animate-bubble-in">
-              <div className="flex flex-col gap-1" style={{ maxWidth: '85%', alignItems: 'flex-start' }}>
+              <div className="flex flex-col gap-1 max-w-[85%] items-start">
                 <div className="flex items-end gap-2">
-                  <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                  <div className={cn("w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0", av.bgClass)}>
                     <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
                   </div>
                   {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
