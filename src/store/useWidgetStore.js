@@ -3,6 +3,24 @@ import { GRID_COLS, GRID_ROWS } from '@/lib/gridConstants'
 import { fromApiResponse } from './widgetApi'
 
 const STORAGE_KEY_CURRENT_PAGE = 'dashboard:currentPageId'
+const DEFAULT_STOCK_CHART_CONFIG = {
+  stockCode: '055550',
+  stockName: '신한지주',
+  marketType: 'KOSPI',
+}
+const DEFAULT_STOCK_NEWS_CONFIG = {
+  stockCode: '055550',
+  stockName: '신한지주',
+}
+const DEFAULT_WIDGET_CONFIG = {
+  'stock-chart': DEFAULT_STOCK_CHART_CONFIG,
+  'stock-news': DEFAULT_STOCK_NEWS_CONFIG,
+}
+
+function getDefaultWidgetConfig(widgetTypeId) {
+  const config = DEFAULT_WIDGET_CONFIG[widgetTypeId]
+  return config ? { ...config } : undefined
+}
 
 /* ── 충돌 판정 ──────────────────────────────────────────────
    모든 좌표는 1-indexed (CSS grid와 동일).
@@ -180,12 +198,12 @@ const INITIAL_WIDGETS = [
   { instanceId: 'w2',  widgetTypeId: 'balance',         variantId: 'balance-sm',      colSpan: 1, rowSpan: 1, gridCol: 4, gridRow: 1 },
   { instanceId: 'w3',  widgetTypeId: 'portfolio',       variantId: 'portfolio-sm',    colSpan: 1, rowSpan: 1, gridCol: 5, gridRow: 1 },
   { instanceId: 'w4',  widgetTypeId: 'exchange',        variantId: 'exchange-sm',     colSpan: 1, rowSpan: 1, gridCol: 6, gridRow: 1 },
-  { instanceId: 'w5',  widgetTypeId: 'stock-chart',     variantId: 'stock-3x2',       colSpan: 3, rowSpan: 2, gridCol: 1, gridRow: 2, config: { stockId: 'samsung' } },
+  { instanceId: 'w5',  widgetTypeId: 'stock-chart',     variantId: 'stock-3x2',       colSpan: 3, rowSpan: 2, gridCol: 1, gridRow: 2, config: DEFAULT_STOCK_CHART_CONFIG },
   { instanceId: 'w6',  widgetTypeId: 'ranking',         variantId: 'ranking-lg',      colSpan: 2, rowSpan: 2, gridCol: 4, gridRow: 2 },
   { instanceId: 'w7',  widgetTypeId: 'watchlist',       variantId: 'watchlist-sm',    colSpan: 1, rowSpan: 1, gridCol: 6, gridRow: 2 },
   { instanceId: 'w8',  widgetTypeId: 'market-overview', variantId: 'market-sm',       colSpan: 1, rowSpan: 1, gridCol: 6, gridRow: 3 },
   { instanceId: 'w9',  widgetTypeId: 'trade-history',   variantId: 'trade-wide',      colSpan: 2, rowSpan: 1, gridCol: 1, gridRow: 4 },
-  { instanceId: 'w10', widgetTypeId: 'stock-news',      variantId: 'stock-news-wide', colSpan: 2, rowSpan: 1, gridCol: 3, gridRow: 4 },
+  { instanceId: 'w10', widgetTypeId: 'stock-news',      variantId: 'stock-news-wide', colSpan: 2, rowSpan: 1, gridCol: 3, gridRow: 4, config: DEFAULT_STOCK_NEWS_CONFIG },
 ]
 
 const INITIAL_PAGES = [
@@ -314,6 +332,7 @@ const useWidgetStore = create((set) => ({
     set((state) => {
       const pos = _findFirstFreeCell(state.widgets, variant.colSpan, variant.rowSpan)
       if (!pos) return state
+      const defaultConfig = getDefaultWidgetConfig(widgetTypeId)
       const newWidgets = [
         ...state.widgets,
         {
@@ -324,6 +343,7 @@ const useWidgetStore = create((set) => ({
           rowSpan: variant.rowSpan,
           gridCol: pos.gridCol,
           gridRow: pos.gridRow,
+          ...(defaultConfig ? { config: defaultConfig } : {}),
         },
       ]
       return _setCurrentWidgets(state, newWidgets)
@@ -333,6 +353,7 @@ const useWidgetStore = create((set) => ({
   addWidgetAt: (widgetTypeId, variant, gridCol, gridRow) =>
     set((state) => {
       if (!canPlaceAt(state.widgets, gridCol, gridRow, variant.colSpan, variant.rowSpan)) return state
+      const defaultConfig = getDefaultWidgetConfig(widgetTypeId)
       const newWidgets = [
         ...state.widgets,
         {
@@ -343,6 +364,7 @@ const useWidgetStore = create((set) => ({
           rowSpan: variant.rowSpan,
           gridCol,
           gridRow,
+          ...(defaultConfig ? { config: defaultConfig } : {}),
         },
       ]
       return _setCurrentWidgets(state, newWidgets)
