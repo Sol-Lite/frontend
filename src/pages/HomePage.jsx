@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Pencil, LayoutTemplate, X, ChevronLeft, ChevronRight, LayoutGrid, Plus } from 'lucide-react'
-import { useDashboardSave } from '@/hooks/useDashboardSync'
 import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
@@ -15,6 +14,7 @@ import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT, MAX_PAGES, gridElementRef } from '@/lib/gridConstants'
 import { DASHBOARD_PRESETS } from '@/data/dashboardPresets'
 import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
+import SectorSelectModal from '@/components/layout/SectorSelectModal'
 
 function PresetThumbnail({ widgets }) {
   return (
@@ -63,7 +63,7 @@ function PresetPickerModal({ onSelect, onClose, isAtLimit }) {
           {DASHBOARD_PRESETS.map((preset) => (
             <button
               key={preset.id}
-              onClick={() => !isAtLimit && onSelect(preset)}
+              onClick={() => onSelect(preset)}
               disabled={isAtLimit}
               className={cn(
                 'text-left rounded-[14px] border border-stroke overflow-hidden group transition-all duration-150',
@@ -113,8 +113,7 @@ export default function HomePage() {
   const { isAuthenticated, isRestoring } = useAuthStore()
   const [isPageEditOpen, setIsPageEditOpen]         = useState(false)
   const [isPresetPickerOpen, setIsPresetPickerOpen] = useState(false)
-  const { applyPageChanges } = useWidgetStore()
-  const { mutate: saveDashboard } = useDashboardSave()
+  const [selectedPresetForSector, setSelectedPresetForSector] = useState(null)
 
   // 편집 모드 종료(완료·저장 또는 취소) 시 열려있는 모달 닫기
   useEffect(() => {
@@ -131,12 +130,8 @@ export default function HomePage() {
       setIsPresetPickerOpen(false)
       return
     }
-    const newId      = crypto.randomUUID()
-    const newWidgets = preset.widgets.map((w) => ({ ...w, instanceId: crypto.randomUUID() }))
-    const newPages   = [...pages, { id: newId, name: preset.name, widgets: newWidgets }]
-    applyPageChanges(newPages, newId)
+    setSelectedPresetForSector(preset)
     setIsPresetPickerOpen(false)
-    saveDashboard()
   }
 
   // 로드 완료 전에는 위젯 미표시 (새로고침 flash 방지)
@@ -362,6 +357,12 @@ export default function HomePage() {
         onSelect={handleApplyPreset}
         isAtLimit={isAtPageLimit}
         onClose={() => setIsPresetPickerOpen(false)}
+      />
+    )}
+    {selectedPresetForSector && (
+      <SectorSelectModal
+        preset={selectedPresetForSector}
+        onClose={() => setSelectedPresetForSector(null)}
       />
     )}
     </>

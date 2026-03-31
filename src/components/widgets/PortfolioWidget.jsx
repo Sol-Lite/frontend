@@ -7,7 +7,13 @@ import { useDomesticHoldings } from '@/api/balance'
 import { extractDominantColor } from '@/lib/extractLogoColor'
 import { getStockLogoUrl } from '@/lib/stockLogo'
 
-const FALLBACK_COLORS = ['#0046FF', '#00C2A8', '#7B61FF', '#FF8C00', '#0035CC']
+const FALLBACK_COLORS = [
+  'var(--color-chart-1)',
+  'var(--color-chart-2)',
+  'var(--color-chart-3)',
+  'var(--color-chart-4)',
+  'var(--color-chart-5)',
+]
 const OTHER_COLOR = 'var(--color-chart-other)'
 
 function ItemBar({ item, color, barHeight = 'h-[3px]' }) {
