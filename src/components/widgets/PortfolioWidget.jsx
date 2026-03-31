@@ -75,11 +75,7 @@ function usePortfolioColors(items) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [JSON.stringify(items?.map((item) => `${item.stockCode ?? 'none'}:${item.marketType ?? ''}:${item.type ?? ''}`))])
 
-  return (item, idx) => {
-    const key = item.stockCode ?? `item_${idx}`
-    if (item.type === 'OTHER') return OTHER_COLOR
-    return colors[key] ?? FALLBACK_COLORS[idx % FALLBACK_COLORS.length]
-  }
+  return colors
 }
 
 function usePortfolio(enabled, topN = 3) {
@@ -142,11 +138,15 @@ function usePortfolio(enabled, topN = 3) {
   }, [holdings, isLoading])
 }
 
-function buildConicStops(items, getColor) {
+function buildConicStops(items, colors) {
   let start = 0
   return items.map((item, i) => {
+    const key = item.stockCode ?? `item_${i}`
+    const color = item.type === 'OTHER'
+      ? OTHER_COLOR
+      : (colors[key] ?? FALLBACK_COLORS[i % FALLBACK_COLORS.length])
     const end = start + item.ratio
-    const stop = `${getColor(item, i)} ${start}% ${end}%`
+    const stop = `${color} ${start}% ${end}%`
     start = end
     return stop
   }).join(', ')
@@ -157,8 +157,8 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
   const { open } = useWidgetDetailStore()
   const topN = variant === 'portfolio-2x2' ? 5 : 3
   const portfolio = usePortfolio(isAuthenticated && !isRestoring, topN)
-  const getColor = usePortfolioColors(portfolio.items)
-  const conicStops = useMemo(() => buildConicStops(portfolio.items, getColor), [portfolio.items, getColor])
+  const colors = usePortfolioColors(portfolio.items)
+  const conicStops = useMemo(() => buildConicStops(portfolio.items, colors), [portfolio.items, colors])
 
   const returnRateStr = portfolio.returnRate != null
     ? `${portfolio.returnRate >= 0 ? '+' : ''}${portfolio.returnRate.toFixed(1)}%`
