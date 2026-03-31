@@ -90,7 +90,7 @@ function PresetPickerModal({ onClose, isAtLimit }) {
       }))
 
       const store = useWidgetStore.getState()
-      const { pages, addTempPage, switchPage: switchPageFn } = store
+      const { pages, addTempPage, switchPage: switchPageFn, addPendingPreset } = store
 
       const tempPageId = `temp-preset-${Date.now()}`
 
@@ -100,12 +100,16 @@ function PresetPickerModal({ onClose, isAtLimit }) {
         sectorCode: theme.code,
       })
 
+      // 방금 추가된 페이지에서 presetId 가져오기
+      const addedPage = useWidgetStore.getState().pages.find((p) => p.id === tempPageId)
+
       // 임시 페이지로 전환
       switchPageFn(tempPageId)
 
-      // 임시 상태에 프리셋 추가 (완료·저장 시 사용)
-      const { addPendingPreset } = useWidgetStore.getState()
-      addPendingPreset(presetWidgets, selectedPreset.name, theme.code)
+      // 임시 상태에 프리셋 추가 (완료·저장 시 사용, presetId로 정확히 매칭)
+      if (addedPage?.presetId) {
+        addPendingPreset(addedPage.presetId, presetWidgets, selectedPreset.name, theme.code)
+      }
 
       onClose()
     } catch (e) {

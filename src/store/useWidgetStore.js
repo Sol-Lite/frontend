@@ -304,11 +304,9 @@ const useWidgetStore = create((set) => ({
 
       for (const deletedPage of deletedPages) {
         if (deletedPage.isTempPage) {
-          // 임시 페이지: pendingPresets에서 제거
-          if (deletedPage.presetName && deletedPage.presetSectorCode) {
-            newPendingPresets = newPendingPresets.filter(
-              (p) => !(p.name === deletedPage.presetName && p.sectorCode === deletedPage.presetSectorCode)
-            )
+          // 임시 페이지: presetId로 정확히 매칭해서 pendingPresets에서 제거
+          if (deletedPage.presetId) {
+            newPendingPresets = newPendingPresets.filter((p) => p.id !== deletedPage.presetId)
           }
         } else {
           // DB 페이지: deletePageIds에 추가 (완료·저장 시 API 호출)
@@ -443,9 +441,9 @@ const useWidgetStore = create((set) => ({
     }),
 
   // ── 프리셋 임시 상태 관리 ────────────────────────────────
-  addPendingPreset: (widgets, presetName, sectorCode) =>
+  addPendingPreset: (presetId, widgets, presetName, sectorCode) =>
     set((state) => ({
-      pendingPresets: [...state.pendingPresets, { widgets, name: presetName, sectorCode }],
+      pendingPresets: [...state.pendingPresets, { id: presetId, widgets, name: presetName, sectorCode }],
     })),
 
   clearPendingPresets: () =>
@@ -460,11 +458,13 @@ const useWidgetStore = create((set) => ({
 
   addTempPage: (pageId, pageName, widgets, presetInfo = {}) =>
     set((state) => {
+      const presetId = crypto.randomUUID()
       const newPage = {
         id: pageId,
         name: pageName,
         widgets: widgets,
         isTempPage: true,
+        presetId: presetId,
         presetName: presetInfo.name,
         presetSectorCode: presetInfo.sectorCode,
       }
@@ -481,12 +481,10 @@ const useWidgetStore = create((set) => ({
       // 삭제할 임시 페이지 찾기
       const tempPageToRemove = state.pages.find((p) => p.id === pageId && p.isTempPage)
 
-      // 해당 프리셋을 pendingPresets에서도 제거
+      // 해당 presetId로 pendingPresets에서 정확히 제거
       let newPendingPresets = state.pendingPresets
-      if (tempPageToRemove) {
-        newPendingPresets = state.pendingPresets.filter(
-          (p) => !(p.name === tempPageToRemove.presetName && p.sectorCode === tempPageToRemove.presetSectorCode)
-        )
+      if (tempPageToRemove && tempPageToRemove.presetId) {
+        newPendingPresets = state.pendingPresets.filter((p) => p.id !== tempPageToRemove.presetId)
       }
 
       const newPages = state.pages.filter((p) => p.id !== pageId)
