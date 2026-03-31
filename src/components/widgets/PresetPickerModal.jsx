@@ -171,7 +171,7 @@ export default function PresetPickerModal({ onClose, isAtLimit }) {
               {DASHBOARD_PRESETS.map((preset) => (
                 <button
                   key={preset.id}
-                  onClick={() => setSelectedPreset(preset)}
+                  onClick={() => { setSelectedPreset(preset); setSelectedSectorCode(null); setSectorStocks(null) }}
                   disabled={isAtLimit}
                   className={cn(
                     'text-left rounded-[14px] border border-stroke overflow-hidden group transition-all duration-150',
@@ -207,7 +207,7 @@ export default function PresetPickerModal({ onClose, isAtLimit }) {
               <div className="flex items-center gap-2">
                 <button
                   aria-label="뒤로"
-                  onClick={() => { setSelectedPreset(null); setError(null) }}
+                  onClick={() => { setSelectedPreset(null); setSelectedSectorCode(null); setSectorStocks(null); setError(null) }}
                   disabled={!!loadingCode}
                   className="w-7 h-7 rounded-full border border-stroke-input bg-surface-muted flex items-center justify-center text-foreground-tertiary hover:text-foreground transition-colors disabled:opacity-40"
                 >
