@@ -10,6 +10,7 @@ import { HOME_STOCKS } from '@/mocks/home'
 import { marketApi, foreignMarketApi } from '@/api/market'
 import useWidgetStore from '@/store/useWidgetStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
+import useEditModeStore from '@/store/useEditModeStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import useStompSubscription from '@/hooks/useStompSubscription'
 import { normalizeDailySeries, normalizeMinuteSeries } from '@/features/invest/domestic/normalize'
@@ -86,6 +87,13 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
   const { mutate: saveDashboard } = useDashboardSave()
   const openDetail = useWidgetDetailStore((s) => s.open)
+  const { lockWidgetDrag, unlockWidgetDrag } = useEditModeStore()
+
+  useEffect(() => {
+    if (!isConfigOpen) return undefined
+    lockWidgetDrag()
+    return () => unlockWidgetDrag()
+  }, [isConfigOpen, lockWidgetDrag, unlockWidgetDrag])
 
   const handleCardClick = () => {
     openDetail({
