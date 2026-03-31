@@ -68,13 +68,20 @@ const SECTOR_THEMES = [
 
 function PresetPickerModal({ onClose, isAtLimit }) {
   const [selectedPreset, setSelectedPreset] = useState(null)
+  const [selectedSectorCode, setSelectedSectorCode] = useState(null)
   const [loadingCode, setLoadingCode]       = useState(null)
   const [error, setError]                   = useState(null)
   const { loadFromServer, switchPage }      = useWidgetStore()
   const queryClient                         = useQueryClient()
 
   function handleSelectSector(theme) {
-    setLoadingCode(theme.code)
+    setSelectedSectorCode(theme.code)
+  }
+
+  function handleConfirm() {
+    if (!selectedSectorCode || !selectedPreset) return
+
+    setLoadingCode(selectedSectorCode)
     setError(null)
     try {
       // 프리셋으로 생성될 위젯들 변환
@@ -97,7 +104,7 @@ function PresetPickerModal({ onClose, isAtLimit }) {
       // 새 임시 페이지 추가 + presetInfo 포함 (삭제 시 pendingPresets에서도 제거하기 위함)
       addTempPage(tempPageId, selectedPreset.name, presetWidgets, {
         name: selectedPreset.name,
-        sectorCode: theme.code,
+        sectorCode: selectedSectorCode,
       })
 
       // 방금 추가된 페이지에서 presetId 가져오기
@@ -108,7 +115,7 @@ function PresetPickerModal({ onClose, isAtLimit }) {
 
       // 임시 상태에 프리셋 추가 (완료·저장 시 사용, presetId로 정확히 매칭)
       if (addedPage?.presetId) {
-        addPendingPreset(addedPage.presetId, presetWidgets, selectedPreset.name, theme.code)
+        addPendingPreset(addedPage.presetId, presetWidgets, selectedPreset.name, selectedSectorCode)
       }
 
       onClose()
@@ -163,7 +170,7 @@ function PresetPickerModal({ onClose, isAtLimit }) {
                   <img
                     src={`/preset-thumbnails/${preset.imageId}.png`}
                     alt={preset.name}
-                    className="w-full aspect-[3/2] object-cover bg-background"
+                    className="w-full aspect-[2266/1444] object-cover bg-background"
                   />
                   <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-stroke-subtle">
                     <div>
@@ -226,19 +233,43 @@ function PresetPickerModal({ onClose, isAtLimit }) {
 
             {error && <p className="mb-3 text-[11px] text-danger">{error}</p>}
 
-            <div className="grid grid-cols-5 gap-2">
+            <div className="grid grid-cols-5 gap-2 mb-4">
               {SECTOR_THEMES.map((theme) => (
                 <button
                   key={theme.code}
                   onClick={() => handleSelectSector(theme)}
                   disabled={!!loadingCode}
-                  className="flex items-center justify-center h-8 rounded-lg border border-stroke bg-surface-muted text-[10px] font-semibold text-foreground hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
+                  className={cn(
+                    'flex items-center justify-center h-8 rounded-lg border text-[10px] font-semibold transition-all duration-150',
+                    selectedSectorCode === theme.code
+                      ? 'border-primary bg-primary-light text-primary'
+                      : 'border-stroke bg-surface-muted text-foreground hover:border-primary hover:text-primary hover:bg-primary-light',
+                    loadingCode && 'disabled:opacity-40 disabled:cursor-not-allowed'
+                  )}
                 >
                   {loadingCode === theme.code
                     ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     : theme.displayName}
                 </button>
               ))}
+            </div>
+
+            {/* 확인 버튼 */}
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setSelectedPreset(null); setSelectedSectorCode(null) }}
+                disabled={!!loadingCode}
+                className="flex-1 px-3 py-1.5 rounded-xl border border-stroke-input text-[12px] text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms] disabled:opacity-50"
+              >
+                뒤로
+              </button>
+              <button
+                onClick={handleConfirm}
+                disabled={!selectedSectorCode || !!loadingCode}
+                className="flex-1 px-3 py-1.5 rounded-xl bg-primary text-white text-[12px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] shadow-primary-btn disabled:opacity-50"
+              >
+                {loadingCode ? '추가 중…' : '확인'}
+              </button>
             </div>
           </>
         )}
