@@ -334,6 +334,8 @@ export default function HomePage() {
                 rowSpan={w.rowSpan}
                 gridCol={w.gridCol}
                 gridRow={w.gridRow}
+                widgetTypeId={w.widgetTypeId}
+                config={w.config}
               >
                 <Component
                   instanceId={w.instanceId}
