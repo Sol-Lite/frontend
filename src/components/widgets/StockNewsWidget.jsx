@@ -101,9 +101,9 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
       onClick={(e) => { e.stopPropagation(); setShowModal(true) }}
     />
   )
-  const empty   = <p className="text-widget-10 text-foreground-disabled py-2">뉴스가 없습니다</p>
-  const loading = <p className="text-widget-10 text-foreground-disabled py-2">로딩 중...</p>
-  const noStock = <p className="text-widget-10 text-foreground-disabled py-2">종목을 선택하세요</p>
+  const empty   = <p className="text-widget-10 text-foreground-disabled py-2 opacity-50 group-hover:opacity-75 transition-opacity">뉴스가 없습니다</p>
+  const loading = <p className="text-widget-10 text-foreground-disabled py-2 opacity-50 group-hover:opacity-75 transition-opacity">로딩 중...</p>
+  const noStock = <p className="text-widget-10 text-foreground-disabled py-2 opacity-50 group-hover:opacity-75 transition-opacity">종목을 선택하세요</p>
 
   const modal = showModal && (
     <StockSelectModal
@@ -155,7 +155,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
         <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
         {chip}
       </div>
-      <div className="flex-1 min-h-0 overflow-y-auto">
+      <div className="flex-1 min-h-0 overflow-y-auto hover:bg-surface-muted/50 transition-colors rounded">
         {isLoading ? loading : !stockCode ? noStock : !news.length ? empty :
           <NewsListCompact items={news} onClickNews={handleNewsClick} />
         }

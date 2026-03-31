@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
-import { Pencil, LayoutTemplate, LayoutGrid, Plus } from 'lucide-react'
+import { Pencil, LayoutTemplate, LayoutGrid, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'

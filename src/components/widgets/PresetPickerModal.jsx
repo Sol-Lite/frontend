@@ -239,18 +239,11 @@ export default function PresetPickerModal({ onClose, isAtLimit }) {
             </div>
 
             {/* 미리보기 카드 */}
-            <div className="rounded-[14px] border border-primary overflow-hidden mb-5">
-              <PresetThumbnail widgets={selectedPreset.widgets} large sectorStocks={sectorStocks} />
-              <div className="px-3.5 py-2.5 border-t border-stroke-subtle">
-                <div className="text-[12px] font-bold text-foreground">{selectedPreset.name}</div>
-                <div className="text-[10px] text-foreground-disabled mt-0.5">{selectedPreset.description}</div>
+            <div className="flex justify-center mb-3">
+              <div className="rounded-[14px] overflow-hidden">
+                <PresetThumbnail widgets={selectedPreset.widgets} large sectorStocks={sectorStocks} />
               </div>
             </div>
-
-            {/* 섹터 선택 */}
-            <p className="text-[11px] text-foreground-disabled mb-3">
-              선택한 섹터의 상위 종목이 차트 위젯에 자동으로 설정됩니다
-            </p>
 
             {error && <p className="mb-3 text-[11px] text-danger">{error}</p>}
 

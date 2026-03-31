@@ -5,6 +5,7 @@ import useGridStore from '@/store/useGridStore'
 import useWidgetStore, { canFitInGrid } from '@/store/useWidgetStore'
 import { GRID_GAP, MIN_CELL_WIDTH, MIN_CELL_HEIGHT } from '@/lib/gridConstants'
 import StockAvatar from '@/components/ui/StockAvatar'
+import { getStockPrice } from '@/data/stockPriceMap'
 
 /* ── 너비 클래스 ─────────────────────────────────────────────
    EditPanel 가로폭을 3등분하여 colSpan 비율을 반영.
@@ -181,7 +182,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
       const name = stock?.name ?? PREVIEW_STOCK_NAME
       const code = stock?.stockCode ?? PREVIEW_STOCK_CODE
       const market = stock?.marketType ?? PREVIEW_STOCK_MARKET
-      const price = stock?.price ?? 99000
+      const price = (stock?.price && stock.price > 0) ? stock.price : (stock ? getStockPrice(stock.stockCode) : 99000)
       const change = stock?.change ?? 350
       const changeRate = stock?.changeRate ?? 0.79
       const isUp = change >= 0
@@ -209,7 +210,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
       const name = stock?.name ?? PREVIEW_STOCK_NAME
       const code = stock?.stockCode ?? PREVIEW_STOCK_CODE
       const market = stock?.marketType ?? PREVIEW_STOCK_MARKET
-      const price = stock?.price ?? 99000
+      const price = (stock?.price && stock.price > 0) ? stock.price : (stock ? getStockPrice(stock.stockCode) : 99000)
       const change = stock?.change ?? 350
       const changeRate = stock?.changeRate ?? 0.79
       const isUp = change >= 0
@@ -242,8 +243,8 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
         ? stocks.map(s => [
             String(s.rank),
             s.name,
-            `${s.change >= 0 ? '+' : ''}${s.changeRate.toFixed(2)}%`,
-            s.change >= 0
+            `${s.changeRate >= 0 ? '+' : ''}${s.changeRate.toFixed(2)}%`,
+            true
           ])
         : [
             ['1', '삼성전자',       '+1.62%', true ],
@@ -283,8 +284,8 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
         ? sectorStocks.slice(0, 10).map(s => [
             String(s.rank),
             s.name,
-            `${s.change >= 0 ? '+' : ''}${s.changeRate.toFixed(2)}%`,
-            s.change >= 0
+            `${s.changeRate >= 0 ? '+' : ''}${s.changeRate.toFixed(2)}%`,
+            true
           ])
         : [
             ['1',  '삼성전자',       '+1.62%', true ],
@@ -508,7 +509,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
         ? stocks.slice(0, 3).map(s => ({
             name: s.name,
             code: s.stockCode,
-            price: s.price.toLocaleString(),
+            price: ((s.price && s.price > 0) ? s.price : getStockPrice(s.stockCode)).toLocaleString(),
             chg: `${s.change >= 0 ? '+' : ''}${s.changeRate.toFixed(2)}%`,
             up: s.change >= 0
           }))
@@ -735,7 +736,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
       const name = stock?.name ?? PREVIEW_STOCK_NAME
       const code = stock?.stockCode ?? PREVIEW_STOCK_CODE
       const market = stock?.marketType ?? PREVIEW_STOCK_MARKET
-      const price = stock?.price ?? 99000
+      const price = (stock?.price && stock.price > 0) ? stock.price : (stock ? getStockPrice(stock.stockCode) : 99000)
       const change = stock?.change ?? 350
       const changeRate = stock?.changeRate ?? 0.79
       const isUp = change >= 0
@@ -863,7 +864,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
       const name = stock?.name ?? PREVIEW_STOCK_NAME
       const code = stock?.stockCode ?? PREVIEW_STOCK_CODE
       const market = stock?.marketType ?? PREVIEW_STOCK_MARKET
-      const price = stock?.price ?? 99000
+      const price = (stock?.price && stock.price > 0) ? stock.price : (stock ? getStockPrice(stock.stockCode) : 99000)
       const change = stock?.change ?? 350
       const changeRate = stock?.changeRate ?? 0.79
       const isUp = change >= 0

@@ -93,21 +93,6 @@ function ArticleView({ newsId, stockName, onBack }) {
             </div>
           )}
 
-          {/* 소제목 목록 */}
-          {data.subtitles?.length > 0 && (
-            <div className="bg-surface-subtle rounded-xl px-4 py-3 flex flex-col gap-2">
-              <span className="text-[10px] font-bold text-foreground-disabled uppercase tracking-widest">주요 내용</span>
-              <ul className="flex flex-col gap-1.5">
-                {data.subtitles.map((s, i) => (
-                  <li key={i} className="flex items-start gap-2.5 text-[13px] text-foreground leading-relaxed">
-                    <span className="text-primary font-bold mt-[2px] shrink-0">•</span>
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
           {/* 썸네일 */}
           {data.thumbnailUrl && (
             <img

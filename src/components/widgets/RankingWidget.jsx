@@ -1,5 +1,4 @@
 import { useState, useRef, useLayoutEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
 import PriceChange from '@/components/ui/PriceChange'
 import TabChip from '@/components/ui/TabChip'
 import WidgetCard from './WidgetCard'
@@ -20,12 +19,11 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
     () => localStorage.getItem('rankingWidget.activeTab') ?? '거래대금'
   )
   const open     = useWidgetDetailStore((s) => s.open)
-  const navigate = useNavigate()
 
   const handleCardClick  = () => open({ widgetTypeId: 'ranking', config: { initialSortFilter: TAB_TO_SORT[activeTab] } })
   const handleStockClick = (e, stock) => {
     e.stopPropagation()
-    navigate(`/invest/${stock.stockCode}`, { state: { stockName: stock.name, marketType: stock.marketType ?? stock.market } })
+    open({ widgetTypeId: 'stock-chart', config: { stockCode: stock.stockCode, stockName: stock.name, marketType: stock.marketType ?? stock.market } })
   }
 
   function handleTabChange(tab) {
