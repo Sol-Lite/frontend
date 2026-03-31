@@ -217,14 +217,7 @@ export function PreviewContent({ type, sectorStocks }) {
       )
 
     /* 실시간 순위 — 목록형 2×1 */
-    case 'ranking-wide': {
-      const displayStocks = stocks || [
-        { stockName: '삼성전자', changeRate: 1.62, isUp: true },
-        { stockName: 'SK하이닉스', changeRate: 2.35, isUp: true },
-        { stockName: 'LG에너지솔루션', changeRate: -0.87, isUp: false },
-        { stockName: 'POSCO홀딩스', changeRate: 0.54, isUp: true },
-        { stockName: '현대차', changeRate: -1.20, isUp: false },
-      ]
+    case 'ranking-wide':
       return (
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-center justify-between shrink-0">
@@ -236,34 +229,27 @@ export function PreviewContent({ type, sectorStocks }) {
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            {displayStocks.slice(0, 5).map((stock, idx) => (
-              <div key={idx} className="flex items-center justify-between">
+            {[
+              ['1', '삼성전자',       '+1.62%', true ],
+              ['2', 'SK하이닉스',     '+2.35%', true ],
+              ['3', 'LG에너지솔루션', '-0.87%', false],
+              ['4', 'POSCO홀딩스',    '+0.54%', true ],
+              ['5', '현대차',         '-1.20%', false],
+            ].map(([rank, name, chg, up]) => (
+              <div key={rank} className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[9px] text-foreground-disabled w-3">{idx + 1}</span>
-                  <span className="text-[10px] font-medium text-foreground">{stock.stockName}</span>
+                  <span className="text-[9px] text-foreground-disabled w-3">{rank}</span>
+                  <span className="text-[10px] font-medium text-foreground">{name}</span>
                 </div>
-                <span className={`text-[10px] font-semibold ${stock.isUp ? 'text-up' : 'text-down'}`}>{stock.isUp ? '▲' : '▼'} {Math.abs(stock.changeRate).toFixed(2)}%</span>
+                <span className={`text-[10px] font-semibold ${up ? 'text-up' : 'text-down'}`}>{up ? '▲' : '▼'} {chg}</span>
               </div>
             ))}
           </div>
         </div>
       )
-    }
 
     /* 실시간 순위 — 확장형 2×2 */
-    case 'ranking-lg': {
-      const displayStocks = stocks || [
-        { stockName: '삼성전자', changeRate: 1.62, isUp: true },
-        { stockName: 'SK하이닉스', changeRate: 2.35, isUp: true },
-        { stockName: 'LG에너지솔루션', changeRate: -0.87, isUp: false },
-        { stockName: 'POSCO홀딩스', changeRate: 0.54, isUp: true },
-        { stockName: '현대차', changeRate: -1.20, isUp: false },
-        { stockName: '카카오', changeRate: 0.38, isUp: true },
-        { stockName: 'NAVER', changeRate: -0.92, isUp: false },
-        { stockName: 'KB금융', changeRate: 1.15, isUp: true },
-        { stockName: '셀트리온', changeRate: 2.40, isUp: true },
-        { stockName: '기아', changeRate: 0.76, isUp: true },
-      ]
+    case 'ranking-lg':
       return (
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-center justify-between shrink-0">
@@ -275,19 +261,29 @@ export function PreviewContent({ type, sectorStocks }) {
             </div>
           </div>
           <div className="flex flex-col gap-1.5">
-            {displayStocks.slice(0, 10).map((stock, idx) => (
-              <div key={idx} className="flex items-center justify-between">
+            {[
+              ['1',  '삼성전자',       '+1.62%', true ],
+              ['2',  'SK하이닉스',     '+2.35%', true ],
+              ['3',  'LG에너지솔루션', '-0.87%', false],
+              ['4',  'POSCO홀딩스',    '+0.54%', true ],
+              ['5',  '현대차',         '-1.20%', false],
+              ['6',  '카카오',         '+0.38%', true ],
+              ['7',  'NAVER',          '-0.92%', false],
+              ['8',  'KB금융',         '+1.15%', true ],
+              ['9',  '셀트리온',       '+2.40%', true ],
+              ['10', '기아',           '+0.76%', true ],
+            ].map(([rank, name, chg, up]) => (
+              <div key={rank} className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[9px] text-foreground-disabled w-4">{idx + 1}</span>
-                  <span className="text-[10px] font-medium text-foreground">{stock.stockName}</span>
+                  <span className="text-[9px] text-foreground-disabled w-4">{rank}</span>
+                  <span className="text-[10px] font-medium text-foreground">{name}</span>
                 </div>
-                <span className={`text-[10px] font-semibold ${stock.isUp ? 'text-up' : 'text-down'}`}>{stock.isUp ? '▲' : '▼'} {Math.abs(stock.changeRate).toFixed(2)}%</span>
+                <span className={`text-[10px] font-semibold ${up ? 'text-up' : 'text-down'}`}>{up ? '▲' : '▼'} {chg}</span>
               </div>
             ))}
           </div>
         </div>
       )
-    }
 
     /* 주요 지수 — 단일 1×1 */
     case 'index-sm':
