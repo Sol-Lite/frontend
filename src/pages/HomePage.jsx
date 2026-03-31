@@ -336,6 +336,7 @@ export default function HomePage() {
                 gridRow={w.gridRow}
                 widgetTypeId={w.widgetTypeId}
                 config={w.config}
+                canDragToChat={w.widgetTypeId !== 'watchlist'}
               >
                 <Component
                   instanceId={w.instanceId}

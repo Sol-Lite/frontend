@@ -99,5 +99,8 @@ export function getWidgetDefaultQuery(widgetTypeId, config = {}) {
     const name = resolveStockName(config)
     return `${name} 종목 뉴스 알려줘`
   }
+  if (widgetTypeId === 'market-overview') {
+    return config.tab === 'us' ? '해외 시황 알려줘' : '국내 시황 알려줘'
+  }
   return WIDGET_SHORTCUTS.find((s) => s.widgetTypeId === widgetTypeId)?.defaultQuery ?? null
 }

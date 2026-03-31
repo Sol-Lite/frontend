@@ -2,6 +2,7 @@ import { useState } from 'react'
 import WidgetCard from './WidgetCard'
 import useLatestNews from '@/features/market/useLatestNews'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
+import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 
 const TABS = [
@@ -51,11 +52,17 @@ function NewsListCompact({ items, onClickNews }) {
   ))
 }
 
-export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 1, rowSpan = 1, onDelete }) {
-  const [tab, setTab] = useState('kr')
+export default function MarketOverviewWidget({ instanceId, variant = 'market-sm', colSpan = 1, rowSpan = 1, config = {}, onDelete }) {
+  const [tab, setTab] = useState(() => config.tab ?? 'kr')
   const { krNews, usNews, isLoading } = useLatestNews(10)
   const items = tab === 'kr' ? krNews : usNews
   const openDetail = useWidgetDetailStore((s) => s.open)
+  const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
+
+  function handleTabChange(nextTab) {
+    setTab(nextTab)
+    if (instanceId) updateWidgetConfig(instanceId, { tab: nextTab })
+  }
 
   function handleWidgetClick() {
     openDetail({ widgetTypeId: 'market-overview', config: { tab } })
@@ -71,7 +78,7 @@ export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 
         <button
           key={t.key}
           type="button"
-          onClick={(e) => { e.stopPropagation(); setTab(t.key) }}
+          onClick={(e) => { e.stopPropagation(); handleTabChange(t.key) }}
           className={cn(
             'px-1.5 py-px font-semibold rounded transition-colors',
             tab === t.key

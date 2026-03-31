@@ -20,6 +20,7 @@ export default function SortableWidgetCard({
   gridRow,
   widgetTypeId,
   config = {},
+  canDragToChat = true,
   children,
 }) {
   const { isEditMode, widgetDragLockCount } = useEditModeStore()
@@ -44,7 +45,7 @@ export default function SortableWidgetCard({
     setNodeRef: setHandleRef,
   } = useDraggable({
     id: `wtc-handle-${instanceId}`,
-    disabled: isEditMode || isDragLocked,
+    disabled: isEditMode || isDragLocked || !canDragToChat,
     data: { type: 'widget-to-chat', instanceId, widgetTypeId, config },
   })
 
@@ -71,7 +72,7 @@ export default function SortableWidgetCard({
       {children}
 
       {/* 비편집모드 hover 핸들 — widget-to-chat drag 진입점 */}
-      {!isEditMode && (
+      {!isEditMode && canDragToChat && (
         <button
           ref={setHandleRef}
           aria-label="채팅으로 질문하기"
