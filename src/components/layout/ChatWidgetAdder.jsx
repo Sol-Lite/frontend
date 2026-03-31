@@ -9,6 +9,9 @@ const INFOCARD_WIDGET_MAP = {
   index:            'index',
   ranking:          'ranking',
   market_overview:  'market-overview',
+  portfolio:        'portfolio',
+  trade_history:    'trade-history',
+  'trade-history':  'trade-history',
 }
 
 /** info_card infoType → widgetTypeId */

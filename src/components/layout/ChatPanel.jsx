@@ -31,6 +31,25 @@ import { cn } from "@/lib/cn";
 import { getStockLogoUrl } from "@/lib/stockLogo";
 
 const EXCHANGE_RESULT_DELAY_MS = 1400
+const INFO_FALLBACK_WIDGET_TYPES = ['portfolio', 'trade-history', 'market-overview', 'index', 'ranking', 'balance', 'exchange']
+
+function toInfoTypeFromWidgetType(widgetTypeId) {
+  if (widgetTypeId === 'trade-history') return 'trade_history'
+  if (widgetTypeId === 'market-overview') return 'market_overview'
+  if (widgetTypeId === 'exchange') return 'exchange_rate'
+  return widgetTypeId
+}
+
+function inferInfoTypeFromPrompt(prompt = '') {
+  const keyword = prompt.trim().toLowerCase()
+  if (!keyword) return null
+  const matched = WIDGET_SHORTCUTS.find((item) =>
+    INFO_FALLBACK_WIDGET_TYPES.includes(item.widgetTypeId) &&
+    item.keywords.some((k) => keyword.includes(k) || k.includes(keyword))
+  )
+  if (!matched) return null
+  return toInfoTypeFromWidgetType(matched.widgetTypeId)
+}
 
 function getTimestamp() {
   return new Date().toLocaleTimeString("ko-KR", {
@@ -1035,7 +1054,7 @@ export default function ChatPanel() {
       const data = await chatApi.sendMessage(text);
       lastFailedTextRef.current = null;
 
-      const INFO_CARD_TYPES = ['index', 'ranking', 'balance', 'exchange_rate', 'market_overview'];
+      const INFO_CARD_TYPES = ['index', 'ranking', 'balance', 'exchange_rate', 'market_overview', 'portfolio', 'trade_history', 'trade-history'];
       const NEWS_CARD_TYPES = ['stock_news'];
 
       if (data.type === "order" && data.stock_code) {
@@ -1079,12 +1098,13 @@ export default function ChatPanel() {
           },
         ]);
       } else if (data.reply && /━/.test(data.reply)) {
+        const inferredInfoType = inferInfoTypeFromPrompt(text)
         setMessages((prev) => [
           ...prev,
           {
             id: Date.now(),
             type: 'info_card',
-            infoType: 'market_overview',
+            infoType: inferredInfoType ?? 'market_overview',
             text: data.reply,
             time: getTimestamp(),
           },
