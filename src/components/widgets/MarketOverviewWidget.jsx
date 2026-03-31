@@ -5,6 +5,7 @@ import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 
+const STORAGE_KEY_ACTIVE_TAB = 'marketOverviewWidget.activeTab'
 const TABS = [
   { key: 'kr', label: '국내' },
   { key: 'us', label: '해외' },
@@ -53,7 +54,9 @@ function NewsListCompact({ items, onClickNews }) {
 }
 
 export default function MarketOverviewWidget({ instanceId, variant = 'market-sm', colSpan = 1, rowSpan = 1, config = {}, onDelete }) {
-  const [tab, setTab] = useState(() => config.tab ?? 'kr')
+  const [tab, setTab] = useState(
+    () => localStorage.getItem(STORAGE_KEY_ACTIVE_TAB) ?? config.tab ?? 'kr'
+  )
   const { krNews, usNews, isLoading } = useLatestNews(10)
   const items = tab === 'kr' ? krNews : usNews
   const openDetail = useWidgetDetailStore((s) => s.open)
@@ -61,6 +64,7 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
 
   function handleTabChange(nextTab) {
     setTab(nextTab)
+    localStorage.setItem(STORAGE_KEY_ACTIVE_TAB, nextTab)
     if (instanceId) updateWidgetConfig(instanceId, { tab: nextTab })
   }
 
