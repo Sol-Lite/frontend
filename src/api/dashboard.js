@@ -10,6 +10,10 @@ export const dashboardApi = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     }),
+  deletePage: (pageId) =>
+    fetchWithAuth(`${BASE}/${pageId}`, {
+      method: 'DELETE',
+    }),
   applyPreset: (payload) =>
     fetchWithAuth(`${BASE}/presets/apply`, {
       method: 'POST',

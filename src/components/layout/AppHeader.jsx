@@ -121,6 +121,7 @@ function EditModeActions() {
   const { exitEditMode, saveLayout } = useEditModeStore()
   const { restoreSnapshot, clearSnapshot, clearPendingPresets, pages, currentPageId } = useWidgetStore()
   const pendingPresets = useWidgetStore((s) => s.pendingPresets)
+  const deletePageIds = useWidgetStore((s) => s.deletePageIds)
   const { mutate: saveDashboard, isPending, isError } = useDashboardSave()
 
   async function handleSave() {
@@ -166,8 +167,25 @@ function EditModeActions() {
       }
     }
 
+    // DB에서 삭제할 페이지가 있으면 각각 API 호출
+    if (deletePageIds.length > 0) {
+      try {
+        for (const pageId of deletePageIds) {
+          await dashboardApi.deletePage(pageId)
+        }
+      } catch (e) {
+        console.error('페이지 삭제 실패:', e)
+      }
+    }
+
     // 저장 성공 시 editMode 종료, 실패 시 UI에 오류 표시
-    saveDashboard(undefined, { onSuccess: saveLayout })
+    // deletePageIds도 함께 초기화
+    saveDashboard(undefined, {
+      onSuccess: () => {
+        useWidgetStore.getState().clearDeletePageIds?.()
+        saveLayout()
+      },
+    })
   }
 
   return (
@@ -183,8 +201,9 @@ function EditModeActions() {
         onClick={() => {
           restoreSnapshot()
           clearPendingPresets()
+          const { clearDeletePageIds, pages: allPages, removeTempPage } = useWidgetStore.getState()
+          clearDeletePageIds()
           // 모든 임시 페이지 제거
-          const { pages: allPages, removeTempPage } = useWidgetStore.getState()
           allPages.forEach((p) => {
             if (p.isTempPage) {
               removeTempPage(p.id)

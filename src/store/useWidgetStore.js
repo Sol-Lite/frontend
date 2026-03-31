@@ -230,6 +230,9 @@ const useWidgetStore = create((set) => ({
   // ── 프리셋 임시 상태 ─────────────────────────────────────
   pendingPresets: [],  // [{widgets, name, sectorCode}, ...] 여러 프리셋 누적
 
+  // ── 페이지 삭제 상태 ─────────────────────────────────────
+  deletePageIds: [],  // DB에서 삭제할 페이지 ID 목록 (완료·저장 시 API 호출)
+
   // ── 서버 로드 상태 ───────────────────────────────────────
   // false: 아직 서버에서 불러오지 않음 (INITIAL 레이아웃 사용 중)
   // true:  서버 데이터로 교체 완료
@@ -293,14 +296,25 @@ const useWidgetStore = create((set) => ({
       const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
       sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, currentPage.id)
 
-      // 삭제된 임시 페이지 찾아서 pendingPresets도 정리
+      // 삭제된 페이지 찾아서 타입별로 처리
       const deletedPages = state.pages.filter((p) => !newPages.find((np) => np.id === p.id))
+
       let newPendingPresets = state.pendingPresets
+      let newDeletePageIds = [...state.deletePageIds]
+
       for (const deletedPage of deletedPages) {
-        if (deletedPage.isTempPage && deletedPage.presetName && deletedPage.presetSectorCode) {
-          newPendingPresets = newPendingPresets.filter(
-            (p) => !(p.name === deletedPage.presetName && p.sectorCode === deletedPage.presetSectorCode)
-          )
+        if (deletedPage.isTempPage) {
+          // 임시 페이지: pendingPresets에서 제거
+          if (deletedPage.presetName && deletedPage.presetSectorCode) {
+            newPendingPresets = newPendingPresets.filter(
+              (p) => !(p.name === deletedPage.presetName && p.sectorCode === deletedPage.presetSectorCode)
+            )
+          }
+        } else {
+          // DB 페이지: deletePageIds에 추가 (완료·저장 시 API 호출)
+          if (!newDeletePageIds.includes(deletedPage.id)) {
+            newDeletePageIds.push(deletedPage.id)
+          }
         }
       }
 
@@ -309,6 +323,7 @@ const useWidgetStore = create((set) => ({
         currentPageId: currentPage.id,
         widgets: currentPage.widgets,
         pendingPresets: newPendingPresets,
+        deletePageIds: newDeletePageIds,
       }
     })
   },
@@ -436,6 +451,11 @@ const useWidgetStore = create((set) => ({
   clearPendingPresets: () =>
     set({
       pendingPresets: [],
+    }),
+
+  clearDeletePageIds: () =>
+    set({
+      deletePageIds: [],
     }),
 
   addTempPage: (pageId, pageName, widgets, presetInfo = {}) =>
