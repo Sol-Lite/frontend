@@ -17,6 +17,8 @@ import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
 import useAuthStore from '@/store/useAuthStore'
 import usePendingWidgetStore from '@/store/usePendingWidgetStore'
+import usePendingQueryStore from '@/store/usePendingQueryStore'
+import { getWidgetDefaultQuery } from '@/config/widgetShortcuts'
 import { useDashboardLoad } from '@/hooks/useDashboardSync'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_GAP, GRID_COLS, GRID_ROWS, gridElementRef } from '@/lib/gridConstants'
@@ -50,6 +52,7 @@ export default function AppShell() {
   } = useWidgetStore()
   const { resyncWiggle } = useEditModeStore()
   const clearPending = usePendingWidgetStore((s) => s.clearPending)
+  const setPendingQuery = usePendingQueryStore((s) => s.setPendingQuery)
   const { cellWidth, cellHeight } = useGridStore()
   const pointerPos = useRef({ x: 0, y: 0 })
   const dragAnchor = useRef({ colOffset: 0, rowOffset: 0 })
@@ -176,7 +179,7 @@ export default function AppShell() {
     if (!over && active.data.current?.type === 'new-widget') clearPhantom()
   }
 
-  function handleDragEnd({ active }) {
+  function handleDragEnd({ active, over }) {
     window.removeEventListener('pointermove', onPointerMove)
     dragAnchor.current = { colOffset: 0, rowOffset: 0 }
     const savedPhantom = phantomWidget
@@ -198,6 +201,12 @@ export default function AppShell() {
         applyPushAsidePlan(savedPhantom.pushAsidePlan)
       } else {
         moveWidgetTo(savedPhantom.activeId, savedPhantom.gridCol, savedPhantom.gridRow)
+      }
+    } else if (type === 'widget-to-chat') {
+      if (over?.id === 'chat-dropzone') {
+        const { widgetTypeId, config } = active.data.current
+        const query = getWidgetDefaultQuery(widgetTypeId, config)
+        if (query) setPendingQuery(query)
       }
     }
   }
@@ -238,6 +247,18 @@ export default function AppShell() {
         overlayContent = (
           <div className="opacity-90 shadow-widget-edit cursor-grabbing" style={{ width: ow, height: oh }}>
             <Comp variant={variant.id} colSpan={variant.colSpan} rowSpan={variant.rowSpan} />
+          </div>
+        )
+      }
+    } else if (type === 'widget-to-chat') {
+      const w = widgets.find((w) => w.instanceId === activeDrag.data.instanceId)
+      const Comp = w ? WIDGET_REGISTRY[w.widgetTypeId] : null
+      if (Comp && w) {
+        const ow = w.colSpan * cellWidth + (w.colSpan - 1) * GRID_GAP
+        const oh = w.rowSpan * cellHeight + (w.rowSpan - 1) * GRID_GAP
+        overlayContent = (
+          <div className="opacity-90 shadow-widget-edit cursor-grabbing" style={{ width: ow, height: oh }}>
+            <Comp variant={w.variantId} colSpan={w.colSpan} rowSpan={w.rowSpan} config={w.config} />
           </div>
         )
       }
