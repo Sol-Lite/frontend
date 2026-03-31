@@ -58,50 +58,66 @@ export default function ChatWidgetAdder({ msgId, widgetTypeId, variantIds }) {
   }
 
   return (
-    <div className="flex items-center gap-1.5">
-      {/* 아이콘 버튼 */}
-      <button
-        onClick={handleIconClick}
-        className={[
-          'p-0.5 rounded transition-colors',
-          isPending
-            ? 'text-primary'
-            : open
-            ? 'text-foreground-tertiary'
-            : 'text-foreground-disabled hover:text-foreground-tertiary',
-        ].join(' ')}
-        title={isPending ? '드래그하여 대시보드에 추가 (클릭 시 취소)' : `${widgetType.name} 위젯 추가`}
-      >
-        <Grid2X2Plus size={14} />
-      </button>
-
-      {/* Size variants — 오른쪽으로 펼쳐짐 */}
+    <div className="flex flex-col items-start">
+      {/* 아이콘 클릭 시 안내 문구 — 타임스탬프 위로 올라옴 */}
       {open && (
-        <div className="flex items-center gap-2 animate-bubble-in">
-          {variants.map((v) => (
-            <button
-              key={v.id}
-              onClick={() => handleAdd(v)}
-              className="group"
-              title={v.label}
-            >
-              <div
-                className={[
-                  'rounded-[3px] border transition-colors flex items-center justify-center',
-                  selectedId === v.id
-                    ? 'bg-primary border-primary'
-                    : 'border-stroke bg-surface-muted group-hover:bg-primary-light group-hover:border-primary',
-                ].join(' ')}
-                style={{ width: v.colSpan * 16, height: v.rowSpan * 12 }}
-              >
-                <span className={['text-[7px] leading-none', selectedId === v.id ? 'text-white' : 'text-foreground-disabled group-hover:text-primary'].join(' ')}>
-                  {v.colSpan}×{v.rowSpan}
-                </span>
-              </div>
-            </button>
-          ))}
-        </div>
+        <span className="text-[9px] text-foreground-tertiary whitespace-nowrap mb-0.5 animate-bubble-in">
+          원하는 카드를 선택하세요
+        </span>
       )}
+
+      <div className="flex items-center gap-1.5">
+        {/* 아이콘 버튼 */}
+        <button
+          onClick={handleIconClick}
+          className={[
+            'p-0.5 rounded transition-colors',
+            isPending
+              ? 'text-primary'
+              : open
+              ? 'text-foreground-tertiary'
+              : 'text-foreground-disabled hover:text-foreground-tertiary',
+          ].join(' ')}
+          title={isPending ? '드래그하여 대시보드에 추가 (클릭 시 취소)' : `${widgetType.name} 위젯 추가`}
+        >
+          <Grid2X2Plus size={14} />
+        </button>
+
+        {/* 드래그 안내 문구 — 사이즈 선택 후 */}
+        {isPending && (
+          <span className="text-[9px] text-primary font-medium whitespace-nowrap animate-bubble-in">
+            대시보드로 드래그 해보세요
+          </span>
+        )}
+
+        {/* Size variants — 오른쪽으로 펼쳐짐 */}
+        {open && (
+          <div className="flex items-center gap-2 animate-bubble-in">
+            {variants.map((v) => (
+              <button
+                key={v.id}
+                onClick={() => handleAdd(v)}
+                className="group"
+                title={v.label}
+              >
+                <div
+                  className={[
+                    'rounded-[3px] border transition-colors flex items-center justify-center',
+                    selectedId === v.id
+                      ? 'bg-primary border-primary'
+                      : 'border-stroke bg-surface-muted group-hover:bg-primary-light group-hover:border-primary',
+                  ].join(' ')}
+                  style={{ width: v.colSpan * 16, height: v.rowSpan * 12 }}
+                >
+                  <span className={['text-[7px] leading-none font-semibold', selectedId === v.id ? 'text-white' : 'text-foreground-secondary group-hover:text-primary'].join(' ')}>
+                    {v.colSpan}×{v.rowSpan}
+                  </span>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   )
 }

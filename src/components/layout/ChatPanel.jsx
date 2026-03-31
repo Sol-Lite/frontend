@@ -1079,7 +1079,7 @@ export default function ChatPanel() {
           {
             id: Date.now(),
             type: 'info_card',
-            infoType: null,
+            infoType: 'market_overview',
             text: data.reply,
             time: getTimestamp(),
           },
