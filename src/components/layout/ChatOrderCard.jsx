@@ -275,18 +275,18 @@ export default function ChatOrderCard({
       {/* 매도/매수 버튼 */}
       <div className="flex gap-2">
         <button
-          onClick={() => handleAction('sell')}
-          disabled={actionLocked || isDisabled}
-          className="flex-1 py-2.5 rounded-xl bg-down text-white text-[13px] font-bold hover:opacity-90 transition-opacity duration-150 disabled:cursor-not-allowed disabled:opacity-45"
-        >
-          매도 확인
-        </button>
-        <button
           onClick={() => handleAction('buy')}
           disabled={actionLocked || isDisabled}
           className="flex-1 py-2.5 rounded-xl bg-up text-white text-[13px] font-bold hover:opacity-90 transition-opacity duration-150 disabled:cursor-not-allowed disabled:opacity-45"
         >
           매수 확인
+        </button>
+        <button
+          onClick={() => handleAction('sell')}
+          disabled={actionLocked || isDisabled}
+          className="flex-1 py-2.5 rounded-xl bg-down text-white text-[13px] font-bold hover:opacity-90 transition-opacity duration-150 disabled:cursor-not-allowed disabled:opacity-45"
+        >
+          매도 확인
         </button>
       </div>
 

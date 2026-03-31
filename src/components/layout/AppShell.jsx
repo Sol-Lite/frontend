@@ -16,6 +16,7 @@ import useWidgetStore, { canPlaceAt, findPushAsidePlanAt } from '@/store/useWidg
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
 import useAuthStore from '@/store/useAuthStore'
+import usePendingWidgetStore from '@/store/usePendingWidgetStore'
 import { useDashboardLoad } from '@/hooks/useDashboardSync'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_GAP, GRID_COLS, GRID_ROWS, gridElementRef } from '@/lib/gridConstants'
@@ -48,6 +49,7 @@ export default function AppShell() {
     setIsDraggingNewWidget,
   } = useWidgetStore()
   const { resyncWiggle } = useEditModeStore()
+  const clearPending = usePendingWidgetStore((s) => s.clearPending)
   const { cellWidth, cellHeight } = useGridStore()
   const pointerPos = useRef({ x: 0, y: 0 })
   const dragAnchor = useRef({ colOffset: 0, rowOffset: 0 })
@@ -188,6 +190,9 @@ export default function AppShell() {
     if (type === 'new-widget' && savedPhantom) {
       const { widgetTypeId, variant } = active.data.current
       addWidgetAt(widgetTypeId, variant, savedPhantom.gridCol, savedPhantom.gridRow)
+      clearPending()
+    } else if (type === 'new-widget') {
+      // 그리드 밖에 드롭 → pending 유지 (사용자가 다시 시도할 수 있도록)
     } else if (type === 'existing-widget' && savedPhantom?.activeId) {
       if (savedPhantom.pushAsidePlan) {
         applyPushAsidePlan(savedPhantom.pushAsidePlan)

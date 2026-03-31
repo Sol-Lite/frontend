@@ -1,14 +1,20 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, Send } from "lucide-react";
+import WIDGET_SHORTCUTS from "@/config/widgetShortcuts";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { useQueryClient } from "@tanstack/react-query";
-import LiveDot from "@/components/ui/LiveDot";
 import useAuthStore from "@/store/useAuthStore";
 import { chatApi } from "@/api/chat";
 import ChatOrderCard from "@/components/layout/ChatOrderCard";
 import ChatExchangeCard from "@/components/layout/ChatExchangeCard";
+import ChatStockCard from "@/components/layout/ChatStockCard";
+import ChatInfoCard from "@/components/layout/ChatInfoCard";
+import ChatNewsCard from "@/components/layout/ChatNewsCard";
+import ChatWidgetAdder, { getInfoCardWidgetTypeId } from "@/components/layout/ChatWidgetAdder";
+import DraggableChatCard from "@/components/layout/DraggableChatCard";
+import usePendingWidgetStore from "@/store/usePendingWidgetStore";
 import { foreignMarketApi, getExchcd, marketApi } from "@/api/market";
 import { balanceApi } from "@/api/balance";
 import { orderApi, ORDER_SIDE, ORDER_KIND } from "@/api/order";
@@ -18,6 +24,9 @@ import ChatPinBubble from "@/components/layout/ChatPinBubble";
 import ChatExchangePinBubble from "@/components/layout/ChatExchangePinBubble";
 import { isForeignMarketType } from "@/features/invest/formatters";
 import { buildInvestNavigationState } from "@/features/invest/navigation";
+import useWidgetDetailStore from "@/store/useWidgetDetailStore";
+import { cn } from "@/lib/cn";
+import { getStockLogoUrl } from "@/lib/stockLogo";
 
 const EXCHANGE_RESULT_DELAY_MS = 1400
 
@@ -211,10 +220,6 @@ function ChatHeader() {
         <span className="text-[13px] font-bold text-foreground">
           SOL AI 어시스턴트
         </span>
-        <div className="flex items-center gap-1">
-          <LiveDot />
-          <span className="text-[10px] text-live">온라인 · 즉시 응답</span>
-        </div>
       </div>
     </div>
   );
@@ -226,6 +231,18 @@ function ChatHeader() {
 //   User — rounded-[16px_0_16px_16px] bg-primary text-white
 //   animate-bubble-in, 타임스탬프 text-[9px] text-foreground-disabled
 //   타이핑 인디케이터: dot 3개, animate-pulse-dot staggered delay
+
+const AVATARS = [
+  { file: 'puri',     bg: '#F5B89A' },  // 플리
+  { file: 'rurulara', bg: '#A0C8E0' },  // 루루라라
+  { file: 'doremi',   bg: '#4A5568' },  // 도레미
+  { file: 'shu',      bg: '#C8B090' },  // 슈
+  { file: 'rino',     bg: '#B8D4EC' },  // 리노
+  { file: 'molly',    bg: '#7B3FE4' },  // 몰리
+  { file: 'sol',      bg: '#1A3A8A' },  // 쏠
+  { file: 'ray',      bg: '#7BAED6' },  // 레이
+];
+
 function ChatBubble({
   role,
   text,
@@ -233,8 +250,10 @@ function ChatBubble({
   isTyping = false,
   isError = false,
   onRetry,
+  msgId,
 }) {
   const isAI = role === "ai";
+  const avatar = AVATARS[msgId ? (msgId % AVATARS.length) : 0];
 
   return (
     <div
@@ -247,13 +266,29 @@ function ChatBubble({
           alignItems: isAI ? "flex-start" : "flex-end",
         }}
       >
-        <div
-          className={`px-3.5 py-2.5 text-[13px] leading-relaxed ${
-            isAI
-              ? "bg-surface-muted text-foreground rounded-[0_16px_16px_16px]"
-              : "bg-primary text-white rounded-[16px_0_16px_16px]"
-          }`}
-        >
+      {isAI && (
+        <div className="flex items-end gap-2">
+          <div
+            className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0"
+            style={{ backgroundColor: avatar.bg }}
+          >
+            <img
+              src={`/avatars/${avatar.file}.png`}
+              alt="SOL AI"
+              className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in"
+            />
+          </div>
+          {time && !isTyping && (
+            <span className="text-[9px] text-foreground-disabled">{time}</span>
+          )}
+        </div>
+      )}
+      {!isAI ? (
+        <>
+          {time && !isTyping && (
+            <span className="text-[9px] text-foreground-disabled">{time}</span>
+          )}
+          <div className="px-3.5 py-2.5 text-[13px] leading-relaxed bg-primary text-white rounded-[16px_0_16px_16px]">
           {isTyping ? (
             // DESIGN.md §16: dot 3개, w-1.25 h-1.25, pulse-dot 0/150/300ms
             <div className="flex items-center gap-1 py-0.5">
@@ -310,20 +345,39 @@ function ChatBubble({
               {text}
             </ReactMarkdown>
           )}
-        </div>
-        <div className="flex items-center gap-2">
-          {time && !isTyping && (
-            <span className="text-[9px] text-foreground-disabled">{time}</span>
-          )}
-          {isError && onRetry && (
-            <button
-              onClick={onRetry}
-              className="text-[9px] text-primary hover:underline cursor-pointer"
+          </div>
+        </>
+      ) : (
+        <div className="px-3.5 py-2.5 text-[13px] leading-relaxed bg-surface-muted text-foreground rounded-[0_16px_16px_16px]">
+          {isTyping ? (
+            <div className="flex items-center gap-1 py-0.5">
+              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot" style={{ animationDelay: "0ms" }} />
+              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot" style={{ animationDelay: "150ms" }} />
+              <span className="w-1.25 h-1.25 rounded-full bg-foreground-disabled animate-pulse-dot" style={{ animationDelay: "300ms" }} />
+            </div>
+          ) : (
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              components={{
+                p: ({ children }) => <p className="mb-1 last:mb-0">{children}</p>,
+                ul: ({ children }) => <ul className="list-disc pl-4 mb-1 space-y-0.5">{children}</ul>,
+                ol: ({ children }) => <ol className="list-decimal pl-4 mb-1 space-y-0.5">{children}</ol>,
+                strong: ({ children }) => <strong className="font-bold">{children}</strong>,
+                table: ({ children }) => <div className="overflow-x-auto mt-1"><table className="text-[11px] border-collapse w-full">{children}</table></div>,
+                th: ({ children }) => <th className="border border-stroke px-2 py-1 bg-surface font-semibold text-left">{children}</th>,
+                td: ({ children }) => <td className="border border-stroke px-2 py-1">{children}</td>,
+              }}
             >
-              다시 시도
-            </button>
+              {text}
+            </ReactMarkdown>
           )}
         </div>
+      )}
+      {isError && onRetry && (
+        <button onClick={onRetry} className="text-[11px] text-primary hover:underline cursor-pointer self-start">
+          다시 시도
+        </button>
+      )}
       </div>
     </div>
   );
@@ -331,21 +385,39 @@ function ChatBubble({
 
 // ── ChatMessages ───────────────────────────────────────────────
 function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, onExchangeAction, onOrderDetail, onPinClose, onPinSuccess, onExchangePinSuccess, onPinError }) {
+  const { pendingMsgId, widgetTypeId: pendingWidgetTypeId, variant: pendingVariant } = usePendingWidgetStore()
   return (
     <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
       {messages.map((msg) => {
         // 주문 카드
         if (msg.type === 'order' && msg.stock) {
+          const av = AVATARS[msg.id % AVATARS.length]
+          const isThisPending = pendingMsgId === msg.id
           return (
-            <div key={msg.id} className="flex flex-col gap-1">
-              <ChatOrderCard
-                {...msg.stock}
-                onBuy={(qty) => onOrderAction?.(msg.id, msg.stock, 'buy', qty, msg.requestKeyBase)}
-                onSell={(qty) => onOrderAction?.(msg.id, msg.stock, 'sell', qty, msg.requestKeyBase)}
-                onDetail={() => onOrderDetail?.(msg.stock)}
-              />
-              {msg.time && (
-                <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
+            <div key={msg.id} className="flex flex-col gap-1 animate-bubble-in">
+              <div className="flex items-end gap-2">
+                <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                  <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
+                </div>
+                {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
+                <ChatWidgetAdder msgId={msg.id} widgetTypeId="stock-chart" />
+              </div>
+              {isThisPending ? (
+                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                  <ChatOrderCard
+                    {...msg.stock}
+                    onBuy={(qty) => onOrderAction?.(msg.id, msg.stock, 'buy', qty, msg.requestKeyBase)}
+                    onSell={(qty) => onOrderAction?.(msg.id, msg.stock, 'sell', qty, msg.requestKeyBase)}
+                    onDetail={() => onOrderDetail?.(msg.stock)}
+                  />
+                </DraggableChatCard>
+              ) : (
+                <ChatOrderCard
+                  {...msg.stock}
+                  onBuy={(qty) => onOrderAction?.(msg.id, msg.stock, 'buy', qty, msg.requestKeyBase)}
+                  onSell={(qty) => onOrderAction?.(msg.id, msg.stock, 'sell', qty, msg.requestKeyBase)}
+                  onDetail={() => onOrderDetail?.(msg.stock)}
+                />
               )}
             </div>
           )
@@ -365,9 +437,6 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
                 onSuccess={() => onPinSuccess?.(msg.id, msg.sourceOrderId, msg.name, msg.side, msg.quantity)}
                 onError={(message) => onPinError?.(message)}
               />
-              {msg.time && (
-                <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
-              )}
             </div>
           )
         }
@@ -384,25 +453,129 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
                 })}
                 onError={(message) => onPinError?.(message)}
               />
-              {msg.time && (
-                <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
-              )}
             </div>
           )
         }
         // 환전 카드
         if (msg.type === 'exchange') {
+          const av = AVATARS[msg.id % AVATARS.length]
+          const isThisPending = pendingMsgId === msg.id
           return (
-            <div key={msg.id} className="flex flex-col gap-1">
-              <ChatExchangeCard
-                krwBalance={msg.krwBalance}
-                usdBalance={msg.usdBalance}
-                isPending={Boolean(msg.isPending)}
-                onSubmit={(payload) => onExchangeAction?.(msg.id, payload)}
-              />
-              {msg.time && (
-                <span className="text-[9px] text-foreground-disabled">{msg.time}</span>
+            <div key={msg.id} className="flex flex-col gap-1 animate-bubble-in">
+              <div className="flex items-end gap-2">
+                <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                  <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
+                </div>
+                {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
+                <ChatWidgetAdder msgId={msg.id} widgetTypeId="exchange" variantIds={['exchange-sm']} />
+              </div>
+              {isThisPending ? (
+                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                  <ChatExchangeCard
+                    krwBalance={msg.krwBalance}
+                    usdBalance={msg.usdBalance}
+                    isPending={Boolean(msg.isPending)}
+                    onSubmit={(payload) => onExchangeAction?.(msg.id, payload)}
+                  />
+                </DraggableChatCard>
+              ) : (
+                <ChatExchangeCard
+                  krwBalance={msg.krwBalance}
+                  usdBalance={msg.usdBalance}
+                  isPending={Boolean(msg.isPending)}
+                  onSubmit={(payload) => onExchangeAction?.(msg.id, payload)}
+                />
               )}
+            </div>
+          )
+        }
+        // 주식 차트 카드 — 풀 너비 유지
+        if (msg.type === 'stock_price') {
+          const av = AVATARS[msg.id % AVATARS.length]
+          const isThisPending = pendingMsgId === msg.id
+          return (
+            <div key={msg.id} className="flex flex-col gap-1 animate-bubble-in">
+              <div className="flex items-end gap-2">
+                <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                  <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
+                </div>
+                {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
+                <ChatWidgetAdder msgId={msg.id} widgetTypeId="stock-chart" />
+              </div>
+              {isThisPending ? (
+                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                  <ChatStockCard
+                    stockCode={msg.stockCode}
+                    stockName={msg.stockName}
+                    marketType={msg.marketType}
+                    exchangeCode={msg.exchangeCode}
+                  />
+                </DraggableChatCard>
+              ) : (
+                <ChatStockCard
+                  stockCode={msg.stockCode}
+                  stockName={msg.stockName}
+                  marketType={msg.marketType}
+                  exchangeCode={msg.exchangeCode}
+                />
+              )}
+            </div>
+          )
+        }
+        // 뉴스 카드 (종목 뉴스 / 보유 종목 뉴스)
+        if (msg.type === 'news_card') {
+          const av = AVATARS[msg.id % AVATARS.length]
+          const isThisPending = pendingMsgId === msg.id
+          return (
+            <div key={msg.id} className="flex justify-start animate-bubble-in">
+              <div className="flex flex-col gap-1" style={{ maxWidth: '90%', alignItems: 'flex-start' }}>
+                <div className="flex items-end gap-2">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                    <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
+                  </div>
+                  {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
+                  <ChatWidgetAdder msgId={msg.id} widgetTypeId="stock-news" />
+                </div>
+                {isThisPending ? (
+                  <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                    <ChatNewsCard text={msg.text} stockCode={msg.stockCode} stockName={msg.stockName} />
+                  </DraggableChatCard>
+                ) : (
+                  <ChatNewsCard text={msg.text} stockCode={msg.stockCode} stockName={msg.stockName} />
+                )}
+              </div>
+            </div>
+          )
+        }
+        // 정보 카드 (지수/순위/잔고/환율) — reply 텍스트를 카드 스타일로 표시
+        if (msg.type === 'info_card') {
+          const av = AVATARS[msg.id % AVATARS.length]
+          const infoWidgetTypeId = getInfoCardWidgetTypeId(msg.infoType)
+          const isThisPending = pendingMsgId === msg.id
+          return (
+            <div key={msg.id} className="flex justify-start animate-bubble-in">
+              <div className="flex flex-col gap-1" style={{ maxWidth: '85%', alignItems: 'flex-start' }}>
+                <div className="flex items-end gap-2">
+                  <div className="w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0" style={{ backgroundColor: av.bg }}>
+                    <img src={`/avatars/${av.file}.png`} alt="SOL AI" className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in" />
+                  </div>
+                  {msg.time && <span className="text-[9px] text-foreground-disabled">{msg.time}</span>}
+                  {infoWidgetTypeId && (
+                    <ChatWidgetAdder
+                      msgId={msg.id}
+                      widgetTypeId={infoWidgetTypeId}
+                      variantIds={infoWidgetTypeId === 'exchange' ? ['exchange-sm'] : undefined}
+                    />
+                  )}
+                </div>
+                {isThisPending ? (
+                  <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                    <ChatInfoCard text={msg.text} />
+                  </DraggableChatCard>
+                ) : (
+                  <ChatInfoCard text={msg.text} />
+                )}
+              </div>
             </div>
           )
         }
@@ -410,6 +583,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
         return (
           <ChatBubble
             key={msg.id}
+            msgId={msg.id}
             role={msg.role}
             text={msg.text}
             time={msg.time}
@@ -418,9 +592,44 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
           />
         )
       })}
-      {isTyping && <ChatBubble role="ai" isTyping />}
+      {isTyping && <ChatBubble role="ai" isTyping msgId={1} />}
       {/* 자동 스크롤 앵커 */}
       <div ref={bottomRef} />
+    </div>
+  );
+}
+
+// ── ChatSuggestions ────────────────────────────────────────────
+// 채팅 입력 위에 뜨는 종목 자동완성 드롭다운
+function ChatSuggestions({ suggestions, activeIndex, onSelect }) {
+  if (suggestions.length === 0) return null;
+  return (
+    <div className="absolute bottom-full left-0 right-0 overflow-hidden border-t border-x border-stroke bg-surface z-10">
+      {suggestions.map((sugg, i) => (
+        <button
+          key={sugg.key}
+          onMouseDown={(e) => { e.preventDefault(); onSelect(sugg); }}
+          className={cn(
+            "flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors duration-100",
+            i === activeIndex ? "bg-background" : "hover:bg-background",
+            i > 0 && "border-t border-stroke-subtle"
+          )}
+        >
+          {sugg.stock ? (
+            <img
+              src={getStockLogoUrl(sugg.stock.marketType, sugg.stock.stockCode)}
+              alt={sugg.stock.stockName}
+              className="h-7 w-7 shrink-0 rounded-full bg-background object-contain"
+              onError={(e) => { e.target.style.display = "none"; }}
+            />
+          ) : (
+            <div className="h-7 w-7 shrink-0 rounded-full bg-primary-light flex items-center justify-center">
+              {sugg.Icon && <sugg.Icon className="w-3.5 h-3.5 text-primary" />}
+            </div>
+          )}
+          <span className="flex-1 truncate text-[13px] font-bold text-foreground">{sugg.label}</span>
+        </button>
+      ))}
     </div>
   );
 }
@@ -429,8 +638,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
 // DESIGN.md §16: bg-background border-stroke-input rounded-2xl px-3.5 py-2.5
 // 전송버튼: 빈 입력 → bg-surface-muted cursor-not-allowed / 입력 있음 → bg-primary
 // textarea: 입력 내용에 따라 높이 자동 증가, 최대 5줄, Shift+Enter 줄바꿈
-function ChatInput({ isDisabled = false, onSend }) {
-  const [value, setValue] = useState("");
+function ChatInput({ isDisabled = false, onSend, value = "", onChange, onSuggestionKeyDown }) {
   const textareaRef = useRef(null);
   const canSend = value.trim().length > 0 && !isDisabled;
 
@@ -445,12 +653,14 @@ function ChatInput({ isDisabled = false, onSend }) {
   function handleSend() {
     if (!canSend) return;
     onSend(value.trim());
-    setValue("");
+    onChange?.("");
     // 전송 후 높이 초기화
     if (textareaRef.current) textareaRef.current.style.height = "auto";
   }
 
   function handleKeyDown(e) {
+    // suggestion 키 처리가 우선 (ArrowUp/Down/Escape/Enter with active suggestion)
+    if (onSuggestionKeyDown?.(e)) return;
     if (e.key === "Enter" && !e.shiftKey && !e.nativeEvent.isComposing) {
       e.preventDefault();
       handleSend();
@@ -465,7 +675,7 @@ function ChatInput({ isDisabled = false, onSend }) {
         ref={textareaRef}
         rows={1}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e) => onChange?.(e.target.value)}
         onKeyDown={handleKeyDown}
         disabled={isDisabled}
         placeholder={
@@ -559,9 +769,14 @@ export default function ChatPanel() {
   const [messages, setMessages] = useState(loadMessages);
   const [toasts, setToasts] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
+  const [draft, setDraft] = useState("");
+  const [suggestions, setSuggestions] = useState([]);
+  const [activeSuggIdx, setActiveSuggIdx] = useState(-1);
   const bottomRef = useRef(null);
   const lastFailedTextRef = useRef(null);
   const toastTimersRef = useRef(new Map());
+  const suggDebounceRef = useRef(null);
+  const openWidgetDetail = useWidgetDetailStore((s) => s.open);
   // 복원 완료 후 isAuthenticated의 이전 값 추적 (null = 복원 전)
   const prevIsAuthRef = useRef(null);
 
@@ -596,6 +811,83 @@ export default function ChatPanel() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
+
+  // draft 변경 시 종목 자동완성 검색 (300ms 디바운스)
+  useEffect(() => {
+    clearTimeout(suggDebounceRef.current);
+    if (draft.trim().length === 0) {
+      setSuggestions([]);
+      setActiveSuggIdx(-1);
+      return;
+    }
+    suggDebounceRef.current = setTimeout(async () => {
+      const keyword = draft.trim().toLowerCase();
+
+      // 위젯 단축키 매칭 (정적, API 불필요)
+      const widgetItems = WIDGET_SHORTCUTS
+        .filter(w => w.keywords.some(k => k.startsWith(keyword) || keyword.startsWith(k)))
+        .map(w => ({ key: w.key, label: w.label, widgetTypeId: w.widgetTypeId, Icon: w.Icon, config: {} }));
+
+      // 위젯 매칭 있으면 종목 검색 스킵
+      if (widgetItems.length > 0) {
+        setSuggestions(widgetItems);
+        setActiveSuggIdx(-1);
+        return;
+      }
+
+      // 종목 검색
+      const results = await marketApi.searchStocks(draft.trim()).catch(() => []);
+      const stockItems = results.slice(0, 1).flatMap((stock) => [
+        { key: `${stock.stockCode}-price`, label: `${stock.stockName} 주가`, widgetTypeId: "stock-chart", stock },
+        { key: `${stock.stockCode}-news`,  label: `${stock.stockName} 뉴스`, widgetTypeId: "stock-news",  stock },
+      ]);
+
+      setSuggestions(stockItems);
+      setActiveSuggIdx(-1);
+    }, 300);
+    return () => clearTimeout(suggDebounceRef.current);
+  }, [draft]);
+
+  function handleSuggestionSelect(sugg) {
+    openWidgetDetail({
+      widgetTypeId: sugg.widgetTypeId,
+      config: sugg.stock ? {
+        stockCode:    sugg.stock.stockCode,
+        stockName:    sugg.stock.stockName,
+        marketType:   sugg.stock.marketType,
+        exchangeCode: sugg.stock.exchangeCode,
+        widgetPeriod: "1D",
+      } : (sugg.config ?? {}),
+    });
+    setSuggestions([]);
+    setActiveSuggIdx(-1);
+    setDraft("");
+  }
+
+  function handleSuggestionKeyDown(e) {
+    if (suggestions.length === 0) return false;
+    if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveSuggIdx((prev) => Math.max(-1, prev - 1));
+      return true;
+    }
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setActiveSuggIdx((prev) => Math.min(suggestions.length - 1, prev + 1));
+      return true;
+    }
+    if (e.key === "Escape") {
+      setSuggestions([]);
+      setActiveSuggIdx(-1);
+      return true;
+    }
+    if (e.key === "Enter" && activeSuggIdx >= 0) {
+      e.preventDefault();
+      handleSuggestionSelect(suggestions[activeSuggIdx]);
+      return true;
+    }
+    return false;
+  }
 
   useEffect(() => () => {
     toastTimersRef.current.forEach((timerId) => {
@@ -752,16 +1044,65 @@ export default function ChatPanel() {
       const data = await chatApi.sendMessage(text);
       lastFailedTextRef.current = null;
 
-      // 말풍선 먼저 추가
-      setMessages((prev) => [
-        ...prev,
-        { id: Date.now(), role: "ai", text: data.reply, time: getTimestamp() },
-      ]);
+      const INFO_CARD_TYPES = ['index', 'ranking', 'balance', 'exchange_rate', 'market_overview'];
+      const NEWS_CARD_TYPES = ['stock_news'];
 
       if (data.type === "order" && data.stock_code) {
         await appendOrderCardMessage(data);
       } else if (data.type === "exchange") {
         await appendExchangeCardMessage();
+      } else if (data.type === "stock_price" && data.data) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            type: 'stock_price',
+            stockCode: data.data.stock_code,
+            stockName: data.data.stock_name,
+            marketType: data.data.market_type,
+            exchangeCode: data.data.exchange_code,
+            time: getTimestamp(),
+          },
+        ]);
+      } else if (NEWS_CARD_TYPES.includes(data.type)) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            type: 'news_card',
+            text: data.reply,
+            stockCode: data.stock_code ?? null,
+            stockName: data.stock_name ?? null,
+            time: getTimestamp(),
+          },
+        ]);
+      } else if (INFO_CARD_TYPES.includes(data.type)) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            type: 'info_card',
+            infoType: data.type,
+            text: data.reply,
+            time: getTimestamp(),
+          },
+        ]);
+      } else if (data.reply && /━/.test(data.reply)) {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now(),
+            type: 'info_card',
+            infoType: null,
+            text: data.reply,
+            time: getTimestamp(),
+          },
+        ]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { id: Date.now(), role: "ai", text: data.reply, time: getTimestamp() },
+        ]);
       }
     } catch {
       lastFailedTextRef.current = text;
@@ -1023,7 +1364,19 @@ export default function ChatPanel() {
             onPinError={handlePinError}
           />
           <ChatToastStack toasts={toasts} onClose={dismissToast} />
-          <ChatInput onSend={handleSend} />
+          <div className="relative shrink-0">
+            <ChatSuggestions
+              suggestions={suggestions}
+              activeIndex={activeSuggIdx}
+              onSelect={handleSuggestionSelect}
+            />
+            <ChatInput
+              value={draft}
+              onChange={setDraft}
+              onSend={handleSend}
+              onSuggestionKeyDown={handleSuggestionKeyDown}
+            />
+          </div>
         </>
       ) : (
         <LoginPrompt />
