@@ -16,6 +16,18 @@ import { DASHBOARD_PRESETS } from '@/data/dashboardPresets'
 import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
 import SectorSelectModal from '@/components/layout/SectorSelectModal'
 
+const WIDGET_TYPES_DRAGGABLE_TO_CHAT = [
+  'balance',
+  'exchange',
+  'stock-chart',
+  'stock-news',
+  'index',
+  'ranking',
+  'market-overview',
+  'portfolio',
+  'trade-history',
+]
+
 function PresetThumbnail({ widgets }) {
   return (
     <div className="bg-background h-[152px] p-1.5 grid grid-cols-6 grid-rows-4 gap-[2px]">
@@ -334,6 +346,9 @@ export default function HomePage() {
                 rowSpan={w.rowSpan}
                 gridCol={w.gridCol}
                 gridRow={w.gridRow}
+                widgetTypeId={w.widgetTypeId}
+                config={w.config}
+                canDragToChat={WIDGET_TYPES_DRAGGABLE_TO_CHAT.includes(w.widgetTypeId)}
               >
                 <Component
                   instanceId={w.instanceId}
