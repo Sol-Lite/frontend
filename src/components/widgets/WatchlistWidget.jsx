@@ -1,9 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Settings2 } from 'lucide-react'
 import PriceChange from '@/components/ui/PriceChange'
+import StockAvatar from '@/components/ui/StockAvatar'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
+import useEditModeStore from '@/store/useEditModeStore'
 import WidgetCard from './WidgetCard'
 import WatchlistEditModal from './WatchlistEditModal'
 import { useWatchlist, watchlistApi } from '@/api/watchlist'
@@ -41,7 +43,14 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
   const { data: items = [], isError } = useWatchlist({ enabled: isAuthenticated && !isRestoring })
   const { add, remove } = useWatchlistMutations()
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const { lockWidgetDrag, unlockWidgetDrag } = useEditModeStore()
   const openDetail = useWidgetDetailStore((s) => s.open)
+
+  useEffect(() => {
+    if (!isEditOpen) return undefined
+    lockWidgetDrag()
+    return () => unlockWidgetDrag()
+  }, [isEditOpen, lockWidgetDrag, unlockWidgetDrag])
 
   function handleWidgetClick() {
     openDetail({ widgetTypeId: 'watchlist', config: {} })
@@ -103,7 +112,10 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
                 onClick={(e) => handleStockClick(e, item)}
                 className="flex items-center justify-between gap-2 cursor-pointer pl-1.5 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
               >
-                <span className="text-widget-10 font-medium text-foreground truncate">{item.stockName}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <StockAvatar name={item.stockName ?? item.stockCode} stockCode={item.stockCode} marketType={item.marketType} size="sm" />
+                  <span className="text-widget-10 font-medium text-foreground truncate">{item.stockName}</span>
+                </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {fmtPrice(item.currentPrice, item.marketType) && (
                     <span className="text-widget-10 font-semibold text-foreground tabular-nums">

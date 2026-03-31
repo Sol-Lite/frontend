@@ -38,13 +38,17 @@ function buildPreviewCandles(count = 78) {
   const maxY = 38
   const clamp = (v) => Math.max(minY, Math.min(maxY, v))
   const anchors = [
-    [0.00, 31.5], // 시작
-    [0.14, 29.8], // 완만한 초반 상승
-    [0.30, 24.2], // 가속 상승
-    [0.48, 19.4], // 강한 상승
-    [0.66, 16.8], // 고점권
-    [0.82, 20.4], // 눌림
-    [1.00, 17.2], // 상승 재개 후 마감
+    [0.00, 33.0], // 시작
+    [0.08, 31.0], // 초반 상승
+    [0.15, 33.4], // 급 눌림
+    [0.25, 27.6], // 반등
+    [0.36, 24.8], // 상승
+    [0.46, 27.3], // 재차 눌림
+    [0.58, 20.6], // 강한 상승
+    [0.68, 18.1], // 고점권 진입
+    [0.78, 22.2], // 흔들림
+    [0.88, 19.0], // 회복
+    [1.00, 16.4], // 상승 마감
   ]
   const yAt = (t) => {
     for (let i = 0; i < anchors.length - 1; i += 1) {
@@ -62,14 +66,16 @@ function buildPreviewCandles(count = 78) {
     const t = i / (count - 1)
     const cx = 2 + t * 96
     const base = yAt(t)
-    const wave = Math.sin(i * 0.48) * 0.85 + Math.sin(i * 0.16) * 0.45
-    const mid = clamp(base + wave)
-    const prevMid = i === 0 ? mid + 0.3 : (candles[i - 1][2] + candles[i - 1][3]) / 2
+    // 고주파 + 계단형 변동을 섞어 더 뾰족한 등락을 만든다.
+    const microWave = Math.sin(i * 1.25) * 1.05 + Math.sin(i * 0.42) * 0.55
+    const stepShock = ((i % 5) - 2) * 0.22 + ((i % 9) === 0 ? 0.75 : 0) - ((i % 11) === 0 ? 0.6 : 0)
+    const mid = clamp(base + microWave + stepShock)
+    const prevMid = i === 0 ? mid + 0.45 : (candles[i - 1][2] + candles[i - 1][3]) / 2
     // 몸통 길이를 다양화해서 실제 캔들 느낌 강화
-    const body = 0.45 + ((i * 5) % 8) * 0.2
+    const body = 0.5 + ((i * 7) % 9) * 0.18
     // 윗꼬리/아랫꼬리 길이를 분리해 비대칭 + 가변 길이로 생성
-    const wickUp = 0.25 + ((i * 7) % 6) * 0.22
-    const wickDown = 0.2 + ((i * 11) % 7) * 0.18
+    const wickUp = 0.35 + ((i * 5) % 7) * 0.24
+    const wickDown = 0.3 + ((i * 9) % 8) * 0.2
     const isUp = mid <= prevMid
     const bodyTop = clamp(mid - body)
     const bodyBottom = clamp(mid + body)
@@ -81,14 +87,30 @@ function buildPreviewCandles(count = 78) {
 }
 
 const PREVIEW_CANDLES = buildPreviewCandles(65)
+const PREVIEW_STOCK_NAME = '신한지주'
+const PREVIEW_STOCK_CODE = '055550'
+const PREVIEW_STOCK_MARKET = 'KOSPI'
 
-function MiniCandleChart({ className = '' }) {
-  const lastBodyBottom = PREVIEW_CANDLES[PREVIEW_CANDLES.length - 1][3]
+function MiniCandleChart({ className = '', candleRatio = 1, volatility = 1 }) {
+  const targetCount = Math.max(8, Math.round(PREVIEW_CANDLES.length * candleRatio))
+  const sampledCandles = targetCount >= PREVIEW_CANDLES.length
+    ? PREVIEW_CANDLES
+    : Array.from({ length: targetCount }, (_, i) => {
+      const idx = Math.floor((i * (PREVIEW_CANDLES.length - 1)) / (targetCount - 1))
+      return PREVIEW_CANDLES[idx]
+    })
+  const clampY = (v) => Math.max(2, Math.min(40, v))
+  const baseline = sampledCandles[sampledCandles.length - 1][3]
+  const scaleY = (y) => clampY(baseline + (y - baseline) * volatility)
+  const candles = volatility === 1
+    ? sampledCandles
+    : sampledCandles.map(([cx, ht, bt, bb, lb, isUp]) => [cx, scaleY(ht), scaleY(bt), scaleY(bb), scaleY(lb), isUp])
+  const lastBodyBottom = candles[candles.length - 1][3]
   return (
     <div className={cn('h-full w-full rounded-lg bg-white p-1', className)}>
       <svg viewBox="0 0 100 42" preserveAspectRatio="none" className="w-full h-full block">
         <line x1="0" y1={lastBodyBottom} x2="100" y2={lastBodyBottom} stroke="var(--color-up)" strokeWidth="0.7" strokeDasharray="1.5 1.5" vectorEffect="non-scaling-stroke" />
-        {PREVIEW_CANDLES.map(([cx, ht, bt, bb, lb, isUp]) => {
+        {candles.map(([cx, ht, bt, bb, lb, isUp]) => {
           const color = isUp ? 'var(--color-up)' : 'var(--color-down)'
           return (
             <g key={cx}>
@@ -155,15 +177,15 @@ export function PreviewContent({ type }) {
       return (
         <div className="flex flex-col justify-between h-full">
           <div className="flex items-center gap-1 min-w-0">
-            <StockAvatar name="삼성전자" stockCode="005930" marketType="KOSPI" size="sm" />
+            <StockAvatar name={PREVIEW_STOCK_NAME} stockCode={PREVIEW_STOCK_CODE} marketType={PREVIEW_STOCK_MARKET} size="sm" />
             <div className="min-w-0">
-              <div className="text-[10px] font-bold text-foreground leading-none truncate">삼성전자</div>
-              <div className="text-[8px] text-foreground-disabled mt-0.5">005930 · KOSPI</div>
+              <div className="text-[10px] font-bold text-foreground leading-none truncate">{PREVIEW_STOCK_NAME}</div>
+              <div className="text-[8px] text-foreground-disabled mt-0.5">{PREVIEW_STOCK_CODE} · {PREVIEW_STOCK_MARKET}</div>
             </div>
           </div>
           <div>
-            <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
-            <div className="text-[10px] text-up font-medium mt-0.5">▲ 1,200 (+1.62%)</div>
+            <div className="text-[14px] font-extrabold text-foreground leading-none">99,000</div>
+            <div className="text-[10px] text-up font-medium mt-0.5">▲ 350 (+0.79%)</div>
           </div>
         </div>
       )
@@ -174,19 +196,19 @@ export function PreviewContent({ type }) {
         <div className="flex h-full gap-2.5">
           <div className="flex flex-col justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              <StockAvatar name="삼성전자" stockCode="005930" marketType="KOSPI" size="sm" />
+              <StockAvatar name={PREVIEW_STOCK_NAME} stockCode={PREVIEW_STOCK_CODE} marketType={PREVIEW_STOCK_MARKET} size="sm" />
               <div>
-                <div className="text-[10px] font-bold text-foreground leading-none">삼성전자</div>
-                <div className="text-[8px] text-foreground-disabled mt-0.5">005930 · KOSPI</div>
+                <div className="text-[10px] font-bold text-foreground leading-none">{PREVIEW_STOCK_NAME}</div>
+                <div className="text-[8px] text-foreground-disabled mt-0.5">{PREVIEW_STOCK_CODE} · {PREVIEW_STOCK_MARKET}</div>
               </div>
             </div>
             <div>
-              <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
-              <div className="text-[10px] text-up mt-0.5">▲ +1,200 (+1.62%)</div>
+              <div className="text-[14px] font-extrabold text-foreground leading-none">99,000</div>
+              <div className="text-[10px] text-up mt-0.5">▲ +350 (+0.79%)</div>
             </div>
           </div>
           <div className="flex-1 min-h-0">
-            <MiniCandleChart />
+            <MiniCandleChart candleRatio={0.81} />
           </div>
         </div>
       )
@@ -437,14 +459,15 @@ export function PreviewContent({ type }) {
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
           <div className="flex flex-col gap-1.5">
             {[
-              { name: '삼성전자',       price: '75,400',  chg: '+1.62%', up: true  },
-              { name: '현대차',         price: '221,500', chg: '-0.43%', up: false },
-              { name: 'LG에너지솔루션', price: '412,000', chg: '+0.91%', up: true  },
-              { name: 'POSCO홀딩스',    price: '378,500', chg: '+0.53%', up: true  },
-              { name: 'SK하이닉스',     price: '182,000', chg: '-0.82%', up: false },
-            ].map(({ name, price, chg, up }) => (
+              { name: '삼성전자',       code: '005930', price: '75,400',  chg: '+1.62%', up: true  },
+              { name: '현대차',         code: '005380', price: '221,500', chg: '-0.43%', up: false },
+              { name: 'LG에너지솔루션', code: '373220', price: '412,000', chg: '+0.91%', up: true  },
+            ].map(({ name, code, price, chg, up }) => (
               <div key={name} className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-medium text-foreground truncate">{name}</span>
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <StockAvatar name={name} stockCode={code} marketType="KOSPI" size="sm" />
+                  <span className="text-[10px] font-medium text-foreground truncate">{name}</span>
+                </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   <span className="text-[10px] font-semibold text-foreground">{price}</span>
                   <span className={cn('text-[9px] font-medium', up ? 'text-up' : 'text-down')}>{chg}</span>
@@ -651,19 +674,19 @@ export function PreviewContent({ type }) {
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-start justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              <StockAvatar name="삼성전자" stockCode="005930" marketType="KOSPI" size="sm" />
+              <StockAvatar name={PREVIEW_STOCK_NAME} stockCode={PREVIEW_STOCK_CODE} marketType={PREVIEW_STOCK_MARKET} size="sm" />
               <div>
-                <div className="text-[11px] font-bold text-foreground leading-none">삼성전자</div>
-                <div className="text-[9px] text-foreground-disabled mt-0.5">005930 · KOSPI</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">{PREVIEW_STOCK_NAME}</div>
+                <div className="text-[9px] text-foreground-disabled mt-0.5">{PREVIEW_STOCK_CODE} · {PREVIEW_STOCK_MARKET}</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
-              <div className="text-[10px] text-up">▲ +1,200 (+1.62%)</div>
+              <div className="text-[14px] font-extrabold text-foreground leading-none">99,000</div>
+              <div className="text-[10px] text-up">▲ +350 (+0.79%)</div>
             </div>
           </div>
           <div className="flex-1 min-h-0 overflow-hidden">
-            <MiniCandleChart />
+            <MiniCandleChart candleRatio={0.81} />
           </div>
           <div className="flex justify-between shrink-0">
             {[
@@ -769,15 +792,15 @@ export function PreviewContent({ type }) {
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-start justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              <StockAvatar name="삼성전자" stockCode="005930" marketType="KOSPI" size="sm" />
+              <StockAvatar name={PREVIEW_STOCK_NAME} stockCode={PREVIEW_STOCK_CODE} marketType={PREVIEW_STOCK_MARKET} size="sm" />
               <div>
-                <div className="text-[11px] font-bold text-foreground leading-none">삼성전자</div>
-                <div className="text-[8px] text-foreground-disabled mt-0.5">005930 · KOSPI · 반도체</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">{PREVIEW_STOCK_NAME}</div>
+                <div className="text-[8px] text-foreground-disabled mt-0.5">{PREVIEW_STOCK_CODE} · {PREVIEW_STOCK_MARKET} · 금융</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[14px] font-extrabold text-foreground leading-none">75,400</div>
-              <div className="text-[9px] text-up">▲ +1,200 (+1.62%)</div>
+              <div className="text-[14px] font-extrabold text-foreground leading-none">99,000</div>
+              <div className="text-[9px] text-up">▲ +350 (+0.79%)</div>
             </div>
           </div>
           <div className="flex gap-1.5 shrink-0">
@@ -786,7 +809,7 @@ export function PreviewContent({ type }) {
             ))}
           </div>
           <div className="flex-1 min-h-0 overflow-hidden">
-            <MiniCandleChart />
+            <MiniCandleChart candleRatio={0.9} volatility={1.65} />
           </div>
           <div className="flex justify-between shrink-0">
             {[
@@ -842,15 +865,15 @@ export function PreviewContent({ type }) {
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
             <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
-              삼성전자
+              {PREVIEW_STOCK_NAME}
               <ChevronDown size={9} />
             </span>
           </div>
           <div className="flex-1 flex flex-col overflow-hidden">
             {[
-              'HBM 공급 본격화 — 엔비디아향 납품 재개',
-              '외국인 6거래일 연속 순매수',
-              '파운드리 2나노 시범 생산 개시',
+              '신한지주, 분기 실적 기대감에 금융주 강세',
+              '은행주 배당 매력 부각, 기관 순매수 확대',
+              '원화 강세 속 금융지주 밸류에이션 재평가',
             ].map((title, i) => (
               <div key={i} className="flex items-start gap-1.5 py-1 border-b border-stroke last:border-b-0 pl-2 border-l-2 border-l-transparent">
                 <span className="text-[8px] font-bold text-primary mt-[1px] shrink-0">{i + 1}</span>
@@ -868,14 +891,14 @@ export function PreviewContent({ type }) {
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
             <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
-              삼성전자
+              {PREVIEW_STOCK_NAME}
               <ChevronDown size={9} />
             </span>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             {[
-              { title: 'HBM 공급 본격화 — 엔비디아향 납품 재개', source: '연합뉴스', at: '1시간 전' },
-              { title: '외국인 6거래일 연속 순매수', source: '매일경제', at: '2시간 전' },
+              { title: '신한지주, 분기 실적 기대감에 금융주 강세', source: '연합뉴스', at: '1시간 전' },
+              { title: '은행주 배당 매력 부각, 기관 순매수 확대', source: '매일경제', at: '2시간 전' },
             ].map(({ title, source, at }, i) => (
               <div
                 key={i}
@@ -902,15 +925,15 @@ export function PreviewContent({ type }) {
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
             <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
-              삼성전자
+              {PREVIEW_STOCK_NAME}
               <ChevronDown size={9} />
             </span>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
             {[
-              { title: 'HBM 공급 본격화 — 엔비디아향 납품 재개', source: '연합뉴스', at: '1시간 전' },
-              { title: '외국인 6거래일 연속 순매수', source: '매일경제', at: '2시간 전' },
-              { title: '파운드리 2나노 시범 생산 개시', source: '한국경제', at: '4시간 전' },
+              { title: '신한지주, 분기 실적 기대감에 금융주 강세', source: '연합뉴스', at: '1시간 전' },
+              { title: '은행주 배당 매력 부각, 기관 순매수 확대', source: '매일경제', at: '2시간 전' },
+              { title: '원화 강세 속 금융지주 밸류에이션 재평가', source: '한국경제', at: '4시간 전' },
             ].map(({ title, source, at }, i) => (
               <div
                 key={i}

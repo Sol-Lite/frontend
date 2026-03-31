@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X } from 'lucide-react'
 
 const ALL_INDICES = [
@@ -31,13 +32,13 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
     })
   }
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[1200] flex items-center justify-center bg-transparent"
       onClick={onClose}
     >
       <div
-        className="bg-surface rounded-2xl shadow-xl w-[280px] p-5"
+        className="bg-surface rounded-2xl shadow-modal animate-modal-in w-[280px] p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
@@ -90,6 +91,7 @@ export default function IndexConfigModal({ variant, currentIndices, onSave, onCl
           저장
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

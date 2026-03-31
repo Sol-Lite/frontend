@@ -1,10 +1,14 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import WidgetCard from './WidgetCard'
 import StockSelectModal from './StockSelectModal'
 import useStockNews from '@/features/market/useStockNews'
 import useWidgetStore from '@/store/useWidgetStore'
+import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
+
+const DEFAULT_STOCK_NEWS_CODE = '055550'
+const DEFAULT_STOCK_NEWS_NAME = '신한지주'
 
 function StockChip({ name, onClick }) {
   return (
@@ -62,10 +66,17 @@ function NewsListCompact({ items, onClickNews }) {
 export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm', colSpan = 1, rowSpan = 1, config = {}, onDelete }) {
   const [showModal, setShowModal] = useState(false)
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
+  const { lockWidgetDrag, unlockWidgetDrag } = useEditModeStore()
   const openDetail = useWidgetDetailStore((s) => s.open)
 
-  const stockCode = config.stockCode ?? null
-  const stockName = config.stockName ?? null
+  useEffect(() => {
+    if (!showModal) return undefined
+    lockWidgetDrag()
+    return () => unlockWidgetDrag()
+  }, [showModal, lockWidgetDrag, unlockWidgetDrag])
+
+  const stockCode = config.stockCode ?? DEFAULT_STOCK_NEWS_CODE
+  const stockName = config.stockName ?? DEFAULT_STOCK_NEWS_NAME
 
   const size = variant === 'stock-news-2x2' ? 5 : 3
   const { news, isLoading } = useStockNews(stockCode, size)
@@ -144,7 +155,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
         <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
         {chip}
       </div>
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {isLoading ? loading : !stockCode ? noStock : !news.length ? empty :
           <NewsListCompact items={news} onClickNews={handleNewsClick} />
         }

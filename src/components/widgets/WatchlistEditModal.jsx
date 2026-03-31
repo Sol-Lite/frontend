@@ -3,10 +3,11 @@ import { createPortal } from 'react-dom'
 import { useQuery } from '@tanstack/react-query'
 import { X, Search, Heart } from 'lucide-react'
 import { marketApi } from '@/api/market'
+import StockAvatar from '@/components/ui/StockAvatar'
 
 export default function WatchlistEditModal({ items, onAdd, onRemove, onClose }) {
   const [localItems, setLocalItems] = useState(() =>
-    items.map((i) => ({ stockCode: i.stockCode, stockName: i.stockName, isWatched: true }))
+    items.map((i) => ({ stockCode: i.stockCode, stockName: i.stockName, marketType: i.marketType ?? null, isWatched: true }))
   )
   const [keyword, setKeyword] = useState('')
   const [debouncedKeyword, setDebouncedKeyword] = useState('')
@@ -41,7 +42,7 @@ export default function WatchlistEditModal({ items, onAdd, onRemove, onClose }) 
       toggleTopItem(stock.stockCode)
     } else {
       onAdd(stock.stockCode)
-      setLocalItems((prev) => [...prev, { stockCode: stock.stockCode, stockName: stock.stockName, isWatched: true }])
+      setLocalItems((prev) => [...prev, { stockCode: stock.stockCode, stockName: stock.stockName, marketType: stock.marketType ?? null, isWatched: true }])
     }
   }
 
@@ -49,11 +50,11 @@ export default function WatchlistEditModal({ items, onAdd, onRemove, onClose }) 
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[1200] flex items-center justify-center bg-transparent"
       onClick={onClose}
     >
       <div
-        className="bg-surface rounded-2xl shadow-modal w-[320px] p-5"
+        className="bg-surface rounded-2xl shadow-modal animate-modal-in w-[320px] p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-4">
@@ -70,11 +71,14 @@ export default function WatchlistEditModal({ items, onAdd, onRemove, onClose }) 
         {/* 상단: 관심종목 목록 (로컬 state 기준) */}
         {localItems.length > 0 && (
           <div className="flex flex-col gap-0.5 max-h-[180px] overflow-y-auto mb-3">
-            {localItems.map(({ stockCode, stockName, isWatched }) => (
+            {localItems.map(({ stockCode, stockName, marketType, isWatched }) => (
               <div key={stockCode} className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-subtle">
-                <span className={`text-widget-12 font-semibold ${isWatched ? 'text-foreground' : 'text-foreground-disabled'}`}>
-                  {stockName}
-                </span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <StockAvatar name={stockName ?? stockCode} stockCode={stockCode} marketType={marketType} size="sm" />
+                  <span className={`text-widget-12 font-semibold truncate ${isWatched ? 'text-foreground' : 'text-foreground-disabled'}`}>
+                    {stockName}
+                  </span>
+                </div>
                 <div className="flex items-center gap-2">
                   <span className="text-widget-10 text-foreground-disabled">{stockCode}</span>
                   <button
@@ -116,7 +120,10 @@ export default function WatchlistEditModal({ items, onAdd, onRemove, onClose }) 
             const isWatched = localSet.get(stock.stockCode) ?? false
             return (
               <div key={stock.stockCode} className="flex items-center justify-between px-3 py-2 rounded-xl hover:bg-surface-subtle">
-                <span className="text-widget-12 font-semibold text-foreground">{stock.stockName}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                  <StockAvatar name={stock.stockName ?? stock.stockCode} stockCode={stock.stockCode} marketType={stock.marketType} size="sm" />
+                  <span className="text-widget-12 font-semibold text-foreground truncate">{stock.stockName}</span>
+                </div>
                 <div className="flex items-center gap-2">
                   <span className="text-widget-10 text-foreground-disabled">{stock.stockCode}</span>
                   <button

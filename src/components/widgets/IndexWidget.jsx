@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Settings2 } from 'lucide-react'
 import WidgetCard from './WidgetCard'
 import IndexConfigModal from './IndexConfigModal'
 import useMarketIndices from '@/features/market/useMarketIndices'
 import useWidgetStore from '@/store/useWidgetStore'
+import useEditModeStore from '@/store/useEditModeStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
@@ -67,7 +68,14 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
   const { mutate: saveDashboard } = useDashboardSave()
   const [isConfigOpen, setIsConfigOpen] = useState(false)
+  const { lockWidgetDrag, unlockWidgetDrag } = useEditModeStore()
   const open = useWidgetDetailStore((s) => s.open)
+
+  useEffect(() => {
+    if (!isConfigOpen) return undefined
+    lockWidgetDrag()
+    return () => unlockWidgetDrag()
+  }, [isConfigOpen, lockWidgetDrag, unlockWidgetDrag])
 
   const selectedCodes = config.indices ?? DEFAULT_INDICES[variant] ?? DEFAULT_INDICES['index-wide']
   const indices = useIndices(selectedCodes)
