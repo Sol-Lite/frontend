@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Search, X } from 'lucide-react'
 import { marketApi } from '@/api/market'
-import { cn } from '@/lib/cn'
 import { getStockLogoUrl } from '@/lib/stockLogo'
+import { cn } from '@/lib/cn'
 
 export default function InvestStockSearch({ stockMeta }) {
   const navigate = useNavigate()
@@ -125,14 +125,6 @@ export default function InvestStockSearch({ stockMeta }) {
                   {stock.exchangeCode && ` · ${stock.exchangeCode}`}
                 </div>
               </div>
-              <span className={cn(
-                'shrink-0 rounded px-1.5 py-0.5 text-[9px] font-semibold',
-                ['KOSPI', 'KOSDAQ'].includes(stock.marketType)
-                  ? 'bg-blue-50 text-blue-600'
-                  : 'bg-emerald-50 text-emerald-600',
-              )}>
-                {stock.marketType}
-              </span>
             </button>
           ))}
         </div>
