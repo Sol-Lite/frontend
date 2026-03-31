@@ -83,5 +83,9 @@ export function getWidgetDefaultQuery(widgetTypeId, config = {}) {
     const name = config.stockName ?? null
     return name ? `${name} 주가 알려줘` : '주가 차트 보여줘'
   }
+  if (widgetTypeId === 'stock-news') {
+    const name = config.stockName ?? null
+    return name ? `${name} 종목 뉴스 알려줘` : '종목 뉴스 알려줘'
+  }
   return WIDGET_SHORTCUTS.find((s) => s.widgetTypeId === widgetTypeId)?.defaultQuery ?? null
 }

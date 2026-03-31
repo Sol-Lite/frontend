@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 import { useDraggable, useDroppable } from '@dnd-kit/core'
-import { GripVertical } from 'lucide-react'
+import { Grid2X2Plus } from 'lucide-react'
 import { cn } from '@/lib/cn'
 import useEditModeStore from '@/store/useEditModeStore'
 
@@ -84,7 +84,7 @@ export default function SortableWidgetCard({
           {...handleAttrs}
           {...handleListeners}
         >
-          <GripVertical size={13} />
+          <Grid2X2Plus size={13} />
         </button>
       )}
     </div>
