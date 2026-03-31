@@ -17,14 +17,18 @@ const THEMES = [
   { code: 'ROBOT',            displayName: '로봇' },
 ]
 
+const ERROR_MESSAGES = {
+  PAGE_LIMIT_EXCEEDED: '대시보드 페이지 수 초과로 적용할 수 없습니다',
+}
+
 export default function SectorSelectModal({ preset, onClose }) {
-  const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState(null)
+  const [loadingCode, setLoadingCode] = useState(null)
+  const [error, setError]             = useState(null)
   const { loadFromServer, switchPage } = useWidgetStore()
   const queryClient = useQueryClient()
 
   async function handleSelect(theme) {
-    setLoading(true)
+    setLoadingCode(theme.code)
     setError(null)
     try {
       const payload = {
@@ -40,25 +44,26 @@ export default function SectorSelectModal({ preset, onClose }) {
         })),
       }
       const response = await dashboardApi.applyPreset(payload)
+      if (!response?.length) throw new Error('UNKNOWN')
       queryClient.setQueryData(['dashboard', 'me'], response)
       loadFromServer(response)
       const newPage = response[response.length - 1]
       switchPage(String(newPage.dashboardId))
       onClose()
     } catch (e) {
-      setError(e?.message ?? '오류가 발생했습니다')
-      setLoading(false)
+      setError(ERROR_MESSAGES[e?.message] ?? '오류가 발생했습니다')
+      setLoadingCode(null)
     }
   }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-[6px]" onClick={!loading ? onClose : undefined} />
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-[6px]" onClick={!loadingCode ? onClose : undefined} />
 
       <div className="relative bg-surface rounded-[20px] p-7 w-[560px] max-w-full border border-stroke shadow-modal animate-modal-in">
         <div className="flex items-start justify-between mb-1">
           <div>
-            <h2 className="text-base font-extrabold text-foreground">섹터 선택</h2>
+            <h2 className="text-xl font-extrabold text-foreground">섹터 선택</h2>
             <p className="text-[11px] text-foreground-disabled mt-0.5">
               선택한 섹터의 상위 종목이 차트 위젯에 자동으로 설정됩니다
             </p>
@@ -66,7 +71,7 @@ export default function SectorSelectModal({ preset, onClose }) {
           <button
             aria-label="닫기"
             onClick={onClose}
-            disabled={loading}
+            disabled={!!loadingCode}
             className="w-7 h-7 rounded-full border border-stroke-input bg-surface-muted flex items-center justify-center text-foreground-tertiary hover:text-foreground transition-colors disabled:opacity-40"
           >
             <X className="w-3.5 h-3.5" />
@@ -78,7 +83,7 @@ export default function SectorSelectModal({ preset, onClose }) {
         </p>
 
         {error && (
-          <p className="mb-3 text-[11px] text-red-400">{error}</p>
+          <p className="mb-3 text-[11px] text-danger">{error}</p>
         )}
 
         <div className="grid grid-cols-5 gap-2">
@@ -86,10 +91,10 @@ export default function SectorSelectModal({ preset, onClose }) {
             <button
               key={theme.code}
               onClick={() => handleSelect(theme)}
-              disabled={loading}
+              disabled={!!loadingCode}
               className="flex items-center justify-center h-10 rounded-xl border border-stroke bg-surface-muted text-[11px] font-semibold text-foreground hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-150 disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {loading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : theme.displayName}
+              {loadingCode === theme.code ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : theme.displayName}
             </button>
           ))}
         </div>
