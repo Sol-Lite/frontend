@@ -16,6 +16,7 @@ import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CE
 import { DASHBOARD_PRESETS } from '@/data/dashboardPresets'
 import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
 import { dashboardApi } from '@/api/dashboard'
+import { marketApi } from '@/api/market'
 
 function calcCellAspectRatio(colSpan, rowSpan, cellWidth, cellHeight) {
   const w = colSpan * cellWidth + (colSpan - 1) * GRID_GAP
@@ -23,7 +24,7 @@ function calcCellAspectRatio(colSpan, rowSpan, cellWidth, cellHeight) {
   return w / h
 }
 
-function PresetThumbnail({ widgets, large }) {
+function PresetThumbnail({ widgets, large, sectorStocks }) {
   // 미리보기 셀 크기 계산
   const containerHeight = large ? 420 : 152
   const cellHeight = (containerHeight - GRID_GAP * (GRID_ROWS - 1)) / GRID_ROWS
@@ -44,7 +45,7 @@ function PresetThumbnail({ widgets, large }) {
             }}
           >
             <div className="absolute top-0 left-0 w-[150%] h-[150%] origin-top-left scale-[0.6667] p-1.5">
-              <PreviewContent type={w.variantId} />
+              <PreviewContent type={w.variantId} sectorStocks={sectorStocks} />
             </div>
           </div>
         )
@@ -69,13 +70,24 @@ const SECTOR_THEMES = [
 function PresetPickerModal({ onClose, isAtLimit }) {
   const [selectedPreset, setSelectedPreset] = useState(null)
   const [selectedSectorCode, setSelectedSectorCode] = useState(null)
+  const [sectorStocks, setSectorStocks]     = useState(null)
   const [loadingCode, setLoadingCode]       = useState(null)
   const [error, setError]                   = useState(null)
   const { loadFromServer, switchPage }      = useWidgetStore()
   const queryClient                         = useQueryClient()
 
-  function handleSelectSector(theme) {
+  async function handleSelectSector(theme) {
     setSelectedSectorCode(theme.code)
+    setLoadingCode(theme.code)
+    setError(null)
+    try {
+      const stocks = await marketApi.getThemeRanking(theme.code)
+      setSectorStocks(stocks)
+    } catch (e) {
+      setError('상위 종목을 불러올 수 없습니다')
+    } finally {
+      setLoadingCode(null)
+    }
   }
 
   function handleConfirm() {
@@ -219,7 +231,7 @@ function PresetPickerModal({ onClose, isAtLimit }) {
 
             {/* 미리보기 카드 */}
             <div className="rounded-[14px] border border-primary overflow-hidden mb-5">
-              <PresetThumbnail widgets={selectedPreset.widgets} large />
+              <PresetThumbnail widgets={selectedPreset.widgets} large sectorStocks={sectorStocks} />
               <div className="px-3.5 py-2.5 border-t border-stroke-subtle">
                 <div className="text-[12px] font-bold text-foreground">{selectedPreset.name}</div>
                 <div className="text-[10px] text-foreground-disabled mt-0.5">{selectedPreset.description}</div>
