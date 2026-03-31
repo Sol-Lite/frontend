@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Pencil, LayoutTemplate, X, ChevronRight, LayoutGrid, Plus } from 'lucide-react'
+import { Pencil, LayoutTemplate, X, ChevronLeft, ChevronRight, LayoutGrid, Plus } from 'lucide-react'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
@@ -12,7 +12,7 @@ import { cn } from '@/lib/cn'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
 import PageEditModal from '@/components/layout/PageEditModal'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
-import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT, gridElementRef } from '@/lib/gridConstants'
+import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT, MAX_PAGES, gridElementRef } from '@/lib/gridConstants'
 import { DASHBOARD_PRESETS } from '@/data/dashboardPresets'
 import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
 
@@ -37,7 +37,7 @@ function PresetThumbnail({ widgets }) {
   )
 }
 
-function PresetPickerModal({ onSelect, onClose }) {
+function PresetPickerModal({ onSelect, onClose, isAtLimit }) {
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-[6px]" onClick={onClose} />
@@ -63,14 +63,22 @@ function PresetPickerModal({ onSelect, onClose }) {
           {DASHBOARD_PRESETS.map((preset) => (
             <button
               key={preset.id}
-              onClick={() => onSelect(preset)}
-              className="text-left rounded-[14px] border border-stroke hover:border-primary hover:shadow-widget-hover transition-all duration-150 overflow-hidden group"
+              onClick={() => !isAtLimit && onSelect(preset)}
+              disabled={isAtLimit}
+              className={cn(
+                'text-left rounded-[14px] border border-stroke overflow-hidden group transition-all duration-150',
+                isAtLimit
+                  ? 'opacity-50 cursor-not-allowed'
+                  : 'hover:border-primary hover:shadow-widget-hover',
+              )}
             >
               <PresetThumbnail widgets={preset.widgets} />
               <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-stroke-subtle">
                 <div>
                   <div className="text-[12px] font-bold text-foreground">{preset.name}</div>
-                  <div className="text-[10px] text-foreground-disabled mt-0.5">{preset.description}</div>
+                  <div className="text-[10px] text-foreground-disabled mt-0.5">
+                    {isAtLimit ? `페이지는 최대 ${MAX_PAGES}개까지 추가 가능` : preset.description}
+                  </div>
                 </div>
                 <ChevronRight className="w-3.5 h-3.5 text-foreground-disabled group-hover:text-primary transition-colors shrink-0" />
               </div>
@@ -116,7 +124,13 @@ export default function HomePage() {
     }
   }, [isEditMode])
 
+  const isAtPageLimit = pages.length >= MAX_PAGES
+
   function handleApplyPreset(preset) {
+    if (isAtPageLimit) {
+      setIsPresetPickerOpen(false)
+      return
+    }
     const newId      = crypto.randomUUID()
     const newWidgets = preset.widgets.map((w) => ({ ...w, instanceId: crypto.randomUUID() }))
     const newPages   = [...pages, { id: newId, name: preset.name, widgets: newWidgets }]
@@ -130,6 +144,7 @@ export default function HomePage() {
   // - 비로그인: 빈 대시보드 표시
   // - 로그인 + 서버 데이터 미도착: 대기
   const safeWidgets = (!isRestoring && (isLoaded || !isAuthenticated)) ? widgets : []
+  const currentPageIndex = pages.findIndex((p) => p.id === currentPageId)
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
 
@@ -202,7 +217,18 @@ export default function HomePage() {
           )}
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
+            {pages.length > 1 && (
+              <button
+                aria-label="이전 페이지"
+                onClick={() => currentPageIndex > 0 && switchPage(pages[currentPageIndex - 1].id)}
+                disabled={currentPageIndex <= 0}
+                className="w-4 h-4 flex items-center justify-center rounded text-foreground-disabled hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronLeft className="w-3 h-3" />
+              </button>
+            )}
+            <div className="flex items-center gap-1.5">
               {pages.map((page) => (
                 <button
                   key={page.id}
@@ -216,12 +242,29 @@ export default function HomePage() {
                   )}
                 />
               ))}
+            </div>
+            {pages.length > 1 && (
+              <button
+                aria-label="다음 페이지"
+                onClick={() => currentPageIndex < pages.length - 1 && switchPage(pages[currentPageIndex + 1].id)}
+                disabled={currentPageIndex >= pages.length - 1}
+                className="w-4 h-4 flex items-center justify-center rounded text-foreground-disabled hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                <ChevronRight className="w-3 h-3" />
+              </button>
+            )}
           </div>
           {isEditMode && (
             <div className="flex items-center gap-1.5">
               <button
-                onClick={() => setIsPresetPickerOpen(true)}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg border border-stroke-input bg-surface text-foreground-tertiary text-[11px] font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-[150ms]"
+                onClick={() => !isAtPageLimit && setIsPresetPickerOpen(true)}
+                disabled={isAtPageLimit}
+                className={cn(
+                  'flex items-center gap-1 px-2.5 py-1 rounded-lg border border-stroke-input bg-surface text-foreground-tertiary text-[11px] font-medium transition-all duration-[150ms]',
+                  isAtPageLimit
+                    ? 'opacity-40 cursor-not-allowed'
+                    : 'hover:border-primary hover:text-primary hover:bg-primary-light',
+                )}
               >
                 <LayoutTemplate className="w-[11px] h-[11px]" />
                 위젯 프리셋
@@ -317,6 +360,7 @@ export default function HomePage() {
     {isPresetPickerOpen && (
       <PresetPickerModal
         onSelect={handleApplyPreset}
+        isAtLimit={isAtPageLimit}
         onClose={() => setIsPresetPickerOpen(false)}
       />
     )}
