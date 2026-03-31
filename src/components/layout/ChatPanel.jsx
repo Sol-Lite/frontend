@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDroppable } from "@dnd-kit/core";
 import { MessageCircle, Send } from "lucide-react";
 import WIDGET_SHORTCUTS from "@/config/widgetShortcuts";
 import ReactMarkdown from "react-markdown";
@@ -20,6 +21,7 @@ import { balanceApi } from "@/api/balance";
 import { orderApi, ORDER_SIDE, ORDER_KIND } from "@/api/order";
 import { exchangeApi } from "@/api/exchange";
 import usePinAuth from "@/hooks/usePinAuth";
+import usePendingQueryStore from "@/store/usePendingQueryStore";
 import ChatPinBubble from "@/components/layout/ChatPinBubble";
 import ChatExchangePinBubble from "@/components/layout/ChatExchangePinBubble";
 import { isForeignMarketType } from "@/features/invest/formatters";
@@ -766,6 +768,9 @@ export default function ChatPanel() {
   // 복원 완료 후 isAuthenticated의 이전 값 추적 (null = 복원 전)
   const prevIsAuthRef = useRef(null);
 
+  const { pendingQuery, consumePendingQuery } = usePendingQueryStore();
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: 'chat-dropzone' });
+
 
   // 메시지 변경 시 sessionStorage에 저장
   useEffect(() => {
@@ -1107,6 +1112,14 @@ export default function ChatPanel() {
     }
   }, [appendExchangeCardMessage, appendOrderCardMessage]);
 
+  // 대시보드 위젯 → 채팅 드롭 시 자동 질의 전송
+  useEffect(() => {
+    if (!pendingQuery || !isAuthenticated) return
+    const query = pendingQuery
+    consumePendingQuery()
+    handleSend(query)
+  }, [pendingQuery, isAuthenticated, consumePendingQuery, handleSend])
+
   const handleRetry = useCallback(() => {
     const text = lastFailedTextRef.current;
     if (!text) return;
@@ -1332,7 +1345,7 @@ export default function ChatPanel() {
   }
 
   return (
-    <>
+    <div ref={setDropRef} className={cn('flex flex-col h-full', isOver && 'ring-2 ring-primary ring-inset')}>
       <ChatHeader />
       {isRestoring || isAuthenticated ? (
         <>
@@ -1361,13 +1374,13 @@ export default function ChatPanel() {
               onChange={setDraft}
               onSend={handleSend}
               onSuggestionKeyDown={handleSuggestionKeyDown}
+              isDisabled={isTyping}
             />
           </div>
         </>
       ) : (
         <LoginPrompt />
       )}
-
-    </>
+    </div>
   );
 }
