@@ -6,6 +6,9 @@ import useStockNews from '@/features/market/useStockNews'
 import useWidgetStore from '@/store/useWidgetStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
+const DEFAULT_STOCK_NEWS_CODE = '055550'
+const DEFAULT_STOCK_NEWS_NAME = '신한지주'
+
 function StockChip({ name, onClick }) {
   return (
     <button
@@ -64,8 +67,8 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
   const openDetail = useWidgetDetailStore((s) => s.open)
 
-  const stockCode = config.stockCode ?? null
-  const stockName = config.stockName ?? null
+  const stockCode = config.stockCode ?? DEFAULT_STOCK_NEWS_CODE
+  const stockName = config.stockName ?? DEFAULT_STOCK_NEWS_NAME
 
   const size = variant === 'stock-news-2x2' ? 5 : 3
   const { news, isLoading } = useStockNews(stockCode, size)
@@ -144,7 +147,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
         <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
         {chip}
       </div>
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 min-h-0 overflow-y-auto">
         {isLoading ? loading : !stockCode ? noStock : !news.length ? empty :
           <NewsListCompact items={news} onClickNews={handleNewsClick} />
         }
