@@ -138,13 +138,16 @@ function usePortfolio(enabled, topN = 3) {
   }, [holdings, isLoading])
 }
 
+function resolveColor(item, idx, colors) {
+  if (item.type === 'OTHER') return OTHER_COLOR
+  const key = item.stockCode ?? `item_${idx}`
+  return colors[key] ?? FALLBACK_COLORS[idx % FALLBACK_COLORS.length]
+}
+
 function buildConicStops(items, colors) {
   let start = 0
   return items.map((item, i) => {
-    const key = item.stockCode ?? `item_${i}`
-    const color = item.type === 'OTHER'
-      ? OTHER_COLOR
-      : (colors[key] ?? FALLBACK_COLORS[i % FALLBACK_COLORS.length])
+    const color = resolveColor(item, i, colors)
     const end = start + item.ratio
     const stop = `${color} ${start}% ${end}%`
     start = end
@@ -181,7 +184,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
                 {portfolio.isLoading ? '불러오는 중...' : '보유 종목 없음'}
               </div>
             ) : portfolio.items.map((item, i) => (
-              <ItemBar key={item.name} item={item} color={getColor(item, i)} barHeight="h-[3px]" />
+              <ItemBar key={item.name} item={item} color={resolveColor(item, i, colors)} barHeight="h-[3px]" />
             ))}
           </div>
         </>
@@ -208,7 +211,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
               </div>
               <div className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-hidden">
                 {portfolio.items.map((item, i) => (
-                  <ItemBar key={item.name} item={item} color={getColor(item, i)} barHeight="h-[4px]" />
+                  <ItemBar key={item.name} item={item} color={resolveColor(item, i, colors)} barHeight="h-[4px]" />
                 ))}
               </div>
             </div>
@@ -234,7 +237,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
               <div className="flex flex-col gap-1 min-w-0 flex-1">
                 {portfolio.items.map((item, i) => (
                   <div key={item.name} className="flex items-center gap-1 min-w-0">
-                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: getColor(item, i) }} />
+                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: resolveColor(item, i, colors) }} />
                     <span className="text-widget-10 text-foreground-secondary tracking-tight truncate">{item.name}</span>
                   </div>
                 ))}
