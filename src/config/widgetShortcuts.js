@@ -78,14 +78,25 @@ const WIDGET_SHORTCUTS = [
 
 export default WIDGET_SHORTCUTS
 
+// StockChartWidget / StockNewsWidget의 폴백 로직과 동일하게 유지
+const STOCK_NAME_BY_ID = { shinhan: '신한지주', samsung: '삼성전자', skhynix: 'SK하이닉스' }
+const STOCK_NAME_BY_CODE = { '055550': '신한지주', '005930': '삼성전자', '000660': 'SK하이닉스' }
+const DEFAULT_STOCK_NAME = '신한지주'
+
+function resolveStockName(config = {}) {
+  const stockId = config.stockId ?? 'shinhan'
+  const stockCode = config.stockCode ?? null
+  return config.stockName ?? STOCK_NAME_BY_ID[stockId] ?? STOCK_NAME_BY_CODE[stockCode] ?? DEFAULT_STOCK_NAME
+}
+
 export function getWidgetDefaultQuery(widgetTypeId, config = {}) {
   if (widgetTypeId === 'stock-chart') {
-    const name = config.stockName ?? null
-    return name ? `${name} 주가 알려줘` : '주가 차트 보여줘'
+    const name = resolveStockName(config)
+    return `${name} 주가 알려줘`
   }
   if (widgetTypeId === 'stock-news') {
-    const name = config.stockName ?? null
-    return name ? `${name} 종목 뉴스 알려줘` : '종목 뉴스 알려줘'
+    const name = resolveStockName(config)
+    return `${name} 종목 뉴스 알려줘`
   }
   return WIDGET_SHORTCUTS.find((s) => s.widgetTypeId === widgetTypeId)?.defaultQuery ?? null
 }
