@@ -179,7 +179,6 @@ function EditModeActions() {
     }
 
     // 저장 성공 시 editMode 종료, 실패 시 UI에 오류 표시
-    // deletePageIds도 함께 초기화
     saveDashboard(undefined, {
       onSuccess: () => {
         useWidgetStore.getState().clearDeletePageIds?.()
