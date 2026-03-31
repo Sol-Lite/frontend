@@ -19,8 +19,18 @@ import { getLatestMinuteSession } from '@/features/invest/marketData'
 
 // config.stockId(레거시) → 종목코드 매핑
 const STOCK_CODE_MAP = {
+  shinhan: '055550',
   samsung: '005930',
   skhynix: '000660',
+}
+const DEFAULT_STOCK_ID = 'shinhan'
+const DEFAULT_STOCK_META = {
+  id: 'shinhan',
+  name: '신한지주',
+  label: '신한',
+  code: '055550',
+  market: 'KOSPI',
+  color: 'orange',
 }
 
 const PERIODS = ['1일', '1주', '1달', '3달']
@@ -90,10 +100,10 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     })
   }
 
-  const stockId    = config.stockId ?? 'samsung'
-  const stockCode  = config.stockCode ?? STOCK_CODE_MAP[stockId]
+  const stockId    = config.stockId ?? DEFAULT_STOCK_ID
+  const stockCode  = config.stockCode ?? STOCK_CODE_MAP[stockId] ?? DEFAULT_STOCK_META.code
   const stockName  = config.stockName ?? null
-  const stockMeta  = HOME_STOCKS.find((s) => s.id === stockId) ?? HOME_STOCKS[0]
+  const stockMeta  = HOME_STOCKS.find((s) => s.id === stockId) ?? DEFAULT_STOCK_META
   const marketType = config.marketType ?? stockMeta.market ?? null
   const isOverseas = OVERSEAS_MARKET_TYPES.includes(marketType)
   // exchangeCode(NAS/NYS/AMS)가 저장돼 있으면 우선, 없으면 marketType(NASDAQ/NYSE/AMEX)으로 파생
@@ -296,6 +306,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     <StockSelectModal
       currentCode={stockCode}
       currentName={stock.name}
+      currentMarketType={stock.marketType}
       onSave={handleStockSave}
       onClose={() => setIsConfigOpen(false)}
     />
