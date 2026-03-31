@@ -4,6 +4,7 @@ import { Trash2, Plus, RotateCcw, X } from 'lucide-react'
 import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import { PreviewContent } from '@/components/layout/EditPanel/WidgetSizeList'
+import { MAX_PAGES } from '@/lib/gridConstants'
 
 /* 6×4 미니 그리드 썸네일 */
 function PageThumbnail({ widgets }) {
@@ -124,8 +125,6 @@ function AddPageSlot({ onClick }) {
     </div>
   )
 }
-
-const MAX_PAGES = 5
 
 export default function PageEditModal({ onClose }) {
   const { pages, currentPageId, applyPageChanges } = useWidgetStore()
