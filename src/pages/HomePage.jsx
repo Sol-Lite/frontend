@@ -160,7 +160,11 @@ function PresetPickerModal({ onClose, isAtLimit }) {
                       : 'hover:border-primary hover:shadow-widget-hover',
                   )}
                 >
-                  <PresetThumbnail widgets={preset.widgets} />
+                  <img
+                    src={`/preset-thumbnails/${preset.imageId}.png`}
+                    alt={preset.name}
+                    className="w-full aspect-[3/2] object-cover bg-background"
+                  />
                   <div className="flex items-center justify-between px-3.5 py-2.5 border-t border-stroke-subtle">
                     <div>
                       <div className="text-[12px] font-bold text-foreground">{preset.name}</div>
