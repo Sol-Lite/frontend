@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Settings2 } from 'lucide-react'
 import PriceChange from '@/components/ui/PriceChange'
 import StockAvatar from '@/components/ui/StockAvatar'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
+import useEditModeStore from '@/store/useEditModeStore'
 import WidgetCard from './WidgetCard'
 import WatchlistEditModal from './WatchlistEditModal'
 import { useWatchlist, watchlistApi } from '@/api/watchlist'
@@ -42,7 +43,14 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
   const { data: items = [], isError } = useWatchlist({ enabled: isAuthenticated && !isRestoring })
   const { add, remove } = useWatchlistMutations()
   const [isEditOpen, setIsEditOpen] = useState(false)
+  const { lockWidgetDrag, unlockWidgetDrag } = useEditModeStore()
   const openDetail = useWidgetDetailStore((s) => s.open)
+
+  useEffect(() => {
+    if (!isEditOpen) return undefined
+    lockWidgetDrag()
+    return () => unlockWidgetDrag()
+  }, [isEditOpen, lockWidgetDrag, unlockWidgetDrag])
 
   function handleWidgetClick() {
     openDetail({ widgetTypeId: 'watchlist', config: {} })

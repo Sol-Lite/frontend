@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 import WidgetCard from './WidgetCard'
 import StockSelectModal from './StockSelectModal'
 import useStockNews from '@/features/market/useStockNews'
 import useWidgetStore from '@/store/useWidgetStore'
+import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
 const DEFAULT_STOCK_NEWS_CODE = '055550'
@@ -65,7 +66,14 @@ function NewsListCompact({ items, onClickNews }) {
 export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm', colSpan = 1, rowSpan = 1, config = {}, onDelete }) {
   const [showModal, setShowModal] = useState(false)
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
+  const { lockWidgetDrag, unlockWidgetDrag } = useEditModeStore()
   const openDetail = useWidgetDetailStore((s) => s.open)
+
+  useEffect(() => {
+    if (!showModal) return undefined
+    lockWidgetDrag()
+    return () => unlockWidgetDrag()
+  }, [showModal, lockWidgetDrag, unlockWidgetDrag])
 
   const stockCode = config.stockCode ?? DEFAULT_STOCK_NEWS_CODE
   const stockName = config.stockName ?? DEFAULT_STOCK_NEWS_NAME

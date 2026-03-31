@@ -5,6 +5,7 @@ export const WIGGLE_DURATION_MS = 1100
 
 const useEditModeStore = create((set) => ({
   isEditMode: false,
+  widgetDragLockCount: 0,
 
   // 편집 모드 진입 시 계산 — 모든 위젯이 동일 위상(phase)으로 시작하도록 동기화
   wiggleDelay: 0,
@@ -26,6 +27,12 @@ const useEditModeStore = create((set) => ({
       wiggleDelay: -(performance.now() % WIGGLE_DURATION_MS),
       wiggleSyncKey: state.wiggleSyncKey + 1,
     })),
+
+  lockWidgetDrag: () =>
+    set((state) => ({ widgetDragLockCount: state.widgetDragLockCount + 1 })),
+
+  unlockWidgetDrag: () =>
+    set((state) => ({ widgetDragLockCount: Math.max(0, state.widgetDragLockCount - 1) })),
 }))
 
 export default useEditModeStore
