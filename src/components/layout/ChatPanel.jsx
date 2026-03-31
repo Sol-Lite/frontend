@@ -391,7 +391,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
                 <ChatWidgetAdder msgId={msg.id} widgetTypeId="stock-chart" />
               </div>
               {isThisPending ? (
-                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant} widgetConfig={{ stockCode: msg.stock.stockCode, stockName: msg.stock.name, marketType: msg.stock.marketType, exchangeCode: msg.stock.exchangeCode }}>
                   <ChatOrderCard
                     {...msg.stock}
                     onBuy={(qty) => onOrderAction?.(msg.id, msg.stock, 'buy', qty, msg.requestKeyBase)}
@@ -491,7 +491,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
                 <ChatWidgetAdder msgId={msg.id} widgetTypeId="stock-chart" />
               </div>
               {isThisPending ? (
-                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant} widgetConfig={{ stockCode: msg.stockCode, stockName: msg.stockName, marketType: msg.marketType, exchangeCode: msg.exchangeCode }}>
                   <ChatStockCard
                     stockCode={msg.stockCode}
                     stockName={msg.stockName}
@@ -525,7 +525,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
                   <ChatWidgetAdder msgId={msg.id} widgetTypeId="stock-news" />
                 </div>
                 {isThisPending ? (
-                  <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                  <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant} widgetConfig={{ stockCode: msg.stockCode, stockName: msg.stockName }}>
                     <ChatNewsCard text={msg.text} stockCode={msg.stockCode} stockName={msg.stockName} />
                   </DraggableChatCard>
                 ) : (

@@ -19,7 +19,7 @@ import useAuthStore from '@/store/useAuthStore'
 import usePendingWidgetStore from '@/store/usePendingWidgetStore'
 import usePendingQueryStore from '@/store/usePendingQueryStore'
 import { getWidgetDefaultQuery } from '@/config/widgetShortcuts'
-import { useDashboardLoad } from '@/hooks/useDashboardSync'
+import { useDashboardLoad, useDashboardSave } from '@/hooks/useDashboardSync'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_GAP, GRID_COLS, GRID_ROWS, gridElementRef } from '@/lib/gridConstants'
 
@@ -51,6 +51,7 @@ export default function AppShell() {
     setIsDraggingNewWidget,
   } = useWidgetStore()
   const { resyncWiggle } = useEditModeStore()
+  const { mutate: saveDashboard } = useDashboardSave()
   const clearPending = usePendingWidgetStore((s) => s.clearPending)
   const setPendingQuery = usePendingQueryStore((s) => s.setPendingQuery)
   const { cellWidth, cellHeight } = useGridStore()
@@ -191,9 +192,10 @@ export default function AppShell() {
     const type = active.data.current?.type
 
     if (type === 'new-widget' && savedPhantom) {
-      const { widgetTypeId, variant } = active.data.current
-      addWidgetAt(widgetTypeId, variant, savedPhantom.gridCol, savedPhantom.gridRow)
+      const { widgetTypeId, variant, widgetConfig } = active.data.current
+      addWidgetAt(widgetTypeId, variant, savedPhantom.gridCol, savedPhantom.gridRow, widgetConfig)
       clearPending()
+      saveDashboard()
     } else if (type === 'new-widget') {
       // 그리드 밖에 드롭 → pending 유지 (사용자가 다시 시도할 수 있도록)
     } else if (type === 'existing-widget' && savedPhantom?.activeId) {
