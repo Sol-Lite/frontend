@@ -90,7 +90,7 @@ function resolveStockName(config = {}) {
   return STOCK_NAME_BY_ID['shinhan']
 }
 
-export function getWidgetDefaultQuery(widgetTypeId, config = {}) {
+export function getWidgetDefaultQuery(widgetTypeId, config = {}, variantId) {
   if (widgetTypeId === 'stock-chart') {
     const name = resolveStockName(config)
     return `${name} 주가 알려줘`
@@ -100,7 +100,10 @@ export function getWidgetDefaultQuery(widgetTypeId, config = {}) {
     return `${name} 종목 뉴스 알려줘`
   }
   if (widgetTypeId === 'market-overview') {
-    return config.tab === 'us' ? '해외 시황 알려줘' : '국내 시황 알려줘'
+    if (variantId === 'market-2x2') return '오늘의 시황 알려줘'
+    const STORAGE_KEY = 'marketOverviewWidget.activeTab'
+    const tab = config.tab ?? localStorage.getItem(STORAGE_KEY) ?? 'kr'
+    return tab === 'us' ? '해외 시황 알려줘' : '국내 시황 알려줘'
   }
   return WIDGET_SHORTCUTS.find((s) => s.widgetTypeId === widgetTypeId)?.defaultQuery ?? null
 }
