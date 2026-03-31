@@ -198,16 +198,10 @@ function EditModeActions() {
       )}
       <button
         onClick={() => {
-          restoreSnapshot()
+          const { clearDeletePageIds } = useWidgetStore.getState()
+          restoreSnapshot()  // pages 복원 + 임시 페이지 자동 제거됨
           clearPendingPresets()
-          const { clearDeletePageIds, pages: allPages, removeTempPage } = useWidgetStore.getState()
           clearDeletePageIds()
-          // 모든 임시 페이지 제거
-          allPages.forEach((p) => {
-            if (p.isTempPage) {
-              removeTempPage(p.id)
-            }
-          })
           exitEditMode()
         }}
         disabled={isPending}
