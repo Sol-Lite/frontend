@@ -34,9 +34,21 @@ function PresetThumbnail({ widgets, large, sectorStocks }) {
   const cellHeight = (containerHeight - GRID_GAP * (GRID_ROWS - 1)) / GRID_ROWS
   const cellWidth = cellHeight // 1:1 셀 비율 가정
 
+  // 위젯들을 크기순(colSpan * rowSpan)으로 정렬하고 인덱스 부여
+  const widgetsWithIndex = widgets.map((w, i) => ({
+    ...w,
+    originalIndex: i,
+    size: w.colSpan * w.rowSpan,
+  }))
+  .sort((a, b) => b.size - a.size) // 큰 순서부터
+  .map((w, idx) => ({ ...w, globalIndex: idx }))
+
+  const widgetMap = new Map(widgetsWithIndex.map(w => [w.originalIndex, w.globalIndex]))
+
   return (
     <div className={cn('bg-background p-1.5 grid grid-cols-6 grid-rows-4 gap-[2px] aspect-[3/2]', large ? 'h-[420px]' : 'h-[152px]')}>
       {widgets.map((w, i) => {
+        const globalIndex = widgetMap.get(i)
         const ratio = calcCellAspectRatio(w.colSpan, w.rowSpan, cellWidth, cellHeight)
         return (
           <div
@@ -49,7 +61,7 @@ function PresetThumbnail({ widgets, large, sectorStocks }) {
             }}
           >
             <div className="absolute top-0 left-0 w-[150%] h-[150%] origin-top-left scale-[0.6667] p-1.5">
-              <PreviewContent type={w.variantId} sectorStocks={sectorStocks} />
+              <PreviewContent type={w.variantId} sectorStocks={sectorStocks} typeIndex={globalIndex} />
             </div>
           </div>
         )

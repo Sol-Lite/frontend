@@ -125,9 +125,9 @@ function MiniCandleChart({ className = '', candleRatio = 1, volatility = 1 }) {
 }
 
 /* ── 위젯별 미리보기 콘텐츠 ─────────────────────────────── */
-export function PreviewContent({ type, sectorStocks }) {
-  // sectorStocks가 있으면 상위 5개 종목만 사용
-  const stocks = sectorStocks ? sectorStocks.slice(0, 5) : null
+export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
+  // sectorStocks가 있으면 전체 사용 (typeIndex로 선택)
+  const stocks = sectorStocks ? sectorStocks : null
 
   switch (type) {
 
@@ -176,38 +176,57 @@ export function PreviewContent({ type, sectorStocks }) {
       )
 
     /* 주가/차트 — 카드형 1×1 */
-    case 'stock-sm':
+    case 'stock-sm': {
+      const stock = stocks ? stocks[typeIndex] : null
+      const name = stock?.name ?? PREVIEW_STOCK_NAME
+      const code = stock?.stockCode ?? PREVIEW_STOCK_CODE
+      const market = stock?.marketType ?? PREVIEW_STOCK_MARKET
+      const price = stock?.price ?? 99000
+      const change = stock?.change ?? 350
+      const changeRate = stock?.changeRate ?? 0.79
+      const isUp = change >= 0
+
       return (
         <div className="flex flex-col justify-between h-full">
           <div className="flex items-center gap-1 min-w-0">
-            <StockAvatar name={PREVIEW_STOCK_NAME} stockCode={PREVIEW_STOCK_CODE} marketType={PREVIEW_STOCK_MARKET} size="sm" />
+            <StockAvatar name={name} stockCode={code} marketType={market} size="sm" />
             <div className="min-w-0">
-              <div className="text-[10px] font-bold text-foreground leading-none truncate">{PREVIEW_STOCK_NAME}</div>
-              <div className="text-[8px] text-foreground-disabled mt-0.5">{PREVIEW_STOCK_CODE} · {PREVIEW_STOCK_MARKET}</div>
+              <div className="text-[10px] font-bold text-foreground leading-none truncate">{name}</div>
+              <div className="text-[8px] text-foreground-disabled mt-0.5">{code} · {market}</div>
             </div>
           </div>
           <div>
-            <div className="text-[14px] font-extrabold text-foreground leading-none">99,000</div>
-            <div className="text-[10px] text-up font-medium mt-0.5">▲ 350 (+0.79%)</div>
+            <div className="text-[14px] font-extrabold text-foreground leading-none">{price.toLocaleString()}</div>
+            <div className={`text-[10px] font-medium mt-0.5 ${isUp ? 'text-up' : 'text-down'}`}>{isUp ? '▲' : '▼'} {Math.abs(change).toLocaleString()} ({isUp ? '+' : ''}{changeRate.toFixed(2)}%)</div>
           </div>
         </div>
       )
+    }
 
     /* 주가/차트 — 와이드 2×1 */
-    case 'stock-wide':
+    case 'stock-wide': {
+      const stock = stocks ? stocks[typeIndex] : null
+      const name = stock?.name ?? PREVIEW_STOCK_NAME
+      const code = stock?.stockCode ?? PREVIEW_STOCK_CODE
+      const market = stock?.marketType ?? PREVIEW_STOCK_MARKET
+      const price = stock?.price ?? 99000
+      const change = stock?.change ?? 350
+      const changeRate = stock?.changeRate ?? 0.79
+      const isUp = change >= 0
+
       return (
         <div className="flex h-full gap-2.5">
           <div className="flex flex-col justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              <StockAvatar name={PREVIEW_STOCK_NAME} stockCode={PREVIEW_STOCK_CODE} marketType={PREVIEW_STOCK_MARKET} size="sm" />
+              <StockAvatar name={name} stockCode={code} marketType={market} size="sm" />
               <div>
-                <div className="text-[10px] font-bold text-foreground leading-none">{PREVIEW_STOCK_NAME}</div>
-                <div className="text-[8px] text-foreground-disabled mt-0.5">{PREVIEW_STOCK_CODE} · {PREVIEW_STOCK_MARKET}</div>
+                <div className="text-[10px] font-bold text-foreground leading-none">{name}</div>
+                <div className="text-[8px] text-foreground-disabled mt-0.5">{code} · {market}</div>
               </div>
             </div>
             <div>
-              <div className="text-[14px] font-extrabold text-foreground leading-none">99,000</div>
-              <div className="text-[10px] text-up mt-0.5">▲ +350 (+0.79%)</div>
+              <div className="text-[14px] font-extrabold text-foreground leading-none">{price.toLocaleString()}</div>
+              <div className={`text-[10px] mt-0.5 ${isUp ? 'text-up' : 'text-down'}`}>▲ {isUp ? '+' : ''}{change.toLocaleString()} ({isUp ? '+' : ''}{changeRate.toFixed(2)}%)</div>
             </div>
           </div>
           <div className="flex-1 min-h-0">
@@ -215,6 +234,7 @@ export function PreviewContent({ type, sectorStocks }) {
           </div>
         </div>
       )
+    }
 
     /* 실시간 순위 — 목록형 2×1 */
     case 'ranking-wide': {
@@ -452,18 +472,26 @@ export function PreviewContent({ type, sectorStocks }) {
       )
 
     /* 관심종목 — 컴팩트 1×1 */
-    case 'watchlist-sm':
+    case 'watchlist-sm': {
+      const watchData = stocks
+        ? stocks.slice(0, 5).map(s => ({
+            name: s.name,
+            chg: `${s.change >= 0 ? '+' : ''}${s.changeRate.toFixed(2)}%`,
+            up: s.change >= 0
+          }))
+        : [
+            { name: '삼성전자',   chg: '+1.62%', up: true  },
+            { name: '현대차',     chg: '-0.43%', up: false },
+            { name: 'LG에너지',   chg: '+0.91%', up: true  },
+            { name: 'SK하이닉스', chg: '-0.82%', up: false },
+            { name: 'NAVER',      chg: '-0.51%', up: false },
+          ]
+
       return (
         <div className="flex flex-col h-full gap-1">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
           <div className="flex flex-col gap-1.5">
-            {[
-              { name: '삼성전자',   chg: '+1.62%', up: true  },
-              { name: '현대차',     chg: '-0.43%', up: false },
-              { name: 'LG에너지',   chg: '+0.91%', up: true  },
-              { name: 'SK하이닉스', chg: '-0.82%', up: false },
-              { name: 'NAVER',      chg: '-0.51%', up: false },
-            ].map(({ name, chg, up }) => (
+            {watchData.map(({ name, chg, up }) => (
               <div key={name} className="flex items-center justify-between">
                 <span className="text-[10px] font-medium text-foreground">{name}</span>
                 <span className={`text-[9px] font-semibold ${up ? 'text-up' : 'text-down'}`}>{chg}</span>
@@ -472,18 +500,29 @@ export function PreviewContent({ type, sectorStocks }) {
           </div>
         </div>
       )
+    }
 
     /* 관심종목 — 목록형 2×1 */
-    case 'watchlist-wide':
+    case 'watchlist-wide': {
+      const watchData = stocks
+        ? stocks.slice(0, 3).map(s => ({
+            name: s.name,
+            code: s.stockCode,
+            price: s.price.toLocaleString(),
+            chg: `${s.change >= 0 ? '+' : ''}${s.changeRate.toFixed(2)}%`,
+            up: s.change >= 0
+          }))
+        : [
+            { name: '삼성전자',       code: '005930', price: '75,400',  chg: '+1.62%', up: true  },
+            { name: '현대차',         code: '005380', price: '221,500', chg: '-0.43%', up: false },
+            { name: 'LG에너지솔루션', code: '373220', price: '412,000', chg: '+0.91%', up: true  },
+          ]
+
       return (
         <div className="flex flex-col h-full gap-1">
           <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
           <div className="flex flex-col gap-1.5">
-            {[
-              { name: '삼성전자',       code: '005930', price: '75,400',  chg: '+1.62%', up: true  },
-              { name: '현대차',         code: '005380', price: '221,500', chg: '-0.43%', up: false },
-              { name: 'LG에너지솔루션', code: '373220', price: '412,000', chg: '+0.91%', up: true  },
-            ].map(({ name, code, price, chg, up }) => (
+            {watchData.map(({ name, code, price, chg, up }) => (
               <div key={name} className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-1.5 min-w-0">
                   <StockAvatar name={name} stockCode={code} marketType="KOSPI" size="sm" />
@@ -498,6 +537,7 @@ export function PreviewContent({ type, sectorStocks }) {
           </div>
         </div>
       )
+    }
 
     /* 거래내역 — 주간 2×1 */
     case 'trade-wide': {
@@ -690,20 +730,29 @@ export function PreviewContent({ type, sectorStocks }) {
       )
 
     /* 주가/차트 — 대형 차트 2×2 */
-    case 'stock-2x2':
+    case 'stock-2x2': {
+      const stock = stocks ? stocks[typeIndex] : null
+      const name = stock?.name ?? PREVIEW_STOCK_NAME
+      const code = stock?.stockCode ?? PREVIEW_STOCK_CODE
+      const market = stock?.marketType ?? PREVIEW_STOCK_MARKET
+      const price = stock?.price ?? 99000
+      const change = stock?.change ?? 350
+      const changeRate = stock?.changeRate ?? 0.79
+      const isUp = change >= 0
+
       return (
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-start justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              <StockAvatar name={PREVIEW_STOCK_NAME} stockCode={PREVIEW_STOCK_CODE} marketType={PREVIEW_STOCK_MARKET} size="sm" />
+              <StockAvatar name={name} stockCode={code} marketType={market} size="sm" />
               <div>
-                <div className="text-[11px] font-bold text-foreground leading-none">{PREVIEW_STOCK_NAME}</div>
-                <div className="text-[9px] text-foreground-disabled mt-0.5">{PREVIEW_STOCK_CODE} · {PREVIEW_STOCK_MARKET}</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">{name}</div>
+                <div className="text-[9px] text-foreground-disabled mt-0.5">{code} · {market}</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[14px] font-extrabold text-foreground leading-none">99,000</div>
-              <div className="text-[10px] text-up">▲ +350 (+0.79%)</div>
+              <div className="text-[14px] font-extrabold text-foreground leading-none">{price.toLocaleString()}</div>
+              <div className={`text-[10px] ${isUp ? 'text-up' : 'text-down'}`}>▲ {isUp ? '+' : ''}{change.toLocaleString()} ({isUp ? '+' : ''}{changeRate.toFixed(2)}%)</div>
             </div>
           </div>
           <div className="flex-1 min-h-0 overflow-hidden">
@@ -724,6 +773,7 @@ export function PreviewContent({ type, sectorStocks }) {
           </div>
         </div>
       )
+    }
 
     /* 주요 지수 — 3지수 3×1 */
     case 'index-3x1':
@@ -808,20 +858,29 @@ export function PreviewContent({ type, sectorStocks }) {
       )
 
     /* 주가/차트 — 풀 차트 3×2 */
-    case 'stock-3x2':
+    case 'stock-3x2': {
+      const stock = stocks ? stocks[typeIndex] : null
+      const name = stock?.name ?? PREVIEW_STOCK_NAME
+      const code = stock?.stockCode ?? PREVIEW_STOCK_CODE
+      const market = stock?.marketType ?? PREVIEW_STOCK_MARKET
+      const price = stock?.price ?? 99000
+      const change = stock?.change ?? 350
+      const changeRate = stock?.changeRate ?? 0.79
+      const isUp = change >= 0
+
       return (
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-start justify-between shrink-0">
             <div className="flex items-center gap-1.5">
-              <StockAvatar name={PREVIEW_STOCK_NAME} stockCode={PREVIEW_STOCK_CODE} marketType={PREVIEW_STOCK_MARKET} size="sm" />
+              <StockAvatar name={name} stockCode={code} marketType={market} size="sm" />
               <div>
-                <div className="text-[11px] font-bold text-foreground leading-none">{PREVIEW_STOCK_NAME}</div>
-                <div className="text-[8px] text-foreground-disabled mt-0.5">{PREVIEW_STOCK_CODE} · {PREVIEW_STOCK_MARKET} · 금융</div>
+                <div className="text-[11px] font-bold text-foreground leading-none">{name}</div>
+                <div className="text-[8px] text-foreground-disabled mt-0.5">{code} · {market}</div>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-[14px] font-extrabold text-foreground leading-none">99,000</div>
-              <div className="text-[9px] text-up">▲ +350 (+0.79%)</div>
+              <div className="text-[14px] font-extrabold text-foreground leading-none">{price.toLocaleString()}</div>
+              <div className={`text-[9px] ${isUp ? 'text-up' : 'text-down'}`}>▲ {isUp ? '+' : ''}{change.toLocaleString()} ({isUp ? '+' : ''}{changeRate.toFixed(2)}%)</div>
             </div>
           </div>
           <div className="flex gap-1.5 shrink-0">
@@ -847,6 +906,7 @@ export function PreviewContent({ type, sectorStocks }) {
           </div>
         </div>
       )
+    }
 
     /* 환율 — 대형 (구 2×2, 미사용) */
     case 'exchange-2x2':
@@ -880,22 +940,26 @@ export function PreviewContent({ type, sectorStocks }) {
       )
 
     /* 종목별 뉴스 — 헤드라인 1×1 */
-    case 'stock-news-sm':
+    case 'stock-news-sm': {
+      const stock = stocks ? stocks[typeIndex] : null
+      const name = stock?.name ?? PREVIEW_STOCK_NAME
+      const newsTitles = [
+        `${name}, 분기 실적 기대감에 강세`,
+        '배당 매력 부각, 기관 순매수 확대',
+        '호재 반영 밸류에이션 재평가',
+      ]
+
       return (
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
             <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
-              {PREVIEW_STOCK_NAME}
+              {name}
               <ChevronDown size={9} />
             </span>
           </div>
           <div className="flex-1 flex flex-col overflow-hidden">
-            {[
-              '신한지주, 분기 실적 기대감에 금융주 강세',
-              '은행주 배당 매력 부각, 기관 순매수 확대',
-              '원화 강세 속 금융지주 밸류에이션 재평가',
-            ].map((title, i) => (
+            {newsTitles.map((title, i) => (
               <div key={i} className="flex items-start gap-1.5 py-1 border-b border-stroke last:border-b-0 pl-2 border-l-2 border-l-transparent">
                 <span className="text-[8px] font-bold text-primary mt-[1px] shrink-0">{i + 1}</span>
                 <p className="text-[9px] text-foreground leading-snug line-clamp-2">{title}</p>
@@ -904,23 +968,28 @@ export function PreviewContent({ type, sectorStocks }) {
           </div>
         </div>
       )
+    }
 
     /* 종목별 뉴스 — 상세 2×1 */
-    case 'stock-news-wide':
+    case 'stock-news-wide': {
+      const stock = stocks ? stocks[typeIndex] : null
+      const name = stock?.name ?? PREVIEW_STOCK_NAME
+      const newsData = [
+        { title: `${name}, 분기 실적 기대감에 강세`, source: '연합뉴스', at: '1시간 전' },
+        { title: '배당 매력 부각, 기관 순매수 확대', source: '매일경제', at: '2시간 전' },
+      ]
+
       return (
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
             <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
-              {PREVIEW_STOCK_NAME}
+              {name}
               <ChevronDown size={9} />
             </span>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            {[
-              { title: '신한지주, 분기 실적 기대감에 금융주 강세', source: '연합뉴스', at: '1시간 전' },
-              { title: '은행주 배당 매력 부각, 기관 순매수 확대', source: '매일경제', at: '2시간 전' },
-            ].map(({ title, source, at }, i) => (
+            {newsData.map(({ title, source, at }, i) => (
               <div
                 key={i}
                 className="flex gap-2 py-2 border-b border-stroke last:border-b-0 pl-2 border-l-2 border-l-transparent"
@@ -938,24 +1007,29 @@ export function PreviewContent({ type, sectorStocks }) {
           </div>
         </div>
       )
+    }
 
     /* 종목별 뉴스 — 대형 2×2 */
-    case 'stock-news-2x2':
+    case 'stock-news-2x2': {
+      const stock = stocks ? stocks[typeIndex] : null
+      const name = stock?.name ?? PREVIEW_STOCK_NAME
+      const newsData = [
+        { title: `${name}, 분기 실적 기대감에 강세`, source: '연합뉴스', at: '1시간 전' },
+        { title: '배당 매력 부각, 기관 순매수 확대', source: '매일경제', at: '2시간 전' },
+        { title: '호재 반영 밸류에이션 재평가', source: '한국경제', at: '4시간 전' },
+      ]
+
       return (
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
             <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
-              {PREVIEW_STOCK_NAME}
+              {name}
               <ChevronDown size={9} />
             </span>
           </div>
           <div className="flex-1 min-h-0 overflow-y-auto">
-            {[
-              { title: '신한지주, 분기 실적 기대감에 금융주 강세', source: '연합뉴스', at: '1시간 전' },
-              { title: '은행주 배당 매력 부각, 기관 순매수 확대', source: '매일경제', at: '2시간 전' },
-              { title: '원화 강세 속 금융지주 밸류에이션 재평가', source: '한국경제', at: '4시간 전' },
-            ].map(({ title, source, at }, i) => (
+            {newsData.map(({ title, source, at }, i) => (
               <div
                 key={i}
                 className="flex gap-2 py-2 border-b border-stroke last:border-b-0 pl-2 border-l-2 border-l-transparent"
@@ -973,6 +1047,7 @@ export function PreviewContent({ type, sectorStocks }) {
           </div>
         </div>
       )
+    }
 
     /* 오늘의 시황 — 대형 2×2 */
     case 'market-2x2':
