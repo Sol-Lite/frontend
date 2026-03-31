@@ -128,8 +128,8 @@ export default function MarketOverviewWidget({ variant = 'market-sm', colSpan = 
         <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
         {tabBar}
       </div>
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {isLoading ? loading : !items.length ? empty : <NewsListCompact items={items.slice(0, 3)} onClickNews={handleNewsClick} />}
+      <div className="flex-1 min-h-0 overflow-y-auto">
+        {isLoading ? loading : !items.length ? empty : <NewsListCompact items={items} onClickNews={handleNewsClick} />}
       </div>
     </WidgetCard>
   )
