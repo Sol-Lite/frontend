@@ -70,7 +70,7 @@ export default function PresetPickerModal({ onClose, isAtLimit }) {
     setLoadingCode(theme.code)
     setError(null)
     try {
-      const stocks = await marketApi.getThemeRanking(theme.code)
+      const stocks = await marketApi.getThemeRanking(theme.code, { type: 'market-cap' })
       setSectorStocks(stocks)
     } catch (e) {
       setError('상위 종목을 불러올 수 없습니다')
