@@ -84,9 +84,10 @@ const STOCK_NAME_BY_CODE = { '055550': '신한지주', '005930': '삼성전자',
 const DEFAULT_STOCK_NAME = '신한지주'
 
 function resolveStockName(config = {}) {
-  const stockId = config.stockId ?? 'shinhan'
-  const stockCode = config.stockCode ?? null
-  return config.stockName ?? STOCK_NAME_BY_ID[stockId] ?? STOCK_NAME_BY_CODE[stockCode] ?? DEFAULT_STOCK_NAME
+  if (config.stockName) return config.stockName
+  if (config.stockId) return STOCK_NAME_BY_ID[config.stockId] ?? DEFAULT_STOCK_NAME
+  if (config.stockCode) return STOCK_NAME_BY_CODE[config.stockCode] ?? DEFAULT_STOCK_NAME
+  return STOCK_NAME_BY_ID['shinhan']
 }
 
 export function getWidgetDefaultQuery(widgetTypeId, config = {}) {
