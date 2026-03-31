@@ -366,7 +366,10 @@ const useWidgetStore = create((set) => ({
   addWidgetAt: (widgetTypeId, variant, gridCol, gridRow, configOverride) =>
     set((state) => {
       if (!canPlaceAt(state.widgets, gridCol, gridRow, variant.colSpan, variant.rowSpan)) return state
-      const config = configOverride ?? getDefaultWidgetConfig(widgetTypeId)
+      const defaultConfig = getDefaultWidgetConfig(widgetTypeId)
+      const config = configOverride
+        ? { ...(defaultConfig ?? {}), ...configOverride }
+        : defaultConfig
       const newWidgets = [
         ...state.widgets,
         {

@@ -45,7 +45,7 @@ function inferInfoTypeFromPrompt(prompt = '') {
   if (!keyword) return null
   const matched = WIDGET_SHORTCUTS.find((item) =>
     INFO_FALLBACK_WIDGET_TYPES.includes(item.widgetTypeId) &&
-    item.keywords.some((k) => keyword.includes(k) || k.includes(keyword))
+    item.keywords.some((k) => keyword.includes(k))
   )
   if (!matched) return null
   return toInfoTypeFromWidgetType(matched.widgetTypeId)

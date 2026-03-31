@@ -40,17 +40,15 @@ function NewsCard({ item, showSummary = false, onClickNews }) {
   )
 }
 
-function NewsListCompact({ items, onClickNews }) {
-  return items.map((item, i) => (
+function NewsSingleCompact({ item, onClickNews }) {
+  return (
     <div
-      key={item.newsId ?? i}
-      className="flex items-start gap-1.5 py-1 border-b border-stroke last:border-b-0 cursor-pointer pl-2 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
+      className="flex items-start py-1.5 border-b border-stroke last:border-b-0 cursor-pointer pl-2 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
       onClick={(e) => { e.stopPropagation(); onClickNews(item.newsId) }}
     >
-      <span className="text-widget-9 font-bold text-primary mt-[1px] shrink-0">{i + 1}</span>
-      <p className="text-widget-10 text-foreground leading-snug line-clamp-2">{item.title}</p>
+      <p className="text-widget-10 text-foreground leading-snug line-clamp-6">{item.title}</p>
     </div>
-  ))
+  )
 }
 
 export default function MarketOverviewWidget({ instanceId, variant = 'market-sm', colSpan = 1, rowSpan = 1, config = {}, onDelete }) {
@@ -72,8 +70,8 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
     openDetail({ widgetTypeId: 'market-overview', config: { tab } })
   }
 
-  function handleNewsClick(newsId) {
-    openDetail({ widgetTypeId: 'market-overview', config: { tab, newsId } })
+  function handleNewsClick(newsId, nextTab = tab) {
+    openDetail({ widgetTypeId: 'market-overview', config: { tab: nextTab, newsId } })
   }
 
   const tabBar = (
@@ -101,16 +99,38 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
   const loading = <div className="text-widget-10 text-foreground-disabled py-2">불러오는 중...</div>
 
   if (variant === 'market-2x2') {
+    const krTop = krNews[0] ?? null
+    const usTop = usNews[0] ?? null
+    const sectionTitleClass = 'text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase'
+    const sectionCardClass = 'flex flex-col gap-0.5 py-2 border-b border-stroke last:border-b-0 cursor-pointer pl-2 border-l-2 border-l-transparent hover:border-l-primary transition-colors'
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
         <div className="flex items-center justify-between mb-1 shrink-0">
           <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
-          {tabBar}
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          {isLoading ? loading : !items.length ? empty : items.slice(0, 4).map((item, i) => (
-            <NewsCard key={item.newsId ?? i} item={item} showSummary onClickNews={handleNewsClick} />
-          ))}
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
+          <section>
+            <h4 className={sectionTitleClass}>국내 시황</h4>
+            <div className="mt-0.5">
+              {isLoading ? loading : !krTop ? empty : (
+                <div className={sectionCardClass} onClick={(e) => { e.stopPropagation(); handleNewsClick(krTop.newsId, 'kr') }}>
+                  <p className="text-widget-11 font-semibold text-foreground leading-snug line-clamp-2">{krTop.title}</p>
+                  {krTop.oneLineSummary && <p className="text-[9.5px] text-foreground-secondary leading-relaxed line-clamp-2">{krTop.oneLineSummary}</p>}
+                </div>
+              )}
+            </div>
+          </section>
+          <section>
+            <h4 className={sectionTitleClass}>해외 시황</h4>
+            <div className="mt-0.5">
+              {isLoading ? loading : !usTop ? empty : (
+                <div className={sectionCardClass} onClick={(e) => { e.stopPropagation(); handleNewsClick(usTop.newsId, 'us') }}>
+                  <p className="text-widget-11 font-semibold text-foreground leading-snug line-clamp-2">{usTop.title}</p>
+                  {usTop.oneLineSummary && <p className="text-[9.5px] text-foreground-secondary leading-relaxed line-clamp-2">{usTop.oneLineSummary}</p>}
+                </div>
+              )}
+            </div>
+          </section>
         </div>
       </WidgetCard>
     )
@@ -140,7 +160,7 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
         {tabBar}
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto">
-        {isLoading ? loading : !items.length ? empty : <NewsListCompact items={items} onClickNews={handleNewsClick} />}
+        {isLoading ? loading : !items.length ? empty : <NewsSingleCompact item={items[0]} onClickNews={handleNewsClick} />}
       </div>
     </WidgetCard>
   )
