@@ -227,6 +227,9 @@ const useWidgetStore = create((set) => ({
   // top-level widgets: 항상 현재 페이지의 widgets를 미러링 (하위 호환)
   widgets: INITIAL_WIDGETS,
 
+  // ── 프리셋 임시 상태 ─────────────────────────────────────
+  pendingPresets: [],  // [{widgets, name, sectorCode}, ...] 여러 프리셋 누적
+
   // ── 서버 로드 상태 ───────────────────────────────────────
   // false: 아직 서버에서 불러오지 않음 (INITIAL 레이아웃 사용 중)
   // true:  서버 데이터로 교체 완료
@@ -286,13 +289,28 @@ const useWidgetStore = create((set) => ({
 
   // ── 페이지 편집 모달에서 staged 변경사항 일괄 적용 ────────
   applyPageChanges: (newPages, newCurrentId) => {
-    const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
-    sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, currentPage.id)
-    set(() => ({
-      pages: newPages,
-      currentPageId: currentPage.id,
-      widgets: currentPage.widgets,
-    }))
+    set((state) => {
+      const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
+      sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, currentPage.id)
+
+      // 삭제된 임시 페이지 찾아서 pendingPresets도 정리
+      const deletedPages = state.pages.filter((p) => !newPages.find((np) => np.id === p.id))
+      let newPendingPresets = state.pendingPresets
+      for (const deletedPage of deletedPages) {
+        if (deletedPage.isTempPage && deletedPage.presetName && deletedPage.presetSectorCode) {
+          newPendingPresets = newPendingPresets.filter(
+            (p) => !(p.name === deletedPage.presetName && p.sectorCode === deletedPage.presetSectorCode)
+          )
+        }
+      }
+
+      return {
+        pages: newPages,
+        currentPageId: currentPage.id,
+        widgets: currentPage.widgets,
+        pendingPresets: newPendingPresets,
+      }
+    })
   },
 
   // ── 편집 모드 스냅샷 (전체 pages 스코프) ─────────────────
@@ -407,6 +425,63 @@ const useWidgetStore = create((set) => ({
         return w
       })
       return _setCurrentWidgets(state, newWidgets)
+    }),
+
+  // ── 프리셋 임시 상태 관리 ────────────────────────────────
+  addPendingPreset: (widgets, presetName, sectorCode) =>
+    set((state) => ({
+      pendingPresets: [...state.pendingPresets, { widgets, name: presetName, sectorCode }],
+    })),
+
+  clearPendingPresets: () =>
+    set({
+      pendingPresets: [],
+    }),
+
+  addTempPage: (pageId, pageName, widgets, presetInfo = {}) =>
+    set((state) => {
+      const newPage = {
+        id: pageId,
+        name: pageName,
+        widgets: widgets,
+        isTempPage: true,
+        presetName: presetInfo.name,
+        presetSectorCode: presetInfo.sectorCode,
+      }
+      return {
+        ...state,
+        pages: [...state.pages, newPage],
+        currentPageId: pageId,
+        widgets: widgets,
+      }
+    }),
+
+  removeTempPage: (pageId) =>
+    set((state) => {
+      // 삭제할 임시 페이지 찾기
+      const tempPageToRemove = state.pages.find((p) => p.id === pageId && p.isTempPage)
+
+      // 해당 프리셋을 pendingPresets에서도 제거
+      let newPendingPresets = state.pendingPresets
+      if (tempPageToRemove) {
+        newPendingPresets = state.pendingPresets.filter(
+          (p) => !(p.name === tempPageToRemove.presetName && p.sectorCode === tempPageToRemove.presetSectorCode)
+        )
+      }
+
+      const newPages = state.pages.filter((p) => p.id !== pageId)
+      // 삭제된 페이지가 현재 페이지면 마지막 페이지로 이동
+      const newCurrentPageId = state.currentPageId === pageId && newPages.length > 0
+        ? newPages[newPages.length - 1].id
+        : state.currentPageId
+      const currentPage = newPages.find((p) => p.id === newCurrentPageId)
+      return {
+        ...state,
+        pages: newPages,
+        currentPageId: newCurrentPageId,
+        widgets: currentPage?.widgets || [],
+        pendingPresets: newPendingPresets,
+      }
     }),
 }))
 

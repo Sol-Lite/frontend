@@ -19,7 +19,7 @@ export default function DraggableChatCard({ msgId, widgetTypeId, variant, childr
       style={style}
       {...listeners}
       {...attributes}
-      className={['cursor-grab active:cursor-grabbing', isDragging ? 'opacity-50' : 'animate-wiggle'].join(' ')}
+      className={['relative z-10 cursor-grab active:cursor-grabbing', isDragging ? 'opacity-0' : 'animate-wiggle'].join(' ')}
     >
       {children}
     </div>

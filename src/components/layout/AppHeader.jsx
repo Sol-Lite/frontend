@@ -7,6 +7,7 @@ import { useMyAccount } from '@/api/account'
 import useRightPanelStore from '@/store/useRightPanelStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore, { hasUnsavedChanges } from '@/store/useWidgetStore'
+import { dashboardApi } from '@/api/dashboard'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import NotificationCenter from '@/components/ui/NotificationCenter'
 import { FontSizeButton, ThemeButton } from './DisplaySettingsButtons'
@@ -118,11 +119,53 @@ function UserArea() {
 
 function EditModeActions() {
   const { exitEditMode, saveLayout } = useEditModeStore()
-  const { restoreSnapshot, clearSnapshot } = useWidgetStore()
+  const { restoreSnapshot, clearSnapshot, clearPendingPresets, pages, currentPageId } = useWidgetStore()
+  const pendingPresets = useWidgetStore((s) => s.pendingPresets)
   const { mutate: saveDashboard, isPending, isError } = useDashboardSave()
 
-  function handleSave() {
+  async function handleSave() {
     clearSnapshot()
+
+    // 프리셋 여러 개가 대기 중이면 각각 API로 새 페이지 생성
+    if (pendingPresets.length > 0) {
+      try {
+        let allResponses = []
+
+        // 각 프리셋마다 API 호출
+        for (const preset of pendingPresets) {
+          const payload = {
+            presetName: preset.name,
+            theme: preset.sectorCode,
+            widgets: preset.widgets.map((w) => ({
+              widgetType: w.widgetTypeId,
+              positionX: w.gridCol,
+              positionY: w.gridRow,
+              width: w.colSpan,
+              height: w.rowSpan,
+              configJson: JSON.stringify({ variantId: w.variantId }),
+            })),
+          }
+          const response = await dashboardApi.applyPreset(payload)
+          if (response?.length) {
+            allResponses = response  // 마지막 응답이 전체 페이지 목록
+          }
+        }
+
+        if (allResponses.length > 0) {
+          // 서버 데이터로 갱신
+          const { loadFromServer, switchPage } = useWidgetStore.getState()
+          loadFromServer(allResponses)
+          // 마지막 생성된 페이지로 이동
+          const lastPage = allResponses[allResponses.length - 1]
+          switchPage(String(lastPage.dashboardId))
+        }
+
+        clearPendingPresets()
+      } catch (e) {
+        console.error('프리셋 적용 실패:', e)
+      }
+    }
+
     // 저장 성공 시 editMode 종료, 실패 시 UI에 오류 표시
     saveDashboard(undefined, { onSuccess: saveLayout })
   }
@@ -137,7 +180,18 @@ function EditModeActions() {
         <span className="text-[11px] text-down">저장 실패. 다시 시도해주세요.</span>
       )}
       <button
-        onClick={() => { restoreSnapshot(); exitEditMode() }}
+        onClick={() => {
+          restoreSnapshot()
+          clearPendingPresets()
+          // 모든 임시 페이지 제거
+          const { pages: allPages, removeTempPage } = useWidgetStore.getState()
+          allPages.forEach((p) => {
+            if (p.isTempPage) {
+              removeTempPage(p.id)
+            }
+          })
+          exitEditMode()
+        }}
         disabled={isPending}
         className="px-3 py-1.5 rounded-xl border border-stroke-input text-[12px] text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms] disabled:opacity-50"
       >
