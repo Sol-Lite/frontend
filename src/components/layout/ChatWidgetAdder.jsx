@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Grid2X2Plus } from 'lucide-react'
 import { WIDGET_TYPES } from '@/mocks/widgets'
 import usePendingWidgetStore from '@/store/usePendingWidgetStore'
@@ -28,11 +28,34 @@ export default function ChatWidgetAdder({ msgId, widgetTypeId, variantIds }) {
   const [open, setOpen]           = useState(false)
   const [selectedId, setSelectedId] = useState(null)
   const { pendingMsgId, setPending, clearPending } = usePendingWidgetStore()
+  const containerRef = useRef(null)
 
   const widgetType = WIDGET_TYPES.find((w) => w.id === widgetTypeId)
-  if (!widgetType) return null
 
   const isPending = pendingMsgId === msgId
+
+  // 외부 클릭 시 초기 상태로 리셋 (open 또는 isPending 상태일 때)
+  useEffect(() => {
+    if (!open && !isPending) return
+    const handleClick = (e) => {
+      // React가 클릭 핸들러에서 DOM을 업데이트해 target이 이미 제거된 경우 무시
+      if (!document.body.contains(e.target)) return
+      if (containerRef.current && !containerRef.current.contains(e.target)) {
+        clearPending()
+        setSelectedId(null)
+        setOpen(false)
+      }
+    }
+    document.addEventListener('click', handleClick)
+    return () => document.removeEventListener('click', handleClick)
+  }, [open, isPending, clearPending])
+
+  // 드롭 완료 등 외부에서 clearPending 호출 시 selectedId 리셋
+  useEffect(() => {
+    if (!isPending) setSelectedId(null)
+  }, [isPending])
+
+  if (!widgetType) return null
   // variantIds가 지정된 경우 해당 variant만 피커에 표시
   const variants = variantIds
     ? widgetType.variants.filter((v) => variantIds.includes(v.id))
@@ -61,7 +84,7 @@ export default function ChatWidgetAdder({ msgId, widgetTypeId, variantIds }) {
   }
 
   return (
-    <div className="flex flex-col items-start">
+    <div ref={containerRef} className="flex flex-col items-start">
       {/* 아이콘 클릭 시 안내 문구 — 타임스탬프 위로 올라옴 */}
       {open && (
         <span className="text-[9px] text-foreground-tertiary whitespace-nowrap mb-0.5 animate-bubble-in">
