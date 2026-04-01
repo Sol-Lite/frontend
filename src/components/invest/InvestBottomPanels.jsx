@@ -13,13 +13,13 @@ import PendingOrdersPanel from '@/components/invest/panels/PendingOrdersPanel'
 
 function SectionTabs({ items, activeKey, onChange }) {
   return (
-    <div className="flex shrink-0 border-b border-stroke bg-surface-subtle px-2.5">
+    <div className="flex h-10 shrink-0 items-stretch border-b border-stroke bg-surface-subtle px-2.5">
       {items.map((item) => (
         <button
           key={item.key}
           onClick={() => onChange(item.key)}
           className={cn(
-            'px-3 py-2.5 text-xs transition-colors',
+            'flex h-full items-center px-3 text-xs transition-colors',
             activeKey === item.key
               ? 'border-b-2 border-primary text-primary font-bold'
               : 'font-semibold text-foreground-disabled hover:text-foreground-secondary',

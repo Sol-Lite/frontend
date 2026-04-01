@@ -23,6 +23,13 @@ import { useDashboardLoad, useDashboardSave } from '@/hooks/useDashboardSync'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_GAP, GRID_COLS, GRID_ROWS, gridElementRef } from '@/lib/gridConstants'
 
+const PAGE_TITLE_BY_PATH = [
+  { match: (pathname) => pathname === '/', label: '홈' },
+  { match: (pathname) => pathname.startsWith('/market'), label: '시세' },
+  { match: (pathname) => pathname.startsWith('/invest'), label: '주문' },
+  { match: (pathname) => pathname.startsWith('/asset'), label: '자산' },
+]
+
 export default function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
@@ -37,6 +44,11 @@ export default function AppShell() {
     }
 
   }, [location, navigate, openLoginModal])
+
+  useEffect(() => {
+    const matched = PAGE_TITLE_BY_PATH.find(({ match }) => match(location.pathname))
+    document.title = matched ? `SOL-Lite | ${matched.label}` : 'SOL-Lite'
+  }, [location.pathname])
 
 
   const [activeDrag, setActiveDrag] = useState(null)

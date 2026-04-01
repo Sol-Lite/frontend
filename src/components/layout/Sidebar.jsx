@@ -6,7 +6,7 @@ const ITEMS = [
   { icon: LayoutGrid,     path: '/',       label: '홈' },
   { icon: TrendingUp,     path: '/market', label: '시세' },
   { icon: ArrowLeftRight, path: '/invest', label: '주문' },
-  { icon: Wallet,         path: '/asset',  label: '잔고' },
+  { icon: Wallet,         path: '/asset',  label: '자산' },
 ]
 
 export default function Sidebar() {

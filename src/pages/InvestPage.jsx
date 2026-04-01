@@ -6,6 +6,7 @@ import InvestStockOverview from '@/components/invest/InvestStockOverview'
 import {
   DISPLAY_CURRENCY,
   FALLBACK_USD_RATE,
+  formatCurrency,
   isForeignMarketType,
 } from '@/features/invest/formatters'
 import { LAST_INVEST_PATH_KEY, LAST_INVEST_STATE_KEY } from '@/features/invest/navigation'
@@ -87,6 +88,14 @@ export default function InvestPage() {
     }
     sessionStorage.setItem(LAST_INVEST_STATE_KEY, JSON.stringify(nextState))
   }, [location.pathname, marketType, stockMeta.exchangeCode, stockMeta.name, stockMeta.nameEn])
+
+  useEffect(() => {
+    const stockName = stockMeta.name ?? '주문'
+    const priceLabel = formatCurrency(currentPrice, { marketType, displayCurrency, usdRate })
+    document.title = priceLabel === '-'
+      ? stockName
+      : `${stockName} | ${priceLabel}`
+  }, [currentPrice, displayCurrency, marketType, stockMeta.name, usdRate])
 
   return (
     <div className="h-full overflow-x-auto bg-surface">

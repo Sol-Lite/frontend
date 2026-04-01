@@ -11,7 +11,7 @@ const TABS = [
   { label: '홈',  path: '/' },
   { label: '시세', path: '/market' },
   { label: '주문', path: '/invest' },
-  { label: '잔고', path: '/asset' },
+  { label: '자산', path: '/asset' },
 ]
 
 /* 이동 경로를 결정 — /invest는 마지막 방문 경로 복원 */
