@@ -21,7 +21,7 @@ export function getMarketRowGrid(sortFilter) {
 }
 
 
-export default function StockRow({ stock, sortFilter = 'volume_value', isWatched, onWatchToggle }) {
+export default function StockRow({ stock, sortFilter = 'volume_value', isWatched, onWatchToggle, isModalMode = false, onStockClick }) {
   const navigate = useNavigate()
   const isTop = stock.rank === 1
   const grid = getMarketRowGrid(sortFilter)
@@ -32,7 +32,7 @@ export default function StockRow({ stock, sortFilter = 'volume_value', isWatched
   return (
     <div
       className={`grid ${grid} items-center px-4 py-2.5 border-b border-stroke-subtle hover:bg-surface-subtle transition-colors duration-[100ms] cursor-pointer last:border-b-0`}
-      onClick={() => navigate(`/invest/${stock.stockCode}`, { state: { stockName: stock.name, marketType } })}
+      onClick={() => isModalMode ? onStockClick?.(stock) : navigate(`/invest/${stock.stockCode}`, { state: { stockName: stock.name, marketType } })}
     >
       {/* 관심종목 */}
       <button

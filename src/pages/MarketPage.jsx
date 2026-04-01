@@ -102,7 +102,7 @@ export default function MarketPage() {
   return <MarketContent />
 }
 
-export function MarketContent({ initialSortFilter }) {
+export function MarketContent({ initialSortFilter, onStockClick, isModalMode = false }) {
   const [marketFilter, setMarketFilter] = useState('kr')
   const [sortFilter, setSortFilter]     = useState(initialSortFilter ?? 'volume_value')
   const { watchedSet, toggle }          = useWatchlistSet()
@@ -135,6 +135,8 @@ export function MarketContent({ initialSortFilter }) {
             sortFilter={sortFilter}
             isWatched={watchedSet.has(stock.stockCode)}
             onWatchToggle={toggle}
+            isModalMode={isModalMode}
+            onStockClick={onStockClick}
           />
         ))}
       </div>

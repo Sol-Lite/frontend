@@ -20,12 +20,13 @@ function Header() {
 
   const handleLogout = async () => {
     setChatMode()
-    logout()
-    navigate('/')
     try {
       await authApi.logout()
     } catch (err) {
       console.error('로그아웃 에러:', err)
+    } finally {
+      logout()
+      navigate('/')
     }
   }
 

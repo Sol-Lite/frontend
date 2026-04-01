@@ -95,8 +95,8 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
     </div>
   )
 
-  const empty = <div className="text-widget-10 text-foreground-disabled py-2">뉴스가 없습니다.</div>
-  const loading = <div className="text-widget-10 text-foreground-disabled py-2">불러오는 중...</div>
+  const empty = <div className="text-widget-10 text-foreground-disabled py-2 opacity-50 group-hover:opacity-75 transition-opacity">뉴스가 없습니다.</div>
+  const loading = <div className="text-widget-10 text-foreground-disabled py-2 opacity-50 group-hover:opacity-75 transition-opacity">불러오는 중...</div>
 
   if (variant === 'market-2x2') {
     const krTop = krNews[0] ?? null

@@ -94,23 +94,6 @@ function ArticleView({ newsId, onBack }) {
           </div>
         )}
 
-        {/* 주요 이벤트 */}
-        {data.marketEvents?.length > 0 && (
-          <div className="bg-surface-subtle rounded-2xl px-5 py-4 flex flex-col gap-3">
-            <span className="text-xs font-bold text-foreground-disabled uppercase tracking-widest">
-              주요 이벤트
-            </span>
-            <ul className="flex flex-col gap-2.5">
-              {data.marketEvents.map((ev, i) => (
-                <li key={i} className="flex items-start gap-3 text-[14px] text-foreground leading-relaxed">
-                  <span className="text-primary font-bold mt-[2px] shrink-0">•</span>
-                  {ev}
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-
         {/* 본문 카드 */}
         {paragraphs.length > 0 && (
           <div className="bg-surface-subtle rounded-2xl px-5 py-5 mb-6">
