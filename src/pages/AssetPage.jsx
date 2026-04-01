@@ -8,6 +8,7 @@ import StockAvatar from '@/components/ui/StockAvatar'
 import { cn } from '@/lib/cn'
 import ExchangeModal from '@/components/asset/ExchangeModal'
 import useAuthStore from '@/store/useAuthStore'
+import useUIStore from '@/store/useUIStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import { useMyAccount } from '@/api/account'
 import { useAssetPage } from '@/features/asset/useAssetPage'
@@ -212,6 +213,8 @@ function AssetFlowCard({ data, assetFlowRange, onChangeAssetFlowRange }) {
   const [mode, setMode] = useState('assets')
   const [chartOpacity, setChartOpacity] = useState(1)
   const pendingMode = useRef(null)
+  const theme = useUIStore((s) => s.theme)
+  const splitLineColor = theme === 'dark' ? '#252836' : '#F2F4F7'
 
   function handleModeChange(newMode) {
     if (newMode === mode) return
@@ -273,7 +276,7 @@ function AssetFlowCard({ data, assetFlowRange, onChangeAssetFlowRange }) {
       splitNumber: 3,
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: '#F2F4F7' } },
+      splitLine: { lineStyle: { color: splitLineColor } },
       axisLabel: {
         color: '#9CA3AF',
         fontSize: 10,
