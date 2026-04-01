@@ -139,7 +139,7 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
                     data: BALANCE.flowDates,
                     axisLine: { show: false },
                     axisTick: { show: false },
-                    axisLabel: { color: '#9CA3AF', fontSize: 8, margin: 4 },
+                    axisLabel: { color: 'var(--color-foreground-disabled)', fontSize: 8, margin: 4 },
                   },
                   yAxis: {
                     type: 'value',
@@ -149,7 +149,7 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
                     axisTick: { show: false },
                     splitLine: { show: false },
                     axisLabel: {
-                      color: '#9CA3AF',
+                      color: 'var(--color-foreground-disabled)',
                       fontSize: 8,
                       margin: 4,
                       formatter: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%',

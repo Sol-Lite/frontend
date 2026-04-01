@@ -700,7 +700,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
               <div className="text-[8px] text-foreground-disabled shrink-0">수익 추이 (7일)</div>
               <div className="flex-1 min-h-0 flex mt-1">
                 {/* y축 눈금 */}
-                <div className="flex flex-col justify-between items-end pr-1 shrink-0" style={{ width: 20 }}>
+                <div className="flex flex-col justify-between items-end pr-1 shrink-0 w-5">
                   <span className="text-[6px] text-foreground-disabled">+3%</span>
                   <span className="text-[6px] text-foreground-disabled">0%</span>
                   <span className="text-[6px] text-foreground-disabled">-1%</span>
