@@ -12,7 +12,7 @@ export default function useLatestNews(size = 10) {
     retry: false,
   })
 
-  const all = data ?? []
+  const all = Array.isArray(data) ? data : []
   const kr  = all.filter((n) => !n.stockIndex || KR_INDICES.includes(n.stockIndex))
   const us  = all.filter((n) => US_INDICES.includes(n.stockIndex))
 
