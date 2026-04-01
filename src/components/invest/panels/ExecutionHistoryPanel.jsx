@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import StockAvatar from '@/components/ui/StockAvatar'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import { cn } from '@/lib/cn'
-import { formatCurrency, formatNumber, formatVisiblePrice } from '@/features/invest/formatters'
+import { formatCurrency, formatNumber } from '@/features/invest/formatters'
 import { buildInvestNavigationState } from '@/features/invest/navigation'
 import { orderApi } from '@/api/order'
 import useAuthStore from '@/store/useAuthStore'
@@ -57,7 +57,7 @@ export default function ExecutionHistoryPanel({ stockCode, marketType, displayCu
 
   return (
     <div className="flex-1 overflow-y-auto">
-      <div className="sticky top-0 z-[1] grid grid-cols-[58px_minmax(0,1fr)_40px_72px_48px_90px] items-center border-b border-stroke bg-surface-subtle px-2.5 py-1">
+      <div className="sticky top-0 z-[1] grid grid-cols-[58px_minmax(0,1fr)_40px_72px_48px_90px] items-center border-b border-stroke bg-surface-subtle px-2.5 py-1.5">
         {['시간', '종목', '구분', '체결가', '수량', '금액'].map((label) => (
           <span key={label} className={cn('text-[9px] font-semibold text-foreground-disabled', label === '시간' || label === '종목' || label === '구분' ? '' : 'text-right')}>
             {label}
@@ -75,7 +75,7 @@ export default function ExecutionHistoryPanel({ stockCode, marketType, displayCu
         return (
           <div
             key={row.orderId ?? row.id}
-            className="grid grid-cols-[58px_minmax(0,1fr)_40px_72px_48px_90px] items-center gap-2 border-b border-stroke-subtle px-2.5 py-1.5"
+            className="grid grid-cols-[58px_minmax(0,1fr)_40px_72px_48px_90px] items-center border-b border-stroke-subtle px-2.5 py-1.5"
           >
             <span className="text-[10px] text-foreground-disabled">{formatTime(row.filledAt ?? row.executedAt ?? row.requestedAt ?? row.createdAt)}</span>
             <button
@@ -86,11 +86,18 @@ export default function ExecutionHistoryPanel({ stockCode, marketType, displayCu
               <StockAvatar name={row.stockName ?? row.stockCode} stockCode={row.stockCode} marketType={rowMarketType} size="sm" />
               <span className="truncate text-[10px] font-semibold text-foreground">{row.stockName ?? row.stockCode}</span>
             </button>
-            <span className={cn('rounded-[4px] px-1 py-0.5 text-center text-[8px] font-bold', isBuy ? 'bg-up-bg text-up' : 'bg-down-bg text-down')}>
+            <span
+              className={cn(
+                'inline-flex min-w-[34px] items-center justify-center rounded-full px-2 py-1 text-center text-[9px] font-bold leading-none',
+                isBuy
+                  ? 'bg-up/12 text-up'
+                  : 'bg-down/12 text-down',
+              )}
+            >
               {isBuy ? '매수' : '매도'}
             </span>
             <span className={cn('text-[10px] font-bold text-right', isBuy ? 'text-up' : 'text-down')}>
-              {formatVisiblePrice(filledPrice, { marketType: rowMarketType, displayCurrency, usdRate })}
+              {formatCurrency(filledPrice, { marketType: rowMarketType, displayCurrency, usdRate })}
             </span>
             <span className="text-[10px] text-right">{formatNumber(filledQty)}</span>
             <span className="text-[10px] font-semibold text-right">

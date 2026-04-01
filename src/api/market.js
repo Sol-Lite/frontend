@@ -70,6 +70,7 @@ export const foreignMarketApi = {
   getInfo: (symbol, exchcd) => get(`/foreign-stocks/${symbol}/info`, { exchcd }),
   getChart: (symbol, exchcd, params) => get(`/foreign-stocks/${symbol}/chart-advanced`, { exchcd, ...params }),
   getMinuteChart: (symbol, exchcd, params) => get(`/foreign-stocks/${symbol}/chart-nmin`, { exchcd, ...params }),
+  getForeignRanking: (params) => get('/foreign-stocks/ranking', params),
 }
 
 const EXCHCD_MAP = {

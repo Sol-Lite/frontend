@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Activity, LayoutGrid } from 'lucide-react'
+import { LayoutGrid } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import NavTabs, { NavConfirmModal } from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
@@ -38,13 +38,10 @@ function Logo() {
       <button
         onClick={handleClick}
         aria-label="홈으로 이동"
-        className="flex items-center gap-2 mr-2 shrink-0"
+        className="group flex items-center gap-2 mr-2 shrink-0 rounded-lg px-2 py-1 hover:bg-surface-muted transition-colors duration-[150ms]"
       >
-        <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow">
-          <Activity className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-        </div>
-        <span className="text-[15px] font-bold tracking-tight text-foreground">
-          SOL <span className="text-primary">Lite</span>
+        <span className="text-[15px] font-bold tracking-tight text-foreground transition-colors duration-[150ms] group-hover:text-primary">
+          SOL-<span className="text-primary transition-colors duration-[150ms] group-hover:text-foreground">Lite</span>
         </span>
       </button>
       {showConfirm && (

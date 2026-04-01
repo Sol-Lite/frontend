@@ -7,6 +7,10 @@ import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import useUIStore from '@/store/useUIStore'
 
 const TABS = ['거래대금', '급상승', '거래량']
+const MARKET_TABS = [
+  { key: 'kr', label: '국내' },
+  { key: 'us', label: '해외' },
+]
 
 const TAB_TO_SORT = {
   '거래대금': 'volume_value',
@@ -18,30 +22,53 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
   const [activeTab, setActiveTab] = useState(
     () => localStorage.getItem('rankingWidget.activeTab') ?? '거래대금'
   )
+  const [activeMarket, setActiveMarket] = useState(
+    () => localStorage.getItem('rankingWidget.activeMarket') ?? 'kr'
+  )
   const open     = useWidgetDetailStore((s) => s.open)
 
-  const handleCardClick  = () => open({ widgetTypeId: 'ranking', config: { initialSortFilter: TAB_TO_SORT[activeTab] } })
+  const handleCardClick  = () => open({ widgetTypeId: 'ranking', config: { initialSortFilter: TAB_TO_SORT[activeTab], initialMarketFilter: activeMarket } })
   const handleStockClick = (e, stock) => {
     e.stopPropagation()
-    open({ widgetTypeId: 'stock-chart', config: { stockCode: stock.stockCode, stockName: stock.name, marketType: stock.marketType ?? stock.market } })
+    open({ widgetTypeId: 'stock-chart', config: { stockCode: stock.stockCode, stockName: stock.name, marketType: stock.marketType ?? stock.market, exchangeCode: stock.exchangeCode } })
   }
 
   function handleTabChange(tab) {
     setActiveTab(tab)
     localStorage.setItem('rankingWidget.activeTab', tab)
   }
-  const { stocks } = useMarketRanking(TAB_TO_SORT[activeTab], '')
+
+  function handleMarketChange(market) {
+    setActiveMarket(market)
+    localStorage.setItem('rankingWidget.activeMarket', market)
+  }
+
+  const { stocks } = useMarketRanking(TAB_TO_SORT[activeTab], activeMarket)
   const fontSize = useUIStore((s) => s.fontSize)
+
+  const marketTabBar = (
+    <div className="ml-auto pr-1 flex gap-1.5">
+      {MARKET_TABS.map((tab) => (
+        <button
+          key={tab.key}
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleMarketChange(tab.key) }}
+          className={
+            activeMarket === tab.key
+              ? 'px-2 py-0.5 text-widget-10 font-semibold rounded-md bg-primary text-white shadow-control'
+              : 'px-2 py-0.5 text-widget-10 font-semibold rounded-md text-foreground-secondary bg-surface-muted/65 hover:bg-surface-muted hover:text-foreground transition-colors'
+          }
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  )
 
   // ── ranking-lg (2x2): 컨테이너 높이 실측 후 완전한 행만 표시 ──
   const lgListRef = useRef(null)
   const lgFirstRowRef = useRef(null)
   const [lgMax, setLgMax] = useState(undefined)
-
-  // fontSize 변경 시 maxHeight 초기화 → 컨테이너가 자연 높이로 복귀
-  useLayoutEffect(() => {
-    setLgMax(undefined)
-  }, [fontSize])
 
   // lgMax가 undefined일 때(= 컨테이너가 flex-1 자연 높이) 실측 후 설정
   useLayoutEffect(() => {
@@ -73,8 +100,10 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
               </TabChip>
             ))}
           </div>
+          {marketTabBar}
         </div>
         <div
+          key={fontSize}
           ref={lgListRef}
           className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-0.5"
           style={{ maxHeight: lgMax }}
@@ -116,6 +145,7 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
             </TabChip>
           ))}
         </div>
+        {marketTabBar}
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
         {stocks.map((stock) => (

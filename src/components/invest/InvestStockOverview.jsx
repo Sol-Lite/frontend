@@ -2,7 +2,6 @@ import { Heart } from 'lucide-react'
 import InvestStockChart from '@/components/market/InvestStockChart'
 import { useWatchlistSet } from '@/api/watchlist'
 import InvestStockSearch from '@/components/invest/InvestStockSearch'
-import LiveDot from '@/components/ui/LiveDot'
 import PriceChange from '@/components/ui/PriceChange'
 import StockAvatar from '@/components/ui/StockAvatar'
 import {
@@ -57,29 +56,25 @@ export default function InvestStockOverview({
           <div className="min-w-0 flex-1">
             <InvestStockSearch stockMeta={stockMeta} />
           </div>
-          <div className="flex shrink-0 items-center gap-1">
-            {isForeignMarket && (
-              <div className="mr-1 flex items-center rounded-lg bg-surface-muted p-0.5">
-                {[DISPLAY_CURRENCY.USD, DISPLAY_CURRENCY.KRW].map((currency) => (
-                  <button
-                    key={currency}
-                    type="button"
-                    onClick={() => onDisplayCurrencyChange?.(currency)}
-                    className={cn(
-                      'rounded-md px-2 py-0.5 text-[10px] font-semibold transition-all',
-                      displayCurrency === currency
-                        ? 'bg-primary text-white shadow-control'
-                        : 'text-foreground-disabled hover:text-foreground-secondary',
-                    )}
-                  >
-                    {currency}
-                  </button>
-                ))}
-              </div>
-            )}
-            <LiveDot size="sm" />
-            <span className="text-[9px] text-live">실시간</span>
-          </div>
+          {isForeignMarket && (
+            <div className="flex shrink-0 items-center rounded-lg bg-surface-muted p-0.5">
+              {[DISPLAY_CURRENCY.USD, DISPLAY_CURRENCY.KRW].map((currency) => (
+                <button
+                  key={currency}
+                  type="button"
+                  onClick={() => onDisplayCurrencyChange?.(currency)}
+                  className={cn(
+                    'rounded-md px-2 py-0.5 text-[10px] font-semibold transition-all',
+                    displayCurrency === currency
+                      ? 'bg-primary text-white shadow-control'
+                      : 'text-foreground-disabled hover:text-foreground-secondary',
+                  )}
+                >
+                  {currency}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
         {errorMessage && (
           <div className="mt-1.5 text-[10px] text-danger">{errorMessage}</div>
