@@ -99,8 +99,8 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
     return (
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-          <div className="flex items-center justify-between mb-2 shrink-0">
-            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
+          <div className="flex items-center gap-1.5 mb-2 shrink-0">
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">관심종목</span>
             {editBtn}
           </div>
           <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-y-auto">
@@ -140,8 +140,8 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
   return (
     <>
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-        <div className="flex items-center justify-between mb-2 shrink-0">
-          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">관심 종목</span>
+        <div className="flex items-center gap-1.5 mb-2 shrink-0">
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">관심종목</span>
           {editBtn}
         </div>
         <div className="flex-1 flex flex-col gap-1 min-h-0 overflow-y-auto">

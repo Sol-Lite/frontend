@@ -121,7 +121,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
   if (variant === 'stock-news-2x2') {
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-        <div className="flex items-center justify-between gap-1 mb-1 shrink-0 min-w-0">
+        <div className="flex items-center gap-1.5 mb-1 shrink-0 min-w-0">
           <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase whitespace-nowrap shrink-0">종목별 뉴스</span>
           {chip}
         </div>
@@ -138,7 +138,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
   if (variant === 'stock-news-wide') {
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-        <div className="flex items-center justify-between gap-1 mb-1 shrink-0 min-w-0">
+        <div className="flex items-center gap-1.5 mb-1 shrink-0 min-w-0">
           <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase whitespace-nowrap shrink-0">종목별 뉴스</span>
           {chip}
         </div>
@@ -155,7 +155,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
   /* stock-news-sm */
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-      <div className="flex items-center justify-between gap-1 mb-1 shrink-0 min-w-0">
+      <div className="flex items-center gap-1.5 mb-1 shrink-0 min-w-0">
         <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase whitespace-nowrap shrink-0">종목별 뉴스</span>
         {chip}
       </div>
