@@ -137,6 +137,9 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
   }
 
   if (variant === 'market-wide') {
+    const todayUtc = new Date().toISOString().slice(0, 10)
+    const todayItems = items.filter((n) => n.publishedAt?.startsWith(todayUtc))
+    const wideItems = (todayItems.length > 0 ? todayItems : items).slice(0, 2)
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
         <div className="flex items-center gap-1.5 mb-1 shrink-0">
@@ -144,7 +147,7 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
           {tabBar}
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
-          {isLoading ? loading : !items.length ? empty : items.slice(0, 2).map((item, i) => (
+          {isLoading ? loading : !wideItems.length ? empty : wideItems.map((item, i) => (
             <NewsCard key={item.newsId ?? i} item={item} showSummary onClickNews={handleNewsClick} />
           ))}
         </div>
