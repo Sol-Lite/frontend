@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronLeft } from 'lucide-react'
+import { ChevronDown, ChevronLeft, Settings2 } from 'lucide-react'
 import { useDraggable } from '@dnd-kit/core'
 import { cn } from '@/lib/cn'
 import useGridStore from '@/store/useGridStore'
@@ -255,9 +255,9 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
           ]
       return (
         <div className="flex flex-col h-full gap-1.5">
-          <div className="flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
-            <div className="flex gap-1.5 justify-end">
+            <div className="flex gap-1.5">
             {['거래금', '급상승', '거래량'].map((tab, i) => (
               <span key={tab} className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${i === 0 ? 'bg-primary-light text-primary' : 'text-foreground-disabled'}`}>{tab}</span>
             ))}
@@ -301,9 +301,9 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
           ]
       return (
         <div className="flex flex-col h-full gap-1.5">
-          <div className="flex items-center justify-between shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
-            <div className="flex gap-1.5 justify-end">
+            <div className="flex gap-1.5">
             {['거래금', '급상승', '거래량'].map((tab, i) => (
               <span key={tab} className={`text-[9px] font-semibold px-1.5 py-0.5 rounded-full ${i === 0 ? 'bg-primary-light text-primary' : 'text-foreground-disabled'}`}>{tab}</span>
             ))}
@@ -328,7 +328,10 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
     case 'index-sm':
       return (
         <div className="flex flex-col h-full">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+            <Settings2 className="w-2.5 h-2.5 text-foreground-disabled" />
+          </div>
           <div className="flex-1 flex flex-col justify-center items-center text-center min-h-0">
             <div className="text-[8px] text-foreground-disabled">KOSPI</div>
             <div className="text-[15px] font-extrabold text-foreground leading-tight">2,685.42</div>
@@ -341,7 +344,10 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
     case 'index-wide':
       return (
         <div className="flex flex-col h-full gap-1">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+            <Settings2 className="w-2.5 h-2.5 text-foreground-disabled" />
+          </div>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke">
             {[
               { name: 'KOSPI',  val: '2,685', chg: '+0.46%', up: true  },
@@ -429,7 +435,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
     case 'market-sm':
       return (
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 mb-1">
             <span className="text-[9px] font-semibold text-foreground-disabled uppercase tracking-[.04em]">오늘의 시황</span>
             <div className="flex gap-1">
               <span className="px-1.5 py-px text-[7px] font-semibold rounded bg-primary text-white">국내</span>
@@ -448,7 +454,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
     case 'market-wide':
       return (
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 mb-1">
             <span className="text-[9px] font-semibold text-foreground-disabled uppercase tracking-[.04em]">오늘의 시황</span>
             <div className="flex gap-1">
               <span className="px-1.5 py-px text-[7px] font-semibold rounded bg-primary text-white">국내</span>
@@ -487,7 +493,10 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
 
       return (
         <div className="flex flex-col h-full gap-1">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
+            <Settings2 className="w-2.5 h-2.5 text-foreground-disabled" />
+          </div>
           <div className="flex flex-col gap-1.5">
             {watchData.map(({ name, chg, up }) => (
               <div key={name} className="flex items-center justify-between">
@@ -518,7 +527,10 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
 
       return (
         <div className="flex flex-col h-full gap-1">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">관심종목</span>
+            <Settings2 className="w-2.5 h-2.5 text-foreground-disabled" />
+          </div>
           <div className="flex flex-col gap-1.5">
             {watchData.map(({ name, code, price, chg, up }) => (
               <div key={name} className="flex items-center justify-between gap-2">
@@ -777,7 +789,10 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
     case 'index-3x1':
       return (
         <div className="flex flex-col h-full gap-1">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+            <Settings2 className="w-2.5 h-2.5 text-foreground-disabled" />
+          </div>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke">
             {[
               { name: 'KOSPI',  val: '2,685.42', chg: '+0.46%', up: true  },
@@ -798,7 +813,10 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
     case 'index-2x2':
       return (
         <div className="flex flex-col h-full gap-2">
-          <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[9px] font-semibold text-foreground-disabled shrink-0">주요 지수</span>
+            <Settings2 className="w-2.5 h-2.5 text-foreground-disabled" />
+          </div>
           <div className="flex flex-col justify-center gap-2.5 flex-1">
             {[
               { name: 'KOSPI',  val: '2,685.42', chg: '+0.46%', up: true  },
@@ -949,7 +967,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
 
       return (
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 mb-1">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
             <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
               {name}
@@ -979,7 +997,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
 
       return (
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 mb-1">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
             <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
               {name}
@@ -1019,7 +1037,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
 
       return (
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 mb-1">
             <span className="text-[9px] font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
             <span className="flex items-center gap-0.5 text-[8px] font-semibold text-primary shrink-0">
               {name}
@@ -1051,8 +1069,12 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
     case 'market-2x2':
       return (
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between mb-1 shrink-0">
+          <div className="flex items-center gap-1 shrink-0 mb-1">
             <span className="text-[9px] font-semibold text-foreground-disabled uppercase tracking-[.04em]">오늘의 시황</span>
+            <div className="flex gap-1">
+              <span className="px-1.5 py-px text-[7px] font-semibold rounded bg-primary text-white">국내</span>
+              <span className="px-1.5 py-px text-[7px] font-semibold rounded text-foreground-disabled">해외</span>
+            </div>
           </div>
           <div className="flex flex-col flex-1 min-h-0 gap-2">
             <div>

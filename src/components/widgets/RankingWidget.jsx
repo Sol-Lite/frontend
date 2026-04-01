@@ -60,7 +60,7 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
   if (variant === 'ranking-lg') {
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
-        <div className="flex items-center justify-between mb-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 mb-1.5 shrink-0">
           <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
           <div className="flex gap-0.5">
             {TABS.map((tab) => (
@@ -103,7 +103,7 @@ export default function RankingWidget({ variant = 'ranking-wide', colSpan = 2, r
   /* ranking-wide (default) */
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleCardClick}>
-      <div className="flex items-center justify-between mb-1.5 shrink-0">
+      <div className="flex items-center gap-1.5 mb-1.5 shrink-0">
         <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">실시간 순위</span>
         <div className="flex gap-0.5">
           {TABS.map((tab) => (

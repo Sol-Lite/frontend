@@ -105,7 +105,7 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
     const sectionCardClass = 'flex flex-col gap-0.5 py-2 border-b border-stroke last:border-b-0 cursor-pointer pl-2 border-l-2 border-l-transparent hover:border-l-primary transition-colors'
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-        <div className="flex items-center justify-between mb-1 shrink-0">
+        <div className="flex items-center gap-1.5 mb-1 shrink-0">
           <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto flex flex-col gap-2">
@@ -139,7 +139,7 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
   if (variant === 'market-wide') {
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-        <div className="flex items-center justify-between mb-1 shrink-0">
+        <div className="flex items-center gap-1.5 mb-1 shrink-0">
           <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
           {tabBar}
         </div>
@@ -155,7 +155,7 @@ export default function MarketOverviewWidget({ instanceId, variant = 'market-sm'
   /* market-sm */
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-      <div className="flex items-center justify-between mb-1 shrink-0">
+      <div className="flex items-center gap-1.5 mb-1 shrink-0">
         <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">오늘의 시황</span>
         {tabBar}
       </div>
