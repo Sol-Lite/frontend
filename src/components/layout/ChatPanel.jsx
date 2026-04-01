@@ -654,6 +654,11 @@ function ChatInput({ isDisabled = false, isSending = false, onSend, value = "", 
     el.style.height = `${el.scrollHeight}px`;
   }, [value]);
 
+  // 답변 완료 시 입력창 포커스 복원
+  useEffect(() => {
+    if (!isSending) textareaRef.current?.focus();
+  }, [isSending]);
+
   function handleSend() {
     if (!canSend) return;
     onSend(value.trim());
@@ -684,7 +689,7 @@ function ChatInput({ isDisabled = false, isSending = false, onSend, value = "", 
         disabled={isDisabled}
         placeholder={
           isSending
-            ? "답변을 생성하고 있습니다..."
+            ? "답변을 준비하고 있어요..."
             : isDisabled
             ? "로그인 후 이용하실 수 있습니다"
             : "SOL AI 어시스턴트에게 물어보세요..."
