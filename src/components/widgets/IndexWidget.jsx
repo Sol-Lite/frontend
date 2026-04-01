@@ -96,8 +96,8 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
     return (
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={(e) => handleIndexClick(e, shown.code)}>
-          <div className="flex items-center justify-between shrink-0">
-            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
             <SettingsButton onClick={() => setIsConfigOpen(true)} />
           </div>
           <div className="relative flex-1 flex flex-col justify-center items-center text-center min-h-0 group">
@@ -123,8 +123,8 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
     return (
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-          <div className="flex items-center justify-between shrink-0">
-            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
+          <div className="flex items-center gap-1.5 shrink-0">
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
             <SettingsButton onClick={() => setIsConfigOpen(true)} />
           </div>
           <div className="flex flex-1 min-h-0 divide-x divide-stroke mt-1">
@@ -158,8 +158,8 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
     return (
       <>
         <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-          <div className="flex items-center justify-between mb-2 shrink-0">
-            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
+          <div className="flex items-center gap-1.5 mb-2 shrink-0">
+            <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
             <SettingsButton onClick={() => setIsConfigOpen(true)} />
           </div>
           <div className="flex flex-col flex-1 justify-center gap-3">
@@ -193,8 +193,8 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
   return (
     <>
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete}>
-        <div className="flex items-center justify-between shrink-0">
-          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">주요 지수</span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
           <SettingsButton onClick={() => setIsConfigOpen(true)} />
         </div>
         <div className="flex flex-1 min-h-0 divide-x divide-stroke mt-1">

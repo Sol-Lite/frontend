@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import ReactECharts from 'echarts-for-react'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
@@ -38,6 +39,7 @@ function useBalance(enabled) {
   const invested  = total - profit - Number(krwEntry.totalAmount ?? 0)
 
   const flowPoints = (assetFlow?.points ?? []).map((p) => Number(p.cumulativeReturnRate ?? 0))
+  const flowDates  = (assetFlow?.points ?? []).map((p) => (p.date ?? '').slice(5).replace('-', '.'))
   const maxRate    = flowPoints.reduce((m, r) => Math.max(m, Math.abs(r)), 0)
 
   return {
@@ -49,6 +51,7 @@ function useBalance(enabled) {
     isProfit:   profit >= 0,
     isLoading:  false,
     flowPoints,
+    flowDates,
     maxRate,
   }
 }
@@ -121,48 +124,58 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
           {/* 하: 수익 추이 */}
           <div className="flex flex-col flex-1 min-h-0 border-t border-stroke pt-2">
             <div className="text-widget-9 text-foreground-disabled shrink-0">수익 추이 (7일)</div>
-            <div className="flex-1 min-h-0 relative my-2">
+            <div className="flex-1 min-h-0 relative">
               {BALANCE.flowPoints.length > 1 ? (() => {
                 const pts = BALANCE.flowPoints
-                const min = Math.min(...pts)
-                const max = Math.max(...pts)
-                const range = max - min || 1
-                const W = 100 / (pts.length - 1)
                 const isUp = pts[pts.length - 1] >= pts[0]
+                const lineColor = isUp ? 'var(--color-up)' : 'var(--color-down)'
+                const chartOption = {
+                  backgroundColor: 'transparent',
+                  grid: { left: 28, right: 4, top: 4, bottom: 16, containLabel: false },
+                  tooltip: { show: false },
+                  xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: BALANCE.flowDates,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    axisLabel: { color: 'var(--color-foreground-disabled)', fontSize: 8, margin: 4 },
+                  },
+                  yAxis: {
+                    type: 'value',
+                    scale: true,
+                    splitNumber: 2,
+                    axisLine: { show: false },
+                    axisTick: { show: false },
+                    splitLine: { show: false },
+                    axisLabel: {
+                      color: 'var(--color-foreground-disabled)',
+                      fontSize: 8,
+                      margin: 4,
+                      formatter: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%',
+                    },
+                  },
+                  series: [{
+                    type: 'line',
+                    smooth: true,
+                    showSymbol: pts.length === 1,
+                    symbolSize: 5,
+                    data: pts,
+                    lineStyle: { width: 2, color: lineColor },
+                    itemStyle: { color: lineColor },
+                  }],
+                }
                 return (
-                  <svg className="absolute inset-0 w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <polyline
-                      points={pts.map((r, i) => {
-                        const x = i * W
-                        const y = 10 + (1 - (r - min) / range) * 80
-                        return `${x},${y}`
-                      }).join(' ')}
-                      fill="none"
-                      stroke={isUp ? 'var(--color-up)' : 'var(--color-down)'}
-                      strokeWidth="2"
-                      vectorEffect="non-scaling-stroke"
-                    />
-                    {pts.map((r, i) => {
-                      const x = i * W
-                      const y = 10 + (1 - (r - min) / range) * 80
-                      return (
-                        <circle key={i} cx={x} cy={y} r="3"
-                          fill={r >= 0 ? 'var(--color-up)' : 'var(--color-down)'}
-                          vectorEffect="non-scaling-stroke"
-                        />
-                      )
-                    })}
-                  </svg>
+                  <ReactECharts
+                    option={chartOption}
+                    style={{ width: '100%', height: '100%' }}
+                    opts={{ renderer: 'svg' }}
+                  />
                 )
               })() : (
                 <div className="absolute inset-0 flex items-center justify-center text-widget-9 text-foreground-disabled">데이터 없음</div>
               )}
             </div>
-            {BALANCE.flowPoints.length > 0 && (
-              <div className={cn('text-widget-9 text-right shrink-0', BALANCE.flowPoints[BALANCE.flowPoints.length - 1] >= 0 ? 'text-up' : 'text-down')}>
-                {`${BALANCE.flowPoints[BALANCE.flowPoints.length - 1] >= 0 ? '+' : ''}${BALANCE.flowPoints[BALANCE.flowPoints.length - 1].toFixed(2)}%`}
-              </div>
-            )}
           </div>
         </div>
       ) : variant === 'balance-2x2' ? (
@@ -205,7 +218,7 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
           </div>
           {BALANCE.isLoading
             ? <div className="text-widget-11 text-foreground-disabled mt-1">-</div>
-            : <div className={`text-widget-11 font-semibold mt-1 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+            : <div className={`text-widget-10 font-semibold mt-1 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
           }
         </div>
       )}

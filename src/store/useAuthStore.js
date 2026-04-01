@@ -36,6 +36,8 @@ const useAuthStore = create((set, get) => ({
     const storage = autoLogin ? localStorage : sessionStorage
     storage.setItem('accessToken', accessToken)
     storage.setItem('user', JSON.stringify(user))
+    if (autoLogin) localStorage.setItem('autoLogin', 'true')
+    else localStorage.removeItem('autoLogin')
     set({ isAuthenticated: true, user, accessToken })
   },
 
@@ -45,7 +47,23 @@ const useAuthStore = create((set, get) => ({
       localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken')
 
     if (!accessToken) {
-      set({ isRestoring: false })
+      // 저장된 토큰 없음 — 쿠키(refresh token)가 살아있는지 silent refresh로 확인
+      try {
+        const data = await silentRefresh()
+        const newToken = data.accessToken
+        const storage = localStorage.getItem('autoLogin') === 'true' ? localStorage : sessionStorage
+        storage.setItem('accessToken', newToken)
+        const userRes = await fetch('/api/users/me', {
+          headers: { Authorization: `Bearer ${newToken}` },
+          credentials: 'include',
+        })
+        const user = userRes.ok ? await userRes.json() : null
+        if (user) storage.setItem('user', JSON.stringify(user))
+        set({ isAuthenticated: true, user, accessToken: newToken, isRestoring: false })
+        applyThemeFromServer()
+      } catch {
+        set({ isRestoring: false })
+      }
       return
     }
 
@@ -75,6 +93,7 @@ const useAuthStore = create((set, get) => ({
   logout: ({ broadcast = true } = {}) => {
     localStorage.removeItem('accessToken')
     localStorage.removeItem('user')
+    localStorage.removeItem('autoLogin')
     localStorage.removeItem('ui:theme')
     sessionStorage.removeItem('accessToken')
     sessionStorage.removeItem('user')

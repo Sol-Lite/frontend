@@ -81,19 +81,20 @@ function FilterBar({ marketFilter, setMarketFilter, sortFilter, setSortFilter })
   )
 }
 
-function StockTableHeader({ sortFilter }) {
+function StockTableHeader({ sortFilter, isForeign }) {
   const showVolume = hasPrimaryMetricColumn(sortFilter)
-  const grid = getMarketRowGrid(sortFilter)
+  const grid = getMarketRowGrid(sortFilter, isForeign)
+  const showSecondary = !isForeign || (sortFilter !== 'rising' && sortFilter !== 'falling')
 
   return (
     <div className={`grid ${grid} items-center px-4 py-2.5 border-b border-stroke-subtle text-[10px] font-semibold text-foreground-disabled`}>
       <div />
-      <div>순위</div>
-      <div>종목명</div>
+      <div />
+      <div className="pl-1">종목명</div>
       <div className="text-right">현재가</div>
       <div className="text-right">등락률</div>
       {showVolume && <div className="text-right">{VOLUME_COL_LABEL[sortFilter]}</div>}
-      <div className="text-right">{SECONDARY_COL_LABEL[sortFilter]}</div>
+      {showSecondary && <div className="text-right">{SECONDARY_COL_LABEL[sortFilter]}</div>}
     </div>
   )
 }
@@ -102,22 +103,32 @@ export default function MarketPage() {
   return <MarketContent />
 }
 
-export function MarketContent({ initialSortFilter }) {
-  const [marketFilter, setMarketFilter] = useState('kr')
+const MARKET_FILTER_KEY = 'market:tab'
+
+export function MarketContent({ initialSortFilter, initialMarketFilter, onStockClick, isModalMode = false }) {
+  const [marketFilter, setMarketFilter] = useState(
+    () => initialMarketFilter ?? ((!isModalMode && sessionStorage.getItem(MARKET_FILTER_KEY)) || 'kr')
+  )
   const [sortFilter, setSortFilter]     = useState(initialSortFilter ?? 'volume_value')
   const { watchedSet, toggle }          = useWatchlistSet()
 
+  function handleMarketFilter(key) {
+    setMarketFilter(key)
+    if (!isModalMode) sessionStorage.setItem(MARKET_FILTER_KEY, key)
+  }
+
   const { stocks, isLoading, errorMessage } = useMarketRanking(sortFilter, marketFilter)
+  const isForeign = marketFilter === 'us'
 
   return (
     <div className="flex flex-col h-full overflow-hidden bg-surface">
       <MarketIndexBar />
       <FilterBar
-        marketFilter={marketFilter} setMarketFilter={setMarketFilter}
+        marketFilter={marketFilter} setMarketFilter={handleMarketFilter}
         sortFilter={sortFilter}     setSortFilter={setSortFilter}
       />
       <div className="flex-1 overflow-y-auto">
-        <StockTableHeader sortFilter={sortFilter} />
+        <StockTableHeader sortFilter={sortFilter} isForeign={isForeign} />
         {isLoading && (
           <div className="flex items-center justify-center py-16 text-[12px] text-foreground-disabled">
             불러오는 중...
@@ -133,8 +144,11 @@ export function MarketContent({ initialSortFilter }) {
             key={stock.id}
             stock={stock}
             sortFilter={sortFilter}
+            isForeign={isForeign}
             isWatched={watchedSet.has(stock.stockCode)}
             onWatchToggle={toggle}
+            isModalMode={isModalMode}
+            onStockClick={onStockClick}
           />
         ))}
       </div>

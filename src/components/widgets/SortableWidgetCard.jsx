@@ -19,6 +19,7 @@ export default function SortableWidgetCard({
   gridCol,
   gridRow,
   widgetTypeId,
+  variantId,
   config = {},
   canDragToChat = true,
   children,
@@ -39,22 +40,24 @@ export default function SortableWidgetCard({
   })
 
   // 비편집모드 전용 — 핸들 버튼 draggable (widget-to-chat)
+  // setNodeRef를 전체 카드에 연결해 DragOverlay가 위젯 카드 위치 기준으로 앵커되도록 함
   const {
     attributes: handleAttrs,
     listeners: handleListeners,
-    setNodeRef: setHandleRef,
+    setNodeRef: setWtcNodeRef,
   } = useDraggable({
     id: `wtc-handle-${instanceId}`,
     disabled: isEditMode || isDragLocked || !canDragToChat,
-    data: { type: 'widget-to-chat', instanceId, widgetTypeId, config },
+    data: { type: 'widget-to-chat', instanceId, widgetTypeId, variantId, config },
   })
 
   const setNodeRef = useCallback(
     (node) => {
       setDraggableRef(node)
       setDroppableRef(node)
+      setWtcNodeRef(node)
     },
-    [setDraggableRef, setDroppableRef],
+    [setDraggableRef, setDroppableRef, setWtcNodeRef],
   )
 
   return (
@@ -74,7 +77,6 @@ export default function SortableWidgetCard({
       {/* 비편집모드 hover 핸들 — widget-to-chat drag 진입점 */}
       {!isEditMode && canDragToChat && (
         <button
-          ref={setHandleRef}
           aria-label="채팅으로 질문하기"
           className={cn(
             'absolute top-2 right-2 z-10 p-1 rounded',

@@ -2,12 +2,12 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeftRight } from 'lucide-react'
 import ReactECharts from 'echarts-for-react'
-import { getStockLogoUrl } from '@/lib/stockLogo'
-import { extractDominantColor } from '@/lib/extractLogoColor'
+import { usePortfolioColors } from '@/features/portfolio/portfolioColors'
 import StockAvatar from '@/components/ui/StockAvatar'
 import { cn } from '@/lib/cn'
 import ExchangeModal from '@/components/asset/ExchangeModal'
 import useAuthStore from '@/store/useAuthStore'
+import useUIStore from '@/store/useUIStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import { useMyAccount } from '@/api/account'
 import { useAssetPage } from '@/features/asset/useAssetPage'
@@ -212,6 +212,8 @@ function AssetFlowCard({ data, assetFlowRange, onChangeAssetFlowRange }) {
   const [mode, setMode] = useState('assets')
   const [chartOpacity, setChartOpacity] = useState(1)
   const pendingMode = useRef(null)
+  const theme = useUIStore((s) => s.theme)
+  const splitLineColor = theme === 'dark' ? '#252836' : '#F2F4F7'
 
   function handleModeChange(newMode) {
     if (newMode === mode) return
@@ -273,7 +275,7 @@ function AssetFlowCard({ data, assetFlowRange, onChangeAssetFlowRange }) {
       splitNumber: 3,
       axisLine: { show: false },
       axisTick: { show: false },
-      splitLine: { lineStyle: { color: '#F2F4F7' } },
+      splitLine: { lineStyle: { color: splitLineColor } },
       axisLabel: {
         color: '#9CA3AF',
         fontSize: 10,
@@ -353,51 +355,12 @@ function AssetFlowCard({ data, assetFlowRange, onChangeAssetFlowRange }) {
   )
 }
 
-// ── 로고 대표색 추출 훅 ───────────────────────────────────────────
-const CASH_COLOR = '#9CA3AF'
-const FALLBACK_COLORS = ['#0046FF', '#00C2A8', '#7B61FF', '#FF8C00', '#0035CC']
-
-function useLogoColors(items) {
-  const [colors, setColors] = useState({})
-
-  useEffect(() => {
-    if (!items?.length) return
-    items.forEach(async (item, i) => {
-      const key = item.stockCode ?? `cash_${i}`
-      if (item.type === 'CASH') {
-        setColors((prev) => ({ ...prev, [key]: CASH_COLOR }))
-        return
-      }
-      if (!item.stockCode) {
-        setColors((prev) => ({ ...prev, [key]: FALLBACK_COLORS[i % FALLBACK_COLORS.length] }))
-        return
-      }
-      const url =
-        getStockLogoUrl(item.marketType, item.stockCode) ??
-        getStockLogoUrl('KOSPI', item.stockCode) ??
-        getStockLogoUrl('KOSDAQ', item.stockCode)
-      if (!url) {
-        setColors((prev) => ({ ...prev, [key]: FALLBACK_COLORS[i % FALLBACK_COLORS.length] }))
-        return
-      }
-      const color = await extractDominantColor(url, FALLBACK_COLORS[i % FALLBACK_COLORS.length])
-      setColors((prev) => ({ ...prev, [key]: color }))
-    })
-  // items 배열 내용 변화 감지를 위해 JSON 직렬화
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(items?.map((i) => i.stockCode))])
-
-  return (item, idx) => {
-    const key = item.stockCode ?? `cash_${idx}`
-    return colors[key] ?? FALLBACK_COLORS[idx % FALLBACK_COLORS.length]
-  }
-}
 
 // ── 포트폴리오 파이차트 패널 (하단 좌) ───────────────────────────
 function PortfolioPanel({ data }) {
   const { portfolioItems } = data
 
-  const getColor = useLogoColors(portfolioItems)
+  const { getColor, ready } = usePortfolioColors(portfolioItems)
   const hasItems = portfolioItems.length > 0
 
   const sortedItems = [...portfolioItems].sort((a, b) => b.weight - a.weight)
@@ -464,11 +427,11 @@ function PortfolioPanel({ data }) {
         {hasItems ? (
           <>
             <div className="relative h-[260px] w-[260px] shrink-0">
-              <ReactECharts
+              {ready && <ReactECharts
                 option={chartOption}
                 className="w-full h-full"
                 opts={{ renderer: 'svg' }}
-              />
+              />}
             </div>
 
             <div className="flex min-w-0 flex-1 flex-col gap-3">

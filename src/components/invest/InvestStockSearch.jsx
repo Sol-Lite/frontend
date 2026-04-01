@@ -47,6 +47,13 @@ export default function InvestStockSearch({ stockMeta }) {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  useEffect(() => {
+    setOpen(false)
+    setKeyword('')
+    setResults([])
+    setLoading(false)
+  }, [stockMeta.code])
+
   function handleSelect(stock) {
     setOpen(false)
     setKeyword('')
@@ -73,8 +80,7 @@ export default function InvestStockSearch({ stockMeta }) {
         className="flex w-full items-center gap-2 rounded-[10px] border border-stroke-input bg-background px-3 py-2 text-left transition-colors hover:border-primary"
       >
         <Search className="h-[13px] w-[13px] shrink-0 text-foreground-disabled" />
-        <span className="text-[13px] font-bold text-foreground">{stockMeta.name}</span>
-        <span className="text-[11px] text-foreground-disabled">{stockMeta.code}</span>
+        <span className="text-[13px] font-medium text-foreground-disabled">종목 검색</span>
       </button>
     )
   }

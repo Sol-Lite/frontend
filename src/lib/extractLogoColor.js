@@ -4,6 +4,9 @@
  */
 export async function extractDominantColor(url, fallback = '#0046FF') {
   return new Promise((resolve) => {
+    const clamp8 = (v) => Math.max(0, Math.min(255, Number(v) || 0))
+    const isValidHex = (hex) => /^#[0-9a-fA-F]{6}$/.test(hex)
+
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.onload = () => {
@@ -23,15 +26,16 @@ export async function extractDominantColor(url, fallback = '#0046FF') {
           if (r > 235 && g > 235 && b > 235) continue // 흰색 계열
           if (r < 20 && g < 20 && b < 20) continue    // 검정 계열
           // 16단위로 버킷팅
-          const key = `${Math.round(r / 16) * 16},${Math.round(g / 16) * 16},${Math.round(b / 16) * 16}`
+          const key = `${Math.floor(r / 16) * 16},${Math.floor(g / 16) * 16},${Math.floor(b / 16) * 16}`
           buckets[key] = (buckets[key] || 0) + 1
         }
 
         const top = Object.entries(buckets).sort((a, b) => b[1] - a[1])[0]
         if (!top) return resolve(fallback)
 
-        const [r, g, b] = top[0].split(',').map(Number)
+        const [r, g, b] = top[0].split(',').map((v) => clamp8(v))
         const hex = '#' + [r, g, b].map((v) => v.toString(16).padStart(2, '0')).join('')
+        if (!isValidHex(hex)) return resolve(fallback)
         resolve(hex)
       } catch {
         resolve(fallback)

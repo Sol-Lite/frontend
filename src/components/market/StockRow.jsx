@@ -5,34 +5,37 @@ import PriceChange from '@/components/ui/PriceChange'
 import RatioBar from '@/components/ui/RatioBar'
 
 export const MARKET_GRID_BY_SORT_FILTER = {
-  volume_value: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_90px_96px]',
-  volume: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_80px_90px]',
-  market_cap: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_90px_82px]',
-  rising: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_108px]',
-  falling: 'grid-cols-[32px_36px_minmax(0,1fr)_110px_80px_108px]',
+  volume_value: 'grid-cols-[28px_30px_minmax(0,1fr)_110px_80px_90px_96px]',
+  volume: 'grid-cols-[28px_30px_minmax(0,1fr)_110px_80px_80px_90px]',
+  market_cap: 'grid-cols-[28px_30px_minmax(0,1fr)_110px_80px_90px_82px]',
+  rising: 'grid-cols-[28px_30px_minmax(0,1fr)_110px_80px_108px]',
+  falling: 'grid-cols-[28px_30px_minmax(0,1fr)_110px_80px_108px]',
 }
 
 export function hasPrimaryMetricColumn(sortFilter) {
   return ['volume_value', 'volume', 'market_cap'].includes(sortFilter)
 }
 
-export function getMarketRowGrid(sortFilter) {
+export function getMarketRowGrid(sortFilter, isForeign = false) {
+  if (isForeign && (sortFilter === 'rising' || sortFilter === 'falling')) {
+    return 'grid-cols-[28px_30px_minmax(0,1fr)_110px_80px]'
+  }
   return MARKET_GRID_BY_SORT_FILTER[sortFilter] ?? MARKET_GRID_BY_SORT_FILTER.volume_value
 }
 
 
-export default function StockRow({ stock, sortFilter = 'volume_value', isWatched, onWatchToggle }) {
+export default function StockRow({ stock, sortFilter = 'volume_value', isForeign = false, isWatched, onWatchToggle, isModalMode = false, onStockClick }) {
   const navigate = useNavigate()
   const isTop = stock.rank === 1
-  const grid = getMarketRowGrid(sortFilter)
+  const grid = getMarketRowGrid(sortFilter, isForeign)
   const showVolume = hasPrimaryMetricColumn(sortFilter)
-  const secondaryMetric = stock.secondaryMetric ?? { value: '—' }
+  const secondaryMetric = stock.secondaryMetric
   const marketType = stock.market ?? stock.marketType ?? null
 
   return (
     <div
       className={`grid ${grid} items-center px-4 py-2.5 border-b border-stroke-subtle hover:bg-surface-subtle transition-colors duration-[100ms] cursor-pointer last:border-b-0`}
-      onClick={() => navigate(`/invest/${stock.stockCode}`, { state: { stockName: stock.name, marketType } })}
+      onClick={() => isModalMode ? onStockClick?.(stock) : navigate(`/invest/${stock.stockCode}`, { state: { stockName: stock.name, marketType, exchangeCode: stock.exchangeCode ?? null } })}
     >
       {/* 관심종목 */}
       <button
@@ -81,15 +84,17 @@ export default function StockRow({ stock, sortFilter = 'volume_value', isWatched
       )}
 
       {/* 보조 지표 */}
-      <div className="flex h-full items-center pl-2">
-        {secondaryMetric.buyRatio != null
-          ? <RatioBar className="w-full" buyRatio={secondaryMetric.buyRatio} sellRatio={secondaryMetric.sellRatio} />
-          : (
-            <div className="w-full text-right text-[12px] font-medium text-foreground-secondary">
-              {secondaryMetric.value ?? '—'}
-            </div>
-          )}
-      </div>
+      {secondaryMetric != null && (
+        <div className="flex h-full items-center pl-2">
+          {secondaryMetric.buyRatio != null
+            ? <RatioBar className="w-full" buyRatio={secondaryMetric.buyRatio} sellRatio={secondaryMetric.sellRatio} />
+            : (
+              <div className="w-full text-right text-[12px] font-medium text-foreground-secondary">
+                {secondaryMetric.value ?? '—'}
+              </div>
+            )}
+        </div>
+      )}
     </div>
   )
 }

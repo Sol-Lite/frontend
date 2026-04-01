@@ -119,11 +119,11 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     ? (EXCHCD_BY_EXCHANGE_CODE[config.exchangeCode] ?? EXCHCD_BY_MARKET_TYPE[marketType] ?? '82')
     : null
 
-  // 종목 변경 시 실시간 상태 초기화
+  // 종목·기간 변경 시 실시간 상태 초기화
   useEffect(() => {
     setLivePrice(null)
     setLiveCandle(null)
-  }, [stockCode])
+  }, [stockCode, activePeriod])
 
   function handleStockSave({ stockCode: newCode, stockName: newName, marketType: newMarket, exchangeCode: newExchangeCode }) {
     updateWidgetConfig(instanceId, { stockCode: newCode, stockName: newName, marketType: newMarket, exchangeCode: newExchangeCode, stockId: undefined })
@@ -185,7 +185,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     [isMinute, periodCfg.days]
   )
 
-  const { data: minuteRaw } = useQuery({
+  const { data: minuteRaw, isSuccess: minuteSuccess } = useQuery({
     queryKey: isOverseas
       ? ['foreign', 'minuteChart', stockCode, exchcd, periodCfg.nmin]
       : ['stock', 'minute-chart', stockCode, periodCfg.ncnt],
@@ -197,7 +197,7 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
     refetchInterval: isOverseas && isMinute ? 60_000 : false,
   })
 
-  const { data: chartRaw } = useQuery({
+  const { data: chartRaw, isSuccess: chartSuccess } = useQuery({
     queryKey: isOverseas
       ? ['foreign', 'chart', periodCfg.foreignPeriod, stockCode, exchcd, startDate, endDate]
       : ['stock', 'chart', periodCfg.period, stockCode, startDate, endDate],
@@ -209,7 +209,9 @@ export default function StockChartWidget({ instanceId, variant = 'stock-sm', col
   })
 
   // ── STOMP 실시간 체결 구독 (국내 전용) ─────────────────────────
-  const liveTrade = useStompSubscription(!isOverseas && stockCode ? `/topic/stock/trade/${stockCode}` : null)
+  // 차트 데이터 로드 완료 후에만 구독 시작 (polling보다 STOMP가 먼저 도착하는 race condition 방지)
+  const chartDataReady = isMinute ? minuteSuccess : chartSuccess
+  const liveTrade = useStompSubscription(!isOverseas && stockCode && chartDataReady ? `/topic/stock/trade/${stockCode}` : null)
 
   useEffect(() => {
     if (!liveTrade) return

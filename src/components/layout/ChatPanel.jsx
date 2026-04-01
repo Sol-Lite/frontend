@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDroppable } from "@dnd-kit/core";
-import { MessageCircle, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import WIDGET_SHORTCUTS from "@/config/widgetShortcuts";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -119,7 +119,7 @@ function getInitialMessages() {
     {
       id: Date.now(),
       role: "ai",
-      text: "안녕하세요! 저는 SOL AI 어시스턴트입니다. ",
+      text: "안녕하세요! 저는 위젯과 대화를 통해  \n증권을 편리하게 돕는 쏠리입니다!",
       time: getTimestamp(),
     },
   ];
@@ -234,12 +234,9 @@ const FEATURE_CARDS = [
 function ChatHeader() {
   return (
     <div className="h-chat-header flex items-center gap-3 px-4 border-b border-stroke shrink-0">
-      <div className="w-9 h-9 rounded-xl bg-primary flex items-center justify-center shrink-0 shadow-brand-glow-sm">
-        <MessageCircle className="w-4.5 h-4.5 text-white" />
-      </div>
       <div className="flex flex-col gap-0.5">
-        <span className="text-[13px] font-bold text-foreground">
-          SOL AI 어시스턴트
+        <span className="text-[14px] font-bold text-foreground">
+          SOL-Lite <span className="text-primary">쏠리</span>
         </span>
       </div>
     </div>
@@ -645,7 +642,7 @@ function ChatSuggestions({ suggestions, activeIndex, onSelect }) {
 // DESIGN.md §16: bg-background border-stroke-input rounded-2xl px-3.5 py-2.5
 // 전송버튼: 빈 입력 → bg-surface-muted cursor-not-allowed / 입력 있음 → bg-primary
 // textarea: 입력 내용에 따라 높이 자동 증가, 최대 5줄, Shift+Enter 줄바꿈
-function ChatInput({ isDisabled = false, onSend, value = "", onChange, onSuggestionKeyDown }) {
+function ChatInput({ isDisabled = false, isSending = false, onSend, value = "", onChange, onSuggestionKeyDown }) {
   const textareaRef = useRef(null);
   const canSend = value.trim().length > 0 && !isDisabled;
 
@@ -686,7 +683,9 @@ function ChatInput({ isDisabled = false, onSend, value = "", onChange, onSuggest
         onKeyDown={handleKeyDown}
         disabled={isDisabled}
         placeholder={
-          isDisabled
+          isSending
+            ? "답변을 생성하고 있습니다..."
+            : isDisabled
             ? "로그인 후 이용하실 수 있습니다"
             : "SOL AI 어시스턴트에게 물어보세요..."
         }
@@ -716,43 +715,48 @@ function ChatInput({ isDisabled = false, onSend, value = "", onChange, onSuggest
 // 하단에 ChatInput disabled
 function LoginPrompt() {
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
+  const [avatar] = useState(() => AVATARS[Math.floor(Math.random() * AVATARS.length)]);
 
   return (
     <>
       <div className="flex-1 overflow-y-auto p-4 flex flex-col items-center justify-center gap-5">
-        <div className="flex flex-col items-center gap-3 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center shadow-brand-glow-sm">
-            <MessageCircle className="w-8 h-8 text-white" />
-          </div>
-          <div>
-            <p className="text-[13px] font-bold text-foreground">
-              SOL AI 어시스턴트
-            </p>
-            <p className="text-[11px] text-foreground-tertiary mt-1 leading-relaxed">
-              대화를 통해 증권 서비스를
-              <br />
-              빠르게 이용해보세요.
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-2 w-full">
-          {FEATURE_CARDS.map((card) => (
-            <div
-              key={card.title}
-              className="bg-surface-subtle border border-stroke rounded-xl px-3.5 py-3 flex items-start gap-3"
-            >
-              <span className="text-base leading-none mt-0.5">{card.icon}</span>
-              <div>
-                <p className="text-[12px] font-semibold text-foreground">
-                  {card.title}
-                </p>
-                <p className="text-[11px] text-foreground-tertiary mt-0.5">
-                  {card.desc}
-                </p>
+        <div className="w-full flex justify-start">
+          <div className="flex flex-col gap-1 w-full max-w-full">
+            <div className="flex items-end gap-2">
+              <div
+                className={cn(
+                  "w-11 h-11 rounded-full overflow-hidden flex items-end justify-center shrink-0",
+                  avatar.bgClass,
+                )}
+              >
+                <img
+                  src={`/avatars/${avatar.file}.png`}
+                  alt={avatar.file}
+                  className="w-9 h-9 object-contain object-bottom"
+                />
+              </div>
+              <span className="text-[14px] font-bold text-foreground">
+                챗봇 <span className="text-primary">쏠리</span>
+              </span>
+            </div>
+            <div className="w-full rounded-[0_18px_18px_18px] bg-surface-muted px-5 py-4 text-left">
+              <div className="flex flex-col gap-4">
+                {FEATURE_CARDS.map((card) => (
+                  <div key={card.title} className="flex items-start gap-3">
+                    <span className="text-[22px] leading-none mt-0.5">{card.icon}</span>
+                    <div>
+                      <p className="text-[14px] font-semibold text-foreground">
+                        {card.title}
+                      </p>
+                      <p className="text-[12px] text-foreground-tertiary mt-1 leading-relaxed">
+                        {card.desc}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
+          </div>
         </div>
 
         <button
@@ -1040,7 +1044,7 @@ export default function ChatPanel() {
     }
   }, []);
 
-  const handleSend = useCallback(async (text) => {
+  const handleSend = useCallback(async (text, stockCode = null, stockName = null) => {
     const userMsg = {
       id: Date.now(),
       role: "user",
@@ -1051,7 +1055,7 @@ export default function ChatPanel() {
     setIsTyping(true);
 
     try {
-      const data = await chatApi.sendMessage(text);
+      const data = await chatApi.sendMessage(text, stockCode, stockName);
       lastFailedTextRef.current = null;
 
       const INFO_CARD_TYPES = ['index', 'ranking', 'balance', 'exchange_rate', 'market_overview', 'portfolio', 'trade_history', 'trade-history'];
@@ -1116,7 +1120,7 @@ export default function ChatPanel() {
         ]);
       }
     } catch {
-      lastFailedTextRef.current = text;
+      lastFailedTextRef.current = { text, stockCode, stockName };
       setMessages((prev) => [
         ...prev,
         {
@@ -1135,16 +1139,16 @@ export default function ChatPanel() {
   // 대시보드 위젯 → 채팅 드롭 시 자동 질의 전송
   useEffect(() => {
     if (!pendingQuery || !isAuthenticated) return
-    const query = pendingQuery
+    const { text, stockCode, stockName } = pendingQuery
     consumePendingQuery()
-    handleSend(query)
+    handleSend(text, stockCode, stockName)
   }, [pendingQuery, isAuthenticated, consumePendingQuery, handleSend])
 
   const handleRetry = useCallback(() => {
-    const text = lastFailedTextRef.current;
-    if (!text) return;
+    const failed = lastFailedTextRef.current;
+    if (!failed) return;
     setMessages((prev) => prev.filter((m) => !m.isError));
-    handleSend(text);
+    handleSend(failed.text, failed.stockCode, failed.stockName);
   }, [handleSend]);
 
   const handlePinClose = useCallback((messageId, sourceOrderId) => {
@@ -1395,6 +1399,7 @@ export default function ChatPanel() {
               onSend={handleSend}
               onSuggestionKeyDown={handleSuggestionKeyDown}
               isDisabled={isTyping}
+              isSending={isTyping}
             />
           </div>
         </>

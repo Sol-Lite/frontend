@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Activity, LayoutGrid } from 'lucide-react'
+import { LayoutGrid } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import NavTabs, { NavConfirmModal } from './NavTabs'
 import useAuthStore from '@/store/useAuthStore'
@@ -7,6 +7,7 @@ import { useMyAccount } from '@/api/account'
 import useRightPanelStore from '@/store/useRightPanelStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore, { hasUnsavedChanges } from '@/store/useWidgetStore'
+import { dashboardApi } from '@/api/dashboard'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import NotificationCenter from '@/components/ui/NotificationCenter'
 import { FontSizeButton, ThemeButton } from './DisplaySettingsButtons'
@@ -37,13 +38,10 @@ function Logo() {
       <button
         onClick={handleClick}
         aria-label="홈으로 이동"
-        className="flex items-center gap-2 mr-2 shrink-0"
+        className="group flex items-center gap-2 mr-2 shrink-0 rounded-lg px-2 py-1 hover:bg-surface-muted transition-colors duration-[150ms]"
       >
-        <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow">
-          <Activity className="w-3.5 h-3.5 text-white" strokeWidth={2.5} />
-        </div>
-        <span className="text-[15px] font-bold tracking-tight text-foreground">
-          SOL <span className="text-primary">Lite</span>
+        <span className="text-[15px] font-bold tracking-tight text-foreground transition-colors duration-[150ms] group-hover:text-primary">
+          SOL-<span className="text-primary transition-colors duration-[150ms] group-hover:text-foreground">Lite</span>
         </span>
       </button>
       {showConfirm && (
@@ -118,13 +116,72 @@ function UserArea() {
 
 function EditModeActions() {
   const { exitEditMode, saveLayout } = useEditModeStore()
-  const { restoreSnapshot, clearSnapshot } = useWidgetStore()
+  const { restoreSnapshot, clearSnapshot, clearPendingPresets, pages, currentPageId } = useWidgetStore()
+  const pendingPresets = useWidgetStore((s) => s.pendingPresets)
+  const deletePageIds = useWidgetStore((s) => s.deletePageIds)
   const { mutate: saveDashboard, isPending, isError } = useDashboardSave()
 
-  function handleSave() {
+  async function handleSave() {
     clearSnapshot()
+
+    // 프리셋 여러 개가 대기 중이면 각각 API로 새 페이지 생성
+    if (pendingPresets.length > 0) {
+      try {
+        let allResponses = []
+
+        // 각 프리셋마다 API 호출
+        for (const preset of pendingPresets) {
+          const payload = {
+            presetName: preset.name,
+            theme: preset.sectorCode,
+            widgets: preset.widgets.map((w) => ({
+              widgetType: w.widgetTypeId,
+              positionX: w.gridCol,
+              positionY: w.gridRow,
+              width: w.colSpan,
+              height: w.rowSpan,
+              configJson: JSON.stringify({ variantId: w.variantId }),
+            })),
+          }
+          const response = await dashboardApi.applyPreset(payload)
+          if (response?.length) {
+            allResponses = response  // 마지막 응답이 전체 페이지 목록
+          }
+        }
+
+        if (allResponses.length > 0) {
+          // 서버 데이터로 갱신
+          const { loadFromServer, switchPage } = useWidgetStore.getState()
+          loadFromServer(allResponses)
+          // 마지막 생성된 페이지로 이동
+          const lastPage = allResponses[allResponses.length - 1]
+          switchPage(String(lastPage.dashboardId))
+        }
+
+        clearPendingPresets()
+      } catch (e) {
+        console.error('프리셋 적용 실패:', e)
+      }
+    }
+
+    // DB에서 삭제할 페이지가 있으면 각각 API 호출
+    if (deletePageIds.length > 0) {
+      try {
+        for (const pageId of deletePageIds) {
+          await dashboardApi.deletePage(pageId)
+        }
+      } catch (e) {
+        console.error('페이지 삭제 실패:', e)
+      }
+    }
+
     // 저장 성공 시 editMode 종료, 실패 시 UI에 오류 표시
-    saveDashboard(undefined, { onSuccess: saveLayout })
+    saveDashboard(undefined, {
+      onSuccess: () => {
+        useWidgetStore.getState().clearDeletePageIds?.()
+        saveLayout()
+      },
+    })
   }
 
   return (
@@ -137,7 +194,13 @@ function EditModeActions() {
         <span className="text-[11px] text-down">저장 실패. 다시 시도해주세요.</span>
       )}
       <button
-        onClick={() => { restoreSnapshot(); exitEditMode() }}
+        onClick={() => {
+          const { clearDeletePageIds } = useWidgetStore.getState()
+          restoreSnapshot()  // pages 복원 + 임시 페이지 자동 제거됨
+          clearPendingPresets()
+          clearDeletePageIds()
+          exitEditMode()
+        }}
         disabled={isPending}
         className="px-3 py-1.5 rounded-xl border border-stroke-input text-[12px] text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms] disabled:opacity-50"
       >

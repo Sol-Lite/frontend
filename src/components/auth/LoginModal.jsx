@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Activity, X, Check, ArrowLeft } from 'lucide-react'
 import SplashScreenFill from '@/components/ui/SplashScreenFill'
 import { Input, PasswordInput } from '@/components/ui/Input'
@@ -223,9 +224,15 @@ export default function LoginModal({ onClose, initialView = 'login' }) {
     setView(initialView)
   }, [initialView])
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-5 pointer-events-none">
-      <div className="relative w-full max-w-[400px] bg-surface rounded-[6px] shadow-modal overflow-hidden pointer-events-auto animate-modal-in">
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[1200] flex items-center justify-center p-5 bg-transparent"
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-[400px] bg-surface rounded-[6px] shadow-modal overflow-hidden animate-modal-in"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* 모달 헤더 */}
         <div className="flex items-center justify-between px-6 pt-[22px]">
           <div className="flex items-center gap-2.5">
@@ -266,6 +273,7 @@ export default function LoginModal({ onClose, initialView = 'login' }) {
           }
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

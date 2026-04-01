@@ -6,8 +6,8 @@ import { newsApi } from '@/api/news'
 import { cn } from '@/lib/cn'
 
 const TABS = [
-  { key: 'kr', label: '한국' },
-  { key: 'us', label: '미국' },
+  { key: 'kr', label: '국내' },
+  { key: 'us', label: '해외' },
 ]
 
 function HighlightedText({ text }) {
@@ -91,23 +91,6 @@ function ArticleView({ newsId, onBack }) {
                 <HighlightedText text={data.oneLineSummary} />
               </p>
             </div>
-          </div>
-        )}
-
-        {/* 주요 이벤트 */}
-        {data.marketEvents?.length > 0 && (
-          <div className="bg-surface-subtle rounded-2xl px-5 py-4 flex flex-col gap-3">
-            <span className="text-xs font-bold text-foreground-disabled uppercase tracking-widest">
-              주요 이벤트
-            </span>
-            <ul className="flex flex-col gap-2.5">
-              {data.marketEvents.map((ev, i) => (
-                <li key={i} className="flex items-start gap-3 text-[14px] text-foreground leading-relaxed">
-                  <span className="text-primary font-bold mt-[2px] shrink-0">•</span>
-                  {ev}
-                </li>
-              ))}
-            </ul>
           </div>
         )}
 

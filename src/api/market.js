@@ -48,6 +48,7 @@ export const marketApi = {
   getIndexChart: (code, params) => get(`/indices/${encodeURIComponent(code)}/chart`, params),
   getIndexMinuteChart: (code, params) => get(`/indices/${encodeURIComponent(code)}/minute-chart`, params),
   getRanking: (params) => get('/stocks/ranking', params),
+  getThemeRanking: (theme, params = { type: 'trading-value' }) => get(`/stocks/themes/${theme}/ranking`, params),
   getCurrentPrice: (stockCode) => get(`/stocks/${stockCode}/price`),
   getDailyPrice: (stockCode, params) => get(`/stocks/${stockCode}/daily`, params),
   getChart: (stockCode, params) => get(`/stocks/${stockCode}/chart`, params),
@@ -69,6 +70,7 @@ export const foreignMarketApi = {
   getInfo: (symbol, exchcd) => get(`/foreign-stocks/${symbol}/info`, { exchcd }),
   getChart: (symbol, exchcd, params) => get(`/foreign-stocks/${symbol}/chart-advanced`, { exchcd, ...params }),
   getMinuteChart: (symbol, exchcd, params) => get(`/foreign-stocks/${symbol}/chart-nmin`, { exchcd, ...params }),
+  getForeignRanking: (params) => get('/foreign-stocks/ranking', params),
 }
 
 const EXCHCD_MAP = {

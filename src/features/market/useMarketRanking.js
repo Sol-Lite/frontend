@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { marketApi } from '@/api/market'
+import { foreignMarketApi, marketApi } from '@/api/market'
 import { subscribeTopic } from '@/lib/stomp'
 
 const AVATAR_COLORS = [
@@ -20,6 +20,15 @@ function formatMoney(won) {
   if (n >= 100_000_000) return `${(n / 100_000_000).toFixed(1)}억원`
   if (n >= 10_000) return `${Math.floor(n / 10_000).toLocaleString('ko-KR')}만원`
   return `${n.toLocaleString('ko-KR')}원`
+}
+
+function formatUSD(value) {
+  const n = Number(value)
+  if (!n) return null
+  if (n >= 1e12) return `$${(n / 1e12).toFixed(1)}T`
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(1)}M`
+  return `$${n.toLocaleString('en-US')}`
 }
 
 function formatVolume(shares) {
@@ -99,18 +108,71 @@ function normalizeItem(item, sortFilter) {
   }
 }
 
+const EXCHANGE_TO_MARKET_TYPE = { NAS: 'NASDAQ', NYS: 'NYSE', AMS: 'AMEX' }
+
+function normalizeForeignItem(item, sortFilter) {
+  const marketType = EXCHANGE_TO_MARKET_TYPE[item.exchangeCode] ?? 'NASDAQ'
+  const metricValue = sortFilter === 'volume'
+    ? formatVolume(item.volume)
+    : sortFilter === 'volume_value'
+      ? formatUSD(item.tradingValue)
+      : sortFilter === 'market_cap'
+        ? formatUSD(item.marketCap)
+        : null
+
+  const secondaryMetric = sortFilter === 'volume_value'
+    ? { label: '평균 거래대금', value: item.avgTradingValue != null ? formatUSD(item.avgTradingValue) : '—' }
+    : sortFilter === 'volume'
+      ? { label: '평균 거래량', value: item.avgVolume != null ? formatVolume(item.avgVolume) : '—' }
+      : sortFilter === 'market_cap'
+        ? { label: '시장비중', value: item.marketShareRate != null ? formatPercent(item.marketShareRate) : '—' }
+        : null  // rising/falling: 칼럼 자체 제거
+
+  const priceFormatted = `$${Number(item.price).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`
+
+  return {
+    id: item.stockCode,
+    rank: item.rank,
+    name: item.name,
+    stockNameEn: item.nameEn ?? null,
+    label: (item.nameEn ?? item.name ?? '').slice(0, 2),
+    color: pickColor(item.stockCode),
+    price: priceFormatted,
+    change: item.changeRate,
+    metricValue,
+    secondaryMetric,
+    consecutiveDays: null,
+    buyRatio: null,
+    sellRatio: null,
+    stockCode: item.stockCode,
+    market: marketType,       // 'NASDAQ' / 'NYSE' → StockAvatar 로고 경로용
+    exchangeCode: item.exchangeCode,  // NAS / NYS → StockRow navigate state로 전달
+  }
+}
+
 export default function useMarketRanking(sortFilter, marketFilter) {
+  const isForeign = marketFilter === 'us'
   const [livePrices, setLivePrices] = useState({})
   const subscriptionsRef = useRef(new Map())
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['market', 'ranking', sortFilter, marketFilter],
-    queryFn: () => marketApi.getRanking({ type: TYPE_MAP[sortFilter] ?? 'trading-value', market: marketFilter }),
-    refetchInterval: 30 * 1000,
+    queryKey: isForeign
+      ? ['market', 'foreign-ranking', sortFilter]
+      : ['market', 'ranking', sortFilter, marketFilter],
+    queryFn: isForeign
+      ? () => foreignMarketApi.getForeignRanking({ type: TYPE_MAP[sortFilter] ?? 'trading-value', exchange: 'NAS' })
+      : () => marketApi.getRanking({ type: TYPE_MAP[sortFilter] ?? 'trading-value', market: marketFilter }),
+    refetchInterval: isForeign ? 60 * 1000 : 30 * 1000,
     staleTime: 0,
   })
 
+  // 국내 전용 - 실시간 WebSocket 구독
   useEffect(() => {
+    if (isForeign) return
+
     const nextCodes = new Set((data ?? []).map((item) => item.stockCode).filter(Boolean))
     const subscriptions = subscriptionsRef.current
 
@@ -134,7 +196,7 @@ export default function useMarketRanking(sortFilter, marketFilter) {
       })
       subscriptions.set(code, subscription)
     })
-  }, [data])
+  }, [data, isForeign])
 
   useEffect(() => {
     const subscriptions = subscriptionsRef.current
@@ -147,11 +209,12 @@ export default function useMarketRanking(sortFilter, marketFilter) {
   const stocks = useMemo(
     () =>
       (data ?? []).map((item) => {
+        if (isForeign) return normalizeForeignItem(item, sortFilter)
         const base = normalizeItem(item, sortFilter)
         const live = livePrices[item.stockCode]
         return live ? { ...base, price: live.price, change: live.change } : base
       }),
-    [data, livePrices, sortFilter],
+    [data, livePrices, sortFilter, isForeign],
   )
 
   return { stocks, isLoading, errorMessage: error?.message ?? '' }
