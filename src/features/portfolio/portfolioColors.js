@@ -2,8 +2,14 @@ import { useEffect, useMemo, useState } from 'react'
 import { getStockLogoUrl } from '@/lib/stockLogo'
 import { extractDominantColor } from '@/lib/extractLogoColor'
 
-const GRAY_COLOR = '#9CA3AF'
-const FALLBACK_COLORS = ['#0046FF', '#00C2A8', '#7B61FF', '#FF8C00', '#0035CC']
+const GRAY_COLOR = 'var(--color-chart-other)'
+const FALLBACK_COLORS = [
+  'var(--color-chart-1)',
+  'var(--color-chart-2)',
+  'var(--color-chart-3)',
+  'var(--color-chart-4)',
+  'var(--color-chart-5)',
+]
 
 function hashString(text) {
   let hash = 5381
