@@ -6,8 +6,8 @@ import { newsApi } from '@/api/news'
 import { cn } from '@/lib/cn'
 
 const TABS = [
-  { key: 'kr', label: '한국' },
-  { key: 'us', label: '미국' },
+  { key: 'kr', label: '국내' },
+  { key: 'us', label: '해외' },
 ]
 
 function HighlightedText({ text }) {
