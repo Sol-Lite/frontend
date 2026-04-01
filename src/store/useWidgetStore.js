@@ -164,6 +164,40 @@ export function findPushAsidePlanAt(widgets, activeId, targetCol, targetRow) {
   return { activeId, targetCol, targetRow, moves }
 }
 
+/* 그리드에 아직 없는 신규 위젯을 targetCol/targetRow에 추가할 때 필요한 push-aside 계획 생성.
+   findPushAsidePlanAt과 동일 로직이지만 activeId(기존 위젯) 없이 colSpan/rowSpan을 직접 받는다. */
+export function findPushAsidePlanForNew(widgets, colSpan, rowSpan, targetCol, targetRow) {
+  if (targetCol + colSpan - 1 > GRID_COLS || targetRow + rowSpan - 1 > GRID_ROWS) return null
+
+  const blockers = widgets.filter(
+    (w) => _overlap(targetCol, targetRow, colSpan, rowSpan, w.gridCol, w.gridRow, w.colSpan, w.rowSpan),
+  )
+  if (blockers.length === 0) return null
+
+  const sortedBlockers = [...blockers].sort((a, b) => {
+    const areaDiff = b.colSpan * b.rowSpan - a.colSpan * a.rowSpan
+    if (areaDiff !== 0) return areaDiff
+    const da = Math.abs(a.gridCol - targetCol) + Math.abs(a.gridRow - targetRow)
+    const db = Math.abs(b.gridCol - targetCol) + Math.abs(b.gridRow - targetRow)
+    return da - db
+  })
+
+  const blockerIds = new Set(sortedBlockers.map((w) => w.instanceId))
+  const working = widgets
+    .filter((w) => !blockerIds.has(w.instanceId))
+    .concat({ instanceId: '__ghost_new__', gridCol: targetCol, gridRow: targetRow, colSpan, rowSpan })
+
+  const moves = []
+  for (const blocker of sortedBlockers) {
+    const cell = findNearestFreeCell(working, blocker.colSpan, blocker.rowSpan, blocker.gridCol, blocker.gridRow)
+    if (!cell) return null
+    moves.push({ instanceId: blocker.instanceId, gridCol: cell.gridCol, gridRow: cell.gridRow })
+    working.push({ instanceId: blocker.instanceId, colSpan: blocker.colSpan, rowSpan: blocker.rowSpan, gridCol: cell.gridCol, gridRow: cell.gridRow })
+  }
+
+  return { targetCol, targetRow, moves }
+}
+
 /* 그리드에 해당 크기의 위젯을 배치할 빈 공간이 있는지 확인 */
 export function canFitInGrid(widgets, colSpan, rowSpan) {
   for (let r = 1; r <= GRID_ROWS - rowSpan + 1; r++) {
@@ -437,6 +471,18 @@ const useWidgetStore = create((set) => ({
       const newWidgets = state.widgets.map((w) =>
         w.instanceId === instanceId ? { ...w, gridCol, gridRow } : w,
       )
+      return _setCurrentWidgets(state, newWidgets)
+    }),
+
+  // new-widget push-aside: blockers만 계획된 좌표로 이동 (active 위젯은 addWidgetAt으로 별도 추가)
+  applyPushAsideMoves: (moves) =>
+    set((state) => {
+      if (!moves?.length) return state
+      const moveMap = new Map(moves.map((m) => [m.instanceId, m]))
+      const newWidgets = state.widgets.map((w) => {
+        const m = moveMap.get(w.instanceId)
+        return m ? { ...w, gridCol: m.gridCol, gridRow: m.gridRow } : w
+      })
       return _setCurrentWidgets(state, newWidgets)
     }),
 

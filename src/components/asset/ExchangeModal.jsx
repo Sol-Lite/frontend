@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { X, ArrowLeftRight, Loader2 } from 'lucide-react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { exchangeApi } from '@/api/exchange'
@@ -281,13 +282,16 @@ function Row({ label, value, bold }) {
 }
 
 function Overlay({ onClose, children }) {
-  return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center">
-      {/* 딤 배경 */}
-      <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-
+  return createPortal(
+    <div
+      className="fixed inset-0 z-[1200] flex items-center justify-center p-5 bg-transparent"
+      onClick={onClose}
+    >
       {/* 모달 */}
-      <div className="relative z-10 w-[380px] bg-surface rounded-2xl shadow-modal p-6">
+      <div
+        className="relative w-[380px] bg-surface rounded-2xl shadow-modal p-6 animate-modal-in"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-[9px] bg-primary flex items-center justify-center shadow-brand-glow">
@@ -297,6 +301,7 @@ function Overlay({ onClose, children }) {
           </div>
           <button
             onClick={onClose}
+            aria-label="닫기"
             className="p-1 text-foreground-disabled hover:text-foreground transition-colors"
           >
             <X className="w-4 h-4" />
@@ -304,6 +309,7 @@ function Overlay({ onClose, children }) {
         </div>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }

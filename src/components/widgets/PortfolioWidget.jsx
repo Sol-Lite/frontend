@@ -197,8 +197,8 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
               {portfolio.isLoading ? '불러오는 중...' : '보유 종목 없음'}
             </div>
           ) : (
-            <div className="flex items-center gap-2.5 flex-1 min-h-0">
-              <div className="relative w-14 h-14 rounded-full shrink-0" style={ready && conicStops ? { background: `conic-gradient(${conicStops})` } : undefined}>
+            <div className="flex items-stretch gap-2.5 flex-1 min-h-0">
+              <div className="relative w-14 h-14 rounded-full shrink-0 self-center" style={ready && conicStops ? { background: `conic-gradient(${conicStops})` } : undefined}>
                 {(!ready || !conicStops) && <div className="absolute inset-0 rounded-full bg-surface-muted" />}
                 <div className="absolute inset-[30%] rounded-full bg-surface" />
               </div>
