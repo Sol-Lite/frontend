@@ -1,9 +1,15 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { getStockLogoUrl } from '@/lib/stockLogo'
 import { extractDominantColor } from '@/lib/extractLogoColor'
 
-const GRAY_COLOR = '#9CA3AF'
-const FALLBACK_COLORS = ['#0046FF', '#00C2A8', '#7B61FF', '#FF8C00', '#0035CC']
+const GRAY_COLOR = 'var(--color-chart-other)'
+const FALLBACK_COLORS = [
+  'var(--color-chart-1)',
+  'var(--color-chart-2)',
+  'var(--color-chart-3)',
+  'var(--color-chart-4)',
+  'var(--color-chart-5)',
+]
 
 function hashString(text) {
   let hash = 5381
@@ -28,7 +34,6 @@ function getFallbackColor(item, idx) {
 
 export function usePortfolioColors(items) {
   const [colors, setColors] = useState({})
-  const [ready, setReady] = useState(false)
 
   const depsKey = useMemo(
     () => JSON.stringify((items ?? []).map((item, idx) => ({
@@ -41,19 +46,20 @@ export function usePortfolioColors(items) {
   )
 
   useEffect(() => {
-    if (!items?.length) { setReady(true); return }
+    if (!items?.length) return
     let cancelled = false
-    setReady(false)
 
-    Promise.all(items.map(async (item, idx) => {
+    items.forEach(async (item, idx) => {
       const key = getStableKey(item, idx)
 
       if (item?.type === 'OTHER' || item?.type === 'CASH') {
-        return [key, GRAY_COLOR]
+        if (!cancelled) setColors((prev) => ({ ...prev, [key]: GRAY_COLOR }))
+        return
       }
 
       if (!item?.stockCode) {
-        return [key, getFallbackColor(item, idx)]
+        if (!cancelled) setColors((prev) => ({ ...prev, [key]: getFallbackColor(item, idx) }))
+        return
       }
 
       const fallback = getFallbackColor(item, idx)
@@ -62,25 +68,23 @@ export function usePortfolioColors(items) {
         getStockLogoUrl('KOSPI', item.stockCode) ??
         getStockLogoUrl('KOSDAQ', item.stockCode)
 
-      if (!url) return [key, fallback]
+      if (!url) {
+        if (!cancelled) setColors((prev) => ({ ...prev, [key]: fallback }))
+        return
+      }
 
       const color = await extractDominantColor(url, fallback)
-      return [key, color]
-    })).then((entries) => {
-      if (!cancelled) {
-        setColors(Object.fromEntries(entries))
-        setReady(true)
-      }
+      if (!cancelled) setColors((prev) => ({ ...prev, [key]: color }))
     })
 
-    return () => { cancelled = true }
+    return () => {
+      cancelled = true
+    }
   }, [depsKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const getColor = useCallback((item, idx = 0) => {
+  return (item, idx = 0) => {
     const key = getStableKey(item, idx)
     if (item?.type === 'OTHER' || item?.type === 'CASH') return GRAY_COLOR
     return colors[key] ?? getFallbackColor(item, idx)
-  }, [colors])
-
-  return { getColor, ready }
+  }
 }
