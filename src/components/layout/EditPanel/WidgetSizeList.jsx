@@ -698,12 +698,26 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
             {/* 하: 수익 추이 */}
             <div className="flex flex-col flex-1 min-h-0 border-t border-stroke pt-1">
               <div className="text-[8px] text-foreground-disabled shrink-0">수익 추이 (7일)</div>
-              <div className="flex-1 min-h-0 my-1">
-                <svg viewBox="0 0 100 30" preserveAspectRatio="none" className="w-full h-full block">
-                  <polyline points="0,27 12,23 24,25 36,18 50,14 62,10 74,7 86,4 100,1" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
-                </svg>
+              <div className="flex-1 min-h-0 flex mt-1">
+                {/* y축 눈금 */}
+                <div className="flex flex-col justify-between items-end pr-1 shrink-0" style={{ width: 20 }}>
+                  <span className="text-[6px] text-foreground-disabled">+3%</span>
+                  <span className="text-[6px] text-foreground-disabled">0%</span>
+                  <span className="text-[6px] text-foreground-disabled">-1%</span>
+                </div>
+                {/* 차트 영역 */}
+                <div className="flex flex-col flex-1 min-w-0">
+                  <svg viewBox="0 0 100 24" preserveAspectRatio="none" className="w-full flex-1 block">
+                    <polyline points="0,20 17,18 33,19 50,13 67,10 83,6 100,2" fill="none" stroke="var(--color-up)" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+                  </svg>
+                  {/* x축 날짜 */}
+                  <div className="flex justify-between">
+                    {['03.26', '03.28', '03.30', '04.01'].map((d) => (
+                      <span key={d} className="text-[6px] text-foreground-disabled">{d}</span>
+                    ))}
+                  </div>
+                </div>
               </div>
-              <div className="text-[8px] text-up text-right shrink-0">+2.61%</div>
             </div>
           </div>
         </div>
