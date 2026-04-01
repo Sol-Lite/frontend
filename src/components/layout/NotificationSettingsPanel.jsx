@@ -99,12 +99,11 @@ export default function NotificationSettingsPanel() {
 
   function handleCustomChange(val) {
     setCustomValue(val)
-    setSettings((s) => ({ ...s, defaultThresholdPercent: parseFloat(val) || 0 }))
   }
 
   async function handleSave() {
-    const percent = settings.defaultThresholdPercent
-    if (!percent || percent < 0.01 || percent > 99.99) {
+    const percent = isCustom ? parseFloat(customValue) : settings.defaultThresholdPercent
+    if (isNaN(percent) || percent < 0.01 || percent > 99.99) {
       setSaveError('유효한 범위를 입력해주세요 (0.01 ~ 99.99)')
       return
     }
