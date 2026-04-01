@@ -12,7 +12,7 @@ import AppHeader from './AppHeader'
 import RightPanel from './RightPanel'
 import CurrencySync from './CurrencySync'
 import WidgetDetailModal from '@/components/widgets/WidgetDetailModal'
-import useWidgetStore, { canPlaceAt, findPushAsidePlanAt } from '@/store/useWidgetStore'
+import useWidgetStore, { canPlaceAt, findPushAsidePlanAt, findPushAsidePlanForNew } from '@/store/useWidgetStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
 import useAuthStore from '@/store/useAuthStore'
@@ -45,6 +45,7 @@ export default function AppShell() {
     addWidgetAt,
     moveWidgetTo,
     applyPushAsidePlan,
+    applyPushAsideMoves,
     setPhantom,
     clearPhantom,
     phantomWidget,
@@ -57,6 +58,8 @@ export default function AppShell() {
   const { cellWidth, cellHeight } = useGridStore()
   const pointerPos = useRef({ x: 0, y: 0 })
   const dragAnchor = useRef({ colOffset: 0, rowOffset: 0 })
+  // new-widget 드래그 시작 시 패널 카드 내 grab 위치(px). DragOverlay와 phantom 위치 동기화에 사용.
+  const newWidgetGrabOffset = useRef({ x: 0, y: 0 })
 
   // 포인터 좌표를 drag 중에만 추적 (handleDragMove에서 사용)
   // 동일 참조로 등록·해제할 수 있도록 useRef에 저장
@@ -92,6 +95,16 @@ export default function AppShell() {
 
     if (type === 'new-widget') {
       setIsDraggingNewWidget(true)
+      // 패널 카드 내 grab 위치 기록: DragOverlay top-left = cursor - grabOffset
+      const initial = active.rect.current?.initial
+      if (initial && activatorEvent && 'clientX' in activatorEvent) {
+        newWidgetGrabOffset.current = {
+          x: activatorEvent.clientX - initial.left,
+          y: activatorEvent.clientY - initial.top,
+        }
+      } else {
+        newWidgetGrabOffset.current = { x: 0, y: 0 }
+      }
     }
   }
 
@@ -124,10 +137,31 @@ export default function AppShell() {
 
     if (type === 'new-widget') {
       const { variant } = active.data.current
-      if (canPlaceAt(widgets, pointerCol, pointerRow, variant.colSpan, variant.rowSpan)) {
-        setPhantom({ gridCol: pointerCol, gridRow: pointerRow, colSpan: variant.colSpan, rowSpan: variant.rowSpan })
+      // grab offset으로 보정: DragOverlay top-left = cursor - grabOffset이므로 phantom도 동일 기준으로 계산
+      const { x: grabX, y: grabY } = newWidgetGrabOffset.current
+      const phantomCol = Math.max(1, Math.min(
+        Math.floor((x - grabX - rect.left) / (cellWidth + GRID_GAP)) + 1,
+        GRID_COLS - variant.colSpan + 1,
+      ))
+      const phantomRow = Math.max(1, Math.min(
+        Math.floor((y - grabY - rect.top) / (cellHeight + GRID_GAP)) + 1,
+        GRID_ROWS - variant.rowSpan + 1,
+      ))
+      if (canPlaceAt(widgets, phantomCol, phantomRow, variant.colSpan, variant.rowSpan)) {
+        setPhantom({ gridCol: phantomCol, gridRow: phantomRow, colSpan: variant.colSpan, rowSpan: variant.rowSpan })
       } else {
-        clearPhantom()
+        const plan = findPushAsidePlanForNew(widgets, variant.colSpan, variant.rowSpan, phantomCol, phantomRow)
+        if (plan) {
+          setPhantom({
+            gridCol: plan.targetCol,
+            gridRow: plan.targetRow,
+            colSpan: variant.colSpan,
+            rowSpan: variant.rowSpan,
+            pushAsidePlan: plan,
+          })
+        } else {
+          clearPhantom()
+        }
       }
       return
     }
@@ -193,6 +227,9 @@ export default function AppShell() {
 
     if (type === 'new-widget' && savedPhantom) {
       const { widgetTypeId, variant, widgetConfig } = active.data.current
+      if (savedPhantom.pushAsidePlan) {
+        applyPushAsideMoves(savedPhantom.pushAsidePlan.moves)
+      }
       addWidgetAt(widgetTypeId, variant, savedPhantom.gridCol, savedPhantom.gridRow, widgetConfig)
       clearPending()
       saveDashboard()
