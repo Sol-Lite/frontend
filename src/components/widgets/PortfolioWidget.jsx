@@ -87,11 +87,15 @@ function usePortfolio(enabled, topN = 3) {
       if (items.length > 0) items[items.length - 1].ratio += (100 - sum)
     }
 
-    const returnRate = summary?.totalStockUnrealizedProfitLossRate != null
-      ? Number(summary.totalStockUnrealizedProfitLossRate)
+    const returnRate = summary?.accountProfitLossRate != null
+      ? Number(summary.accountProfitLossRate)
       : 0
 
-    return { items, returnRate, isLoading: false }
+    const accountProfitLoss = summary?.accountProfitLoss != null
+      ? Number(summary.accountProfitLoss)
+      : null
+
+    return { items, returnRate, accountProfitLoss, isLoading: false }
   }, [summary, domestic, overseas, portfolio, sl, dl, ol, pl, enabled, topN])
 }
 
@@ -121,9 +125,12 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
   const conicStops = useMemo(() => buildConicStops(portfolio.items, getColor), [portfolio.items, getColor])
 
   const returnRateStr = portfolio.returnRate != null
-    ? `${portfolio.returnRate >= 0 ? '+' : ''}${portfolio.returnRate.toFixed(1)}%`
+    ? `${portfolio.returnRate >= 0 ? '+' : ''}${portfolio.returnRate.toFixed(2)}%`
     : '-'
   const returnRateColor = portfolio.returnRate == null ? 'text-foreground-disabled' : portfolio.returnRate >= 0 ? 'text-up' : 'text-down'
+  const profitLossStr = portfolio.accountProfitLoss != null
+    ? `${portfolio.accountProfitLoss >= 0 ? '+' : ''}${Math.round(portfolio.accountProfitLoss).toLocaleString('ko-KR')}원`
+    : null
 
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={() => open({ widgetTypeId: 'balance', config: {} })}>
@@ -164,7 +171,9 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
                 <div>
                   <div className="text-widget-9 text-foreground-disabled">총 수익률</div>
                   <div className={`text-widget-22 font-bold leading-tight ${returnRateColor}`}>{returnRateStr}</div>
-                  <div className="text-widget-9 text-foreground-disabled mt-0.5">+4,280,000원</div>
+                  {profitLossStr && (
+                    <div className={`text-widget-9 mt-0.5 ${returnRateColor}`}>{profitLossStr}</div>
+                  )}
                 </div>
               </div>
               <div className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-y-auto">
