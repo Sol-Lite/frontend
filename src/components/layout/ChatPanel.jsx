@@ -280,7 +280,7 @@ function ChatBubble({
       <div
         className={cn("flex flex-col gap-1 max-w-[85%]", isAI ? "items-start" : "items-end")}
       >
-      {isAI && (
+      {isAI && !isTyping && (
         <div className="flex items-end gap-2">
           <div
             className={cn("w-10 h-10 rounded-full overflow-hidden flex items-end justify-center shrink-0", avatar.bgClass)}
@@ -291,7 +291,7 @@ function ChatBubble({
               className="w-8 h-8 object-contain object-bottom animate-avatar-pop-in"
             />
           </div>
-          {time && !isTyping && (
+          {time && (
             <span className="text-[9px] text-foreground-disabled">{time}</span>
           )}
         </div>
@@ -692,7 +692,7 @@ function ChatInput({ isDisabled = false, isSending = false, onSend, value = "", 
             ? "답변을 준비하고 있어요..."
             : isDisabled
             ? "로그인 후 이용하실 수 있습니다"
-            : "SOL AI 어시스턴트에게 물어보세요..."
+            : "쏠리에게 물어보세요..."
         }
         className="flex-1 px-3 py-1.5 rounded-lg bg-background text-[12px] text-foreground placeholder:text-foreground-disabled border border-stroke focus:outline-none transition-colors duration-150 resize-none leading-relaxed"
         style={{ maxHeight: "120px", overflowY: "auto" }}
