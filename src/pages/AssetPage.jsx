@@ -2,8 +2,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeftRight } from 'lucide-react'
 import ReactECharts from 'echarts-for-react'
-import { getStockLogoUrl } from '@/lib/stockLogo'
-import { extractDominantColor } from '@/lib/extractLogoColor'
+import { usePortfolioColors } from '@/features/portfolio/portfolioColors'
 import StockAvatar from '@/components/ui/StockAvatar'
 import { cn } from '@/lib/cn'
 import ExchangeModal from '@/components/asset/ExchangeModal'
@@ -356,55 +355,12 @@ function AssetFlowCard({ data, assetFlowRange, onChangeAssetFlowRange }) {
   )
 }
 
-// ── 로고 대표색 추출 훅 ───────────────────────────────────────────
-const CASH_COLOR = '#9CA3AF'
-const FALLBACK_COLORS = ['#0046FF', '#00C2A8', '#7B61FF', '#FF8C00', '#0035CC']
-
-function useLogoColors(items) {
-  const [colors, setColors] = useState({})
-  const [ready, setReady] = useState(false)
-
-  useEffect(() => {
-    if (!items?.length) { setReady(true); return }
-    let isCancelled = false
-    setReady(false)
-
-    Promise.all(items.map(async (item, i) => {
-      const key = item.stockCode ?? `cash_${i}`
-      if (item.type === 'CASH') return [key, CASH_COLOR]
-      if (!item.stockCode) return [key, FALLBACK_COLORS[i % FALLBACK_COLORS.length]]
-      const url =
-        getStockLogoUrl(item.marketType, item.stockCode) ??
-        getStockLogoUrl('KOSPI', item.stockCode) ??
-        getStockLogoUrl('KOSDAQ', item.stockCode)
-      if (!url) return [key, FALLBACK_COLORS[i % FALLBACK_COLORS.length]]
-      const color = await extractDominantColor(url, FALLBACK_COLORS[i % FALLBACK_COLORS.length])
-      return [key, color]
-    })).then((entries) => {
-      if (!isCancelled) {
-        setColors(Object.fromEntries(entries))
-        setReady(true)
-      }
-    })
-
-    return () => { isCancelled = true }
-  // items 배열 내용 변화 감지를 위해 JSON 직렬화
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(items?.map((i) => i.stockCode))])
-
-  const getColor = (item, idx) => {
-    const key = item.stockCode ?? `cash_${idx}`
-    return colors[key] ?? FALLBACK_COLORS[idx % FALLBACK_COLORS.length]
-  }
-
-  return { getColor, ready }
-}
 
 // ── 포트폴리오 파이차트 패널 (하단 좌) ───────────────────────────
 function PortfolioPanel({ data }) {
   const { portfolioItems } = data
 
-  const { getColor, ready } = useLogoColors(portfolioItems)
+  const { getColor, ready } = usePortfolioColors(portfolioItems)
   const hasItems = portfolioItems.length > 0
 
   const sortedItems = [...portfolioItems].sort((a, b) => b.weight - a.weight)
