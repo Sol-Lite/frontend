@@ -259,6 +259,7 @@ export default function HomePage() {
                 gridCol={w.gridCol}
                 gridRow={w.gridRow}
                 widgetTypeId={w.widgetTypeId}
+                variantId={w.variantId}
                 config={w.config}
                 canDragToChat={WIDGET_TYPES_DRAGGABLE_TO_CHAT.includes(w.widgetTypeId)}
               >

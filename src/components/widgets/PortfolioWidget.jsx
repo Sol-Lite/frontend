@@ -1,20 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import LockedOverlay from '@/components/ui/LockedOverlay'
 import useAuthStore from '@/store/useAuthStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import WidgetCard from './WidgetCard'
-import { useDomesticHoldings } from '@/api/balance'
-import { extractDominantColor } from '@/lib/extractLogoColor'
-import { getStockLogoUrl } from '@/lib/stockLogo'
-
-const FALLBACK_COLORS = [
-  'var(--color-chart-1)',
-  'var(--color-chart-2)',
-  'var(--color-chart-3)',
-  'var(--color-chart-4)',
-  'var(--color-chart-5)',
-]
-const OTHER_COLOR = 'var(--color-chart-other)'
+import { useBalanceSummary, useDomesticHoldings, useOverseasHoldings, usePortfolioData } from '@/api/balance'
+import { usePortfolioColors } from '@/features/portfolio/portfolioColors'
 
 function ItemBar({ item, color, barHeight = 'h-[3px]' }) {
   return (
@@ -30,96 +20,59 @@ function ItemBar({ item, color, barHeight = 'h-[3px]' }) {
   )
 }
 
-function usePortfolioColors(items) {
-  const [colors, setColors] = useState({})
-
-  useEffect(() => {
-    if (!items?.length) {
-      setColors({})
-      return
-    }
-
-    let isCancelled = false
-
-    items.forEach(async (item, i) => {
-      const key = item.stockCode ?? `item_${i}`
-
-      if (item.type === 'OTHER') {
-        if (!isCancelled) setColors((prev) => ({ ...prev, [key]: OTHER_COLOR }))
-        return
-      }
-
-      if (!item.stockCode) {
-        if (!isCancelled) setColors((prev) => ({ ...prev, [key]: FALLBACK_COLORS[i % FALLBACK_COLORS.length] }))
-        return
-      }
-
-      const fallback = FALLBACK_COLORS[i % FALLBACK_COLORS.length]
-      const url =
-        getStockLogoUrl(item.marketType, item.stockCode) ??
-        getStockLogoUrl('KOSPI', item.stockCode) ??
-        getStockLogoUrl('KOSDAQ', item.stockCode)
-
-      if (!url) {
-        if (!isCancelled) setColors((prev) => ({ ...prev, [key]: fallback }))
-        return
-      }
-
-      const color = await extractDominantColor(url, fallback)
-      if (!isCancelled) setColors((prev) => ({ ...prev, [key]: color }))
-    })
-
-    return () => {
-      isCancelled = true
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(items?.map((item) => `${item.stockCode ?? 'none'}:${item.marketType ?? ''}:${item.type ?? ''}`))])
-
-  return colors
-}
-
 function usePortfolio(enabled, topN = 3) {
-  const { data: holdings = [], isLoading } = useDomesticHoldings({ enabled })
+  const { data: summary, isLoading: sl } = useBalanceSummary({ enabled })
+  const { data: domestic = [], isLoading: dl } = useDomesticHoldings({ enabled })
+  const { data: overseas = [], isLoading: ol } = useOverseasHoldings({ enabled })
+  const { data: portfolio, isLoading: pl } = usePortfolioData({ enabled })
 
   return useMemo(() => {
+    const isLoading = enabled && (sl || dl || ol || pl)
     if (isLoading) return { items: [], returnRate: null, isLoading: true }
 
-    const withValues = holdings
-      .map((h) => {
-        const qty = h.holdingQuantity ?? h.availableQuantity ?? 0
-        const curPrice = h.currentPrice ?? h.avgPrice ?? h.avgBuyPrice ?? 0
-        const avgPrice = h.avgPrice ?? h.avgBuyPrice ?? 0
-        return {
-          name: h.stockName ?? h.stockCode,
-          stockCode: h.stockCode ?? null,
-          marketType: h.marketType ?? null,
-          currentValue: curPrice * qty,
-          investedValue: avgPrice * qty,
-        }
-      })
-      .filter((h) => h.currentValue > 0)
-      .sort((a, b) => b.currentValue - a.currentValue)
+    const allHoldings = [...domestic, ...overseas]
+      .filter((h) => (h.holdingQuantity ?? 0) > 0 || (h.availableQuantity ?? 0) > 0)
+      .map((h) => ({
+        ...h,
+        evalKrw: Number(h.evalAmount ?? 0),
+      }))
+    const holdingByName = Object.fromEntries(allHoldings.map((h) => [h.stockName, h]))
 
-    const total = withValues.reduce((s, h) => s + h.currentValue, 0)
-    const totalInvested = withValues.reduce((s, h) => s + h.investedValue, 0)
+    const orderedItems = (portfolio?.items ?? []).filter((item) => item.type === 'STOCK')
+    const normalized = orderedItems.map((item) => {
+      const holding = holdingByName[item.label]
+      return {
+        name: item.label,
+        ratio: Number(item.weight ?? 0),
+        evalKrw: Number(holding?.evalKrw ?? 0),
+        stockCode: holding?.stockCode ?? null,
+        marketType: holding?.marketType ?? null,
+        type: 'STOCK',
+      }
+    })
 
-    if (total === 0) return { items: [], returnRate: null, isLoading: false }
+    const totalRatio = normalized.reduce((sum, item) => sum + item.ratio, 0)
+    if (totalRatio > 0 && normalized.length > 0) {
+      const rounded = normalized.map((item) => ({
+        ...item,
+        ratio: Math.round((item.ratio / totalRatio) * 100),
+      }))
+      const roundedSum = rounded.reduce((sum, item) => sum + item.ratio, 0)
+      rounded[rounded.length - 1].ratio += (100 - roundedSum)
+      normalized.splice(0, normalized.length, ...rounded)
+    }
 
-    const top = withValues.slice(0, topN)
-    const rest = withValues.slice(topN)
+    // 잔고 탭 보유종목과 동일하게 평가금액 내림차순 정렬
+    normalized.sort((a, b) => (b.evalKrw ?? 0) - (a.evalKrw ?? 0))
 
-    const items = top.map((h) => ({
-      name: h.name,
-      ratio: Math.round((h.currentValue / total) * 100),
-      stockCode: h.stockCode,
-      marketType: h.marketType,
-      type: 'STOCK',
-    }))
+    const top = normalized.slice(0, topN)
+    const rest = normalized.slice(topN)
+    const items = [...top]
 
     if (rest.length > 0) {
       items.push({
         name: '기타',
-        ratio: 100 - items.reduce((s, item) => s + item.ratio, 0),
+        ratio: Math.max(0, 100 - items.reduce((s, item) => s + item.ratio, 0)),
         stockCode: null,
         marketType: null,
         type: 'OTHER',
@@ -129,25 +82,18 @@ function usePortfolio(enabled, topN = 3) {
       if (items.length > 0) items[items.length - 1].ratio += (100 - sum)
     }
 
-    const returnRate = totalInvested > 0
-      ? ((total - totalInvested) / totalInvested) * 100
+    const returnRate = summary?.totalStockUnrealizedProfitLossRate != null
+      ? Number(summary.totalStockUnrealizedProfitLossRate)
       : 0
 
     return { items, returnRate, isLoading: false }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [holdings, isLoading])
+  }, [summary, domestic, overseas, portfolio, sl, dl, ol, pl, enabled, topN])
 }
 
-function resolveColor(item, idx, colors) {
-  if (item.type === 'OTHER') return OTHER_COLOR
-  const key = item.stockCode ?? `item_${idx}`
-  return colors[key] ?? FALLBACK_COLORS[idx % FALLBACK_COLORS.length]
-}
-
-function buildConicStops(items, colors) {
+function buildConicStops(items, getColor) {
   let start = 0
   return items.map((item, i) => {
-    const color = resolveColor(item, i, colors)
+    const color = getColor(item, i)
     const end = start + item.ratio
     const stop = `${color} ${start}% ${end}%`
     start = end
@@ -158,10 +104,10 @@ function buildConicStops(items, colors) {
 export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
   const { open } = useWidgetDetailStore()
-  const topN = variant === 'portfolio-2x2' ? 5 : 3
+  const topN = variant === 'portfolio-2x2' ? 6 : 3
   const portfolio = usePortfolio(isAuthenticated && !isRestoring, topN)
-  const colors = usePortfolioColors(portfolio.items)
-  const conicStops = useMemo(() => buildConicStops(portfolio.items, colors), [portfolio.items, colors])
+  const getColor = usePortfolioColors(portfolio.items)
+  const conicStops = useMemo(() => buildConicStops(portfolio.items, getColor), [portfolio.items, getColor])
 
   const returnRateStr = portfolio.returnRate != null
     ? `${portfolio.returnRate >= 0 ? '+' : ''}${portfolio.returnRate.toFixed(1)}%`
@@ -184,7 +130,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
                 {portfolio.isLoading ? '불러오는 중...' : '보유 종목 없음'}
               </div>
             ) : portfolio.items.map((item, i) => (
-              <ItemBar key={item.name} item={item} color={resolveColor(item, i, colors)} barHeight="h-[3px]" />
+              <ItemBar key={item.name} item={item} color={getColor(item, i)} barHeight="h-[3px]" />
             ))}
           </div>
         </>
@@ -211,7 +157,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
               </div>
               <div className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-hidden">
                 {portfolio.items.map((item, i) => (
-                  <ItemBar key={item.name} item={item} color={resolveColor(item, i, colors)} barHeight="h-[4px]" />
+                  <ItemBar key={item.name} item={item} color={getColor(item, i)} barHeight="h-[4px]" />
                 ))}
               </div>
             </div>
@@ -237,7 +183,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
               <div className="flex flex-col gap-1 min-w-0 flex-1">
                 {portfolio.items.map((item, i) => (
                   <div key={item.name} className="flex items-center gap-1 min-w-0">
-                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: resolveColor(item, i, colors) }} />
+                    <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: getColor(item, i) }} />
                     <span className="text-widget-10 text-foreground-secondary tracking-tight truncate">{item.name}</span>
                   </div>
                 ))}

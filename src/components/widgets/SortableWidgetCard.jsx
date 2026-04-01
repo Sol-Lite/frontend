@@ -19,6 +19,7 @@ export default function SortableWidgetCard({
   gridCol,
   gridRow,
   widgetTypeId,
+  variantId,
   config = {},
   canDragToChat = true,
   children,
@@ -46,7 +47,7 @@ export default function SortableWidgetCard({
   } = useDraggable({
     id: `wtc-handle-${instanceId}`,
     disabled: isEditMode || isDragLocked || !canDragToChat,
-    data: { type: 'widget-to-chat', instanceId, widgetTypeId, config },
+    data: { type: 'widget-to-chat', instanceId, widgetTypeId, variantId, config },
   })
 
   const setNodeRef = useCallback(

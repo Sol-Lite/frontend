@@ -206,8 +206,8 @@ export default function AppShell() {
       }
     } else if (type === 'widget-to-chat') {
       if (over?.id === 'chat-dropzone') {
-        const { widgetTypeId, config } = active.data.current
-        const query = getWidgetDefaultQuery(widgetTypeId, config)
+        const { widgetTypeId, variantId, config } = active.data.current
+        const query = getWidgetDefaultQuery(widgetTypeId, config, variantId)
         if (query) setPendingQuery(query)
       }
     }

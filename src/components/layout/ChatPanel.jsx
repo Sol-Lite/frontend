@@ -645,7 +645,7 @@ function ChatSuggestions({ suggestions, activeIndex, onSelect }) {
 // DESIGN.md §16: bg-background border-stroke-input rounded-2xl px-3.5 py-2.5
 // 전송버튼: 빈 입력 → bg-surface-muted cursor-not-allowed / 입력 있음 → bg-primary
 // textarea: 입력 내용에 따라 높이 자동 증가, 최대 5줄, Shift+Enter 줄바꿈
-function ChatInput({ isDisabled = false, onSend, value = "", onChange, onSuggestionKeyDown }) {
+function ChatInput({ isDisabled = false, isSending = false, onSend, value = "", onChange, onSuggestionKeyDown }) {
   const textareaRef = useRef(null);
   const canSend = value.trim().length > 0 && !isDisabled;
 
@@ -686,7 +686,9 @@ function ChatInput({ isDisabled = false, onSend, value = "", onChange, onSuggest
         onKeyDown={handleKeyDown}
         disabled={isDisabled}
         placeholder={
-          isDisabled
+          isSending
+            ? "답변을 생성하고 있습니다..."
+            : isDisabled
             ? "로그인 후 이용하실 수 있습니다"
             : "SOL AI 어시스턴트에게 물어보세요..."
         }
@@ -1395,6 +1397,7 @@ export default function ChatPanel() {
               onSend={handleSend}
               onSuggestionKeyDown={handleSuggestionKeyDown}
               isDisabled={isTyping}
+              isSending={isTyping}
             />
           </div>
         </>

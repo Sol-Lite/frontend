@@ -310,8 +310,8 @@ export default function ChatStockCard({ stockCode, stockName, marketType, exchan
           { label: '거래량', val: stock.volume },
         ].map(({ label, val }) => (
           <div key={label} className="text-center">
-            <div className="text-widget-8 text-foreground-disabled">{label}</div>
-            <div className="text-widget-10 font-semibold text-foreground">{val}</div>
+            <div className="text-widget-9 text-foreground-disabled">{label}</div>
+            <div className="text-widget-11 font-semibold text-foreground">{val}</div>
           </div>
         ))}
       </div>
