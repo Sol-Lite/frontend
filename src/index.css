@@ -119,6 +119,7 @@
   /* ── Box Shadow ── */
   --shadow-brand-glow:    0 0 14px rgba(0,70,255,.35);
   --shadow-brand-glow-sm: 0 0 14px rgba(0,70,255,.30);
+  --shadow-avatar-monogram-dot: 0 0 12px rgba(125,211,252,.65);
   --shadow-primary-btn:   0 4px 14px rgba(0,70,255,.25);
   --shadow-up-btn:        0 4px 14px rgba(232,57,62,.30);
   --shadow-down-btn:      0 4px 14px rgba(0,117,232,.25);
@@ -364,6 +365,7 @@ select:-webkit-autofill:focus {
   /* ── Box Shadow ── */
   --shadow-brand-glow:    0 0 14px rgba(0,70,255,.50);
   --shadow-brand-glow-sm: 0 0 14px rgba(0,70,255,.45);
+  --shadow-avatar-monogram-dot: 0 0 12px rgba(125,211,252,.7);
   --shadow-control:       0 1px 3px rgba(0,0,0,.30);
   --shadow-dropdown:      0 10px 30px rgba(0,0,0,.50);
   --shadow-widget-hover:  0 4px 16px rgba(0,70,255,.15);

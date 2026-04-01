@@ -715,7 +715,7 @@ function ChatInput({ isDisabled = false, isSending = false, onSend, value = "", 
 // 하단에 ChatInput disabled
 function LoginPrompt() {
   const openLoginModal = useAuthStore((s) => s.openLoginModal);
-  const avatar = AVATARS[Math.floor(Math.random() * AVATARS.length)];
+  const [avatar] = useState(() => AVATARS[Math.floor(Math.random() * AVATARS.length)]);
 
   return (
     <>

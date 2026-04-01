@@ -84,7 +84,7 @@ function FilterBar({ marketFilter, setMarketFilter, sortFilter, setSortFilter })
 function StockTableHeader({ sortFilter, isForeign }) {
   const showVolume = hasPrimaryMetricColumn(sortFilter)
   const grid = getMarketRowGrid(sortFilter, isForeign)
-  const showSecondary = !isForeign || sortFilter !== 'rising' && sortFilter !== 'falling'
+  const showSecondary = !isForeign || (sortFilter !== 'rising' && sortFilter !== 'falling')
 
   return (
     <div className={`grid ${grid} items-center px-4 py-2.5 border-b border-stroke-subtle text-[10px] font-semibold text-foreground-disabled`}>

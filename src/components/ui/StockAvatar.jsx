@@ -155,7 +155,7 @@ export default function StockAvatar({ name, stockCode, marketType, color = 'prim
       <div className={`${base} border-white/10 bg-gradient-to-br ${monogramTheme.shell}`}>
         <div className="relative flex h-full w-full items-center justify-center">
           <span className={`text-[11px] font-black tracking-[-0.08em] leading-none ${monogramTheme.text}`}>{initials}</span>
-          <span className={`absolute bottom-[16%] h-[4px] w-[4px] rounded-full bg-gradient-to-br ${monogramTheme.accent} shadow-[0_0_12px_rgba(125,211,252,0.65)]`} />
+          <span className={`absolute bottom-[16%] h-[4px] w-[4px] rounded-full bg-gradient-to-br ${monogramTheme.accent} shadow-avatar-monogram-dot`} />
         </div>
       </div>
     )
