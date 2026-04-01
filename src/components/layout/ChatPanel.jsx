@@ -1042,7 +1042,7 @@ export default function ChatPanel() {
     }
   }, []);
 
-  const handleSend = useCallback(async (text) => {
+  const handleSend = useCallback(async (text, stockCode = null, stockName = null) => {
     const userMsg = {
       id: Date.now(),
       role: "user",
@@ -1053,7 +1053,7 @@ export default function ChatPanel() {
     setIsTyping(true);
 
     try {
-      const data = await chatApi.sendMessage(text);
+      const data = await chatApi.sendMessage(text, stockCode, stockName);
       lastFailedTextRef.current = null;
 
       const INFO_CARD_TYPES = ['index', 'ranking', 'balance', 'exchange_rate', 'market_overview', 'portfolio', 'trade_history', 'trade-history'];
@@ -1118,7 +1118,7 @@ export default function ChatPanel() {
         ]);
       }
     } catch {
-      lastFailedTextRef.current = text;
+      lastFailedTextRef.current = { text, stockCode, stockName };
       setMessages((prev) => [
         ...prev,
         {
@@ -1137,16 +1137,16 @@ export default function ChatPanel() {
   // 대시보드 위젯 → 채팅 드롭 시 자동 질의 전송
   useEffect(() => {
     if (!pendingQuery || !isAuthenticated) return
-    const query = pendingQuery
+    const { text, stockCode, stockName } = pendingQuery
     consumePendingQuery()
-    handleSend(query)
+    handleSend(text, stockCode, stockName)
   }, [pendingQuery, isAuthenticated, consumePendingQuery, handleSend])
 
   const handleRetry = useCallback(() => {
-    const text = lastFailedTextRef.current;
-    if (!text) return;
+    const failed = lastFailedTextRef.current;
+    if (!failed) return;
     setMessages((prev) => prev.filter((m) => !m.isError));
-    handleSend(text);
+    handleSend(failed.text, failed.stockCode, failed.stockName);
   }, [handleSend]);
 
   const handlePinClose = useCallback((messageId, sourceOrderId) => {
