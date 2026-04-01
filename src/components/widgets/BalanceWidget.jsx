@@ -205,7 +205,7 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
           </div>
           {BALANCE.isLoading
             ? <div className="text-widget-11 text-foreground-disabled mt-1">-</div>
-            : <div className={`text-widget-11 font-semibold mt-1 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
+            : <div className={`text-widget-10 font-semibold mt-1 ${BALANCE.isProfit ? 'text-up' : 'text-down'}`}>{BALANCE.isProfit ? '▲' : '▼'} {BALANCE.profit} ({BALANCE.profitRate})</div>
           }
         </div>
       )}
