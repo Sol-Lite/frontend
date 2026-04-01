@@ -37,6 +37,19 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ap-northeast-2
 
+      - name: S3 이미지 업로드
+        run: |
+          aws s3 sync dist/KOSPI-logo/ s3://shinhansec-sol-lite-frontend/KOSPI-logo/ \
+            --cache-control "public, max-age=31536000, immutable"
+          aws s3 sync dist/KOSDAQ-logo/ s3://shinhansec-sol-lite-frontend/KOSDAQ-logo/ \
+            --cache-control "public, max-age=31536000, immutable"
+          aws s3 sync dist/us-logo/ s3://shinhansec-sol-lite-frontend/us-logo/ \
+            --cache-control "public, max-age=31536000, immutable"
+          aws s3 sync dist/avatars/ s3://shinhansec-sol-lite-frontend/avatars/ \
+            --cache-control "public, max-age=31536000, immutable"
+          aws s3 sync dist/preset-thumbnails/ s3://shinhansec-sol-lite-frontend/preset-thumbnails/ \
+            --cache-control "public, max-age=31536000, immutable"
+
       - name: S3 업로드
         run: |
           aws s3 sync dist/ s3://shinhansec-sol-lite-frontend \
