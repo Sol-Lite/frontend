@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState } from 'react'
+import { useEffect, useRef, useCallback, useMemo, useState } from 'react'
 import { Pencil, LayoutTemplate, LayoutGrid, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useDroppable } from '@dnd-kit/core'
 import LiveDot from '@/components/ui/LiveDot'
@@ -6,6 +6,7 @@ import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
 import useWidgetStore from '@/store/useWidgetStore'
 import useAuthStore from '@/store/useAuthStore'
+import { useDashboardSave } from '@/hooks/useDashboardSync'
 import { cn } from '@/lib/cn'
 import SortableWidgetCard from '@/components/widgets/SortableWidgetCard'
 import PresetPickerModal from '@/components/widgets/PresetPickerModal'
@@ -43,10 +44,14 @@ function PhantomSlot({ colSpan, rowSpan, gridCol, gridRow }) {
 export default function HomePage() {
   const { isEditMode, enterEditMode } = useEditModeStore()
   const { setCellSize, setPreviewCellSize } = useGridStore()
-  const { widgets, isLoaded, removeWidget, phantomWidget, isDraggingNewWidget, pages, currentPageId, switchPage, snapshotWidgets } = useWidgetStore()
+  const { widgets, isLoaded, removeWidget, phantomWidget, isDraggingNewWidget, pages, currentPageId, switchPage, snapshotWidgets, renamePage } = useWidgetStore()
   const { isAuthenticated, isRestoring } = useAuthStore()
+  const { mutate: saveDashboard, isPending: isSavingDashboardName } = useDashboardSave()
   const [isPageEditOpen, setIsPageEditOpen]         = useState(false)
   const [isPresetPickerOpen, setIsPresetPickerOpen] = useState(false)
+  const [isEditingDashboardName, setIsEditingDashboardName] = useState(false)
+  const [dashboardNameDraft, setDashboardNameDraft] = useState('')
+  const [dashboardNameError, setDashboardNameError] = useState('')
 
   // 편집 모드 종료(완료·저장 또는 취소) 시 열려있는 모달 닫기
   useEffect(() => {
@@ -64,6 +69,8 @@ export default function HomePage() {
   // - 로그인 + 서버 데이터 미도착: 대기
   const safeWidgets = (!isRestoring && (isLoaded || !isAuthenticated)) ? widgets : []
   const currentPageIndex = pages.findIndex((p) => p.id === currentPageId)
+  const currentPage = useMemo(() => pages.find((p) => p.id === currentPageId), [pages, currentPageId])
+  const currentPageName = currentPage?.name ?? '대시보드'
   const gridRef = useRef(null)
   const isEditModeRef = useRef(isEditMode)
 
@@ -79,6 +86,58 @@ export default function HomePage() {
   useEffect(() => {
     isEditModeRef.current = isEditMode
   }, [isEditMode])
+
+  useEffect(() => {
+    if (!isEditingDashboardName) setDashboardNameDraft(currentPageName)
+  }, [currentPageName, isEditingDashboardName])
+
+  useEffect(() => {
+    if (!isEditMode) {
+      setIsEditingDashboardName(false)
+      setDashboardNameError('')
+    }
+  }, [isEditMode])
+
+  function startDashboardNameEdit() {
+    setDashboardNameDraft(currentPageName)
+    setDashboardNameError('')
+    setIsEditingDashboardName(true)
+  }
+
+  function cancelDashboardNameEdit() {
+    setDashboardNameDraft(currentPageName)
+    setDashboardNameError('')
+    setIsEditingDashboardName(false)
+  }
+
+  function saveDashboardName() {
+    const nextName = dashboardNameDraft.trim()
+    if (!currentPageId) return
+    if (!nextName) {
+      setDashboardNameError('이름을 입력해주세요.')
+      return
+    }
+    if (nextName === currentPageName) {
+      setDashboardNameError('')
+      setIsEditingDashboardName(false)
+      return
+    }
+
+    const prevName = currentPageName
+    renamePage(currentPageId, nextName)
+    setDashboardNameError('')
+
+    saveDashboard(undefined, {
+      onSuccess: () => {
+        snapshotWidgets()
+        setIsEditingDashboardName(false)
+      },
+      onError: () => {
+        renamePage(currentPageId, prevName)
+        setDashboardNameError('저장 실패')
+      },
+    })
+  }
 
   useEffect(() => {
     const el = gridRef.current
@@ -120,18 +179,68 @@ export default function HomePage() {
     <>
     <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
       {/* 서브바 */}
-      <div className="flex items-center justify-between shrink-0 px-1 h-7">
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-foreground">나의 대시보드</span>
+      <div className="flex items-center justify-between shrink-0 px-1 min-h-7">
+        <div className="flex items-center gap-2 min-w-0">
+          {isEditMode ? (
+            isEditingDashboardName ? (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <input
+                  type="text"
+                  value={dashboardNameDraft}
+                  onChange={(e) => setDashboardNameDraft(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault()
+                      if (!isSavingDashboardName) saveDashboardName()
+                    } else if (e.key === 'Escape') {
+                      e.preventDefault()
+                      if (!isSavingDashboardName) cancelDashboardNameEdit()
+                    }
+                  }}
+                  disabled={isSavingDashboardName}
+                  maxLength={30}
+                  className="w-[168px] h-6 px-2 rounded-md border border-stroke-input bg-background text-widget-12 text-foreground outline-none focus:border-primary disabled:opacity-60"
+                  placeholder="대시보드 이름"
+                />
+                <button
+                  onClick={saveDashboardName}
+                  disabled={isSavingDashboardName}
+                  className="px-2 h-6 rounded-md bg-primary text-white text-widget-10 font-semibold hover:bg-primary-hover transition-colors duration-[150ms] disabled:opacity-50"
+                >
+                  {isSavingDashboardName ? '저장중' : '저장'}
+                </button>
+                <button
+                  onClick={cancelDashboardNameEdit}
+                  disabled={isSavingDashboardName}
+                  className="px-2 h-6 rounded-md border border-stroke-input text-widget-10 text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms] disabled:opacity-50"
+                >
+                  취소
+                </button>
+                {dashboardNameError && <span className="text-widget-10 text-down">{dashboardNameError}</span>}
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="text-widget-13 font-bold text-foreground truncate">{currentPageName}</span>
+                <button
+                  onClick={startDashboardNameEdit}
+                  className="px-2 h-6 rounded-md border border-stroke-input text-widget-10 text-foreground-tertiary font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-colors duration-[150ms] shrink-0"
+                >
+                  수정
+                </button>
+              </div>
+            )
+          ) : (
+            <span className="text-widget-13 font-bold text-foreground">나의 대시보드</span>
+          )}
           {isEditMode ? (
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-light border border-primary-border">
               <Pencil className="w-2.5 h-2.5 text-primary" strokeWidth={2.5} />
-              <span className="text-[10px] text-primary font-semibold">편집 중</span>
+              <span className="text-widget-10 text-primary font-semibold">편집 중</span>
             </div>
           ) : (
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-background border border-stroke">
               <LiveDot size="sm" />
-              <span className="text-[10px] text-foreground-disabled">실시간 반영</span>
+              <span className="text-widget-10 text-foreground-disabled">실시간 반영</span>
             </div>
           )}
         </div>
