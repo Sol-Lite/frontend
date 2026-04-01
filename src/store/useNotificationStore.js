@@ -57,6 +57,18 @@ const useNotificationStore = create((set, get) => ({
     })
   },
 
+  deleteNotification: (notificationId) => {
+    const target = get().notifications.find((n) => n.notificationId === notificationId)
+    const wasUnread = target && !target.read
+    set((state) => ({
+      notifications: state.notifications.filter((n) => n.notificationId !== notificationId),
+      unreadCount: wasUnread ? Math.max(0, state.unreadCount - 1) : state.unreadCount,
+    }))
+    notificationApi.deleteNotification(notificationId).catch((err) => {
+      console.warn('[Notification] 삭제 실패:', err?.message)
+    })
+  },
+
   markAllAsRead: async () => {
     try {
       await notificationApi.markAllAsRead()
