@@ -199,48 +199,48 @@ export default function HomePage() {
                   }}
                   disabled={isSavingDashboardName}
                   maxLength={30}
-                  className="w-[168px] h-6 px-2 rounded-md border border-stroke-input bg-background text-[12px] text-foreground outline-none focus:border-primary disabled:opacity-60"
+                  className="w-[168px] h-6 px-2 rounded-md border border-stroke-input bg-background text-widget-12 text-foreground outline-none focus:border-primary disabled:opacity-60"
                   placeholder="대시보드 이름"
                 />
                 <button
                   onClick={saveDashboardName}
                   disabled={isSavingDashboardName}
-                  className="px-2 h-6 rounded-md bg-primary text-white text-[10px] font-semibold hover:bg-primary-hover transition-colors duration-[150ms] disabled:opacity-50"
+                  className="px-2 h-6 rounded-md bg-primary text-white text-widget-10 font-semibold hover:bg-primary-hover transition-colors duration-[150ms] disabled:opacity-50"
                 >
                   {isSavingDashboardName ? '저장중' : '저장'}
                 </button>
                 <button
                   onClick={cancelDashboardNameEdit}
                   disabled={isSavingDashboardName}
-                  className="px-2 h-6 rounded-md border border-stroke-input text-[10px] text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms] disabled:opacity-50"
+                  className="px-2 h-6 rounded-md border border-stroke-input text-widget-10 text-foreground-tertiary font-medium hover:bg-surface-muted transition-colors duration-[150ms] disabled:opacity-50"
                 >
                   취소
                 </button>
-                {dashboardNameError && <span className="text-[10px] text-down">{dashboardNameError}</span>}
+                {dashboardNameError && <span className="text-widget-10 text-down">{dashboardNameError}</span>}
               </div>
             ) : (
               <div className="flex items-center gap-1.5 min-w-0">
-                <span className="text-[13px] font-bold text-foreground truncate">{currentPageName}</span>
+                <span className="text-widget-13 font-bold text-foreground truncate">{currentPageName}</span>
                 <button
                   onClick={startDashboardNameEdit}
-                  className="px-2 h-6 rounded-md border border-stroke-input text-[10px] text-foreground-tertiary font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-colors duration-[150ms] shrink-0"
+                  className="px-2 h-6 rounded-md border border-stroke-input text-widget-10 text-foreground-tertiary font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-colors duration-[150ms] shrink-0"
                 >
                   수정
                 </button>
               </div>
             )
           ) : (
-            <span className="text-[13px] font-bold text-foreground">나의 대시보드</span>
+            <span className="text-widget-13 font-bold text-foreground">나의 대시보드</span>
           )}
           {isEditMode ? (
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-light border border-primary-border">
               <Pencil className="w-2.5 h-2.5 text-primary" strokeWidth={2.5} />
-              <span className="text-[10px] text-primary font-semibold">편집 중</span>
+              <span className="text-widget-10 text-primary font-semibold">편집 중</span>
             </div>
           ) : (
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-background border border-stroke">
               <LiveDot size="sm" />
-              <span className="text-[10px] text-foreground-disabled">실시간 반영</span>
+              <span className="text-widget-10 text-foreground-disabled">실시간 반영</span>
             </div>
           )}
         </div>
