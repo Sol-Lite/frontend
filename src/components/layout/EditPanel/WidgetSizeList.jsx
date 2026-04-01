@@ -436,13 +436,10 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
               <span className="px-1.5 py-px text-[7px] font-semibold rounded text-foreground-disabled">해외</span>
             </div>
           </div>
-          <div className="flex flex-col">
-            {['美 CPI 예상치 하회… 나스닥 1% 상승', '外人 순매수 4,200억 · 반도체↑', '원달러 1,378원 소폭 하락'].map((title, i) => (
-              <div key={i} className="flex items-start gap-1.5 py-1 border-b border-stroke last:border-b-0">
-                <span className="text-[8px] font-bold text-primary shrink-0">{i + 1}</span>
-                <p className="text-[8px] text-foreground leading-snug line-clamp-2">{title}</p>
-              </div>
-            ))}
+          <div className="flex items-start py-1.5 border-b border-stroke last:border-b-0">
+            <p className="text-[8px] text-foreground leading-snug line-clamp-6">
+              美 CPI 예상치 하회… 나스닥 1% 상승, 인플레이션 둔화 기대에 기술주 중심 매수세가 유입되며 반도체·소프트웨어 중심으로 상승 폭 확대
+            </p>
           </div>
         </div>
       )
@@ -1056,23 +1053,22 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between mb-1 shrink-0">
             <span className="text-[9px] font-semibold text-foreground-disabled uppercase tracking-[.04em]">오늘의 시황</span>
-            <div className="flex gap-1">
-              <span className="px-1.5 py-px text-[7px] font-semibold rounded bg-primary text-white">국내</span>
-              <span className="px-1.5 py-px text-[7px] font-semibold rounded text-foreground-disabled">해외</span>
-            </div>
           </div>
-          <div className="flex flex-col flex-1 min-h-0 overflow-y-auto">
-            {[
-              { title: '美 CPI 예상치 하회… 나스닥 1% 상승', desc: '인플레이션 둔화. AI 관련주 반등.' },
-              { title: '外人 순매수 4,200억 · 반도체↑',      desc: '삼성·SK하이닉스 강세.' },
-              { title: '원달러 1,378원 소폭 하락',            desc: '금리 인하 기대감 반영.' },
-              { title: '美 연준 의사록 공개… 금리 동결 시사', desc: '시장 안도감 회복.' },
-            ].map(({ title, desc }, i) => (
-              <div key={i} className="flex flex-col gap-0.5 py-1.5 border-b border-stroke last:border-b-0 pl-1.5 border-l-2 border-l-transparent">
-                <p className="text-[9px] font-semibold text-foreground leading-snug">{title}</p>
-                <p className="text-[8px] text-foreground-disabled leading-snug">{desc}</p>
+          <div className="flex flex-col flex-1 min-h-0 gap-2">
+            <div>
+              <div className="text-[8px] font-semibold text-foreground-disabled uppercase tracking-[.04em]">국내 시황</div>
+              <div className="mt-0.5 flex flex-col gap-0.5 py-1.5 border-b border-stroke pl-1.5 border-l-2 border-l-transparent">
+                <p className="text-[9px] font-semibold text-foreground leading-snug">外人 순매수 4,200억 · 반도체↑</p>
+                <p className="text-[8px] text-foreground-disabled leading-snug">삼성·SK하이닉스 강세, 코스피 상승 마감.</p>
               </div>
-            ))}
+            </div>
+            <div>
+              <div className="text-[8px] font-semibold text-foreground-disabled uppercase tracking-[.04em]">해외 시황</div>
+              <div className="mt-0.5 flex flex-col gap-0.5 py-1.5 border-b border-stroke pl-1.5 border-l-2 border-l-transparent">
+                <p className="text-[9px] font-semibold text-foreground leading-snug">美 CPI 예상치 하회… 나스닥 1% 상승</p>
+                <p className="text-[8px] text-foreground-disabled leading-snug">인플레이션 둔화 기대, 기술주 중심 반등.</p>
+              </div>
+            </div>
           </div>
         </div>
       )

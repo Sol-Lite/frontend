@@ -13,6 +13,18 @@ import PageEditModal from '@/components/layout/PageEditModal'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_COLS, GRID_ROWS, GRID_GAP, MIN_GRID_WIDTH, MIN_GRID_HEIGHT, MIN_CELL_WIDTH, MIN_CELL_HEIGHT, MAX_PAGES, gridElementRef } from '@/lib/gridConstants'
 
+const WIDGET_TYPES_DRAGGABLE_TO_CHAT = [
+  'balance',
+  'exchange',
+  'stock-chart',
+  'stock-news',
+  'index',
+  'ranking',
+  'market-overview',
+  'portfolio',
+  'trade-history',
+]
+
 /* new-widget 드래그 중 삽입 예정 위치를 표시하는 placeholder.
    pointer-events-none으로 drag 이벤트를 그대로 통과시킨다. */
 function PhantomSlot({ colSpan, rowSpan, gridCol, gridRow }) {
@@ -246,6 +258,9 @@ export default function HomePage() {
                 rowSpan={w.rowSpan}
                 gridCol={w.gridCol}
                 gridRow={w.gridRow}
+                widgetTypeId={w.widgetTypeId}
+                config={w.config}
+                canDragToChat={WIDGET_TYPES_DRAGGABLE_TO_CHAT.includes(w.widgetTypeId)}
               >
                 <Component
                   instanceId={w.instanceId}

@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDroppable } from "@dnd-kit/core";
 import { MessageCircle, Send } from "lucide-react";
 import WIDGET_SHORTCUTS from "@/config/widgetShortcuts";
 import ReactMarkdown from "react-markdown";
@@ -20,6 +21,7 @@ import { balanceApi } from "@/api/balance";
 import { orderApi, ORDER_SIDE, ORDER_KIND } from "@/api/order";
 import { exchangeApi } from "@/api/exchange";
 import usePinAuth from "@/hooks/usePinAuth";
+import usePendingQueryStore from "@/store/usePendingQueryStore";
 import ChatPinBubble from "@/components/layout/ChatPinBubble";
 import ChatExchangePinBubble from "@/components/layout/ChatExchangePinBubble";
 import { isForeignMarketType } from "@/features/invest/formatters";
@@ -29,6 +31,25 @@ import { cn } from "@/lib/cn";
 import { getStockLogoUrl } from "@/lib/stockLogo";
 
 const EXCHANGE_RESULT_DELAY_MS = 1400
+const INFO_FALLBACK_WIDGET_TYPES = ['portfolio', 'trade-history', 'market-overview', 'index', 'ranking', 'balance', 'exchange']
+
+function toInfoTypeFromWidgetType(widgetTypeId) {
+  if (widgetTypeId === 'trade-history') return 'trade_history'
+  if (widgetTypeId === 'market-overview') return 'market_overview'
+  if (widgetTypeId === 'exchange') return 'exchange_rate'
+  return widgetTypeId
+}
+
+function inferInfoTypeFromPrompt(prompt = '') {
+  const keyword = prompt.trim().toLowerCase()
+  if (!keyword) return null
+  const matched = WIDGET_SHORTCUTS.find((item) =>
+    INFO_FALLBACK_WIDGET_TYPES.includes(item.widgetTypeId) &&
+    item.keywords.some((k) => keyword.includes(k))
+  )
+  if (!matched) return null
+  return toInfoTypeFromWidgetType(matched.widgetTypeId)
+}
 
 function getTimestamp() {
   return new Date().toLocaleTimeString("ko-KR", {
@@ -389,7 +410,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
                 <ChatWidgetAdder msgId={msg.id} widgetTypeId="stock-chart" />
               </div>
               {isThisPending ? (
-                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant} widgetConfig={{ stockCode: msg.stock.stockCode, stockName: msg.stock.name, marketType: msg.stock.marketType, exchangeCode: msg.stock.exchangeCode }}>
                   <ChatOrderCard
                     {...msg.stock}
                     onBuy={(qty) => onOrderAction?.(msg.id, msg.stock, 'buy', qty, msg.requestKeyBase)}
@@ -489,7 +510,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
                 <ChatWidgetAdder msgId={msg.id} widgetTypeId="stock-chart" />
               </div>
               {isThisPending ? (
-                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant} widgetConfig={{ stockCode: msg.stockCode, stockName: msg.stockName, marketType: msg.marketType, exchangeCode: msg.exchangeCode }}>
                   <ChatStockCard
                     stockCode={msg.stockCode}
                     stockName={msg.stockName}
@@ -523,7 +544,7 @@ function ChatMessages({ messages, isTyping, bottomRef, onRetry, onOrderAction, o
                   <ChatWidgetAdder msgId={msg.id} widgetTypeId="stock-news" />
                 </div>
                 {isThisPending ? (
-                  <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant}>
+                  <DraggableChatCard msgId={msg.id} widgetTypeId={pendingWidgetTypeId} variant={pendingVariant} widgetConfig={{ stockCode: msg.stockCode, stockName: msg.stockName }}>
                     <ChatNewsCard text={msg.text} stockCode={msg.stockCode} stockName={msg.stockName} />
                   </DraggableChatCard>
                 ) : (
@@ -765,6 +786,9 @@ export default function ChatPanel() {
   const openWidgetDetail = useWidgetDetailStore((s) => s.open);
   // 복원 완료 후 isAuthenticated의 이전 값 추적 (null = 복원 전)
   const prevIsAuthRef = useRef(null);
+
+  const { pendingQuery, consumePendingQuery } = usePendingQueryStore();
+  const { setNodeRef: setDropRef, isOver } = useDroppable({ id: 'chat-dropzone' });
 
 
   // 메시지 변경 시 sessionStorage에 저장
@@ -1030,7 +1054,7 @@ export default function ChatPanel() {
       const data = await chatApi.sendMessage(text);
       lastFailedTextRef.current = null;
 
-      const INFO_CARD_TYPES = ['index', 'ranking', 'balance', 'exchange_rate', 'market_overview'];
+      const INFO_CARD_TYPES = ['index', 'ranking', 'balance', 'exchange_rate', 'market_overview', 'portfolio', 'trade_history', 'trade-history'];
       const NEWS_CARD_TYPES = ['stock_news'];
 
       if (data.type === "order" && data.stock_code) {
@@ -1074,12 +1098,13 @@ export default function ChatPanel() {
           },
         ]);
       } else if (data.reply && /━/.test(data.reply)) {
+        const inferredInfoType = inferInfoTypeFromPrompt(text)
         setMessages((prev) => [
           ...prev,
           {
             id: Date.now(),
             type: 'info_card',
-            infoType: 'market_overview',
+            infoType: inferredInfoType ?? 'market_overview',
             text: data.reply,
             time: getTimestamp(),
           },
@@ -1106,6 +1131,14 @@ export default function ChatPanel() {
       setIsTyping(false);
     }
   }, [appendExchangeCardMessage, appendOrderCardMessage]);
+
+  // 대시보드 위젯 → 채팅 드롭 시 자동 질의 전송
+  useEffect(() => {
+    if (!pendingQuery || !isAuthenticated) return
+    const query = pendingQuery
+    consumePendingQuery()
+    handleSend(query)
+  }, [pendingQuery, isAuthenticated, consumePendingQuery, handleSend])
 
   const handleRetry = useCallback(() => {
     const text = lastFailedTextRef.current;
@@ -1332,7 +1365,7 @@ export default function ChatPanel() {
   }
 
   return (
-    <>
+    <div ref={setDropRef} className={cn('flex flex-col h-full', isOver && 'ring-2 ring-primary ring-inset')}>
       <ChatHeader />
       {isRestoring || isAuthenticated ? (
         <>
@@ -1361,13 +1394,13 @@ export default function ChatPanel() {
               onChange={setDraft}
               onSend={handleSend}
               onSuggestionKeyDown={handleSuggestionKeyDown}
+              isDisabled={isTyping}
             />
           </div>
         </>
       ) : (
         <LoginPrompt />
       )}
-
-    </>
+    </div>
   );
 }

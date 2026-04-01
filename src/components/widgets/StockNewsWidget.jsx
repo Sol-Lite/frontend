@@ -6,18 +6,19 @@ import useStockNews from '@/features/market/useStockNews'
 import useWidgetStore from '@/store/useWidgetStore'
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
+import { useDashboardSave } from '@/hooks/useDashboardSync'
 
 const DEFAULT_STOCK_NEWS_CODE = '055550'
 const DEFAULT_STOCK_NEWS_NAME = '신한지주'
 
-function StockChip({ name, onClick }) {
+function StockChip({ name, onClick, className = '' }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-0.5 text-widget-9 font-semibold text-primary shrink-0 hover:opacity-70"
+      className={`flex items-center gap-0.5 text-widget-9 font-semibold text-primary min-w-0 shrink hover:opacity-70 ${className}`}
     >
-      {name ?? '종목 선택'}
-      <ChevronDown size={10} />
+      <span className="truncate">{name ?? '종목 선택'}</span>
+      <ChevronDown size={10} className="shrink-0" />
     </button>
   )
 }
@@ -66,6 +67,7 @@ function NewsListCompact({ items, onClickNews }) {
 export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm', colSpan = 1, rowSpan = 1, config = {}, onDelete }) {
   const [showModal, setShowModal] = useState(false)
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
+  const { mutate: saveDashboard } = useDashboardSave()
   const { lockWidgetDrag, unlockWidgetDrag } = useEditModeStore()
   const openDetail = useWidgetDetailStore((s) => s.open)
 
@@ -83,6 +85,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
 
   function handleStockSave({ stockCode: newCode, stockName: newName }) {
     updateWidgetConfig(instanceId, { stockCode: newCode, stockName: newName })
+    saveDashboard()
     setShowModal(false)
   }
 
@@ -98,6 +101,7 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
   const chip = (
     <StockChip
       name={stockName}
+      className="max-w-[56%]"
       onClick={(e) => { e.stopPropagation(); setShowModal(true) }}
     />
   )
@@ -117,8 +121,8 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
   if (variant === 'stock-news-2x2') {
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-        <div className="flex items-center justify-between mb-1 shrink-0">
-          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+        <div className="flex items-center justify-between gap-1 mb-1 shrink-0 min-w-0">
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase whitespace-nowrap shrink-0">종목별 뉴스</span>
           {chip}
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -134,8 +138,8 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
   if (variant === 'stock-news-wide') {
     return (
       <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-        <div className="flex items-center justify-between mb-1 shrink-0">
-          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+        <div className="flex items-center justify-between gap-1 mb-1 shrink-0 min-w-0">
+          <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase whitespace-nowrap shrink-0">종목별 뉴스</span>
           {chip}
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto">
@@ -151,8 +155,8 @@ export default function StockNewsWidget({ instanceId, variant = 'stock-news-sm',
   /* stock-news-sm */
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={handleWidgetClick}>
-      <div className="flex items-center justify-between mb-1 shrink-0">
-        <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase">종목별 뉴스</span>
+      <div className="flex items-center justify-between gap-1 mb-1 shrink-0 min-w-0">
+        <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase whitespace-nowrap shrink-0">종목별 뉴스</span>
         {chip}
       </div>
       <div className="flex-1 min-h-0 overflow-y-auto hover:bg-surface-muted/50 transition-colors rounded">

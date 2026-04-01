@@ -3,6 +3,7 @@ import { GRID_COLS, GRID_ROWS } from '@/lib/gridConstants'
 import { fromApiResponse } from './widgetApi'
 
 const STORAGE_KEY_CURRENT_PAGE = 'dashboard:currentPageId'
+const STORAGE_KEY_CURRENT_PAGE_ORDER = 'dashboard:currentPageOrder'
 const DEFAULT_STOCK_CHART_CONFIG = {
   stockCode: '055550',
   stockName: '신한지주',
@@ -219,6 +220,12 @@ function _setCurrentWidgets(state, newWidgets) {
   return { pages: newPages, widgets: newWidgets }
 }
 
+function persistCurrentPageSelection(pages, pageId) {
+  sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, pageId)
+  const pageOrder = pages.findIndex((p) => p.id === pageId) + 1
+  if (pageOrder > 0) sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE_ORDER, String(pageOrder))
+}
+
 const useWidgetStore = create((set) => ({
   // ── 멀티 페이지 상태 ─────────────────────────────────────
   pages: INITIAL_PAGES,
@@ -251,8 +258,13 @@ const useWidgetStore = create((set) => ({
         return { pages: [emptyPage], currentPageId: 'page-1', widgets: [], isLoaded: true }
       }
       const savedPageId = sessionStorage.getItem(STORAGE_KEY_CURRENT_PAGE)
-      const restoredPage = savedPageId ? pages.find((p) => p.id === savedPageId) : null
-      const currentPage = restoredPage ?? pages[0]
+      const savedPageOrder = Number(sessionStorage.getItem(STORAGE_KEY_CURRENT_PAGE_ORDER))
+      const restoredById = savedPageId ? pages.find((p) => p.id === savedPageId) : null
+      const restoredByOrder = Number.isInteger(savedPageOrder) && savedPageOrder > 0
+        ? pages[savedPageOrder - 1] ?? null
+        : null
+      const currentPage = restoredById ?? restoredByOrder ?? pages[0]
+      persistCurrentPageSelection(pages, currentPage.id)
       return {
         pages,
         currentPageId: currentPage.id,
@@ -265,6 +277,7 @@ const useWidgetStore = create((set) => ({
   // isLoaded를 false로 되돌려 재로그인 시 서버에서 새로 불러올 수 있게 함.
   resetLayout: () => {
     sessionStorage.removeItem(STORAGE_KEY_CURRENT_PAGE)
+    sessionStorage.removeItem(STORAGE_KEY_CURRENT_PAGE_ORDER)
     set({
       pages:         INITIAL_PAGES,
       currentPageId: 'page-1',
@@ -276,10 +289,10 @@ const useWidgetStore = create((set) => ({
 
   // ── 페이지 전환 ─────────────────────────────────────────
   switchPage: (pageId) => {
-    sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, pageId)
     set((state) => {
       const page = state.pages.find((p) => p.id === pageId)
       if (!page || page.id === state.currentPageId) return state
+      persistCurrentPageSelection(state.pages, pageId)
       return { currentPageId: pageId, widgets: page.widgets }
     })
   },
@@ -294,7 +307,7 @@ const useWidgetStore = create((set) => ({
   applyPageChanges: (newPages, newCurrentId) => {
     set((state) => {
       const currentPage = newPages.find((p) => p.id === newCurrentId) ?? newPages[0]
-      sessionStorage.setItem(STORAGE_KEY_CURRENT_PAGE, currentPage.id)
+      persistCurrentPageSelection(newPages, currentPage.id)
 
       // 삭제된 페이지 찾아서 타입별로 처리
       const deletedPages = state.pages.filter((p) => !newPages.find((np) => np.id === p.id))
@@ -381,10 +394,13 @@ const useWidgetStore = create((set) => ({
     }),
 
   // 지정 좌표에 위젯 추가 (new-widget drag-to-add 용)
-  addWidgetAt: (widgetTypeId, variant, gridCol, gridRow) =>
+  addWidgetAt: (widgetTypeId, variant, gridCol, gridRow, configOverride) =>
     set((state) => {
       if (!canPlaceAt(state.widgets, gridCol, gridRow, variant.colSpan, variant.rowSpan)) return state
       const defaultConfig = getDefaultWidgetConfig(widgetTypeId)
+      const config = configOverride
+        ? { ...(defaultConfig ?? {}), ...configOverride }
+        : defaultConfig
       const newWidgets = [
         ...state.widgets,
         {
@@ -395,7 +411,7 @@ const useWidgetStore = create((set) => ({
           rowSpan: variant.rowSpan,
           gridCol,
           gridRow,
-          ...(defaultConfig ? { config: defaultConfig } : {}),
+          ...(config ? { config } : {}),
         },
       ]
       return _setCurrentWidgets(state, newWidgets)
