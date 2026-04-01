@@ -267,7 +267,7 @@ export default function ChatStockCard({ stockCode, stockName, marketType, exchan
           <div>
             <div className="text-widget-13 font-bold text-foreground">{stockName}</div>
             <div className="text-widget-9 text-foreground-disabled">
-              {stockCode}{marketType ? ` · ${marketType}` : ''}
+              {stockCode}
             </div>
           </div>
         </div>
