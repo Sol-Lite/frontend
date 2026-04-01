@@ -20,6 +20,11 @@ function ItemBar({ item, color, barHeight = 'h-[3px]' }) {
   )
 }
 
+function parseRatio(value) {
+  const n = typeof value === 'string' ? parseFloat(value) : Number(value)
+  return Number.isFinite(n) && n > 0 ? n : 0
+}
+
 function usePortfolio(enabled, topN = 3) {
   const { data: summary, isLoading: sl } = useBalanceSummary({ enabled })
   const { data: domestic = [], isLoading: dl } = useDomesticHoldings({ enabled })
@@ -43,7 +48,7 @@ function usePortfolio(enabled, topN = 3) {
       const holding = holdingByName[item.label]
       return {
         name: item.label,
-        ratio: Number(item.weight ?? 0),
+        ratio: parseRatio(item.weight),
         evalKrw: Number(holding?.evalKrw ?? 0),
         stockCode: holding?.stockCode ?? null,
         marketType: holding?.marketType ?? null,
@@ -91,10 +96,16 @@ function usePortfolio(enabled, topN = 3) {
 }
 
 function buildConicStops(items, getColor) {
+  const total = items.reduce((sum, item) => sum + (Number.isFinite(item.ratio) ? item.ratio : 0), 0)
+  if (!Number.isFinite(total) || total <= 0) {
+    return '#0046FF 0% 100%'
+  }
+
   let start = 0
   return items.map((item, i) => {
     const color = getColor(item, i)
-    const end = start + item.ratio
+    const slice = (item.ratio / total) * 100
+    const end = start + slice
     const stop = `${color} ${start}% ${end}%`
     start = end
     return stop
@@ -104,9 +115,9 @@ function buildConicStops(items, getColor) {
 export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1, rowSpan = 1, onDelete }) {
   const { isAuthenticated, isRestoring } = useAuthStore()
   const { open } = useWidgetDetailStore()
-  const topN = variant === 'portfolio-2x2' ? 6 : 3
+  const topN = 5
   const portfolio = usePortfolio(isAuthenticated && !isRestoring, topN)
-  const getColor = usePortfolioColors(portfolio.items)
+  const { getColor, ready } = usePortfolioColors(portfolio.items)
   const conicStops = useMemo(() => buildConicStops(portfolio.items, getColor), [portfolio.items, getColor])
 
   const returnRateStr = portfolio.returnRate != null
@@ -124,7 +135,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
               <span className={`text-widget-10 font-semibold ${returnRateColor}`}>{returnRateStr}</span>
             )}
           </div>
-          <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-hidden">
+          <div className="flex flex-col gap-1 flex-1 min-h-0 overflow-y-auto pr-1">
             {portfolio.isLoading || portfolio.items.length === 0 ? (
               <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">
                 {portfolio.isLoading ? '불러오는 중...' : '보유 종목 없음'}
@@ -146,7 +157,8 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
           ) : (
             <div className="flex flex-col flex-1 gap-3 min-h-0">
               <div className="flex items-center gap-3 shrink-0">
-                <div className="relative w-16 h-16 rounded-full shrink-0" style={{ background: `conic-gradient(${conicStops})` }}>
+                <div className="relative w-16 h-16 rounded-full shrink-0" style={ready && conicStops ? { background: `conic-gradient(${conicStops})` } : undefined}>
+                  {(!ready || !conicStops) && <div className="absolute inset-0 rounded-full bg-surface-muted" />}
                   <div className="absolute inset-[28%] rounded-full bg-surface" />
                 </div>
                 <div>
@@ -155,7 +167,7 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
                   <div className="text-widget-9 text-foreground-disabled mt-0.5">+4,280,000원</div>
                 </div>
               </div>
-              <div className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-hidden">
+              <div className="flex flex-col gap-1.5 flex-1 min-h-0 overflow-y-auto pr-1">
                 {portfolio.items.map((item, i) => (
                   <ItemBar key={item.name} item={item} color={getColor(item, i)} barHeight="h-[4px]" />
                 ))}
@@ -177,10 +189,11 @@ export default function PortfolioWidget({ variant = 'portfolio-sm', colSpan = 1,
             </div>
           ) : (
             <div className="flex items-center gap-2.5 flex-1 min-h-0">
-              <div className="relative w-14 h-14 rounded-full shrink-0" style={{ background: `conic-gradient(${conicStops})` }}>
+              <div className="relative w-14 h-14 rounded-full shrink-0" style={ready && conicStops ? { background: `conic-gradient(${conicStops})` } : undefined}>
+                {(!ready || !conicStops) && <div className="absolute inset-0 rounded-full bg-surface-muted" />}
                 <div className="absolute inset-[30%] rounded-full bg-surface" />
               </div>
-              <div className="flex flex-col gap-1 min-w-0 flex-1">
+              <div className="flex flex-col gap-1 min-w-0 flex-1 min-h-0 overflow-y-auto pr-1">
                 {portfolio.items.map((item, i) => (
                   <div key={item.name} className="flex items-center gap-1 min-w-0">
                     <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: getColor(item, i) }} />
