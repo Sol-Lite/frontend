@@ -25,6 +25,11 @@ const STALE = {
   finance: 1000 * 60 * 60,
 }
 
+function resolveQueryErrorMessage(error, fallbackMessage) {
+  const rawMessage = typeof error?.message === 'string' ? error.message.trim() : ''
+  return rawMessage || fallbackMessage
+}
+
 function mergeSeriesByTimestamp(...seriesGroups) {
   const merged = new Map()
 
@@ -320,13 +325,22 @@ export default function useDomesticMarketData(stockCode, { enabled, activeDetail
     [chartHistorySeries, baseChartSeries],
   )
 
+  const marketError = priceQuery.error || dailyChartQuery.error || minuteChartQuery.error
+  const marketErrorMessage = resolveQueryErrorMessage(marketError, '현재 시세를 불러오지 못하고 있습니다.')
+  const dailyErrorMessage = resolveQueryErrorMessage(dailyChartQuery.error, '현재 일별 시세를 불러오지 못하고 있습니다.')
+  const minuteErrorMessage = resolveQueryErrorMessage(minuteChartQuery.error, '현재 실시간 시세를 불러오지 못하고 있습니다.')
+  const orderBookErrorMessage = resolveQueryErrorMessage(orderBookQuery.error, '현재 호가 정보를 불러오지 못하고 있습니다.')
+  const customChartErrorMessage = resolveQueryErrorMessage(customChartQuery.error, '현재 차트 데이터를 불러오지 못하고 있습니다.')
+
   const marketState = {
     isLoading: priceQuery.isLoading || dailyChartQuery.isLoading || minuteChartQuery.isLoading || orderBookQuery.isLoading,
-    errorMessage: (priceQuery.error || dailyChartQuery.error || minuteChartQuery.error || orderBookQuery.error)?.message ?? '',
+    errorMessage: marketError ? marketErrorMessage : '',
     dailyLoading: dailyChartQuery.isLoading,
-    dailyErrorMessage: dailyChartQuery.error?.message ?? '',
+    dailyErrorMessage: dailyChartQuery.error ? dailyErrorMessage : '',
     minuteLoading: minuteChartQuery.isLoading,
-    minuteErrorMessage: minuteChartQuery.error?.message ?? '',
+    minuteErrorMessage: minuteChartQuery.error ? minuteErrorMessage : '',
+    orderBookLoading: orderBookQuery.isLoading,
+    orderBookErrorMessage: orderBookQuery.error ? orderBookErrorMessage : '',
     priceData: livePrice ?? priceQuery.data ?? null,
     dailySeries: dailySeriesWithLive,
     minuteSeries: minuteSeriesWithLive,
@@ -335,7 +349,7 @@ export default function useDomesticMarketData(stockCode, { enabled, activeDetail
 
   const chartState = {
     isLoading: customChartQuery.isLoading,
-    errorMessage: customChartQuery.error?.message ?? '',
+    errorMessage: customChartQuery.error ? customChartErrorMessage : '',
     series: customSeries,
   }
 

@@ -13,6 +13,7 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
   const baseStockMeta = resolveStockMeta(stockCode, locationState)
   const { isDomestic } = baseStockMeta
   const exchcd = isDomestic ? null : getExchcd(baseStockMeta.exchangeCode)
+  const locationStockName = locationState?.stockName
 
   const infoQuery = useQuery({
     queryKey: isDomestic
@@ -27,7 +28,7 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
 
   const stockMeta = useMemo(() => {
     if (isDomestic) {
-      const resolvedName = locationState?.stockName
+      const resolvedName = locationStockName
         ?? infoQuery.data?.companyName
         ?? infoQuery.data?.stockName
         ?? infoQuery.data?.name
@@ -55,7 +56,7 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
       market: infoQuery.data?.exchangeName ?? baseStockMeta.market,
       sector: infoQuery.data?.induname ?? baseStockMeta.sector,
     }
-  }, [baseStockMeta, infoQuery.data, isDomestic])
+  }, [baseStockMeta, exchcd, infoQuery.data, isDomestic, locationStockName])
 
   const domestic = useDomesticMarketData(stockCode, { enabled: isDomestic, activeDetailTab: activeLeftTab, initialPeriod, initialMinuteInterval })
   const foreign = useForeignMarketData(stockCode, exchcd, { enabled: !isDomestic, activeDetailTab: activeLeftTab, initialPeriod, initialMinuteInterval })
@@ -133,6 +134,8 @@ export default function useInvestMarketData(stockCode, locationState, { activeLe
     hasMoreChartHistory: active.hasMoreChartHistory ?? false,
     marketLoading: marketState.isLoading,
     marketErrorMessage: marketState.errorMessage,
+    orderBookLoading: marketState.orderBookLoading ?? false,
+    orderBookErrorMessage: marketState.orderBookErrorMessage ?? '',
     dailyRows: active.dailyRows,
     realtimeRows: active.realtimeRows,
     orderBook: active.orderBook,

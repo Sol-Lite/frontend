@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { foreignMarketApi } from '@/api/market'
 import { DAY_MS, DEFAULT_MINUTE_INTERVAL } from '@/features/invest/constants'
 import { formatApiDate } from '@/features/invest/formatters'
@@ -17,6 +17,52 @@ const STALE = {
   minuteChart: 1000 * 30,
   dailyChart: 1000 * 60 * 5,
   orderBook: 1000 * 5,
+}
+
+function resolveQueryErrorMessage(error, fallbackMessage) {
+  const rawMessage = typeof error?.message === 'string' ? error.message.trim() : ''
+
+  if (!rawMessage) return fallbackMessage
+  if (rawMessage.startsWith('해외주식 API 호출 실패')) return fallbackMessage
+  if (rawMessage === '시장 데이터를 불러오지 못했습니다.') return fallbackMessage
+
+  return rawMessage
+}
+
+function useQueryErrorLogger(label, error, context) {
+  const lastSignatureRef = useRef('')
+
+  useEffect(() => {
+    if (!error) {
+      lastSignatureRef.current = ''
+      return
+    }
+
+    const signature = [
+      label,
+      error.url ?? '',
+      error.status ?? '',
+      error.code ?? '',
+      error.message ?? '',
+      context.stockCode,
+      context.exchcd,
+    ].join('|')
+
+    if (lastSignatureRef.current === signature) return
+    lastSignatureRef.current = signature
+
+    console.error(`[foreign-market] ${label} query failed`, {
+      ...context,
+      url: error.url ?? null,
+      status: error.status ?? null,
+      statusText: error.statusText ?? '',
+      code: error.code ?? null,
+      message: error.message ?? '',
+      data: error.data ?? null,
+      rawText: error.rawText ?? null,
+      error,
+    })
+  }, [context, error, label])
 }
 
 export default function useForeignMarketData(stockCode, exchcd, { enabled, initialPeriod, initialMinuteInterval }) {
@@ -63,6 +109,16 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled, initi
     staleTime: STALE.orderBook,
   })
 
+  const errorLogContext = useMemo(() => ({
+    stockCode,
+    exchcd,
+  }), [exchcd, stockCode])
+
+  useQueryErrorLogger('price', priceQuery.error, errorLogContext)
+  useQueryErrorLogger('daily-chart', dailyChartQuery.error, errorLogContext)
+  useQueryErrorLogger('minute-chart', minuteChartQuery.error, errorLogContext)
+  useQueryErrorLogger('order-book', orderBookQuery.error, errorLogContext)
+
   const usesBaseMinuteData = selectedChartPeriod === 'MINUTE' && selectedMinuteInterval === DEFAULT_MINUTE_INTERVAL
   const needsCustomChart = enabled && !usesBaseMinuteData && selectedChartPeriod !== 'DAILY'
 
@@ -87,6 +143,12 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled, initi
     staleTime: selectedChartPeriod === 'MINUTE' ? STALE.minuteChart : STALE.dailyChart,
   })
 
+  useQueryErrorLogger('custom-chart', customChartQuery.error, {
+    ...errorLogContext,
+    chartPeriod: selectedChartPeriod,
+    minuteInterval: selectedMinuteInterval,
+  })
+
   const dailySeries = normalizeForeignDailySeries(dailyChartQuery.data?.dataPoints)
   const minuteSeries = normalizeForeignMinuteSeries(minuteChartQuery.data?.dataPoints)
 
@@ -94,13 +156,22 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled, initi
     ? { currentPrice: priceQuery.data.price, changeAmount: priceQuery.data.diff, changeRate: priceQuery.data.rate }
     : null
 
+  const marketError = priceQuery.error || dailyChartQuery.error || minuteChartQuery.error
+  const marketErrorMessage = resolveQueryErrorMessage(marketError, '현재 해외주식 시세를 불러오지 못하고 있습니다.')
+  const dailyErrorMessage = resolveQueryErrorMessage(dailyChartQuery.error, '현재 해외주식 일별 시세를 불러오지 못하고 있습니다.')
+  const minuteErrorMessage = resolveQueryErrorMessage(minuteChartQuery.error, '현재 해외주식 실시간 시세를 불러오지 못하고 있습니다.')
+  const orderBookErrorMessage = resolveQueryErrorMessage(orderBookQuery.error, '현재 해외주식 호가 정보를 불러오지 못하고 있습니다.')
+  const customChartErrorMessage = resolveQueryErrorMessage(customChartQuery.error, '현재 해외주식 차트 데이터를 불러오지 못하고 있습니다.')
+
   const marketState = {
     isLoading: priceQuery.isLoading || dailyChartQuery.isLoading || minuteChartQuery.isLoading || orderBookQuery.isLoading,
-    errorMessage: (priceQuery.error || dailyChartQuery.error || minuteChartQuery.error || orderBookQuery.error)?.message ?? '',
+    errorMessage: marketError ? marketErrorMessage : '',
     dailyLoading: dailyChartQuery.isLoading,
-    dailyErrorMessage: dailyChartQuery.error?.message ?? '',
+    dailyErrorMessage: dailyChartQuery.error ? dailyErrorMessage : '',
     minuteLoading: minuteChartQuery.isLoading,
-    minuteErrorMessage: minuteChartQuery.error?.message ?? '',
+    minuteErrorMessage: minuteChartQuery.error ? minuteErrorMessage : '',
+    orderBookLoading: orderBookQuery.isLoading,
+    orderBookErrorMessage: orderBookQuery.error ? orderBookErrorMessage : '',
     priceData,
     dailySeries,
     minuteSeries,
@@ -117,7 +188,7 @@ export default function useForeignMarketData(stockCode, exchcd, { enabled, initi
 
   const chartState = {
     isLoading: customChartQuery.isLoading,
-    errorMessage: customChartQuery.error?.message ?? '',
+    errorMessage: customChartQuery.error ? customChartErrorMessage : '',
     series: customSeries,
   }
 
