@@ -867,10 +867,13 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
           <span className="text-[9px] text-foreground-disabled shrink-0">섹터별 비중</span>
           <div className="flex items-center gap-3 shrink-0">
             
-            <div
-              className="w-16 h-16 rounded-full shrink-0"
-              style={{ background: 'conic-gradient(var(--color-chart-1) 0% 54%, var(--color-chart-2) 54% 72%, var(--color-chart-3) 72% 87%, var(--color-chart-4) 87% 100%)' }}
-            />
+            <div className="relative w-16 h-16 shrink-0 flex items-center justify-center">
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{ background: 'conic-gradient(var(--color-chart-1) 0% 54%, var(--color-chart-2) 54% 72%, var(--color-chart-3) 72% 87%, var(--color-chart-4) 87% 100%)' }}
+              />
+              <div className="relative w-8 h-8 rounded-full bg-surface" />
+            </div>
             <div>
               <div className="text-[9px] text-foreground-disabled">총 수익률</div>
               <div className="text-[17px] font-extrabold text-up leading-none">+5.2%</div>
