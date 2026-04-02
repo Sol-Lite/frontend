@@ -363,16 +363,22 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
         </div>
       )
 
-    /* 포트폴리오 — 파이차트 1×1 */
+    /* 포트폴리오 — 도넛차트 1×1 */
     case 'portfolio-sm':
       return (
         <div className="flex flex-col h-full gap-2">
-          <span className="text-[9px] text-foreground-disabled">종목별 비중</span>
+          <div className="flex items-center justify-between shrink-0">
+            <span className="text-[9px] text-foreground-disabled">종목별 비중</span>
+            <span className="text-[10px] font-bold text-down">+5.2%</span>
+          </div>
           <div className="flex items-center gap-2.5 flex-1 min-h-0">
-            <div
-              className="w-14 h-14 rounded-full shrink-0"
-              style={{ background: 'conic-gradient(var(--color-chart-1) 0% 34%, var(--color-chart-2) 34% 54%, var(--color-chart-3) 54% 72%, var(--color-chart-4) 72% 100%)' }}
-            />
+            <div className="relative w-14 h-14 shrink-0 flex items-center justify-center">
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{ background: 'conic-gradient(var(--color-chart-1) 0% 34%, var(--color-chart-2) 34% 54%, var(--color-chart-3) 54% 72%, var(--color-chart-4) 72% 100%)' }}
+              />
+              <div className="relative w-7 h-7 rounded-full bg-surface" />
+            </div>
             <div className="flex flex-col gap-1">
               {[
                 { name: '삼성', color: 'bg-chart-1' },
@@ -398,22 +404,28 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
             <span className="text-[9px] text-foreground-disabled">종목별 비중</span>
             <span className="text-[10px] font-bold text-up">+5.2%</span>
           </div>
-          <div className="flex flex-col gap-2">
-            {[
-              { name: '삼성전자',   pct: 34, color: 'bg-chart-1' },
-              { name: 'SK하이닉스', pct: 20, color: 'bg-chart-2' },
-              { name: '기타',       pct: 46, color: 'bg-chart-4' },
-            ].map(({ name, pct, color }) => (
-              <div key={name}>
-                <div className="flex justify-between mb-0.5">
-                  <span className="text-[9px] text-foreground-secondary">{name}</span>
-                  <span className="text-[9px] font-semibold text-foreground">{pct}%</span>
+          <div className="flex items-center gap-3 flex-1 min-h-0">
+            <div className="relative w-12 h-12 shrink-0 flex items-center justify-center">
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{ background: 'conic-gradient(var(--color-chart-1) 0% 34%, var(--color-chart-2) 34% 54%, var(--color-chart-3) 54% 72%, var(--color-chart-4) 72% 100%)' }}
+              />
+              <div className="relative w-6 h-6 rounded-full bg-surface" />
+            </div>
+            <div className="flex flex-col gap-1.5">
+              {[
+                { name: '삼성전자',   pct: 34, color: 'bg-chart-1' },
+                { name: 'SK하이닉스', pct: 20, color: 'bg-chart-2' },
+                { name: 'LG에너지',   pct: 18, color: 'bg-chart-3' },
+                { name: '기타',       pct: 28, color: 'bg-chart-4' },
+              ].map(({ name, pct, color }) => (
+                <div key={name} className="flex items-center gap-1.5">
+                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${color}`} />
+                  <span className="text-[8px] text-foreground-secondary">{name}</span>
+                  <span className="text-[8px] font-semibold text-foreground ml-auto">{pct}%</span>
                 </div>
-                <div className="h-1.5 bg-surface-muted rounded-full overflow-hidden">
-                  <div className={`h-full rounded-full ${color}`} style={{ width: `${pct}%` }} />
-                </div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       )
