@@ -60,7 +60,7 @@ export async function fetchWithAuth(url, options = {}) {
 
   const res = await fetch(url, { ...fetchOptions, headers, credentials: 'include' })
 
-  if (res.status !== 401 || skipAuth) {
+  if ((res.status !== 401 && res.status !== 403) || skipAuth) {
     const text = await res.text()
     const data = text ? tryParseJson(text) : null
     if (!res.ok) throw data ?? { message: '요청에 실패했습니다.' }
@@ -107,14 +107,19 @@ export async function fetchWithAuth(url, options = {}) {
         onRefreshed(newToken)
       })
       .catch((err) => {
-        // 다른 탭이 이미 rotation 완료했는지 확인 (멀티탭 race condition)
         const latestToken =
           localStorage.getItem('accessToken') ?? sessionStorage.getItem('accessToken')
         const currentToken = useAuthStore.getState().accessToken
         if (latestToken && latestToken !== currentToken) {
+          // 멀티탭: 다른 탭이 이미 rotation 완료
           useAuthStore.setState({ accessToken: latestToken })
           onRefreshed(latestToken)
+        } else if (latestToken) {
+          // refresh 실패했지만 토큰 존재 → 현재 토큰으로 재시도
+          // (신규 발급 토큰 전파 지연, 일시적 refresh 서버 오류 등 흡수)
+          onRefreshed(latestToken)
         } else {
+          // 토큰 없음 → 완전 만료 → logout
           onRefreshFailed(err)
           useAuthStore.getState().logout({ broadcast: true })
           useAuthStore.getState().openLoginModal()

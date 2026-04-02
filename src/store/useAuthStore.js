@@ -12,15 +12,37 @@ function isTokenExpired(token) {
   }
 }
 
-async function silentRefresh() {
-  const res = await fetch('/api/auth/token/refresh', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
-    credentials: 'include',
-  })
-  if (!res.ok) throw new Error('refresh failed')
-  return res.json()
+async function fetchUserFromServer(token) {
+  try {
+    const res = await fetch('/api/users/me', {
+      headers: { Authorization: `Bearer ${token}` },
+      credentials: 'include',
+    })
+    return res.ok ? await res.json() : null
+  } catch {
+    return null
+  }
+}
+
+async function silentRefresh({ retryOnFail = false } = {}) {
+  const attempt = async () => {
+    const res = await fetch('/api/auth/token/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+      credentials: 'include',
+    })
+    if (!res.ok) throw new Error('refresh failed')
+    return res.json()
+  }
+
+  try {
+    return await attempt()
+  } catch (err) {
+    if (!retryOnFail) throw err
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    return attempt()
+  }
 }
 
 const useAuthStore = create((set, get) => ({
@@ -49,15 +71,11 @@ const useAuthStore = create((set, get) => ({
     if (!accessToken) {
       // 저장된 토큰 없음 — 쿠키(refresh token)가 살아있는지 silent refresh로 확인
       try {
-        const data = await silentRefresh()
+        const data = await silentRefresh({ retryOnFail: true })
         const newToken = data.accessToken
         const storage = localStorage.getItem('autoLogin') === 'true' ? localStorage : sessionStorage
         storage.setItem('accessToken', newToken)
-        const userRes = await fetch('/api/users/me', {
-          headers: { Authorization: `Bearer ${newToken}` },
-          credentials: 'include',
-        })
-        const user = userRes.ok ? await userRes.json() : null
+        const user = await fetchUserFromServer(newToken)
         if (user) storage.setItem('user', JSON.stringify(user))
         set({ isAuthenticated: true, user, accessToken: newToken, isRestoring: false })
         applyThemeFromServer()
@@ -68,9 +86,15 @@ const useAuthStore = create((set, get) => ({
     }
 
     const userStr = localStorage.getItem('user') ?? sessionStorage.getItem('user')
-    const user = userStr ? JSON.parse(userStr) : null
+    let user = userStr ? JSON.parse(userStr) : null
+    const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
 
     if (!isTokenExpired(accessToken)) {
+      // user 정보가 없는 경우 서버에서 복구
+      if (!user) {
+        user = await fetchUserFromServer(accessToken)
+        if (user) storage.setItem('user', JSON.stringify(user))
+      }
       set({ isAuthenticated: true, user, accessToken, isRestoring: false })
       applyThemeFromServer()
       return
@@ -78,10 +102,14 @@ const useAuthStore = create((set, get) => ({
 
     // 만료된 경우 refresh 시도
     try {
-      const data = await silentRefresh()
+      const data = await silentRefresh({ retryOnFail: true })
       const newToken = data.accessToken
-      const storage = localStorage.getItem('accessToken') ? localStorage : sessionStorage
       storage.setItem('accessToken', newToken)
+      // user 정보가 없는 경우 서버에서 복구
+      if (!user) {
+        user = await fetchUserFromServer(newToken)
+        if (user) storage.setItem('user', JSON.stringify(user))
+      }
       set({ isAuthenticated: true, user, accessToken: newToken, isRestoring: false })
       applyThemeFromServer()
     } catch {

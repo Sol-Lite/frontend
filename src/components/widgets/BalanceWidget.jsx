@@ -1,3 +1,4 @@
+import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import ReactECharts from 'echarts-for-react'
 import LockedOverlay from '@/components/ui/LockedOverlay'
@@ -27,8 +28,19 @@ function useBalance(enabled) {
 
   const isLoading = enabled && summaryLoading
 
+  // 조건부 return 이전에 호출 — Rules of Hooks 준수
+  // assetFlow는 React Query가 관리하므로 데이터 미변경 시 레퍼런스 안정
+  const flowPoints = useMemo(
+    () => (assetFlow?.points ?? []).map((p) => Number(p.cumulativeReturnRate ?? 0)),
+    [assetFlow],
+  )
+  const flowDates = useMemo(
+    () => (assetFlow?.points ?? []).map((p) => (p.date ?? '').slice(5).replace('-', '.')),
+    [assetFlow],
+  )
+
   if (isLoading) {
-    return { total: '-', profit: '-', profitRate: '-', invested: '-', available: '-', isProfit: true, isLoading: true, flowPoints: [] }
+    return { total: '-', profit: '-', profitRate: '-', invested: '-', available: '-', isProfit: true, isLoading: true, flowPoints, flowDates }
   }
 
   const cashList  = summary?.cashBalances ?? []
@@ -38,8 +50,6 @@ function useBalance(enabled) {
   const profitRate = Number(summary?.accountProfitLossRate ?? 0)
   const invested  = total - profit - Number(krwEntry.totalAmount ?? 0)
 
-  const flowPoints = (assetFlow?.points ?? []).map((p) => Number(p.cumulativeReturnRate ?? 0))
-  const flowDates  = (assetFlow?.points ?? []).map((p) => (p.date ?? '').slice(5).replace('-', '.'))
   const maxRate    = flowPoints.reduce((m, r) => Math.max(m, Math.abs(r)), 0)
 
   return {
@@ -60,6 +70,51 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
   const { isAuthenticated, isRestoring } = useAuthStore()
   const BALANCE = useBalance(isAuthenticated && !isRestoring)
   const open = useWidgetDetailStore((s) => s.open)
+
+  const chartOption = useMemo(() => {
+    const pts = BALANCE.flowPoints
+    if (pts.length <= 1) return null
+    const isUp = pts[pts.length - 1] >= pts[0]
+    const lineColor = isUp ? 'var(--color-up)' : 'var(--color-down)'
+    return {
+      backgroundColor: 'transparent',
+      grid: { left: 28, right: 4, top: 4, bottom: 16, containLabel: false },
+      tooltip: { show: false },
+      xAxis: {
+        type: 'category',
+        boundaryGap: false,
+        data: BALANCE.flowDates,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        axisLabel: { color: 'var(--color-foreground-disabled)', fontSize: 8, margin: 4 },
+      },
+      yAxis: {
+        type: 'value',
+        scale: true,
+        splitNumber: 2,
+        axisLine: { show: false },
+        axisTick: { show: false },
+        splitLine: { show: false },
+        axisLabel: {
+          color: 'var(--color-foreground-disabled)',
+          fontSize: 8,
+          margin: 4,
+          formatter: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%',
+        },
+      },
+      series: [{
+        type: 'line',
+        smooth: true,
+        showSymbol: pts.length === 1,
+        symbolSize: 5,
+        silent: true,
+        emphasis: { disabled: true },
+        data: pts,
+        lineStyle: { width: 2, color: lineColor },
+        itemStyle: { color: lineColor },
+      }],
+    }
+  }, [BALANCE.flowPoints, BALANCE.flowDates])
 
   return (
     <WidgetCard colSpan={colSpan} rowSpan={rowSpan} onDelete={onDelete} onClick={() => open({ widgetTypeId: 'balance', config: {} })}>
@@ -125,54 +180,13 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
           <div className="flex flex-col flex-1 min-h-0 border-t border-stroke pt-2">
             <div className="text-widget-9 text-foreground-disabled shrink-0">수익 추이 (7일)</div>
             <div className="flex-1 min-h-0 relative">
-              {BALANCE.flowPoints.length > 1 ? (() => {
-                const pts = BALANCE.flowPoints
-                const isUp = pts[pts.length - 1] >= pts[0]
-                const lineColor = isUp ? 'var(--color-up)' : 'var(--color-down)'
-                const chartOption = {
-                  backgroundColor: 'transparent',
-                  grid: { left: 28, right: 4, top: 4, bottom: 16, containLabel: false },
-                  tooltip: { show: false },
-                  xAxis: {
-                    type: 'category',
-                    boundaryGap: false,
-                    data: BALANCE.flowDates,
-                    axisLine: { show: false },
-                    axisTick: { show: false },
-                    axisLabel: { color: 'var(--color-foreground-disabled)', fontSize: 8, margin: 4 },
-                  },
-                  yAxis: {
-                    type: 'value',
-                    scale: true,
-                    splitNumber: 2,
-                    axisLine: { show: false },
-                    axisTick: { show: false },
-                    splitLine: { show: false },
-                    axisLabel: {
-                      color: 'var(--color-foreground-disabled)',
-                      fontSize: 8,
-                      margin: 4,
-                      formatter: (v) => (v >= 0 ? '+' : '') + v.toFixed(1) + '%',
-                    },
-                  },
-                  series: [{
-                    type: 'line',
-                    smooth: true,
-                    showSymbol: pts.length === 1,
-                    symbolSize: 5,
-                    data: pts,
-                    lineStyle: { width: 2, color: lineColor },
-                    itemStyle: { color: lineColor },
-                  }],
-                }
-                return (
-                  <ReactECharts
-                    option={chartOption}
-                    style={{ width: '100%', height: '100%' }}
-                    opts={{ renderer: 'svg' }}
-                  />
-                )
-              })() : (
+              {chartOption ? (
+                <ReactECharts
+                  option={chartOption}
+                  style={{ width: '100%', height: '100%' }}
+                  opts={{ renderer: 'svg' }}
+                />
+              ) : (
                 <div className="absolute inset-0 flex items-center justify-center text-widget-9 text-foreground-disabled">데이터 없음</div>
               )}
             </div>

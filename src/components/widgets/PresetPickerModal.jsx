@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
 import { X, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
-import { useQueryClient } from '@tanstack/react-query'
 import useWidgetStore from '@/store/useWidgetStore'
 import { cn } from '@/lib/cn'
 import { DASHBOARD_PRESETS } from '@/data/dashboardPresets'
@@ -26,6 +25,61 @@ function calcCellAspectRatio(colSpan, rowSpan, cellWidth, cellHeight) {
   const w = colSpan * cellWidth + (colSpan - 1) * GRID_GAP
   const h = rowSpan * cellHeight + (rowSpan - 1) * GRID_GAP
   return w / h
+}
+
+function buildWidgetTypeIndexMap(widgets) {
+  const typeIndexMap = new Map()
+
+  widgets
+    .map((w, i) => ({ ...w, originalIndex: i, size: w.colSpan * w.rowSpan }))
+    .filter((w) => w.widgetTypeId === 'stock-chart')
+    .sort((a, b) => b.size - a.size)
+    .forEach((w, typeIndex) => {
+      typeIndexMap.set(w.originalIndex, { widgetTypeId: 'stock-chart', typeIndex })
+    })
+
+  widgets
+    .map((w, i) => ({ ...w, originalIndex: i, size: w.colSpan * w.rowSpan }))
+    .filter((w) => w.widgetTypeId === 'stock-news')
+    .sort((a, b) => b.size - a.size)
+    .forEach((w, typeIndex) => {
+      typeIndexMap.set(w.originalIndex, { widgetTypeId: 'stock-news', typeIndex })
+    })
+
+  return typeIndexMap
+}
+
+function buildPresetWidgetConfig(widget, sectorStocks, typeIndexInfo) {
+  const baseConfig = { variantId: widget.variantId }
+
+  if (!sectorStocks?.length || !typeIndexInfo) {
+    return baseConfig
+  }
+
+  const stock = sectorStocks[typeIndexInfo.typeIndex]
+  if (!stock?.stockCode) {
+    return baseConfig
+  }
+
+  if (typeIndexInfo.widgetTypeId === 'stock-chart') {
+    return {
+      ...baseConfig,
+      stockCode: stock.stockCode,
+      stockName: stock.name,
+      marketType: stock.marketType ?? stock.market ?? 'KOSPI',
+      ...(stock.exchangeCode ? { exchangeCode: stock.exchangeCode } : {}),
+    }
+  }
+
+  if (typeIndexInfo.widgetTypeId === 'stock-news') {
+    return {
+      ...baseConfig,
+      stockCode: stock.stockCode,
+      stockName: stock.name,
+    }
+  }
+
+  return baseConfig
 }
 
 function PresetThumbnail({ widgets, large, sectorStocks }) {
@@ -92,7 +146,7 @@ export default function PresetPickerModal({ onClose, isAtLimit }) {
     try {
       const stocks = await marketApi.getThemeRanking(theme.code, { type: 'market-cap' })
       setSectorStocks(stocks)
-    } catch (e) {
+    } catch {
       setError('상위 종목을 불러올 수 없습니다')
     } finally {
       setLoadingCode(null)
@@ -105,6 +159,8 @@ export default function PresetPickerModal({ onClose, isAtLimit }) {
     setLoadingCode(selectedSectorCode)
     setError(null)
     try {
+      const typeIndexMap = buildWidgetTypeIndexMap(selectedPreset.widgets)
+
       // 프리셋으로 생성될 위젯들 변환
       const presetWidgets = selectedPreset.widgets.map((w, i) => ({
         instanceId: `widget-${Date.now()}-${i}`,
@@ -114,11 +170,11 @@ export default function PresetPickerModal({ onClose, isAtLimit }) {
         gridRow: w.gridRow,
         colSpan: w.colSpan,
         rowSpan: w.rowSpan,
-        config: { variantId: w.variantId },
+        config: buildPresetWidgetConfig(w, sectorStocks, typeIndexMap.get(i)),
       }))
 
       const store = useWidgetStore.getState()
-      const { pages, addTempPage, switchPage: switchPageFn, addPendingPreset } = store
+      const { addTempPage, switchPage: switchPageFn, addPendingPreset } = store
 
       const tempPageId = `temp-preset-${Date.now()}`
 
@@ -140,7 +196,7 @@ export default function PresetPickerModal({ onClose, isAtLimit }) {
       }
 
       onClose()
-    } catch (e) {
+    } catch {
       setError('오류가 발생했습니다')
     } finally {
       setLoadingCode(null)

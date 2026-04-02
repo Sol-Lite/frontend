@@ -9,8 +9,10 @@ import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore, { hasUnsavedChanges } from '@/store/useWidgetStore'
 import { dashboardApi } from '@/api/dashboard'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
+import { useIsCompact } from '@/hooks/useWindowWidth'
 import NotificationCenter from '@/components/ui/NotificationCenter'
 import { FontSizeButton, ThemeButton } from './DisplaySettingsButtons'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
 function Logo() {
   const navigate = useNavigate()
@@ -116,7 +118,7 @@ function UserArea() {
 
 function EditModeActions() {
   const { exitEditMode, saveLayout } = useEditModeStore()
-  const { restoreSnapshot, clearSnapshot, clearPendingPresets, pages, currentPageId } = useWidgetStore()
+  const { restoreSnapshot, clearSnapshot, clearPendingPresets } = useWidgetStore()
   const pendingPresets = useWidgetStore((s) => s.pendingPresets)
   const deletePageIds = useWidgetStore((s) => s.deletePageIds)
   const { mutate: saveDashboard, isPending, isError } = useDashboardSave()
@@ -220,9 +222,14 @@ function EditModeActions() {
 function WidgetEditButton() {
   const { enterEditMode } = useEditModeStore()
   const { snapshotWidgets } = useWidgetStore()
+  const closeWidgetDetail = useWidgetDetailStore((s) => s.close)
   return (
     <button
-      onClick={() => { snapshotWidgets(); enterEditMode() }}
+      onClick={() => {
+        closeWidgetDetail()
+        snapshotWidgets()
+        enterEditMode()
+      }}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stroke text-foreground-secondary text-[12px] font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-[150ms]"
     >
       <LayoutGrid className="w-3.5 h-3.5" strokeWidth={2} />
@@ -235,13 +242,14 @@ export default function AppHeader() {
   const { isEditMode } = useEditModeStore()
   const { pathname } = useLocation()
   const isHome = pathname === '/'
+  const isCompact = useIsCompact()
 
   return (
     <header className="h-header flex items-center px-4 gap-3 bg-surface border-b border-stroke shrink-0 z-50">
       <Logo />
       <NavTabs />
       <div className="flex-1" />
-      {isHome && (isEditMode ? <EditModeActions /> : <WidgetEditButton />)}
+      {isHome && !isCompact && (isEditMode ? <EditModeActions /> : <WidgetEditButton />)}
       <FontSizeButton />
       <ThemeButton />
       <NotificationCenter />

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { Bell, Settings2, CheckCheck, Loader2 } from 'lucide-react'
+import { Bell, Settings2, CheckCheck, Loader2, Trash2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import useAuthStore from '@/store/useAuthStore'
 import useNotificationStore from '@/store/useNotificationStore'
@@ -20,39 +20,59 @@ function timeAgo(dateStr) {
 function NotificationItem({ notification, onClose }) {
   const navigate = useNavigate()
   const markAsRead = useNotificationStore((s) => s.markAsRead)
+  const deleteNotification = useNotificationStore((s) => s.deleteNotification)
 
   function handleClick() {
     if (!notification.read) {
       markAsRead(notification.notificationId)
     }
     if (notification.notificationType === 'PRICE_ALERT' && notification.referenceId) {
-      navigate(`/invest/${notification.referenceId}`)
+      const stockName = notification.stockName
+        ?? notification.title?.match(/^(.+?)(?:\s+전일대비|\s+목표가)/)?.[1]
+        ?? null
+      navigate(`/invest/${notification.referenceId}`, { state: { stockName } })
       onClose()
     }
   }
 
+  function handleDelete(e) {
+    e.stopPropagation()
+    deleteNotification(notification.notificationId)
+  }
+
   return (
-    <button
-      onClick={handleClick}
-      className={`w-full text-left px-4 py-3 hover:bg-surface-muted transition-colors border-b border-stroke-subtle last:border-0 ${!notification.read ? 'bg-primary-light/50' : ''}`}
+    <div
+      className={`group relative border-b border-stroke-subtle last:border-0 ${!notification.read ? 'bg-primary-light/50' : ''}`}
     >
-      <div className="flex items-start gap-2.5">
-        <span
-          className={`mt-2 w-1.5 h-1.5 rounded-full shrink-0 ${!notification.read ? 'bg-primary' : 'bg-transparent'}`}
-        />
-        <div className="min-w-0">
-          <p className="text-[13px] font-semibold text-foreground leading-snug truncate">
-            {notification.title}
-          </p>
-          <p className="text-[12px] text-foreground-secondary mt-0.5 leading-snug">
-            {notification.message}
-          </p>
-          <p className="text-[11px] text-foreground-disabled mt-1">
-            {timeAgo(notification.createdAt)}
-          </p>
+      <button
+        onClick={handleClick}
+        className="w-full text-left px-4 py-3 pr-8 hover:bg-surface-muted transition-colors"
+      >
+        <div className="flex items-start gap-2.5">
+          <span
+            className={`mt-2 w-1.5 h-1.5 rounded-full shrink-0 ${!notification.read ? 'bg-primary' : 'bg-transparent'}`}
+          />
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold text-foreground leading-snug truncate">
+              {notification.title}
+            </p>
+            <p className="text-[12px] text-foreground-secondary mt-0.5 leading-snug">
+              {notification.message}
+            </p>
+            <p className="text-[11px] text-foreground-disabled mt-1">
+              {timeAgo(notification.createdAt)}
+            </p>
+          </div>
         </div>
-      </div>
-    </button>
+      </button>
+      <button
+        onClick={handleDelete}
+        className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-foreground-disabled hover:text-foreground-secondary hover:bg-surface-muted transition-colors opacity-0 group-hover:opacity-100"
+        aria-label="알림 삭제"
+      >
+        <Trash2 className="w-3 h-3" strokeWidth={2} />
+      </button>
+    </div>
   )
 }
 

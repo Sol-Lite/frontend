@@ -16,11 +16,16 @@ function patch(path) {
   return fetchWithAuth(path, { method: 'PATCH' })
 }
 
+function del(path) {
+  return fetchWithAuth(path, { method: 'DELETE' })
+}
+
 export const notificationApi = {
   getNotifications:       () => get('/api/notifications'),
   getUnreadCount:         () => get('/api/notifications/unread-count'),
   markAsRead:     (id)    => patch(`/api/notifications/${id}/read`),
   markAllAsRead:          () => patch('/api/notifications/read-all'),
+  deleteNotification: (id) => del(`/api/notifications/${id}`),
   getSettings:            () => get('/api/notifications/settings'),
   updateSettings: (body)  => put('/api/notifications/settings', body),
 }

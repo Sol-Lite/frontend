@@ -1,7 +1,6 @@
 import { useEffect, useRef, useCallback, useMemo, useState } from 'react'
 import { Pencil, LayoutTemplate, LayoutGrid, Plus, ChevronLeft, ChevronRight } from 'lucide-react'
 import { useDroppable } from '@dnd-kit/core'
-import LiveDot from '@/components/ui/LiveDot'
 import useEditModeStore from '@/store/useEditModeStore'
 import useGridStore from '@/store/useGridStore'
 import useWidgetStore from '@/store/useWidgetStore'
@@ -177,7 +176,7 @@ export default function HomePage() {
 
   return (
     <>
-    <div className="flex flex-col h-full overflow-hidden p-3 gap-2.5">
+    <div className="flex flex-col h-full min-w-0 overflow-hidden p-3 gap-2.5">
       {/* 서브바 */}
       <div className="flex items-center justify-between shrink-0 px-1 min-h-7">
         <div className="flex items-center gap-2 min-w-0">
@@ -230,17 +229,12 @@ export default function HomePage() {
               </div>
             )
           ) : (
-            <span className="text-widget-13 font-bold text-foreground">나의 대시보드</span>
+            <span className="text-widget-13 font-bold text-foreground">{currentPageName}</span>
           )}
-          {isEditMode ? (
+          {isEditMode && (
             <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-primary-light border border-primary-border">
               <Pencil className="w-2.5 h-2.5 text-primary" strokeWidth={2.5} />
               <span className="text-widget-10 text-primary font-semibold">편집 중</span>
-            </div>
-          ) : (
-            <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-background border border-stroke">
-              <LiveDot size="sm" />
-              <span className="text-widget-10 text-foreground-disabled">실시간 반영</span>
             </div>
           )}
         </div>
