@@ -402,7 +402,7 @@ export function PreviewContent({ type, sectorStocks, typeIndex = 0 }) {
         <div className="flex flex-col h-full gap-1.5">
           <div className="flex items-center justify-between shrink-0">
             <span className="text-[9px] text-foreground-disabled">종목별 비중</span>
-            <span className="text-[10px] font-bold text-up">+5.2%</span>
+            <span className="text-[10px] font-bold text-down">+5.2%</span>
           </div>
           <div className="flex items-center gap-3 flex-1 min-h-0">
             <div className="relative w-12 h-12 shrink-0 flex items-center justify-center">
