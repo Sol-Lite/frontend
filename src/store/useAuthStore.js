@@ -24,15 +24,25 @@ async function fetchUserFromServer(token) {
   }
 }
 
-async function silentRefresh() {
-  const res = await fetch('/api/auth/token/refresh', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({}),
-    credentials: 'include',
-  })
-  if (!res.ok) throw new Error('refresh failed')
-  return res.json()
+async function silentRefresh({ retryOnFail = false } = {}) {
+  const attempt = async () => {
+    const res = await fetch('/api/auth/token/refresh', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({}),
+      credentials: 'include',
+    })
+    if (!res.ok) throw new Error('refresh failed')
+    return res.json()
+  }
+
+  try {
+    return await attempt()
+  } catch (err) {
+    if (!retryOnFail) throw err
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    return attempt()
+  }
 }
 
 const useAuthStore = create((set, get) => ({
@@ -61,7 +71,7 @@ const useAuthStore = create((set, get) => ({
     if (!accessToken) {
       // 저장된 토큰 없음 — 쿠키(refresh token)가 살아있는지 silent refresh로 확인
       try {
-        const data = await silentRefresh()
+        const data = await silentRefresh({ retryOnFail: true })
         const newToken = data.accessToken
         const storage = localStorage.getItem('autoLogin') === 'true' ? localStorage : sessionStorage
         storage.setItem('accessToken', newToken)
@@ -92,7 +102,7 @@ const useAuthStore = create((set, get) => ({
 
     // 만료된 경우 refresh 시도
     try {
-      const data = await silentRefresh()
+      const data = await silentRefresh({ retryOnFail: true })
       const newToken = data.accessToken
       storage.setItem('accessToken', newToken)
       // user 정보가 없는 경우 서버에서 복구
