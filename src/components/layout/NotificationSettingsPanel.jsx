@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { X, Check } from 'lucide-react'
+import { X, Check, Loader2 } from 'lucide-react'
 import { notificationApi } from '@/api/notification'
 import useRightPanelStore from '@/store/useRightPanelStore'
 
@@ -44,11 +44,7 @@ function Header() {
 export default function NotificationSettingsPanel() {
   const setChatMode = useRightPanelStore((s) => s.setChatMode)
 
-  const [settings, setSettings] = useState({
-    priceAlertEnabled: true,
-    executionAlertEnabled: true,
-    defaultThresholdPercent: 5,
-  })
+  const [settings, setSettings] = useState(null)
   const [isCustom, setIsCustom] = useState(false)
   const [customValue, setCustomValue] = useState('')
   const [allOffWarning, setAllOffWarning] = useState(false)
@@ -99,12 +95,11 @@ export default function NotificationSettingsPanel() {
 
   function handleCustomChange(val) {
     setCustomValue(val)
-    setSettings((s) => ({ ...s, defaultThresholdPercent: parseFloat(val) || 0 }))
   }
 
   async function handleSave() {
-    const percent = settings.defaultThresholdPercent
-    if (!percent || percent < 0.01 || percent > 99.99) {
+    const percent = isCustom ? parseFloat(customValue) : settings.defaultThresholdPercent
+    if (isNaN(percent) || percent < 0.01 || percent > 99.99) {
       setSaveError('유효한 범위를 입력해주세요 (0.01 ~ 99.99)')
       return
     }
@@ -132,7 +127,11 @@ export default function NotificationSettingsPanel() {
       <Header />
 
       <div className="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
-        {loadError ? (
+        {!settings && !loadError ? (
+          <div className="flex-1 flex justify-center items-center">
+            <Loader2 className="w-4 h-4 text-foreground-disabled animate-spin" strokeWidth={2} />
+          </div>
+        ) : loadError ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-3">
             <p className="text-[13px] text-foreground-secondary">설정을 불러오지 못했습니다.</p>
             <button

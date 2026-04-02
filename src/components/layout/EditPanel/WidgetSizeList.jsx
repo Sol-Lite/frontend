@@ -108,7 +108,7 @@ function MiniCandleChart({ className = '', candleRatio = 1, volatility = 1 }) {
     : sampledCandles.map(([cx, ht, bt, bb, lb, isUp]) => [cx, scaleY(ht), scaleY(bt), scaleY(bb), scaleY(lb), isUp])
   const lastBodyBottom = candles[candles.length - 1][3]
   return (
-    <div className={cn('h-full w-full rounded-lg bg-white p-1', className)}>
+    <div className={cn('h-full w-full rounded-lg bg-surface p-1', className)}>
       <svg viewBox="0 0 100 42" preserveAspectRatio="none" className="w-full h-full block">
         <line x1="0" y1={lastBodyBottom} x2="100" y2={lastBodyBottom} stroke="var(--color-up)" strokeWidth="0.7" strokeDasharray="1.5 1.5" vectorEffect="non-scaling-stroke" />
         {candles.map(([cx, ht, bt, bb, lb, isUp]) => {
