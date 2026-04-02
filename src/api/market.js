@@ -1,8 +1,49 @@
 const BASE = '/api/market'
 const inFlightRequests = new Map()
 
+function tryParseJson(text) {
+  try {
+    return JSON.parse(text)
+  } catch {
+    return { message: text }
+  }
+}
+
+function resolveErrorMessage(data, fallbackMessage) {
+  const candidates = [
+    data?.message,
+    data?.error,
+    data?.detail,
+    data?.details,
+    data?.errorMessage,
+  ]
+
+  const resolved = candidates.find((value) => typeof value === 'string' && value.trim())
+  return resolved?.trim() || fallbackMessage
+}
+
+function createApiError(url, response, data, rawText, fallbackMessage) {
+  const error = new Error(resolveErrorMessage(data, fallbackMessage))
+  error.name = 'ApiError'
+  error.status = response.status
+  error.statusText = response.statusText
+  error.url = url
+  error.data = data
+  error.rawText = rawText
+
+  const code = data?.code ?? data?.errorCode ?? data?.resultCode ?? data?.rt_cd
+  if (code != null) {
+    error.code = code
+  }
+
+  return error
+}
+
 async function get(path, params, options = {}) {
-  const query = params ? `?${new URLSearchParams(params).toString()}` : ''
+  const filteredParams = params
+    ? Object.fromEntries(Object.entries(params).filter(([, value]) => value != null))
+    : null
+  const query = filteredParams ? `?${new URLSearchParams(filteredParams).toString()}` : ''
   const url = `${BASE}${path}${query}`
   const requestKey = `${options.method ?? 'GET'}:${url}`
 
@@ -17,18 +58,10 @@ async function get(path, params, options = {}) {
     })
 
     const text = await res.text()
-    let data = null
-
-    if (text) {
-      try {
-        data = JSON.parse(text)
-      } catch {
-        data = { message: text }
-      }
-    }
+    const data = text ? tryParseJson(text) : null
 
     if (!res.ok) {
-      throw data ?? { message: '시장 데이터를 불러오지 못했습니다.' }
+      throw createApiError(url, res, data, text, '시장 데이터를 불러오지 못했습니다.')
     }
 
     return data

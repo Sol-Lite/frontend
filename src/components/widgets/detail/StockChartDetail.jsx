@@ -18,7 +18,7 @@ const WIDGET_PERIOD_MAP = {
   '3달': { initialPeriod: 'DAILY',  initialMinuteInterval: undefined },
 }
 
-export default function StockChartDetail({ config = {}, onClose }) {
+export default function StockChartDetail({ config = {} }) {
   const stockCode     = config.stockCode ?? INVEST_STOCK.code
   const locationState = {
     stockName:    config.stockName   ?? null,
@@ -44,6 +44,8 @@ export default function StockChartDetail({ config = {}, onClose }) {
     hasMoreChartHistory,
     marketLoading,
     marketErrorMessage,
+    orderBookLoading,
+    orderBookErrorMessage,
     orderBook,
     onChartPeriodChange,
     onLoadMoreChartHistory,
@@ -114,6 +116,8 @@ export default function StockChartDetail({ config = {}, onClose }) {
           changeRate={changeRate}
           defaultPrice={currentPrice ?? stockMeta.price}
           orderBook={orderBook}
+          orderBookLoading={orderBookLoading}
+          orderBookErrorMessage={orderBookErrorMessage}
           displayCurrency={displayCurrency}
           usdRate={usdRate}
         />

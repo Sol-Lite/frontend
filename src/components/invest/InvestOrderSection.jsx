@@ -24,6 +24,8 @@ export default function InvestOrderSection({
   changeRate,
   defaultPrice,
   orderBook,
+  orderBookLoading,
+  orderBookErrorMessage,
   displayCurrency,
   usdRate,
 }) {
@@ -230,6 +232,8 @@ export default function InvestOrderSection({
         currentPrice={currentPrice}
         changeRate={changeRate}
         orderBook={orderBook}
+        isLoading={orderBookLoading}
+        errorMessage={orderBookErrorMessage}
         onSelectPrice={handleSelectPrice}
         marketType={marketType}
         displayCurrency={displayCurrency}

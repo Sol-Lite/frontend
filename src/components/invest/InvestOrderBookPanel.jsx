@@ -7,6 +7,8 @@ export default function InvestOrderBookPanel({
   currentPrice,
   changeRate,
   orderBook,
+  isLoading = false,
+  errorMessage = '',
   onSelectPrice,
   marketType,
   displayCurrency,
@@ -15,6 +17,19 @@ export default function InvestOrderBookPanel({
   const isUp = changeRate > 0
   const isDown = changeRate < 0
 
+  if (isLoading && !orderBook) {
+    return (
+      <section className="flex w-[170px] shrink-0 flex-col overflow-hidden border-r border-stroke bg-surface">
+        <div className="flex items-center justify-between border-b border-stroke px-2.5 py-2 shrink-0">
+          <span className="text-[11px] font-bold text-foreground">호가창</span>
+        </div>
+        <div className="flex flex-1 items-center justify-center px-3 py-4">
+          <span className="text-[10px] text-foreground-disabled">호가 정보를 불러오는 중입니다.</span>
+        </div>
+      </section>
+    )
+  }
+
   if (!orderBook) {
     return (
       <section className="flex w-[170px] shrink-0 flex-col overflow-hidden border-r border-stroke bg-surface">
@@ -22,7 +37,9 @@ export default function InvestOrderBookPanel({
           <span className="text-[11px] font-bold text-foreground">호가창</span>
         </div>
         <div className="flex flex-1 items-center justify-center px-3 py-4">
-          <span className="text-[10px] text-foreground-disabled">호가 정보를 불러올 수 없습니다.</span>
+          <span className="text-[10px] text-center text-danger">
+            {errorMessage || '호가 정보를 불러오지 못했습니다.'}
+          </span>
         </div>
       </section>
     )
