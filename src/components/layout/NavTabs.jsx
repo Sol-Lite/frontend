@@ -1,11 +1,12 @@
-import { useState } from 'react'
-import { X } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
+import { X, ChevronDown } from 'lucide-react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { cn } from '@/lib/cn'
 import { LAST_INVEST_PATH_KEY, LAST_INVEST_STATE_KEY } from '@/features/invest/navigation'
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore, { hasUnsavedChanges } from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
+import { useIsCompact } from '@/hooks/useWindowWidth'
 
 const TABS = [
   { label: '홈',  path: '/' },
@@ -74,11 +75,33 @@ export default function NavTabs() {
   const { restoreSnapshot, clearSnapshot } = useWidgetStore()
   const unsaved = useWidgetStore(hasUnsavedChanges)
   const { mutate: saveDashboard, isPending } = useDashboardSave()
+  const isCompact = useIsCompact()
 
   const [pendingNav, setPendingNav] = useState(null) // { path, state }
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const menuRef = useRef(null)
 
   const isActive = (path) =>
     path === '/' ? pathname === '/' : pathname.startsWith(path)
+
+  const activeTab = TABS.find(({ path }) => isActive(path))
+
+  // 외부 클릭 시 메뉴 닫기
+  useEffect(() => {
+    if (!isMenuOpen) return
+    function handleClickOutside(e) {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [isMenuOpen])
+
+  // compact 해제 시 메뉴 닫기
+  useEffect(() => {
+    if (!isCompact) setIsMenuOpen(false)
+  }, [isCompact])
 
   function doNavigate({ path, state }) {
     navigate(path, state ? { state } : undefined)
@@ -127,22 +150,52 @@ export default function NavTabs() {
 
   return (
     <>
-      <nav className="flex items-center gap-0.5 bg-background rounded-xl p-1">
-        {TABS.map(({ label, path }) => (
+      {isCompact ? (
+        <div ref={menuRef} className="relative">
           <button
-            key={path}
-            onClick={() => handleTabClick(path)}
-            className={cn(
-              'px-4 py-1.5 text-[12px] rounded-lg transition-colors duration-150',
-              isActive(path)
-                ? 'bg-surface text-foreground font-semibold shadow-sm'
-                : 'text-foreground-disabled hover:text-foreground-secondary',
-            )}
+            onClick={() => setIsMenuOpen((v) => !v)}
+            className="flex items-center gap-1 px-3 py-1.5 text-[12px] rounded-xl bg-background text-foreground font-semibold"
           >
-            {label}
+            {activeTab?.label ?? '메뉴'}
+            <ChevronDown className={cn('w-3 h-3 transition-transform duration-150', isMenuOpen && 'rotate-180')} />
           </button>
-        ))}
-      </nav>
+          {isMenuOpen && (
+            <div className="absolute top-full left-0 mt-1 w-20 bg-surface rounded-xl shadow-modal border border-stroke z-[60] py-1 overflow-hidden">
+              {TABS.map(({ label, path }) => (
+                <button
+                  key={path}
+                  onClick={() => { setIsMenuOpen(false); handleTabClick(path) }}
+                  className={cn(
+                    'w-full px-3 py-2 text-[12px] text-left transition-colors duration-150',
+                    isActive(path)
+                      ? 'text-foreground font-semibold bg-surface-muted'
+                      : 'text-foreground-disabled hover:text-foreground-secondary hover:bg-surface-muted',
+                  )}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : (
+        <nav className="flex items-center gap-0.5 bg-background rounded-xl p-1">
+          {TABS.map(({ label, path }) => (
+            <button
+              key={path}
+              onClick={() => handleTabClick(path)}
+              className={cn(
+                'px-4 py-1.5 text-[12px] rounded-lg transition-colors duration-150',
+                isActive(path)
+                  ? 'bg-surface text-foreground font-semibold shadow-sm'
+                  : 'text-foreground-disabled hover:text-foreground-secondary',
+              )}
+            >
+              {label}
+            </button>
+          ))}
+        </nav>
+      )}
 
       {pendingNav && (
         <NavConfirmModal
