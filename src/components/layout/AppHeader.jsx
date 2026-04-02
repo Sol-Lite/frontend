@@ -9,6 +9,7 @@ import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore, { hasUnsavedChanges } from '@/store/useWidgetStore'
 import { dashboardApi } from '@/api/dashboard'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
+import { useIsCompact } from '@/hooks/useWindowWidth'
 import NotificationCenter from '@/components/ui/NotificationCenter'
 import { FontSizeButton, ThemeButton } from './DisplaySettingsButtons'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
@@ -241,13 +242,14 @@ export default function AppHeader() {
   const { isEditMode } = useEditModeStore()
   const { pathname } = useLocation()
   const isHome = pathname === '/'
+  const isCompact = useIsCompact()
 
   return (
     <header className="h-header flex items-center px-4 gap-3 bg-surface border-b border-stroke shrink-0 z-50">
       <Logo />
       <NavTabs />
       <div className="flex-1" />
-      {isHome && (isEditMode ? <EditModeActions /> : <WidgetEditButton />)}
+      {isHome && !isCompact && (isEditMode ? <EditModeActions /> : <WidgetEditButton />)}
       <FontSizeButton />
       <ThemeButton />
       <NotificationCenter />

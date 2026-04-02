@@ -20,6 +20,7 @@ import usePendingWidgetStore from '@/store/usePendingWidgetStore'
 import usePendingQueryStore from '@/store/usePendingQueryStore'
 import { getWidgetDefaultQuery } from '@/config/widgetShortcuts'
 import { useDashboardLoad, useDashboardSave } from '@/hooks/useDashboardSync'
+import { useIsCompact } from '@/hooks/useWindowWidth'
 import { WIDGET_REGISTRY } from '@/components/widgets/widgetRegistry'
 import { GRID_GAP, GRID_COLS, GRID_ROWS, gridElementRef } from '@/lib/gridConstants'
 
@@ -34,6 +35,7 @@ export default function AppShell() {
   const location = useLocation()
   const navigate = useNavigate()
   const openLoginModal = useAuthStore((s) => s.openLoginModal)
+  const isCompact = useIsCompact()
   useDashboardLoad()
 
   useEffect(() => {
@@ -329,12 +331,14 @@ export default function AppShell() {
       <div className="flex flex-col h-screen overflow-hidden">
         <CurrencySync />
         <AppHeader />
-        <div className="flex flex-1 overflow-hidden">
-          <main className="relative flex-1 overflow-hidden bg-background isolate">
-            <Outlet />
-            <WidgetDetailModal />
-          </main>
-          <RightPanel />
+        <div className="flex flex-1 min-w-0 overflow-hidden">
+          {!isCompact && (
+            <main className="relative flex-1 min-w-0 overflow-hidden bg-background isolate">
+              <Outlet />
+              <WidgetDetailModal />
+            </main>
+          )}
+          <RightPanel isCompact={isCompact} />
         </div>
       </div>
       <DragOverlay>{overlayContent}</DragOverlay>
