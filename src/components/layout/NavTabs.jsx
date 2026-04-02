@@ -75,7 +75,8 @@ export default function NavTabs() {
   const { restoreSnapshot, clearSnapshot } = useWidgetStore()
   const unsaved = useWidgetStore(hasUnsavedChanges)
   const { mutate: saveDashboard, isPending } = useDashboardSave()
-  const isCompact = useIsNavCompact()
+  const isHome = pathname === '/'
+  const isCompact = useIsNavCompact(isHome)
 
   const [pendingNav, setPendingNav] = useState(null) // { path, state }
   const [isMenuOpen, setIsMenuOpen] = useState(false)
