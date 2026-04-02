@@ -60,6 +60,7 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
   const ref      = useRef(null)
   const chartRef = useRef(null)
   const seriesRef = useRef(null)
+  const firstBarTimeRef = useRef(null) // candleData 첫 봉 시간 — liveCandle 유효성 가드용
   const theme = useUIStore((s) => s.theme)
 
   // 차트 생성 — candleData / isIntraday / theme 변경 시 재생성
@@ -137,6 +138,9 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
 
     if (candleData?.length) {
       series.setData(candleData)
+      firstBarTimeRef.current = candleData[0].time
+    } else {
+      firstBarTimeRef.current = null
     }
     if (isIntraday && !isForceFit) {
       // 국내 1일: 09:00~15:30 세션 슬롯(79개)에 맞춰 고정
@@ -171,6 +175,7 @@ export default function MiniChart({ candleData, liveCandle, isIntraday = false, 
   // 15:30 이후 새 봉이 슬롯 밖으로 나갈 때만 scrollToRealTime 호출
   useEffect(() => {
     if (!seriesRef.current || !liveCandle) return
+    if (firstBarTimeRef.current != null && liveCandle.time < firstBarTimeRef.current) return
     seriesRef.current.update(liveCandle)
     if (isIntraday && chartRef.current) {
       const d = new Date((liveCandle.time + tickOffset) * 1000)
