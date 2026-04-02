@@ -6,7 +6,7 @@ import { LAST_INVEST_PATH_KEY, LAST_INVEST_STATE_KEY } from '@/features/invest/n
 import useEditModeStore from '@/store/useEditModeStore'
 import useWidgetStore, { hasUnsavedChanges } from '@/store/useWidgetStore'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
-import { useIsCompact } from '@/hooks/useWindowWidth'
+import { useIsNavCompact } from '@/hooks/useWindowWidth'
 
 const TABS = [
   { label: '홈',  path: '/' },
@@ -75,7 +75,7 @@ export default function NavTabs() {
   const { restoreSnapshot, clearSnapshot } = useWidgetStore()
   const unsaved = useWidgetStore(hasUnsavedChanges)
   const { mutate: saveDashboard, isPending } = useDashboardSave()
-  const isCompact = useIsCompact()
+  const isCompact = useIsNavCompact()
 
   const [pendingNav, setPendingNav] = useState(null) // { path, state }
   const [isMenuOpen, setIsMenuOpen] = useState(false)
