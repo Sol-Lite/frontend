@@ -45,7 +45,7 @@ function fmtUsd(n) {
 
 const ASSET_FLOW_RANGES = [
   { key: '1W', label: '1주' },
-  { key: '1M', label: '1월' },
+  { key: '1M', label: '1달' },
   { key: 'ALL', label: '전체' },
 ]
 
