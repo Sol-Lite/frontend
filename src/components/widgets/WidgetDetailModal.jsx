@@ -1,7 +1,8 @@
-import { useRef } from 'react'
+import { useCallback, useState } from 'react'
 import { Drawer } from 'vaul'
 import { X, ChevronLeft } from 'lucide-react'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
+import { shouldIgnoreWidgetDetailOutsideInteraction } from '@/lib/widgetDetailDismissGuard'
 import StockChartDetail from './detail/StockChartDetail'
 import BalanceDetail from './detail/BalanceDetail'
 import RankingDetail from './detail/RankingDetail'
@@ -29,22 +30,45 @@ export default function WidgetDetailModal() {
   const canGoBack = history.length > 0
 
   // 닫힘 애니메이션 중에도 마지막 위젯 유지
-  const localWidget = useRef(null)
-  if (openWidget) localWidget.current = openWidget
+  const [closingWidget, setClosingWidget] = useState(null)
+  const visibleWidget = openWidget ?? closingWidget
+  const DetailComp = visibleWidget ? DETAIL_MAP[visibleWidget.widgetTypeId] : null
 
-  const DetailComp = localWidget.current ? DETAIL_MAP[localWidget.current.widgetTypeId] : null
+  const handleClose = useCallback(() => {
+    if (openWidget) {
+      setClosingWidget(openWidget)
+    }
+    close()
+  }, [close, openWidget])
+
+  function handleOutsideInteract(event) {
+    if (shouldIgnoreWidgetDetailOutsideInteraction()) {
+      event.preventDefault()
+    }
+  }
 
   return (
     <Drawer.Root
       open={!!openWidget}
-      onOpenChange={(open) => { if (!open) close() }}
+      modal={false}
+      onOpenChange={(open) => {
+        if (!open) handleClose()
+      }}
+      onAnimationEnd={(open) => {
+        if (!open) setClosingWidget(null)
+      }}
       noBodyStyles
     >
       {/* 오버레이 — main 영역에만 국한 */}
       <Drawer.Overlay className="absolute inset-0 z-40 bg-black/10" />
 
       {/* 시트 — Portal 없이 main 안에서 absolute */}
-      <Drawer.Content className="absolute inset-x-0 bottom-0 z-40 h-[99%] bg-surface rounded-t-[20px] shadow-modal flex flex-col outline-none">
+      <Drawer.Content
+        onPointerDownOutside={handleOutsideInteract}
+        onFocusOutside={handleOutsideInteract}
+        onInteractOutside={handleOutsideInteract}
+        className="absolute inset-x-0 bottom-0 z-40 h-[99%] bg-surface rounded-t-[20px] shadow-modal flex flex-col outline-none"
+      >
         {/* 헤더 (드래그 핸들 영역) */}
         <div className="relative flex items-center justify-between pt-2.5 pb-1.5 px-4 shrink-0">
           <Drawer.Handle className="!absolute !left-1/2 !top-3 !-translate-x-1/2 !w-9 !h-1 !rounded-full !bg-stroke !opacity-100" />
@@ -59,17 +83,17 @@ export default function WidgetDetailModal() {
             <div className="w-6" />
           )}
           <button
-            onClick={() => close()}
+            onClick={handleClose}
             className="p-1 rounded-lg hover:bg-surface-muted transition-colors"
           >
             <X className="w-4 h-4 text-foreground-tertiary" />
           </button>
         </div>
 
-        {DetailComp && localWidget.current && (
+        {DetailComp && visibleWidget && (
           <DetailComp
-            config={localWidget.current.config}
-            onClose={() => close()}
+            config={visibleWidget.config}
+            onClose={handleClose}
           />
         )}
       </Drawer.Content>
