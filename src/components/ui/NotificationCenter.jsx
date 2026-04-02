@@ -27,7 +27,10 @@ function NotificationItem({ notification, onClose }) {
       markAsRead(notification.notificationId)
     }
     if (notification.notificationType === 'PRICE_ALERT' && notification.referenceId) {
-      navigate(`/invest/${notification.referenceId}`)
+      const stockName = notification.stockName
+        ?? notification.title?.match(/^(.+?)(?:\s+전일대비|\s+목표가)/)?.[1]
+        ?? null
+      navigate(`/invest/${notification.referenceId}`, { state: { stockName } })
       onClose()
     }
   }
