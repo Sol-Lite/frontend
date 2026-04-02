@@ -40,6 +40,8 @@ export default function InvestPage() {
     hasMoreChartHistory,
     marketLoading,
     marketErrorMessage,
+    orderBookLoading,
+    orderBookErrorMessage,
     dailyRows,
     realtimeRows,
     orderBook,
@@ -133,6 +135,8 @@ export default function InvestPage() {
             changeRate={changeRate}
             defaultPrice={currentPrice ?? stockMeta.price}
             orderBook={orderBook}
+            orderBookLoading={orderBookLoading}
+            orderBookErrorMessage={orderBookErrorMessage}
             displayCurrency={displayCurrency}
             usdRate={usdRate}
           />
