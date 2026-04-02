@@ -644,7 +644,8 @@ export function AssetContent() {
   if (!isRestoring && !isAuthenticated) return <AuthGuard />
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-surface">
+    <div className="h-full overflow-x-auto bg-surface">
+    <div className="flex flex-col h-full min-w-[900px] bg-surface">
 
       {/* 환전 모달 */}
       {showExchange && (
@@ -675,6 +676,7 @@ export function AssetContent() {
         <HoldingsPanel data={data} />
       </div>
 
+    </div>
     </div>
   )
 }

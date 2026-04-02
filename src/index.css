@@ -239,7 +239,6 @@
 }
 
 html {
-  min-width: 1280px; /* desktop-only: 최소 창 너비, 미만 시 수평 스크롤 */
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
