@@ -107,6 +107,8 @@ export default function BalanceWidget({ variant = 'balance-sm', colSpan = 1, row
         smooth: true,
         showSymbol: pts.length === 1,
         symbolSize: 5,
+        silent: true,
+        emphasis: { disabled: true },
         data: pts,
         lineStyle: { width: 2, color: lineColor },
         itemStyle: { color: lineColor },
