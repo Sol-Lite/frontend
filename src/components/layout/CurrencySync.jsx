@@ -14,7 +14,7 @@ function UsdInitializer() {
   useQuery({
     queryKey: ['currency', 'initial', 'USD'],
     queryFn: async () => {
-      const res = await marketApi.getForexChart({ symbol: 'USDKRW=X', interval: '5m', range: '1d' })
+      const res = await marketApi.getForexChart({ symbol: 'USDKRW=X', interval: '5m', range: '5d' })
       const candles = res.data ?? []
       if (!candles.length) return null
       const rate = Number(candles[candles.length - 1].close)
