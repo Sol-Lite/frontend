@@ -7,6 +7,7 @@ import { useWatchlist, watchlistApi } from '@/api/watchlist'
 import useAuthStore from '@/store/useAuthStore'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import useSparkline from '@/features/market/useSparkline'
+import useWatchlistQuote from '@/features/market/useWatchlistQuote'
 import { isForeignMarketType } from '@/features/invest/formatters'
 import { cn } from '@/lib/cn'
 
@@ -31,36 +32,37 @@ function fmtChange(change, marketType) {
 }
 
 function WatchlistRow({ item, onStockClick, onRemove }) {
-  const isOverseas = isForeignMarketType(item.marketType)
-  const changeAmt  = fmtChange(item.change ?? item.changeAmount, item.marketType)
-  const isUp       = (item.changeRate ?? 0) >= 0
+  const resolvedItem = useWatchlistQuote(item)
+  const isOverseas = isForeignMarketType(resolvedItem.marketType)
+  const changeAmt  = fmtChange(resolvedItem.change ?? resolvedItem.changeAmount, resolvedItem.marketType)
+  const isUp       = (resolvedItem.changeRate ?? 0) >= 0
 
-  const exchangeCode = item.exchangeCode ?? EXCHANGE_CODE_BY_MARKET_TYPE[item.marketType] ?? null
-  const { data: sparkData = [] } = useSparkline(item.stockCode, item.marketType, exchangeCode)
+  const exchangeCode = resolvedItem.exchangeCode ?? EXCHANGE_CODE_BY_MARKET_TYPE[resolvedItem.marketType] ?? null
+  const { data: sparkData = [] } = useSparkline(resolvedItem.stockCode, resolvedItem.marketType, exchangeCode)
 
   return (
     <button
-      onClick={() => onStockClick(item)}
+      onClick={() => onStockClick(resolvedItem)}
       className="w-full text-left flex items-center gap-3 px-8 py-3 border-b border-stroke last:border-b-0 hover:bg-surface-muted transition-colors group"
     >
       {/* 로고 */}
       <StockAvatar
-        name={item.stockName}
-        stockCode={item.stockCode}
-        marketType={item.marketType}
+        name={resolvedItem.stockName}
+        stockCode={resolvedItem.stockCode}
+        marketType={resolvedItem.marketType}
         size="md"
       />
 
       {/* 종목명 + 코드 */}
       <div className="flex-1 flex flex-col gap-0.5 min-w-0">
         <span className="text-[13px] font-semibold text-foreground truncate leading-tight">
-          {item.stockName}
+          {resolvedItem.stockName}
         </span>
         <div className="flex items-center gap-1.5">
-          <span className="text-[10px] text-foreground-disabled">{item.stockCode}</span>
+          <span className="text-[10px] text-foreground-disabled">{resolvedItem.stockCode}</span>
           {isOverseas && (
             <span className="text-[9px] font-medium text-foreground-disabled bg-surface-subtle rounded px-1 py-px">
-              {item.marketType}
+              {resolvedItem.marketType}
             </span>
           )}
         </div>
@@ -76,7 +78,7 @@ function WatchlistRow({ item, onStockClick, onRemove }) {
       {/* 현재가 */}
       <div className="w-[96px] text-right">
         <span className="text-[13px] font-bold text-foreground tabular-nums">
-          {fmtPrice(item.currentPrice, item.marketType)}
+          {fmtPrice(resolvedItem.currentPrice, resolvedItem.marketType)}
         </span>
       </div>
 
@@ -88,7 +90,7 @@ function WatchlistRow({ item, onStockClick, onRemove }) {
         {changeAmt && (
           <span className="text-[12px] font-semibold">{changeAmt}</span>
         )}
-        <PriceChange value={item.changeRate} className="text-[11px] font-medium" />
+        <PriceChange value={resolvedItem.changeRate} className="text-[11px] font-medium" />
       </div>
 
       {/* 삭제 버튼 */}
