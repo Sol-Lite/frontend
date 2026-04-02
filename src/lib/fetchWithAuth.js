@@ -60,7 +60,7 @@ export async function fetchWithAuth(url, options = {}) {
 
   const res = await fetch(url, { ...fetchOptions, headers, credentials: 'include' })
 
-  if (res.status !== 401 || skipAuth) {
+  if ((res.status !== 401 && res.status !== 403) || skipAuth) {
     const text = await res.text()
     const data = text ? tryParseJson(text) : null
     if (!res.ok) throw data ?? { message: '요청에 실패했습니다.' }
