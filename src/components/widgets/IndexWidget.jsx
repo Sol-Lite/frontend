@@ -68,6 +68,7 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
   const updateWidgetConfig = useWidgetStore((s) => s.updateWidgetConfig)
   const { mutate: saveDashboard } = useDashboardSave()
   const [isConfigOpen, setIsConfigOpen] = useState(false)
+  const [hoveredCode, setHoveredCode] = useState(null)
   const { lockWidgetDrag, unlockWidgetDrag } = useEditModeStore()
   const open = useWidgetDetailStore((s) => s.open)
 
@@ -85,6 +86,15 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
     open({ widgetTypeId: 'index', config: { code } })
   }
 
+  function bindHover(code) {
+    return {
+      onMouseEnter: () => setHoveredCode(code),
+      onMouseLeave: () => setHoveredCode((prev) => (prev === code ? null : prev)),
+      onFocus: () => setHoveredCode(code),
+      onBlur: () => setHoveredCode((prev) => (prev === code ? null : prev)),
+    }
+  }
+
   function handleSave(newIndices) {
     updateWidgetConfig(instanceId, { indices: newIndices })
     saveDashboard()
@@ -100,11 +110,14 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
             <span className="text-widget-10 font-semibold text-foreground-disabled tracking-[.04em] uppercase shrink-0">주요 지수</span>
             <SettingsButton onClick={() => setIsConfigOpen(true)} />
           </div>
-          <div className="relative flex-1 flex flex-col justify-center items-center text-center min-h-0 group">
+          <div
+            className="relative flex-1 flex flex-col justify-center items-center text-center min-h-0"
+            {...bindHover(shown.code)}
+          >
             <div className="text-widget-9 text-foreground-disabled">{shown.label}</div>
             <div className="text-widget-18 font-bold text-foreground leading-tight">{shown.value}</div>
             <ChangeLabel changeAmt={shown.changeAmt} changeRate={shown.changeRate} className="text-widget-9" />
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+            <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-opacity ${hoveredCode === shown.code ? 'opacity-100' : 'opacity-0'}`} />
           </div>
         </WidgetCard>
         {isConfigOpen && (
@@ -131,13 +144,14 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
             {indices.map((idx) => (
               <div
                 key={idx.key}
-                className="relative flex-1 flex flex-col justify-center items-center text-center px-2 cursor-pointer group"
+                className="relative flex-1 flex flex-col justify-center items-center text-center px-2 cursor-pointer"
                 onClick={(e) => handleIndexClick(e, idx.code)}
+                {...bindHover(idx.code)}
               >
                 <div className="text-widget-9 text-foreground-disabled">{idx.label}</div>
                 <div className="text-widget-17 font-bold text-foreground leading-tight">{idx.value}</div>
                 <ChangeLabel changeAmt={idx.changeAmt} changeRate={idx.changeRate} className="text-widget-10" />
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-opacity ${hoveredCode === idx.code ? 'opacity-100' : 'opacity-0'}`} />
               </div>
             ))}
           </div>
@@ -166,13 +180,14 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
             {indices.map((idx) => (
               <div
                 key={idx.key}
-                className="relative flex-1 min-w-0 cursor-pointer px-1 group"
+                className="relative flex-1 min-w-0 cursor-pointer px-1"
                 onClick={(e) => handleIndexClick(e, idx.code)}
+                {...bindHover(idx.code)}
               >
                 <div className="text-widget-9 text-foreground-disabled">{idx.label}</div>
                 <div className="text-widget-15 font-bold text-foreground leading-tight">{idx.value}</div>
                 <ChangeLabel changeAmt={idx.changeAmt} changeRate={idx.changeRate} className="text-widget-10" />
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+                <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-opacity ${hoveredCode === idx.code ? 'opacity-100' : 'opacity-0'}`} />
               </div>
             ))}
           </div>
@@ -201,13 +216,14 @@ export default function IndexWidget({ instanceId, variant = 'index-wide', colSpa
           {indices.map((idx) => (
             <div
               key={idx.key}
-              className="relative flex-1 flex flex-col justify-center items-center text-center px-3 py-1 cursor-pointer group"
+              className="relative flex-1 flex flex-col justify-center items-center text-center px-3 py-1 cursor-pointer"
               onClick={(e) => handleIndexClick(e, idx.code)}
+              {...bindHover(idx.code)}
             >
               <div className="text-widget-9 text-foreground-disabled">{idx.label}</div>
               <div className="text-widget-16 font-bold text-foreground leading-tight">{idx.value}</div>
               <ChangeLabel changeAmt={idx.changeAmt} changeRate={idx.changeRate} className="text-widget-9" />
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div className={`absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-opacity ${hoveredCode === idx.code ? 'opacity-100' : 'opacity-0'}`} />
             </div>
           ))}
         </div>
