@@ -11,6 +11,7 @@ import WatchlistEditModal from './WatchlistEditModal'
 import { useWatchlist, watchlistApi } from '@/api/watchlist'
 import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 import { isForeignMarketType } from '@/features/invest/formatters'
+import useWatchlistQuote from '@/features/market/useWatchlistQuote'
 
 const EXCHANGE_CODE_BY_MARKET_TYPE = { NASDAQ: 'NAS', NYSE: 'NYS', AMEX: 'AMS' }
 
@@ -36,6 +37,44 @@ function useWatchlistMutations() {
   })
 
   return { add, remove }
+}
+
+function WatchlistWideRow({ item, onStockClick }) {
+  const resolvedItem = useWatchlistQuote(item)
+
+  return (
+    <div
+      onClick={(e) => onStockClick(e, resolvedItem)}
+      className="flex items-center justify-between gap-2 cursor-pointer pl-1.5 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
+    >
+      <div className="flex items-center gap-2 min-w-0">
+        <StockAvatar name={resolvedItem.stockName ?? resolvedItem.stockCode} stockCode={resolvedItem.stockCode} marketType={resolvedItem.marketType} size="sm" />
+        <span className="text-widget-10 font-medium text-foreground truncate">{resolvedItem.stockName}</span>
+      </div>
+      <div className="flex items-center gap-1.5 shrink-0">
+        {fmtPrice(resolvedItem.currentPrice, resolvedItem.marketType) && (
+          <span className="text-widget-10 font-semibold text-foreground tabular-nums">
+            {fmtPrice(resolvedItem.currentPrice, resolvedItem.marketType)}
+          </span>
+        )}
+        <PriceChange value={resolvedItem.changeRate} className="text-widget-9 font-medium" />
+      </div>
+    </div>
+  )
+}
+
+function WatchlistCompactRow({ item, onStockClick }) {
+  const resolvedItem = useWatchlistQuote(item)
+
+  return (
+    <div
+      onClick={(e) => onStockClick(e, resolvedItem)}
+      className="flex items-center justify-between cursor-pointer pl-1.5 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
+    >
+      <span className="text-widget-10 font-medium text-foreground truncate">{resolvedItem.stockName}</span>
+      <PriceChange value={resolvedItem.changeRate} className="text-widget-9 font-semibold shrink-0" />
+    </div>
+  )
 }
 
 export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1, rowSpan = 1, onDelete }) {
@@ -107,24 +146,11 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
             {isError
               ? <span className="text-widget-10 text-foreground-disabled">불러오기에 실패했습니다</span>
               : list.length > 0 ? list.map((item) => (
-              <div
+              <WatchlistWideRow
                 key={item.stockCode}
-                onClick={(e) => handleStockClick(e, item)}
-                className="flex items-center justify-between gap-2 cursor-pointer pl-1.5 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
-              >
-                <div className="flex items-center gap-2 min-w-0">
-                  <StockAvatar name={item.stockName ?? item.stockCode} stockCode={item.stockCode} marketType={item.marketType} size="sm" />
-                  <span className="text-widget-10 font-medium text-foreground truncate">{item.stockName}</span>
-                </div>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  {fmtPrice(item.currentPrice, item.marketType) && (
-                    <span className="text-widget-10 font-semibold text-foreground tabular-nums">
-                      {fmtPrice(item.currentPrice, item.marketType)}
-                    </span>
-                  )}
-                  <PriceChange value={item.changeRate} className="text-widget-9 font-medium" />
-                </div>
-              </div>
+                item={item}
+                onStockClick={handleStockClick}
+              />
             )) : (
               <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">관심 종목 없음</div>
             )}
@@ -148,14 +174,11 @@ export default function WatchlistWidget({ variant = 'watchlist-sm', colSpan = 1,
           {isError
             ? <span className="text-widget-10 text-foreground-disabled">불러오기에 실패했습니다</span>
             : list.length > 0 ? list.map((item) => (
-            <div
+            <WatchlistCompactRow
               key={item.stockCode}
-              onClick={(e) => handleStockClick(e, item)}
-              className="flex items-center justify-between cursor-pointer pl-1.5 border-l-2 border-l-transparent hover:border-l-primary transition-colors"
-            >
-              <span className="text-widget-10 font-medium text-foreground truncate">{item.stockName}</span>
-              <PriceChange value={item.changeRate} className="text-widget-9 font-semibold shrink-0" />
-            </div>
+              item={item}
+              onStockClick={handleStockClick}
+            />
           )) : (
             <div className="flex-1 flex items-center justify-center text-widget-9 text-foreground-disabled">관심 종목 없음</div>
           )}
