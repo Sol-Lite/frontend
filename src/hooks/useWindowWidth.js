@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 
-export const COMPACT_BREAKPOINT = 640   // MIN_DESKTOP(1280px)의 50%
+export const COMPACT_BREAKPOINT = 768   // MIN_DESKTOP(1280px)의 약 60%
 
 export default function useWindowWidth() {
   const [width, setWidth] = useState(() => window.innerWidth)

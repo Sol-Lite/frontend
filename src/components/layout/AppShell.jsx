@@ -36,6 +36,10 @@ export default function AppShell() {
   const navigate = useNavigate()
   const openLoginModal = useAuthStore((s) => s.openLoginModal)
   const isCompact = useIsCompact()
+  const isHome = location.pathname === '/'
+  // compact + 홈: ChatPanel만 표시 / compact + 홈 외: main만 표시
+  const showMain  = !(isCompact && isHome)
+  const showPanel = !(isCompact && !isHome)
   useDashboardLoad()
 
   useEffect(() => {
@@ -332,13 +336,13 @@ export default function AppShell() {
         <CurrencySync />
         <AppHeader />
         <div className="flex flex-1 min-w-0 overflow-hidden">
-          {!isCompact && (
+          {showMain && (
             <main className="relative flex-1 min-w-0 overflow-hidden bg-background isolate">
               <Outlet />
               <WidgetDetailModal />
             </main>
           )}
-          <RightPanel isCompact={isCompact} />
+          {showPanel && <RightPanel isCompact={isCompact && isHome} />}
         </div>
       </div>
       <DragOverlay>{overlayContent}</DragOverlay>
