@@ -11,6 +11,7 @@ import { dashboardApi } from '@/api/dashboard'
 import { useDashboardSave } from '@/hooks/useDashboardSync'
 import NotificationCenter from '@/components/ui/NotificationCenter'
 import { FontSizeButton, ThemeButton } from './DisplaySettingsButtons'
+import useWidgetDetailStore from '@/store/useWidgetDetailStore'
 
 function Logo() {
   const navigate = useNavigate()
@@ -116,7 +117,7 @@ function UserArea() {
 
 function EditModeActions() {
   const { exitEditMode, saveLayout } = useEditModeStore()
-  const { restoreSnapshot, clearSnapshot, clearPendingPresets, pages, currentPageId } = useWidgetStore()
+  const { restoreSnapshot, clearSnapshot, clearPendingPresets } = useWidgetStore()
   const pendingPresets = useWidgetStore((s) => s.pendingPresets)
   const deletePageIds = useWidgetStore((s) => s.deletePageIds)
   const { mutate: saveDashboard, isPending, isError } = useDashboardSave()
@@ -220,9 +221,14 @@ function EditModeActions() {
 function WidgetEditButton() {
   const { enterEditMode } = useEditModeStore()
   const { snapshotWidgets } = useWidgetStore()
+  const closeWidgetDetail = useWidgetDetailStore((s) => s.close)
   return (
     <button
-      onClick={() => { snapshotWidgets(); enterEditMode() }}
+      onClick={() => {
+        closeWidgetDetail()
+        snapshotWidgets()
+        enterEditMode()
+      }}
       className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-stroke text-foreground-secondary text-[12px] font-medium hover:border-primary hover:text-primary hover:bg-primary-light transition-all duration-[150ms]"
     >
       <LayoutGrid className="w-3.5 h-3.5" strokeWidth={2} />
