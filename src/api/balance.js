@@ -8,6 +8,21 @@ function get(path, params) {
   return fetchWithAuth(`${path}${query}`)
 }
 
+function toArray(value) {
+  return Array.isArray(value) ? value : []
+}
+
+function normalizePortfolioData(data) {
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return { items: [] }
+  }
+
+  return {
+    ...data,
+    items: toArray(data.items),
+  }
+}
+
 export const balanceApi = {
   // 예수금 조회 (통화별)
   getCashBalances: () => get('/api/balance/cash'),
@@ -46,6 +61,7 @@ export const useDomesticHoldings = ({ enabled = true } = {}) =>
     queryKey: ['balance', 'holdings', 'domestic'],
     queryFn: () => balanceApi.getDomesticHoldings(),
     enabled,
+    select: toArray,
     staleTime: 1000 * 30,
   })
 
@@ -54,6 +70,7 @@ export const useOverseasHoldings = ({ enabled = true } = {}) =>
     queryKey: ['balance', 'holdings', 'overseas'],
     queryFn: () => balanceApi.getOverseasHoldings(),
     enabled,
+    select: toArray,
     staleTime: 1000 * 30,
   })
 
@@ -78,5 +95,6 @@ export const usePortfolioData = ({ enabled = true } = {}) =>
     queryKey: ['portfolio'],
     queryFn: balanceApi.getPortfolio,
     enabled,
+    select: normalizePortfolioData,
     staleTime: 1000 * 30,
   })
