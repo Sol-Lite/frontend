@@ -45,7 +45,7 @@ function fmtUsd(n) {
 
 const ASSET_FLOW_RANGES = [
   { key: '1W', label: '1주' },
-  { key: '1M', label: '1월' },
+  { key: '1M', label: '1달' },
   { key: 'ALL', label: '전체' },
 ]
 
@@ -566,7 +566,7 @@ function HoldingsPanel({ data }) {
       {/* 컬럼 헤더 */}
       <div className="shrink-0 grid grid-cols-[1fr_62px_82px_78px_92px] items-center px-4 py-1.5 bg-surface-subtle border-b border-stroke text-[9px] font-semibold text-foreground-disabled">
         <span>종목</span>
-        <span className="text-right">수량 / 평균가</span>
+        <span className="text-right">수량 / 평균단가</span>
         <span className="text-right">매수금액</span>
         <span className="text-right">현재가</span>
         <span className="text-right">평가손익</span>
