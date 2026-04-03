@@ -1,12 +1,79 @@
 import { useQuery } from '@tanstack/react-query'
+import { useMemo } from 'react'
 import { newsApi } from '@/api/news'
 
 const KR_INDICES = ['KOSPI', 'KOSDAQ']
 const US_INDICES = ['NASDAQ', 'S&P500', 'DOW']
 const US_KEYWORDS = ['뉴욕', '미국', '나스닥', 's&p', '다우', '월가', 'fomc']
+const DATE_PREFIX_REGEX = /^(\d{4}-\d{2}-\d{2})/
 
 function asArray(value) {
   return Array.isArray(value) ? value : []
+}
+
+function getLocalDateKey(date) {
+  const yyyy = date.getFullYear()
+  const mm = String(date.getMonth() + 1).padStart(2, '0')
+  const dd = String(date.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
+function extractPublishedDateKey(value) {
+  if (typeof value !== 'string') return ''
+
+  const trimmed = value.trim()
+  if (!trimmed) return ''
+
+  const prefixMatch = trimmed.match(DATE_PREFIX_REGEX)
+  if (prefixMatch) {
+    return prefixMatch[1]
+  }
+
+  const parsed = Date.parse(trimmed.replace(' ', 'T'))
+  if (Number.isNaN(parsed)) return ''
+
+  return getLocalDateKey(new Date(parsed))
+}
+
+function getPublishedTimestamp(value) {
+  if (typeof value !== 'string') return null
+
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  const parsed = Date.parse(trimmed.replace(' ', 'T'))
+  if (!Number.isNaN(parsed)) {
+    return parsed
+  }
+
+  const dateKey = extractPublishedDateKey(trimmed)
+  if (!dateKey) return null
+
+  const fallbackParsed = Date.parse(`${dateKey}T00:00:00`)
+  return Number.isNaN(fallbackParsed) ? null : fallbackParsed
+}
+
+function sortLatestNews(items) {
+  return items
+    .map((item, index) => ({
+      item,
+      index,
+      timestamp: getPublishedTimestamp(item?.publishedAt ?? item?.date ?? ''),
+    }))
+    .sort((left, right) => {
+      if (left.timestamp != null && right.timestamp != null && left.timestamp !== right.timestamp) {
+        return right.timestamp - left.timestamp
+      }
+      if (left.timestamp != null && right.timestamp == null) return -1
+      if (left.timestamp == null && right.timestamp != null) return 1
+      return left.index - right.index
+    })
+    .map(({ item }) => item)
+}
+
+function selectTodayNews(items, todayKey) {
+  const todayItems = items.filter((item) => extractPublishedDateKey(item?.publishedAt ?? item?.date ?? '') === todayKey)
+  return todayItems.length > 0 ? todayItems : items
 }
 
 function inferStockIndex(item) {
@@ -88,9 +155,28 @@ export default function useLatestNews(size = 10) {
     retry: false,
   })
 
-  const all = normalizeLatestNews(data)
-  const kr  = all.filter((n) => !n.stockIndex || KR_INDICES.includes(n.stockIndex))
-  const us  = all.filter((n) => US_INDICES.includes(n.stockIndex))
+  const { all, kr, us, krDisplay, usDisplay } = useMemo(() => {
+    const normalized = sortLatestNews(normalizeLatestNews(data))
+    const krNews = normalized.filter((n) => !n.stockIndex || KR_INDICES.includes(n.stockIndex))
+    const usNews = normalized.filter((n) => US_INDICES.includes(n.stockIndex))
+    const todayKey = getLocalDateKey(new Date())
 
-  return { news: all, krNews: kr, usNews: us, isLoading, error }
+    return {
+      all: normalized,
+      kr: krNews,
+      us: usNews,
+      krDisplay: selectTodayNews(krNews, todayKey),
+      usDisplay: selectTodayNews(usNews, todayKey),
+    }
+  }, [data])
+
+  return {
+    news: all,
+    krNews: kr,
+    usNews: us,
+    krDisplayNews: krDisplay,
+    usDisplayNews: usDisplay,
+    isLoading,
+    error,
+  }
 }
