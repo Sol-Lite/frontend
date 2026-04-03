@@ -35,7 +35,11 @@ function usePortfolio(enabled, topN = 3) {
     const isLoading = enabled && (sl || dl || ol || pl)
     if (isLoading) return { items: [], returnRate: null, isLoading: true }
 
-    const allHoldings = [...domestic, ...overseas]
+    const domesticList = Array.isArray(domestic) ? domestic : []
+    const overseasList = Array.isArray(overseas) ? overseas : []
+    const portfolioItemsRaw = Array.isArray(portfolio?.items) ? portfolio.items : []
+
+    const allHoldings = [...domesticList, ...overseasList]
       .filter((h) => (h.holdingQuantity ?? 0) > 0 || (h.availableQuantity ?? 0) > 0)
       .map((h) => ({
         ...h,
@@ -43,7 +47,7 @@ function usePortfolio(enabled, topN = 3) {
       }))
     const holdingByName = Object.fromEntries(allHoldings.map((h) => [h.stockName, h]))
 
-    const orderedItems = (portfolio?.items ?? []).filter((item) => item.type === 'STOCK')
+    const orderedItems = portfolioItemsRaw.filter((item) => item.type === 'STOCK')
     const normalized = orderedItems.map((item) => {
       const holding = holdingByName[item.label]
       return {
